@@ -21,7 +21,7 @@ export default async function ApplicationPage({ params }: { params: { id: string
 
   const { data: app } = await supabase
     .from("applications")
-    .select("*, candidates(*), jobs(*), job_stages(name)")
+    .select("*, candidates(*), jobs(*), job_stages(name), ai_analysis")
     .eq("id", params.id)
     .maybeSingle();
   if (!app) notFound();
@@ -134,7 +134,11 @@ export default async function ApplicationPage({ params }: { params: { id: string
         </div>
 
         <div>
-          <CandidateAnalyzerPanel applicationId={app.id} fitScore={app.fit_score} />
+          <CandidateAnalyzerPanel
+            applicationId={app.id}
+            fitScore={app.fit_score}
+            savedAnalysis={app.ai_analysis ?? null}
+          />
         </div>
       </div>
     </div>

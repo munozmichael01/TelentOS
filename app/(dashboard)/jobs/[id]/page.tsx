@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { Pencil, ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Markdown } from "@/components/markdown";
 import { PipelineBoard } from "@/components/features/pipeline-board";
@@ -37,6 +37,13 @@ export default async function JobDetailPage({ params }: { params: { id: string }
 
   return (
     <div>
+      <Link
+        href="/jobs"
+        style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, color: "#79746B", marginBottom: "14px", textDecoration: "none" }}
+      >
+        <ArrowLeft size={15} />
+        Ofertas
+      </Link>
       <PageHeader
         title={typedJob.title}
         description={[typedJob.location, typedJob.sector, formatSalaryRange(typedJob.salary_min, typedJob.salary_max)]

@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,500;0,600;0,700;0,800;0,900;1,800;1,900&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  ::selection { background: #C6F24E; color: #1A1A17; }
+  .tos-scroll::-webkit-scrollbar { height: 10px; width: 10px; }
+  .tos-scroll::-webkit-scrollbar-thumb { background: #DAD3C5; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+  .tos-card { transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
+  .tos-card:hover { border-color: #D4CCBA; box-shadow: 0 6px 16px -10px rgba(26,26,23,.4); }
+  .tos-hard { transition: transform .1s ease, box-shadow .1s ease; }
+  .tos-hard:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #1A1A17; }
+  .tos-hard:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #1A1A17; }
+  .tos-nav { transition: background .12s ease, color .12s ease; }
+  .tos-nav:hover { background: #EFEBE1; }
+  .tos-kcard:active { cursor: grabbing; }
+  @keyframes tosGrain { 0%{transform:translate(0,0)} 100%{transform:translate(-6%,-6%)} }
+</style>
+</helmet>
+
+<div ref="{{ rootRef }}" data-screen-label="TalentOS App" style="--bg:#F4F0E8; --surface:#FCFAF6; --surface2:#F8F4EB; --ink:#1A1A17; --soft:#79746B; --line:#E7E1D4; --brand:#0E5C4A; --brandSoft:#DCEFE4; --accent:#F1543F; --lime:#C6F24E; --limeSoft:#EAF7C4; --shadow:#1A1A17; font-family:'Hanken Grotesk',system-ui,sans-serif; background:#ECEAE4; color:var(--ink); min-height:100vh; padding:26px; -webkit-font-smoothing:antialiased;">
+
+  <div style="max-width:1320px; margin:0 auto;">
+    <div style="display:flex; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:var(--bg); box-shadow:0 24px 50px -28px rgba(26,26,23,.3);">
+
+      <!-- ===== SIDEBAR ===== -->
+      <aside style="width:234px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--line); display:flex; flex-direction:column;">
+        <div style="height:62px; display:flex; align-items:center; gap:10px; padding:0 18px; border-bottom:1px solid var(--line);">
+          <div style="width:30px; height:30px; border-radius:9px; background:var(--brand); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--shadow);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" stroke-width="2" stroke-linejoin="round"/></svg>
+          </div>
+          <span style="font-family:'Archivo',sans-serif; font-weight:900; font-size:18px; letter-spacing:-.5px;">TalentOS</span>
+        </div>
+
+        <nav class="tos-scroll" style="flex:1; overflow-y:auto; padding:12px 12px 8px;">
+          <div data-screen="dashboard" onClick="{{ navTo }}" class="tos-nav" style="{{ ns.dashboard }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/></svg>
+            Dashboard
+          </div>
+
+          <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); padding:14px 10px 6px;">Reclutamiento</div>
+          <div data-screen="jobs" onClick="{{ navTo }}" class="tos-nav" style="{{ ns.jobs }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/></svg>
+            Ofertas<span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px; opacity:.7;">6</span>
+          </div>
+          <div data-screen="candidates" onClick="{{ navTo }}" class="tos-nav" style="{{ ns.candidates }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="2"/><path d="M3.5 19a5.5 5.5 0 0111 0M16 11a3 3 0 100-6M20.5 19a5 5 0 00-4-4.9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Candidatos<span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px; opacity:.7;">10</span>
+          </div>
+
+          <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); padding:14px 10px 6px;">Personas</div>
+          <div data-screen="employees" onClick="{{ navTo }}" class="tos-nav" style="{{ ns.employees }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="2" stroke="currentColor" stroke-width="2"/><path d="M6 16c.5-1.8 1.7-2.5 3-2.5s2.5.7 3 2.5M15 9h4M15 13h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Empleados
+          </div>
+          <div data-screen="org" onClick="{{ navTo }}" class="tos-nav" style="{{ ns.org }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="16" width="6" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="15" y="16" width="6" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M6 16v-2h12v2" stroke="currentColor" stroke-width="2"/></svg>
+            Organigrama
+          </div>
+          <div data-screen="timeoff" onClick="{{ navTo }}" class="tos-nav" style="{{ ns.timeoff }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Vacaciones
+          </div>
+          <div data-screen="timesheets" onClick="{{ navTo }}" class="tos-nav" style="{{ ns.timesheets }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Horas
+          </div>
+
+          <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); padding:14px 10px 6px;">Workspace</div>
+          <div data-screen="settings" onClick="{{ navTo }}" class="tos-nav" style="{{ ns.settings }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Ajustes
+          </div>
+        </nav>
+
+        <div style="padding:12px; border-top:1px solid var(--line); display:flex; align-items:center; gap:10px;">
+          <div style="width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#8FE3D0,#4FBFA6); color:#063D31; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px;">MM</div>
+          <div style="min-width:0;"><div style="font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Michael Muñoz</div><div style="font-size:11px; color:var(--soft);">Talent Lead</div></div>
+        </div>
+      </aside>
+
+      <!-- ===== MAIN ===== -->
+      <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+        <div style="height:62px; flex-shrink:0; display:flex; align-items:center; gap:14px; padding:0 22px; border-bottom:1px solid var(--line); background:var(--surface);">
+          <div style="display:flex; align-items:center; gap:9px; background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:8px 13px; width:300px; max-width:40%;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="var(--soft)" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="var(--soft)" stroke-width="2" stroke-linecap="round"/></svg>
+            <span style="font-size:13px; color:var(--soft);">Buscar…</span>
+            <span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:10px; color:var(--soft); border:1px solid var(--line); border-radius:5px; padding:1px 5px;">⌘K</span>
+          </div>
+          <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
+            <div style="width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--soft);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 19a2 2 0 004 0" stroke="currentColor" stroke-width="2"/></svg></div>
+            <div style="width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--soft);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.5 2.5 0 114 2c-1 .7-1.5 1.2-1.5 2.5M12 17.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#8FE3D0,#4FBFA6); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; color:#063D31; margin-left:4px;">MM</div>
+          </div>
+        </div>
+
+        <div class="tos-scroll" style="flex:1; overflow:auto; padding:28px; min-height:680px; background:radial-gradient(120% 90% at 100% 0%, #F7F3EB 0%, var(--bg) 55%);">
+
+          <!-- ================= DASHBOARD ================= -->
+          <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="margin-bottom:22px;">
+              <div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin-bottom:6px;">Martes · 16 junio 2026</div>
+              <h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:36px; letter-spacing:-1.2px; line-height:1; margin:0;">Hola, <span style="font-style:italic; color:var(--accent);">Michael.</span></h2>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px;">
+              <div class="tos-card" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">OFERTAS ACTIVAS</div><div style="display:flex; align-items:flex-end; gap:8px; margin-top:6px;"><span style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; line-height:1;">5</span><span style="font-size:12px; color:#1B6B4F; font-weight:700; padding-bottom:4px;">↑ 2</span></div></div>
+              <div class="tos-card" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">CANDIDATOS EN PROCESO</div><div style="display:flex; align-items:flex-end; gap:8px; margin-top:6px;"><span style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; line-height:1;">42</span><span style="font-size:12px; color:#1B6B4F; font-weight:700; padding-bottom:4px;">↑ 12</span></div></div>
+              <div class="tos-card" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">POR REVISAR</div><div style="display:flex; align-items:flex-end; gap:8px; margin-top:6px;"><span style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; line-height:1; color:var(--accent);">8</span><span style="font-size:12px; color:var(--soft); font-weight:600; padding-bottom:4px;">candidaturas</span></div></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1.25fr 1fr; gap:14px; margin-bottom:18px;">
+              <!-- celebraciones -->
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px 20px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;"><div style="width:30px; height:30px; border-radius:9px; background:var(--brandSoft); display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="var(--brand)" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="var(--brand)" stroke-width="2" stroke-linecap="round"/></svg></div><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:16px;">Hoy en el equipo</span></div>
+                <div style="display:flex; gap:18px; border-bottom:1px solid var(--line); margin-bottom:14px;">
+                  <span style="font-family:'Hanken Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--soft); padding-bottom:9px;">Eventos <span style="color:var(--soft); opacity:.6;">0</span></span>
+                  <span style="font-family:'Archivo',sans-serif; font-size:13px; font-weight:800; color:var(--ink); padding-bottom:9px; border-bottom:2px solid var(--accent);">Celebraciones <span style="color:var(--accent);">2</span></span>
+                  <span style="font-family:'Hanken Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--soft); padding-bottom:9px;">Festivos <span style="opacity:.6;">0</span></span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;"><span style="display:inline-flex; width:22px; height:22px; border-radius:7px; background:var(--limeSoft); align-items:center; justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 13l-2 6 6-2M14 4l6 6-9 9-6-6 9-9Z" stroke="#46540F" stroke-width="2" stroke-linejoin="round"/></svg></span><span style="font-size:12px; font-weight:700; color:var(--brand);">Nuevas incorporaciones</span></div>
+                <div style="display:flex; align-items:center; gap:11px; padding:9px 0; border-bottom:1px solid var(--line);"><span style="width:32px; height:32px; border-radius:50%; background:#DCEFE4; color:#0E5C4A; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px;">AK</span><div><div style="font-size:13.5px; font-weight:700;">Koss, Angeline</div><div style="font-size:11.5px; color:var(--soft);">Sales Development Representative</div></div></div>
+                <div style="display:flex; align-items:center; gap:11px; padding:9px 0;"><span style="width:32px; height:32px; border-radius:50%; background:#F8E7C4; color:#946312; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px;">LG</span><div><div style="font-size:13.5px; font-weight:700;">Linnert, George</div><div style="font-size:11.5px; color:var(--soft);">Sales Development Representative</div></div></div>
+              </div>
+
+              <!-- todos -->
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px 20px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;"><div style="width:30px; height:30px; border-radius:9px; background:var(--brandSoft); display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="var(--brand)" stroke-width="2"/><path d="M8 12l2.5 2.5L16 9" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:16px;">Por hacer</span><span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px; color:var(--accent); background:#F6D9D2; border-radius:999px; padding:2px 9px;">3</span></div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <sc-for list="{{ todos }}" as="t" hint-placeholder-count="3">
+                    <div style="display:flex; align-items:flex-start; gap:10px; padding:9px 11px; background:var(--bg); border:1px solid var(--line); border-radius:11px;">
+                      <span style="width:18px; height:18px; flex-shrink:0; border-radius:6px; border:2px solid {{ t.box }}; background:{{ t.boxBg }}; display:flex; align-items:center; justify-content:center; margin-top:1px;"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="{{ t.check }}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                      <div style="min-width:0;"><div style="font-size:13px; font-weight:600; line-height:1.35; color:{{ t.color }}; text-decoration:{{ t.deco }};">{{ t.t }}</div><div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--soft); margin-top:3px;">{{ t.tag }}</div></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <!-- banner -->
+            <div style="position:relative; overflow:hidden; border-radius:16px; border:1px solid rgba(0,0,0,.1); padding:16px 20px; display:flex; align-items:center; gap:16px; background:linear-gradient(105deg, var(--brand) 0%, #1F5566 46%, #5A4C86 100%);">
+              <div style="position:absolute; inset:-40%; background-image:radial-gradient(rgba(255,255,255,.12) 1px, transparent 1px); background-size:5px 5px; opacity:.5; animation:tosGrain 8s linear infinite alternate; pointer-events:none;"></div>
+              <div style="position:relative; color:#fff;"><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15.5px;">Empieza el onboarding de Nina y 2 personas más</div><div style="font-size:13px; opacity:.82; margin-top:1px;">Asigna flujos antes de su primer día.</div></div>
+              <button style="position:relative; margin-left:auto; font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:var(--ink); background:var(--lime); border:none; border-radius:10px; padding:9px 16px; cursor:pointer;">Ver</button>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= JOBS ================= -->
+          <sc-if value="{{ isJobs }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+              <div><div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin-bottom:6px;">Reclutamiento</div><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:34px; letter-spacing:-1px; line-height:1; margin:0;">Ofertas</h2></div>
+              <div style="display:flex; gap:10px;"><button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; color:var(--ink); background:var(--surface); border:2px solid var(--ink); border-radius:11px; padding:10px 16px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;" onClick="{{ openImport }}">Importar</button><button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--accent); border:2px solid var(--ink); border-radius:11px; padding:10px 16px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;" onClick="{{ openNew }}">Nueva oferta</button></div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;">
+              <sc-for list="{{ jobChips }}" as="ch" hint-placeholder-count="6">
+                <span onClick="{{ ch.onClick }}" style="{{ ch.style }}">{{ ch.label }}</span>
+              </sc-for>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:11px;">
+              <sc-for list="{{ jobs }}" as="j" hint-placeholder-count="5">
+                <div class="tos-card" onClick="{{ openJob }}" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:17px 19px; cursor:pointer; display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+                  <div style="width:46px; height:46px; flex-shrink:0; border-radius:12px; background:{{ j.iconBg }}; display:flex; align-items:center; justify-content:center; font-family:'Archivo',sans-serif; font-weight:900; font-size:17px; color:{{ j.iconColor }};">{{ j.tag }}</div>
+                  <div style="min-width:200px; flex:1;"><div style="display:flex; align-items:center; gap:9px; flex-wrap:wrap;"><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:17px; letter-spacing:-.3px;">{{ j.title }}</span><span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 10px; background:{{ j.badgeBg }}; color:{{ j.badgeColor }};">{{ j.badge }}</span><sc-if value="{{ j.ai }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 10px; background:var(--limeSoft); color:#46540F; border:1px solid #D6E89A;">IA</span></sc-if></div><div style="font-family:'Space Mono',monospace; font-size:11.5px; color:var(--soft); margin-top:6px;">{{ j.meta }}</div></div>
+                  <div style="display:flex; align-items:center; gap:22px; margin-left:auto;"><div style="text-align:right;"><div style="font-size:14px; font-weight:700; white-space:nowrap;">{{ j.salary }}</div><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft); margin-top:2px;">salario / año</div></div><div style="display:flex; align-items:center; gap:7px; background:var(--bg); border:1px solid var(--line); border-radius:999px; padding:6px 12px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="var(--brand)" stroke-width="2"/><path d="M3.5 18a5.5 5.5 0 0111 0M16 11a3 3 0 100-6" stroke="var(--brand)" stroke-width="2" stroke-linecap="round"/></svg><span style="font-size:13px; font-weight:800; color:var(--brand);">{{ j.count }}</span></div></div>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ noJobs }}" hint-placeholder-val="{{ false }}"><div style="text-align:center; padding:44px; color:var(--soft); font-size:14px;">No hay ofertas con estos filtros.</div></sc-if>
+          </div>
+          </sc-if>
+
+          <!-- ================= PIPELINE ================= -->
+          <sc-if value="{{ isPipeline }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+              <div><div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft);">Pipeline</span><span style="width:5px; height:5px; border-radius:50%; background:var(--accent);"></span><span style="font-size:13px; color:var(--soft);">Senior Product Designer · Madrid</span></div><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:34px; letter-spacing:-1px; line-height:1; margin:0;">Candidatos</h2></div>
+              <div style="display:flex; gap:10px;"><button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; color:var(--ink); background:var(--surface); border:2px solid var(--ink); border-radius:11px; padding:9px 15px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Filtrar</button><button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--accent); border:2px solid var(--ink); border-radius:11px; padding:9px 15px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">+ Candidato</button></div>
+            </div>
+            <div style="font-family:'Space Mono',monospace; font-size:11px; color:var(--soft); margin-bottom:10px;">↔ Arrastra las tarjetas entre etapas</div>
+            <div class="tos-scroll" onDragOver="{{ kanbanAutoScroll }}" style="display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; scroll-behavior:smooth; touch-action:pan-x;">
+              <sc-for list="{{ columns }}" as="col" hint-placeholder-count="5">
+                <div onDragOver="{{ col.onDragOver }}" onDragLeave="{{ col.onDragLeave }}" onDrop="{{ col.onDrop }}" style="width:236px; flex-shrink:0; background:var(--surface2); border:2px solid {{ col.edge }}; border-radius:14px; padding:10px; transition:border-color .12s ease;">
+                  <div style="display:flex; align-items:center; gap:8px; padding:4px 6px 10px;"><span style="width:8px; height:8px; border-radius:3px; background:{{ col.dot }};"></span><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13.5px; letter-spacing:-.2px;">{{ col.name }}</span><span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px; color:var(--soft); background:var(--bg); border:1px solid var(--line); border-radius:999px; padding:1px 8px;">{{ col.count }}</span></div>
+                  <div style="display:flex; flex-direction:column; gap:9px; min-height:60px;">
+                    <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="2">
+                      <div class="tos-kcard" draggable="true" onClick="{{ c.open }}" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" style="background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:11px 12px; cursor:grab; box-shadow:0 1px 0 rgba(26,26,23,.04);">
+                        <div style="display:flex; align-items:center; gap:9px;"><span style="width:30px; height:30px; flex-shrink:0; border-radius:50%; background:{{ c.avatarBg }}; color:{{ c.avatarColor }}; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800;">{{ c.initials }}</span><span style="flex:1; min-width:0; font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ c.name }}</span><span style="flex-shrink:0; display:inline-flex; align-items:center; height:23px; padding:0 8px; border-radius:999px; font-size:11.5px; font-weight:800; background:{{ c.fitBg }}; color:{{ c.fitColor }};">{{ c.fit }}</span></div>
+                        <div style="display:flex; align-items:center; gap:7px; margin-top:9px;"><span style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">{{ c.src }}</span><sc-if value="{{ c.isTop }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto; display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; background:var(--limeSoft); color:#46540F; border:1px solid #D6E89A; border-radius:999px; padding:2px 7px 2px 5px;"><span style="display:inline-flex; width:13px; height:13px; border-radius:50%; background:var(--lime); align-items:center; justify-content:center;"><svg width="7" height="7" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="#46540F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Top fit</span></sc-if></div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= EMPLOYEES ================= -->
+          <sc-if value="{{ isEmployees }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+              <div><div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin-bottom:6px;">Personas</div><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:34px; letter-spacing:-1px; line-height:1; margin:0;">Directorio</h2></div>
+              <button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--brand); border:2px solid var(--ink); border-radius:11px; padding:10px 16px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Acciones ▾</button>
+            </div>
+            <div style="position:relative; overflow:hidden; border-radius:16px; border:1px solid rgba(0,0,0,.1); padding:15px 20px; margin-bottom:18px; display:flex; align-items:center; gap:16px; background:linear-gradient(105deg, var(--brand) 0%, #1F5566 46%, #5A4C86 100%);">
+              <div style="position:absolute; inset:-40%; background-image:radial-gradient(rgba(255,255,255,.12) 1px, transparent 1px); background-size:5px 5px; opacity:.5; pointer-events:none;"></div>
+              <div style="position:relative; color:#fff;"><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;">Empieza el onboarding de 3 nuevas personas</div><div style="font-size:12.5px; opacity:.82; margin-top:1px;">Asigna flujos a quienes se incorporan pronto.</div></div>
+              <button style="position:relative; margin-left:auto; font-family:'Archivo',sans-serif; font-weight:800; font-size:12.5px; color:var(--ink); background:var(--lime); border:none; border-radius:9px; padding:8px 15px; cursor:pointer;">Ver</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:9px; background:var(--surface); border:1px solid var(--line); border-radius:11px; padding:9px 13px; flex:1; min-width:240px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="var(--soft)" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="var(--soft)" stroke-width="2" stroke-linecap="round"/></svg><span style="font-size:13px; color:var(--soft);">Buscar empleados…</span></div>
+              <span style="font-size:12.5px; font-weight:600; background:var(--surface); color:var(--soft); border:1px solid var(--line); border-radius:11px; padding:9px 14px;">Departamentos ▾</span>
+              <span style="font-size:12.5px; font-weight:600; background:var(--surface); color:var(--soft); border:1px solid var(--line); border-radius:11px; padding:9px 14px;">Ubicación ▾</span>
+            </div>
+            <div style="font-family:'Space Mono',monospace; font-size:11px; color:var(--soft); margin-bottom:10px;">MOSTRANDO 4 DE 77 EMPLEADOS</div>
+            <div style="display:flex; flex-direction:column; gap:11px;">
+              <sc-for list="{{ employees }}" as="e" hint-placeholder-count="4">
+                <div class="tos-card" onClick="{{ e.open }}" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; cursor:pointer;">
+                  <span style="width:48px; height:48px; flex-shrink:0; border-radius:50%; background:{{ e.bg }}; color:{{ e.color }}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px;">{{ e.initials }}</span>
+                  <div style="min-width:180px;"><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:16px;">{{ e.name }}</div><div style="font-size:13px; color:var(--soft); margin-top:2px;">{{ e.role }}</div></div>
+                  <div style="min-width:170px; font-size:12.5px; color:var(--soft);"><div style="display:flex; align-items:center; gap:7px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="2"/></svg>{{ e.email }}</div><div style="margin-top:5px;">{{ e.loc }}</div></div>
+                  <div style="margin-left:auto; text-align:right;"><div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--soft); text-transform:uppercase;">Reporta a</div><div style="font-size:13px; font-weight:700; margin-top:2px;">{{ e.reports }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= ORG ================= -->
+          <sc-if value="{{ isOrg }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="margin-bottom:24px;"><div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin-bottom:6px;">Personas</div><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:34px; letter-spacing:-1px; line-height:1; margin:0;">Organigrama</h2></div>
+            <div style="display:flex; flex-direction:column; align-items:center;">
+              <div style="background:var(--surface); border:2px solid var(--ink); border-radius:14px; padding:14px 22px; box-shadow:3px 3px 0 var(--shadow); text-align:center;"><div style="width:42px; height:42px; border-radius:50%; background:#DCEFE4; color:#0E5C4A; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; margin:0 auto 8px;">GE</div><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;">Greenholt, Eulah</div><div style="font-size:12px; color:var(--soft);">CEO</div></div>
+              <div style="width:2px; height:26px; background:var(--line);"></div>
+              <div style="display:flex; gap:40px; position:relative;">
+                <div style="position:absolute; top:0; left:12%; right:12%; height:2px; background:var(--line);"></div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding-top:24px;">
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:13px 20px; box-shadow:0 2px 8px -2px rgba(26,26,23,.12); text-align:center;"><div style="width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#8FE3D0,#4FBFA6); color:#063D31; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; margin:0 auto 8px;">MM</div><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:14px;">Muñoz, Michael</div><div style="font-size:11.5px; color:var(--soft);">Talent Lead</div></div>
+                  <div style="width:2px; height:24px; background:var(--line);"></div>
+                  <div style="display:flex; gap:14px;">
+                    <div style="background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:11px 16px; text-align:center;"><div style="width:32px; height:32px; border-radius:50%; background:#E7E0F2; color:#5A4C86; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px; margin:0 auto 6px;">MA</div><div style="font-size:12.5px; font-weight:700;">Aguilar, Marta</div><div style="font-size:11px; color:var(--soft);">Product Designer</div></div>
+                    <div style="background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:11px 16px; text-align:center;"><div style="width:32px; height:32px; border-radius:50%; background:#D6E4F2; color:#2B5E8A; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px; margin:0 auto 6px;">NB</div><div style="font-size:12.5px; font-weight:700;">Bauch, Nina</div><div style="font-size:11px; color:var(--soft);">Recruiter</div></div>
+                  </div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; padding-top:24px;">
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:13px 20px; box-shadow:0 2px 8px -2px rgba(26,26,23,.12); text-align:center;"><div style="width:38px; height:38px; border-radius:50%; background:#F8E7C4; color:#946312; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; margin:0 auto 8px;">SP</div><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:14px;">Pollich, Sam</div><div style="font-size:11.5px; color:var(--soft);">VP Sales</div></div>
+                  <div style="width:2px; height:24px; background:var(--line);"></div>
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:11px 16px; text-align:center;"><div style="width:32px; height:32px; border-radius:50%; background:#F6D9D2; color:#BD4332; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px; margin:0 auto 6px;">OA</div><div style="font-size:12.5px; font-weight:700;">Adams, Okey</div><div style="font-size:11px; color:var(--soft);">Sr. Account Executive</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= TIMEOFF ================= -->
+          <sc-if value="{{ isTimeoff }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+              <div><div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin-bottom:6px;">Personas</div><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:34px; letter-spacing:-1px; line-height:1; margin:0;">Vacaciones</h2></div>
+              <button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--accent); border:2px solid var(--ink); border-radius:11px; padding:10px 16px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Solicitar</button>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px;">
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">DÍAS DISPONIBLES</div><div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; margin-top:6px;">18</div></div>
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">SOLICITUDES PENDIENTES</div><div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; margin-top:6px; color:var(--accent);">2</div></div>
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">FUERA HOY</div><div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; margin-top:6px;">6</div></div>
+            </div>
+            <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;">
+              <div style="display:flex; align-items:center; padding:12px 18px; border-bottom:1px solid var(--line); font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--soft);"><span style="flex:1.4;">Empleado</span><span style="flex:1;">Tipo</span><span style="flex:1.2;">Fechas</span><span style="flex:.6;">Días</span><span style="flex:1; text-align:right;">Estado</span></div>
+              <sc-for list="{{ timeoff }}" as="r" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line);">
+                  <span style="flex:1.4; display:flex; align-items:center; gap:10px;"><span style="width:32px; height:32px; border-radius:50%; background:{{ r.bg }}; color:{{ r.color }}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px;">{{ r.initials }}</span><span style="font-size:13.5px; font-weight:700;">{{ r.name }}</span></span>
+                  <span style="flex:1; font-size:13px; color:var(--soft);">{{ r.type }}</span>
+                  <span style="flex:1.2; font-size:13px; color:var(--soft);">{{ r.range }}</span>
+                  <span style="flex:.6; font-size:13px; font-weight:700;">{{ r.days }}</span>
+                  <span style="flex:1; display:flex; justify-content:flex-end;"><span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 11px; background:{{ r.badgeBg }}; color:{{ r.badgeColor }};">{{ r.badge }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= SETTINGS ================= -->
+          <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:720px;">
+            <div style="margin-bottom:18px;"><div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin-bottom:6px;">Workspace</div><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:34px; letter-spacing:-1px; line-height:1; margin:0;">Ajustes</h2></div>
+            <div style="display:flex; gap:4px; background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:4px; width:fit-content; margin-bottom:20px;">
+              <span style="font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; color:#fff; background:var(--ink); border-radius:8px; padding:7px 16px;">Empresa</span>
+              <span style="font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--soft); padding:7px 16px;">Career site</span>
+              <span style="font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--soft); padding:7px 16px;">Equipo</span>
+            </div>
+            <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px 24px;">
+              <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; margin-bottom:18px;">Datos de la empresa</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Nombre</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">Headhunter & Friends Mgmt.</div></div>
+                <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Slug del career site</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px; color:var(--soft);">talentos.jobs/<span style="color:var(--ink);">hfm</span></div></div>
+                <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Web</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">hfm.com</div></div>
+                <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Sector</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">Tecnología</div></div>
+              </div>
+              <div style="margin-top:16px;"><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Descripción</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:13.5px; line-height:1.5; color:var(--soft); margin-top:7px;">Conectamos talento y empresas con un enfoque humano y basado en datos.</div></div>
+              <div style="display:flex; gap:10px; margin-top:22px;"><button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--accent); border:2px solid var(--ink); border-radius:11px; padding:10px 18px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Guardar cambios</button><button style="font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--soft); background:transparent; border:none; padding:10px 14px; cursor:pointer;">Cancelar</button></div>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= JOB DETAIL ================= -->
+          <sc-if value="{{ isJobDetail }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div data-back="jobs" onClick="{{ back }}" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--soft); cursor:pointer; margin-bottom:14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ofertas</div>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+              <div style="display:flex; gap:16px;">
+                <div style="width:54px; height:54px; flex-shrink:0; border-radius:14px; background:#DCEFE4; color:#0E5C4A; display:flex; align-items:center; justify-content:center; font-family:'Archivo',sans-serif; font-weight:900; font-size:19px;">PD</div>
+                <div>
+                  <div style="display:flex; align-items:center; gap:9px; flex-wrap:wrap;"><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:28px; letter-spacing:-.8px; line-height:1; margin:0;">Senior Product Designer</h2><span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 10px; background:#DCEFE3; color:#1B6B4F;">activa</span><span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 10px; background:var(--limeSoft); color:#46540F; border:1px solid #D6E89A;">IA</span></div>
+                  <div style="font-family:'Space Mono',monospace; font-size:12px; color:var(--soft); margin-top:8px;">Madrid · Jornada completa · Producto · 55.000–75.000 € · 41 candidatos</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:10px;"><button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; color:var(--ink); background:var(--surface); border:2px solid var(--ink); border-radius:11px; padding:9px 15px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Editar</button><button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--accent); border:2px solid var(--ink); border-radius:11px; padding:9px 15px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Distribuir</button></div>
+            </div>
+            <div style="display:flex; gap:4px; background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:4px; width:fit-content; margin-bottom:20px;">
+              <span data-tab="pipeline" onClick="{{ goJobTab }}" style="{{ jt.pipeline }}">Pipeline</span>
+              <span data-tab="distribucion" onClick="{{ goJobTab }}" style="{{ jt.distribucion }}">Distribución</span>
+              <span data-tab="descripcion" onClick="{{ goJobTab }}" style="{{ jt.descripcion }}">Descripción</span>
+            </div>
+
+            <sc-if value="{{ isJTpipeline }}" hint-placeholder-val="{{ true }}">
+              <div>
+                <div style="font-family:'Space Mono',monospace; font-size:11px; color:var(--soft); margin-bottom:10px;">↔ Arrastra las tarjetas · clic para abrir la ficha</div>
+                <div class="tos-scroll" onDragOver="{{ kanbanAutoScroll }}" style="display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; scroll-behavior:smooth; touch-action:pan-x;">
+                  <sc-for list="{{ columns }}" as="col" hint-placeholder-count="5">
+                    <div onDragOver="{{ col.onDragOver }}" onDragLeave="{{ col.onDragLeave }}" onDrop="{{ col.onDrop }}" style="width:228px; flex-shrink:0; background:var(--surface2); border:2px solid {{ col.edge }}; border-radius:14px; padding:10px; transition:border-color .12s ease;">
+                      <div style="display:flex; align-items:center; gap:8px; padding:4px 6px 10px;"><span style="width:8px; height:8px; border-radius:3px; background:{{ col.dot }};"></span><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13.5px; letter-spacing:-.2px;">{{ col.name }}</span><span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px; color:var(--soft); background:var(--bg); border:1px solid var(--line); border-radius:999px; padding:1px 8px;">{{ col.count }}</span></div>
+                      <div style="display:flex; flex-direction:column; gap:9px; min-height:50px;">
+                        <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="2">
+                          <div class="tos-kcard" draggable="true" onClick="{{ c.open }}" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" style="background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:11px 12px; cursor:grab; box-shadow:0 1px 0 rgba(26,26,23,.04);">
+                            <div style="display:flex; align-items:center; gap:9px;"><span style="width:30px; height:30px; flex-shrink:0; border-radius:50%; background:{{ c.avatarBg }}; color:{{ c.avatarColor }}; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800;">{{ c.initials }}</span><span style="flex:1; min-width:0; font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ c.name }}</span><span style="flex-shrink:0; display:inline-flex; align-items:center; height:23px; padding:0 8px; border-radius:999px; font-size:11.5px; font-weight:800; background:{{ c.fitBg }}; color:{{ c.fitColor }};">{{ c.fit }}</span></div>
+                            <div style="margin-top:9px;"><span style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">{{ c.src }}</span></div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isJTdist }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <div style="position:relative; overflow:hidden; background:var(--ink); color:#F4F0E8; border-radius:16px; padding:18px 20px; margin-bottom:16px;">
+                  <div style="display:flex; align-items:center; gap:9px; margin-bottom:10px;"><span style="width:26px; height:26px; border-radius:8px; background:rgba(198,242,78,.16); display:flex; align-items:center; justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 19V9M10 19V5M16 19v-7M20 19V11" stroke="#C6F24E" stroke-width="2" stroke-linecap="round"/></svg></span><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:14px;">Agente de canales</span><span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:10.5px; color:#C6F24E; background:rgba(198,242,78,.12); border:1px solid rgba(198,242,78,.3); border-radius:999px; padding:3px 10px;">Objetivo: calidad · 1.200 €</span></div>
+                  <p style="font-size:14px; line-height:1.55; color:#CFCAC0; margin:0 0 12px;">Con tu presupuesto y objetivo, prioriza <span style="color:#fff; font-weight:700;">Infojobs</span> y <span style="color:#fff; font-weight:700;">Career site</span> (mejor coste por aplicación y fit). Considera <span style="color:#fff; font-weight:700;">pausar Indeed</span>: CPA alto para el fit que aporta.</p>
+                  <div style="display:flex; gap:8px;"><button style="font-family:'Archivo',sans-serif; font-weight:800; font-size:12px; color:var(--ink); background:var(--lime); border:none; border-radius:9px; padding:8px 14px; cursor:pointer;">Aplicar recomendación</button><span style="margin-left:auto; align-self:center; font-family:'Space Mono',monospace; font-size:10.5px; color:#8C877E;">Tú decides</span></div>
+                </div>
+                <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;">
+                  <div style="display:flex; align-items:center; padding:11px 18px; border-bottom:1px solid var(--line); font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--soft);"><span style="flex:1.4;">Canal</span><span style="flex:1; text-align:right;">Views</span><span style="flex:1; text-align:right;">Aplicaciones</span><span style="flex:1; text-align:right;">CPA</span></div>
+                  <sc-for list="{{ channels }}" as="ch" hint-placeholder-count="4">
+                    <div style="display:flex; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line);"><span style="flex:1.4; display:flex; align-items:center; gap:10px;"><span style="width:9px; height:9px; border-radius:50%; background:{{ ch.dot }};"></span><span style="font-size:13.5px; font-weight:700;">{{ ch.name }}</span></span><span style="flex:1; text-align:right; font-size:13px; color:var(--soft);">{{ ch.views }}</span><span style="flex:1; text-align:right; font-size:13px; font-weight:700;">{{ ch.apps }}</span><span style="flex:1; text-align:right; font-family:'Space Mono',monospace; font-size:12.5px; font-weight:700; color:{{ ch.cpaColor }};">{{ ch.cpa }}</span></div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isJTdesc }}" hint-placeholder-val="{{ false }}">
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px; max-width:760px;">
+                <h3 style="font-family:'Archivo',sans-serif; font-weight:800; font-size:18px; margin:0 0 10px;">Sobre el rol</h3>
+                <p style="font-size:14.5px; line-height:1.6; color:#54504A; margin:0 0 18px;">Buscamos un Senior Product Designer para liderar el diseño de extremo a extremo de nuestras herramientas de talento. Trabajarás con producto e ingeniería para llevar ideas de la investigación al lanzamiento, definiendo sistemas que escalen.</p>
+                <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft); margin-bottom:10px;">Skills requeridas</div>
+                <div style="display:flex; flex-wrap:wrap; gap:7px;">
+                  <span style="font-size:12.5px; font-weight:600; background:var(--surface2); color:#54504A; border:1px solid var(--line); border-radius:999px; padding:5px 11px;">Product Strategy</span>
+                  <span style="font-size:12.5px; font-weight:600; background:var(--surface2); color:#54504A; border:1px solid var(--line); border-radius:999px; padding:5px 11px;">Design Systems</span>
+                  <span style="font-size:12.5px; font-weight:600; background:var(--surface2); color:#54504A; border:1px solid var(--line); border-radius:999px; padding:5px 11px;">User Research</span>
+                  <span style="font-size:12.5px; font-weight:600; background:var(--surface2); color:#54504A; border:1px solid var(--line); border-radius:999px; padding:5px 11px;">Prototyping</span>
+                  <span style="font-size:12.5px; font-weight:600; background:var(--surface2); color:#54504A; border:1px solid var(--line); border-radius:999px; padding:5px 11px;">Figma</span>
+                  <span style="font-size:12.5px; font-weight:600; background:var(--surface2); color:#54504A; border:1px solid var(--line); border-radius:999px; padding:5px 11px;">Team Leadership</span>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+          </sc-if>
+
+          <!-- ================= CANDIDATE DETAIL ================= -->
+          <sc-if value="{{ isCandidateDetail }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div data-back="pipeline" onClick="{{ back }}" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--soft); cursor:pointer; margin-bottom:14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Candidatos</div>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+              <div style="display:flex; gap:16px; align-items:center;">
+                <span style="width:58px; height:58px; flex-shrink:0; border-radius:50%; background:{{ cand.avatarBg }}; color:{{ cand.avatarColor }}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:19px;">{{ cand.initials }}</span>
+                <div>
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:28px; letter-spacing:-.8px; line-height:1; margin:0;">{{ cand.name }}</h2><span style="display:inline-flex; align-items:center; height:26px; padding:0 10px; border-radius:999px; font-size:13px; font-weight:800; background:{{ cand.fitBg }}; color:{{ cand.fitColor }}; white-space:nowrap;">Fit {{ cand.fit }}</span></div>
+                  <div style="font-family:'Space Mono',monospace; font-size:12px; color:var(--soft); margin-top:8px;">{{ cand.src }} · etapa actual: {{ cand.stageName }}</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:10px;"><button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; color:var(--ink); background:var(--surface); border:2px solid var(--ink); border-radius:11px; padding:9px 15px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer; white-space:nowrap;">Programar entrevista</button><button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--accent); border:2px solid var(--ink); border-radius:11px; padding:9px 15px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Mover etapa</button></div>
+            </div>
+            <div style="display:flex; gap:4px; background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:4px; width:fit-content; margin-bottom:20px; flex-wrap:wrap;">
+              <span data-tab="perfil" onClick="{{ goCandTab }}" style="{{ ct.perfil }}">Perfil</span>
+              <span data-tab="analisis" onClick="{{ goCandTab }}" style="{{ ct.analisis }}">Análisis IA</span>
+              <span data-tab="entrevistas" onClick="{{ goCandTab }}" style="{{ ct.entrevistas }}">Entrevistas</span>
+              <span data-tab="historial" onClick="{{ goCandTab }}" style="{{ ct.historial }}">Historial</span>
+              <span data-tab="notas" onClick="{{ goCandTab }}" style="{{ ct.notas }}">Notas</span>
+            </div>
+
+            <sc-if value="{{ isCTperfil }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:14px;">
+                <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px;">
+                  <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft); margin-bottom:8px;">Resumen</div>
+                  <p style="font-size:14.5px; line-height:1.6; color:#3A3833; margin:0 0 20px;">Diseñadora de producto con 8 años de experiencia liderando discovery y design systems en SaaS B2B. Ha llevado productos de 0 a 1 y escalado equipos de diseño en entornos de alta rotación.</p>
+                  <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft); margin-bottom:10px;">Skills</div>
+                  <div style="display:flex; flex-wrap:wrap; gap:7px;">
+                    <span style="font-size:12.5px; font-weight:600; background:var(--limeSoft); color:#46540F; border:1px solid #D6E89A; border-radius:999px; padding:5px 11px;">Product Strategy ✓</span>
+                    <span style="font-size:12.5px; font-weight:600; background:var(--limeSoft); color:#46540F; border:1px solid #D6E89A; border-radius:999px; padding:5px 11px;">Design Systems ✓</span>
+                    <span style="font-size:12.5px; font-weight:600; background:var(--limeSoft); color:#46540F; border:1px solid #D6E89A; border-radius:999px; padding:5px 11px;">User Research ✓</span>
+                    <span style="font-size:12.5px; font-weight:600; background:var(--surface2); color:#54504A; border:1px solid var(--line); border-radius:999px; padding:5px 11px;">Prototyping</span>
+                    <span style="font-size:12.5px; font-weight:600; background:var(--surface2); color:#54504A; border:1px solid var(--line); border-radius:999px; padding:5px 11px;">Figma</span>
+                  </div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:14px;">
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px;">
+                    <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft); margin-bottom:12px;">Contacto</div>
+                    <div style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:9px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="var(--soft)" stroke-width="2"/><path d="M4 7l8 6 8-6" stroke="var(--soft)" stroke-width="2"/></svg>{{ cand.email }}</div>
+                    <div style="display:flex; align-items:center; gap:8px; font-size:13px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-3 2a12 12 0 005 5l2-3 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2Z" stroke="var(--soft)" stroke-width="2" stroke-linejoin="round"/></svg>+34 600 12 34 56</div>
+                  </div>
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px;">
+                    <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft); margin-bottom:12px;">Experiencia</div>
+                    <div style="font-size:13.5px; font-weight:700;">Lead Product Designer · Lumina</div><div style="font-size:12px; color:var(--soft); margin-bottom:10px;">2021 — actualidad</div>
+                    <div style="font-size:13.5px; font-weight:700;">Product Designer · Caldera</div><div style="font-size:12px; color:var(--soft);">2018 — 2021</div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isCTanalisis }}" hint-placeholder-val="{{ false }}">
+              <div style="background:var(--ink); color:#F4F0E8; border-radius:18px; padding:24px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;"><span style="width:30px; height:30px; border-radius:9px; background:rgba(198,242,78,.16); display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#C6F24E" stroke-width="2" stroke-linejoin="round"/></svg></span><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:17px;">Agente de análisis</span><span style="margin-left:auto; font-size:12px; font-weight:800; color:#0E5C4A; background:#C6F24E; border-radius:999px; padding:3px 11px; white-space:nowrap;">Fit {{ cand.fit }}</span></div>
+                <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:22px;">
+                  <div>
+                    <p style="font-size:14.5px; line-height:1.6; color:#E4E0D7; margin:0 0 16px;">{{ cand.name }} encaja en 8 de 10 skills clave del rol. Perfil sólido en estrategia y sistemas de diseño. Único gap relevante: experiencia liderando squads multidisciplinares de forma directa.</p>
+                    <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:#C6F24E; margin-bottom:10px;">Preguntas sugeridas</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                      <div style="background:#26241F; border:1px solid #38352E; border-radius:11px; padding:11px 13px; font-size:13px; line-height:1.45;">¿Has liderado equipos multidisciplinares de extremo a extremo? ¿Cómo estructuraste el proceso?</div>
+                      <div style="background:#26241F; border:1px solid #38352E; border-radius:11px; padding:11px 13px; font-size:13px; line-height:1.45;">Cuéntame un design system que hayas escalado y cómo midió impacto el equipo.</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; margin-top:16px;"><button style="font-family:'Archivo',sans-serif; font-weight:800; font-size:12px; color:var(--ink); background:var(--lime); border:none; border-radius:9px; padding:8px 14px; cursor:pointer;">Añadir a la entrevista</button><span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:10.5px; color:#8C877E;">El agente propone · tú decides</span></div>
+                  </div>
+                  <div style="background:#26241F; border:1px solid #38352E; border-radius:14px; padding:18px;">
+                    <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:#8C877E; margin-bottom:14px;">Desglose de fit</div>
+                    <div style="margin-bottom:14px;"><div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px;"><span style="color:#E4E0D7;">Skills</span><span style="font-weight:700; color:#C6F24E;">9/10</span></div><div style="height:7px; border-radius:99px; background:#38352E; overflow:hidden;"><div style="width:90%; height:100%; background:#C6F24E;"></div></div></div>
+                    <div style="margin-bottom:14px;"><div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px;"><span style="color:#E4E0D7;">Experiencia</span><span style="font-weight:700; color:#C6F24E;">8/10</span></div><div style="height:7px; border-radius:99px; background:#38352E; overflow:hidden;"><div style="width:80%; height:100%; background:#C6F24E;"></div></div></div>
+                    <div><div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px;"><span style="color:#E4E0D7;">Liderazgo</span><span style="font-weight:700; color:#E0A23C;">6/10</span></div><div style="height:7px; border-radius:99px; background:#38352E; overflow:hidden;"><div style="width:60%; height:100%; background:#E0A23C;"></div></div></div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isCTentrev }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <!-- LISTA -->
+                <sc-if value="{{ ivIsList }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex; flex-direction:column; gap:11px;">
+                    <sc-if value="{{ ivNeedsSchedule }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:#FCEEEA; border:1.5px solid #F1543F; border-radius:14px; padding:15px 18px;">
+                        <span style="width:38px; height:38px; flex-shrink:0; border-radius:10px; background:#F1543F; display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#fff" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4M12 13v4M10 15h4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
+                        <div style="flex:1; min-width:200px;"><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:14.5px; color:#9B2D1C;">En Entrevista, sin agenda</div><div style="font-size:12.5px; color:#7A3326; margin-top:2px;">{{ cand.name }} avanzó a Entrevista pero aún no tiene ninguna programada.</div></div>
+                        <button onClick="{{ openScheduler }}" class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--accent); border:2px solid var(--ink); border-radius:11px; padding:10px 18px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Agendar entrevista</button>
+                      </div>
+                    </sc-if>
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                      <span style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Entrevistas</span>
+                      <button onClick="{{ openScheduler }}" class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; color:var(--ink); background:var(--surface); border:2px solid var(--ink); border-radius:11px; padding:8px 14px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">+ Programar</button>
+                    </div>
+                    <sc-for list="{{ ivList }}" as="iv" hint-placeholder-count="2">
+                      <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <div style="width:42px; height:42px; flex-shrink:0; border-radius:11px; background:var(--brandSoft); display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="var(--brand)" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="var(--brand)" stroke-width="2" stroke-linecap="round"/></svg></div>
+                        <div style="flex:1; min-width:160px;"><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;">{{ iv.stage }}</div><div style="font-size:12.5px; color:var(--soft); margin-top:2px;">con {{ iv.who }} · {{ iv.dur }}</div></div>
+                        <div style="font-family:'Space Mono',monospace; font-size:12px; color:var(--soft);">{{ iv.when }}</div>
+                        <span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:4px 11px; background:{{ iv.bg }}; color:{{ iv.color }};">{{ iv.badge }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <!-- AGENDAR: MANUAL -->
+                <sc-if value="{{ ivIsManual }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px;">
+                    <div style="display:flex; gap:4px; background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:4px; width:fit-content; margin-bottom:20px;">
+                      <span onClick="{{ ivToManual }}" style="font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; color:#fff; background:var(--ink); border-radius:8px; padding:7px 15px; cursor:pointer;">Agendar manualmente</span>
+                      <span onClick="{{ ivToAvail }}" style="font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--soft); padding:7px 15px; cursor:pointer;">Enviar disponibilidad</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+                      <div style="display:flex; flex-direction:column; gap:16px;">
+                        <div>
+                          <label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Tipo de entrevista</label>
+                          <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:8px;"><sc-for list="{{ ivTypeChips }}" as="c" hint-placeholder-count="4"><span onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</span></sc-for></div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                          <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Fecha</label><input type="date" value="{{ ivDate }}" onChange="{{ onIvDate }}" class="car-field" style="width:100%; font-family:inherit; font-size:13.5px; padding:10px 12px; margin-top:8px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);"></div>
+                          <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Hora</label><input type="time" value="{{ ivTime }}" onChange="{{ onIvTime }}" class="car-field" style="width:100%; font-family:inherit; font-size:13.5px; padding:10px 12px; margin-top:8px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);"></div>
+                        </div>
+                        <div>
+                          <label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Duración</label>
+                          <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:8px;"><sc-for list="{{ ivDurChips }}" as="c" hint-placeholder-count="3"><span onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</span></sc-for></div>
+                        </div>
+                        <div>
+                          <label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Entrevistador/a</label>
+                          <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:8px;"><sc-for list="{{ interviewerChips }}" as="m" hint-placeholder-count="4"><span onClick="{{ m.onClick }}" style="{{ m.style }}">{{ m.name }}</span></sc-for></div>
+                        </div>
+                        <div>
+                          <label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Otros participantes</label>
+                          <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:8px;"><sc-for list="{{ participantChips }}" as="m" hint-placeholder-count="4"><span onClick="{{ m.onClick }}" style="{{ m.style }}">{{ m.name }}</span></sc-for></div>
+                        </div>
+                        <div style="border-top:1px solid var(--line); padding-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                          <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Candidato</label><input value="{{ ivCandName }}" onChange="{{ onIvName }}" class="car-field" style="width:100%; font-family:inherit; font-size:13.5px; padding:10px 12px; margin-top:8px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);"></div>
+                          <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Email</label><input value="{{ ivCandEmail }}" onChange="{{ onIvEmail }}" class="car-field" style="width:100%; font-family:inherit; font-size:13.5px; padding:10px 12px; margin-top:8px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);"></div>
+                        </div>
+                      </div>
+                      <!-- vista previa del email -->
+                      <div style="display:flex; flex-direction:column; gap:12px;">
+                        <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Vista previa del mensaje</div>
+                        <div style="background:var(--bg); border:1px solid var(--line); border-radius:13px; overflow:hidden;">
+                          <div style="padding:13px 15px; border-bottom:1px solid var(--line); font-size:12.5px;"><span style="color:var(--soft);">Para:</span> <b>{{ ivCandName }}</b> &lt;{{ ivCandEmail }}&gt;<br><span style="color:var(--soft);">Asunto:</span> <b>Entrevista · Senior Product Designer</b></div>
+                          <div style="padding:15px; font-size:13.5px; line-height:1.6; color:#3A3833;">
+                            Hola {{ ivCandName }},<br><br>
+                            Gracias por tu interés en <b>Senior Product Designer</b>. Nos gustaría avanzar con una entrevista de <b>{{ pvType }}</b>.<br><br>
+                            <span style="font-family:'Space Mono',monospace; font-size:12px; color:var(--soft);">📅 {{ pvWhen }} · {{ pvDur }}<br>👤 {{ pvInterviewer }}<br>👥 {{ pvParticipants }}</span><br><br>
+                            Se incluirá un enlace de videollamada en la invitación de calendario.<br><br>
+                            Un saludo,<br>Equipo de Talento · Acme
+                          </div>
+                        </div>
+                        <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--soft);">Se enviará invitación de calendario + email al candidato y participantes.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:22px;">
+                      <button onClick="{{ sendInvite }}" class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--brand); border:2px solid var(--ink); border-radius:11px; padding:11px 20px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Enviar invitación</button>
+                      <button onClick="{{ ivCancel }}" style="font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--soft); background:transparent; border:none; padding:11px 14px; cursor:pointer;">Cancelar</button>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- AGENDAR: DISPONIBILIDAD -->
+                <sc-if value="{{ ivIsAvail }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px;">
+                    <div style="display:flex; gap:4px; background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:4px; width:fit-content; margin-bottom:20px;">
+                      <span onClick="{{ ivToManual }}" style="font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--soft); padding:7px 15px; cursor:pointer;">Agendar manualmente</span>
+                      <span onClick="{{ ivToAvail }}" style="font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; color:#fff; background:var(--ink); border-radius:8px; padding:7px 15px; cursor:pointer;">Enviar disponibilidad</span>
+                    </div>
+                    <div style="font-size:13.5px; color:var(--soft); margin-bottom:18px; max-width:520px;">El candidato recibe un enlace con los huecos del entrevistador y elige el que le va bien. La invitación se crea sola al confirmar.</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+                      <div style="display:flex; flex-direction:column; gap:16px;">
+                        <div>
+                          <label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Entrevistador/a</label>
+                          <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:8px;"><sc-for list="{{ interviewerChips }}" as="m" hint-placeholder-count="4"><span onClick="{{ m.onClick }}" style="{{ m.style }}">{{ m.name }}</span></sc-for></div>
+                        </div>
+                        <div>
+                          <label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Huecos disponibles</label>
+                          <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:8px;"><sc-for list="{{ slotChips }}" as="s" hint-placeholder-count="5"><span onClick="{{ s.onClick }}" style="{{ s.style }}">{{ s.label }}</span></sc-for></div>
+                        </div>
+                      </div>
+                      <div style="display:flex; flex-direction:column; gap:12px;">
+                        <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Se enviará al candidato</div>
+                        <div style="background:var(--bg); border:1px solid var(--line); border-radius:13px; padding:15px; font-size:13.5px; line-height:1.6; color:#3A3833;">Elige el hueco que prefieras para tu entrevista de <b>{{ pvType }}</b> con <b>{{ pvInterviewer }}</b>:<br><br><span style="font-family:'Space Mono',monospace; font-size:12px; color:var(--brand); font-weight:700;">{{ ivSlotsText }}</span></div>
+                      </div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:22px;">
+                      <button onClick="{{ sendAvailability }}" class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--brand); border:2px solid var(--ink); border-radius:11px; padding:11px 20px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Enviar disponibilidad</button>
+                      <button onClick="{{ ivCancel }}" style="font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--soft); background:transparent; border:none; padding:11px 14px; cursor:pointer;">Cancelar</button>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- ENVIADO -->
+                <sc-if value="{{ ivIsSent }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:34px; text-align:center;">
+                    <div style="width:54px; height:54px; border-radius:16px; background:var(--limeSoft); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke="#46540F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:22px; letter-spacing:-.5px;">Entrevista enviada</div>
+                    <div style="font-size:14px; color:var(--soft); margin:8px 0 18px;">El candidato y los participantes recibieron la invitación. Ya aparece en su agenda.</div>
+                    <button onClick="{{ ivCancel }}" class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:var(--ink); background:var(--surface); border:2px solid var(--ink); border-radius:11px; padding:10px 18px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Ver entrevistas</button>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isCThist }}" hint-placeholder-val="{{ false }}">
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:8px 22px;">
+                <sc-for list="{{ history }}" as="h" hint-placeholder-count="3">
+                  <div style="display:flex; gap:14px; padding:16px 0; border-bottom:1px solid var(--line);">
+                    <span style="width:11px; height:11px; flex-shrink:0; border-radius:50%; background:{{ h.dot }}; margin-top:4px;"></span>
+                    <div style="flex:1;"><div style="font-size:14px; font-weight:700;">{{ h.from }} → {{ h.to }}</div><div style="font-size:13px; color:#54504A; margin-top:3px;">{{ h.reason }}</div><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft); margin-top:6px;">{{ h.who }} · {{ h.when }}</div></div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isCTnotas }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:720px;">
+                <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px 20px; margin-bottom:12px;">
+                  <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft); margin-bottom:10px;">Nota interna</div>
+                  <textarea key="{{ noteKey }}" onInput="{{ onNoteDraft }}" placeholder="Añadir una nota interna sobre el candidato…" style="width:100%; resize:none; height:62px; font-family:'Hanken Grotesk',sans-serif; font-size:13.5px; color:var(--ink); background:var(--bg); border:1.5px solid var(--line); border-radius:11px; padding:10px 12px; outline:none;"></textarea>
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+                    <span style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">Solo el equipo · no visible para el candidato</span>
+                    <button onClick="{{ addNote }}" class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--brand); border:2px solid var(--ink); border-radius:11px; padding:9px 16px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Guardar nota</button>
+                  </div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                  <sc-for list="{{ notesList }}" as="n" hint-placeholder-count="2">
+                    <div style="background:var(--surface); border:1px solid var(--line); border-radius:13px; padding:14px 16px;">
+                      <p style="font-size:14px; line-height:1.55; color:#3A3833; margin:0;">{{ n.body }}</p>
+                      <div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft); margin-top:9px;">{{ n.author }} · {{ n.when }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+          </sc-if>
+
+          <!-- ================= NUEVA OFERTA (IA) ================= -->
+          <sc-if value="{{ isNewJob }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div data-back="jobs" onClick="{{ back }}" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--soft); cursor:pointer; margin-bottom:14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ofertas</div>
+            <div style="margin-bottom:20px;"><div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin-bottom:6px;">Reclutamiento · crear</div><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; line-height:1; margin:0;">Nueva oferta</h2></div>
+            <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:16px; align-items:start;">
+              <div style="display:flex; flex-direction:column; gap:16px;">
+                <!-- punto de partida con IA -->
+                <div style="background:var(--ink); color:#F4F0E8; border-radius:16px; padding:20px;">
+                  <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px;"><span style="width:26px; height:26px; border-radius:8px; background:rgba(198,242,78,.16); display:flex; align-items:center; justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#C6F24E" stroke-width="2" stroke-linejoin="round"/></svg></span><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:14px;">Agente redactor</span></div>
+                  <div style="font-size:13px; color:#CFCAC0; margin-bottom:10px;">Describe el rol en una frase y genero el borrador completo: título, descripción, skills y salario de mercado.</div>
+                  <textarea onInput="{{ onBrief }}" placeholder="Ej.: Product designer senior para B2B SaaS, remoto, con foco en design systems" style="width:100%; resize:none; height:62px; font-family:'Hanken Grotesk',sans-serif; font-size:13.5px; color:#1A1A17; background:#FCFAF6; border:none; border-radius:10px; padding:11px 13px; outline:none;"></textarea>
+                  <div style="display:flex; align-items:center; gap:10px; margin-top:12px;"><button onClick="{{ genDraft }}" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:var(--ink); background:var(--lime); border:none; border-radius:10px; padding:10px 16px; cursor:pointer;">Generar borrador con IA</button><span style="font-family:'Space Mono',monospace; font-size:10.5px; color:#8C877E;">Edítalo todo después · tú decides</span></div>
+                </div>
+                <!-- formulario -->
+                <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px;">
+                  <sc-if value="{{ drafted }}" hint-placeholder-val="{{ false }}"><div style="display:inline-flex; align-items:center; gap:7px; background:var(--limeSoft); border:1px solid #D6E89A; border-radius:999px; padding:5px 11px; margin-bottom:18px;"><span style="display:inline-flex; width:15px; height:15px; border-radius:50%; background:var(--lime); align-items:center; justify-content:center;"><svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="#46540F" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span style="font-size:12px; font-weight:700; color:#46540F;">Borrador generado · revísalo y ajusta lo que quieras</span></div></sc-if>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="grid-column:1 / -1;"><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Título</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:14px; font-weight:600; margin-top:7px; color:{{ draftTitleColor }};">{{ draftTitle }}</div></div>
+                    <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Ubicación</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:14px; font-weight:600; margin-top:7px; color:{{ draftTitleColor }};">{{ draftLoc }}</div></div>
+                    <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Tipo · Sector</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:14px; font-weight:600; margin-top:7px; color:{{ draftTitleColor }};">{{ draftType }}</div></div>
+                    <div style="grid-column:1 / -1;"><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Descripción</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:13.5px; line-height:1.55; margin-top:7px; color:{{ draftDescColor }}; min-height:54px;">{{ draftDesc }}</div></div>
+                  </div>
+                  <div style="margin-top:16px;"><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Skills</label><div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:9px;"><sc-for list="{{ draftSkills }}" as="sk" hint-placeholder-count="5"><span style="font-size:12.5px; font-weight:600; background:var(--surface2); color:#54504A; border:1px solid var(--line); border-radius:999px; padding:5px 11px;">{{ sk }}</span></sc-for></div></div>
+                  <div style="display:flex; gap:10px; margin-top:22px;"><button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--accent); border:2px solid var(--ink); border-radius:11px; padding:10px 18px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Publicar oferta</button><button data-back="jobs" onClick="{{ back }}" style="font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--soft); background:transparent; border:none; padding:10px 14px; cursor:pointer;">Cancelar</button></div>
+                </div>
+              </div>
+              <!-- rail agente -->
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px;">
+                <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft); margin-bottom:14px;">Sugerencias del agente</div>
+                <sc-if value="{{ drafted }}" hint-placeholder-val="{{ true }}">
+                  <div>
+                    <div style="font-size:12px; font-weight:700; color:var(--brand); margin-bottom:8px;">Rango de mercado</div>
+                    <div style="background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:12px 13px; margin-bottom:16px;"><div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:20px; letter-spacing:-.5px;">55.000 – 75.000 €</div><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft); margin-top:3px;">Producto · Senior · España</div></div>
+                    <div style="font-size:12px; font-weight:700; color:var(--brand); margin-bottom:8px;">Skills sugeridas</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;"><span style="font-size:11.5px; font-weight:600; background:var(--limeSoft); color:#46540F; border:1px solid #D6E89A; border-radius:999px; padding:4px 9px; white-space:nowrap;">+ User Research</span><span style="font-size:11.5px; font-weight:600; background:var(--limeSoft); color:#46540F; border:1px solid #D6E89A; border-radius:999px; padding:4px 9px; white-space:nowrap;">+ Prototyping</span></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ notDrafted }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:13px; color:var(--soft); line-height:1.55;">Escribe una frase arriba y pulsa <b style="color:var(--ink);">Generar borrador</b>. El agente propone título, descripción, skills y rango salarial de mercado.</div>
+                </sc-if>
+              </div>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= IMPORTAR (wizard) ================= -->
+          <sc-if value="{{ isImport }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:780px;">
+            <div data-back="jobs" onClick="{{ back }}" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--soft); cursor:pointer; margin-bottom:14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ofertas</div>
+            <div style="margin-bottom:20px;"><div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin-bottom:6px;">Reclutamiento · importar</div><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; line-height:1; margin:0;">Importar ofertas</h2></div>
+            <!-- stepper -->
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:22px; flex-wrap:wrap;">
+              <sc-for list="{{ wizSteps }}" as="w" hint-placeholder-count="4">
+                <span style="display:inline-flex; align-items:center; gap:8px;"><span style="width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; background:{{ w.bg }}; color:{{ w.color }}; border:1px solid {{ w.border }};">{{ w.n }}</span><span style="font-size:12.5px; font-weight:{{ w.weight }}; color:{{ w.label }};">{{ w.name }}</span><span style="width:18px; height:1px; background:var(--line);"></span></span>
+              </sc-for>
+            </div>
+
+            <sc-if value="{{ isWiz1 }}" hint-placeholder-val="{{ true }}">
+              <div>
+                <div style="font-size:14px; color:var(--soft); margin-bottom:16px;">Elige el origen. El sistema extrae las ofertas, las normaliza al schema interno y detecta duplicados.</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div onClick="{{ wizNext }}" class="tos-card" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; cursor:pointer; display:flex; gap:13px; align-items:center;"><div style="width:42px; height:42px; border-radius:11px; background:#DCEFE4; display:flex; align-items:center; justify-content:center; font-family:'Archivo',sans-serif; font-weight:900; font-size:13px; color:#0E5C4A;">XML</div><div><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;">Feed XML</div><div style="font-size:12.5px; color:var(--soft);">Estándar de job boards</div></div></div>
+                  <div onClick="{{ wizNext }}" class="tos-card" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; cursor:pointer; display:flex; gap:13px; align-items:center;"><div style="width:42px; height:42px; border-radius:11px; background:#F8E7C4; display:flex; align-items:center; justify-content:center; font-family:'Archivo',sans-serif; font-weight:900; font-size:13px; color:#946312;">CSV</div><div><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;">CSV / Excel</div><div style="font-size:12.5px; color:var(--soft);">Sube un archivo</div></div></div>
+                  <div onClick="{{ wizNext }}" class="tos-card" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; cursor:pointer; display:flex; gap:13px; align-items:center;"><div style="width:42px; height:42px; border-radius:11px; background:#E7E0F2; display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M10 14a4 4 0 015.66 0l2 2a4 4 0 01-5.66 5.66l-1-1M14 10a4 4 0 00-5.66 0l-2 2a4 4 0 005.66 5.66l1-1" stroke="#5A4C86" stroke-width="2" stroke-linecap="round"/></svg></div><div><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;">Desde una URL</div><div style="font-size:12.5px; color:var(--soft);">Pega el enlace de la oferta</div></div></div>
+                  <div onClick="{{ wizNext }}" class="tos-card" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; cursor:pointer; display:flex; gap:13px; align-items:center;"><div style="width:42px; height:42px; border-radius:11px; background:#D6E4F2; display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="1.5" stroke="#2B5E8A" stroke-width="2"/><rect x="3" y="14" width="18" height="6" rx="1.5" stroke="#2B5E8A" stroke-width="2"/></svg></div><div><div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;">API externa</div><div style="font-size:12.5px; color:var(--soft);">Conecta tu ATS actual</div></div></div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isWiz2 }}" hint-placeholder-val="{{ false }}">
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px;">
+                <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; margin-bottom:6px;">Normalización al schema interno</div>
+                <div style="font-size:13px; color:var(--soft); margin-bottom:16px;">3 ofertas detectadas. Así mapean los campos del origen a TalentOS:</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <div style="display:flex; align-items:center; gap:12px; font-family:'Space Mono',monospace; font-size:12px;"><span style="flex:1; color:var(--soft);">job_title</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="var(--soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="flex:1; font-weight:700; color:var(--ink);">título</span></div>
+                  <div style="display:flex; align-items:center; gap:12px; font-family:'Space Mono',monospace; font-size:12px;"><span style="flex:1; color:var(--soft);">salary_range</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="var(--soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="flex:1; font-weight:700; color:var(--ink);">salary_min / salary_max</span></div>
+                  <div style="display:flex; align-items:center; gap:12px; font-family:'Space Mono',monospace; font-size:12px;"><span style="flex:1; color:var(--soft);">contract</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="var(--soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="flex:1; font-weight:700; color:var(--ink);">employment_type</span></div>
+                  <div style="display:flex; align-items:center; gap:12px; font-family:'Space Mono',monospace; font-size:12px;"><span style="flex:1; color:var(--soft);">tags</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="var(--soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="flex:1; font-weight:700; color:var(--ink);">skills[]</span></div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isWiz3 }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:11px;">
+                <div style="display:flex; align-items:center; gap:13px; background:var(--surface); border:1px solid var(--line); border-radius:13px; padding:15px 17px;"><span style="width:36px; height:36px; border-radius:10px; background:#DCEFE3; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4 10-11" stroke="#1B6B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div style="flex:1;"><div style="font-weight:800; font-size:14.5px;">2 ofertas nuevas</div><div style="font-size:12.5px; color:var(--soft);">Listas para importar al schema interno.</div></div></div>
+                <div style="display:flex; align-items:center; gap:13px; background:var(--surface); border:1px solid var(--line); border-radius:13px; padding:15px 17px;"><span style="width:36px; height:36px; border-radius:10px; background:#F8E7C4; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v5M12 16h.01M3 12a9 9 0 1018 0 9 9 0 00-18 0Z" stroke="#946312" stroke-width="2" stroke-linecap="round"/></svg></span><div style="flex:1;"><div style="font-weight:800; font-size:14.5px;">1 duplicada detectada</div><div style="font-size:12.5px; color:var(--soft);">"Senior Frontend Engineer" ya existe (dedupe por hash). Se omitirá.</div></div></div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isWiz4 }}" hint-placeholder-val="{{ false }}">
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:26px; text-align:center;">
+                <div style="width:54px; height:54px; border-radius:16px; background:var(--limeSoft); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke="#46540F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:22px; letter-spacing:-.5px;">Todo listo</div>
+                <div style="font-size:14px; color:var(--soft); margin:8px 0 18px;">Se importarán 2 ofertas nuevas y se omitirá 1 duplicada.</div>
+                <button data-back="jobs" onClick="{{ back }}" class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--accent); border:2px solid var(--ink); border-radius:11px; padding:11px 20px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Importar 2 ofertas</button>
+              </div>
+            </sc-if>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+              <sc-if value="{{ wizCanBack }}" hint-placeholder-val="{{ false }}"><button onClick="{{ wizBack }}" style="font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:11px; padding:10px 18px; cursor:pointer;">Atrás</button></sc-if>
+              <sc-if value="{{ wizCanNext }}" hint-placeholder-val="{{ true }}"><button onClick="{{ wizNext }}" class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--brand); border:2px solid var(--ink); border-radius:11px; padding:10px 18px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Siguiente</button></sc-if>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= EMPLOYEE DETAIL ================= -->
+          <sc-if value="{{ isEmpDetail }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div data-back="employees" onClick="{{ back }}" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--soft); cursor:pointer; margin-bottom:14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Empleados</div>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+              <div style="display:flex; gap:16px; align-items:center;">
+                <span style="width:58px; height:58px; flex-shrink:0; border-radius:50%; background:{{ emp.bg }}; color:{{ emp.color }}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px;">{{ emp.initials }}</span>
+                <div>
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:28px; letter-spacing:-.8px; line-height:1; margin:0;">{{ emp.name }}</h2><span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 10px; background:#DCEFE3; color:#1B6B4F;">Activo</span></div>
+                  <div style="font-family:'Space Mono',monospace; font-size:12px; color:var(--soft); margin-top:8px;">{{ emp.role }} · {{ emp.loc }}</div>
+                </div>
+              </div>
+              <button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--brand); border:2px solid var(--ink); border-radius:11px; padding:9px 15px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Acciones ▾</button>
+            </div>
+            <div style="display:flex; gap:4px; background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:4px; width:fit-content; margin-bottom:20px; flex-wrap:wrap;">
+              <span data-tab="info" onClick="{{ goEmpTab }}" style="{{ et.info }}">Información</span>
+              <span data-tab="docs" onClick="{{ goEmpTab }}" style="{{ et.docs }}">Documentos</span>
+              <span data-tab="onboarding" onClick="{{ goEmpTab }}" style="{{ et.onboarding }}">Onboarding</span>
+              <span data-tab="vac" onClick="{{ goEmpTab }}" style="{{ et.vac }}">Vacaciones</span>
+              <span data-tab="horas" onClick="{{ goEmpTab }}" style="{{ et.horas }}">Horas</span>
+              <span data-tab="perf" onClick="{{ goEmpTab }}" style="{{ et.perf }}">Desempeño</span>
+            </div>
+
+            <sc-if value="{{ isETinfo }}" hint-placeholder-val="{{ true }}">
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; max-width:760px;">
+                <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; margin-bottom:18px;">Datos del empleado</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                  <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Nombre</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">{{ emp.firstName }}</div></div>
+                  <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Apellido</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">{{ emp.lastName }}</div></div>
+                  <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Email</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">{{ emp.email }}</div></div>
+                  <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Teléfono</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">+34 600 12 34 56</div></div>
+                  <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">ID empleado</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">{{ emp.id }}</div></div>
+                  <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Incorporación</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">8 jun 2026</div></div>
+                  <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Contrato</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">Jornada completa</div></div>
+                  <div><label style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft);">Manager</label><div style="background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:14px; font-weight:600; margin-top:7px;">{{ emp.reports }}</div></div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isETdocs }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:680px; display:flex; flex-direction:column; gap:10px;">
+                <sc-for list="{{ docs }}" as="d" hint-placeholder-count="3">
+                  <div style="display:flex; align-items:center; gap:13px; background:var(--surface); border:1px solid var(--line); border-radius:13px; padding:13px 16px;"><span style="width:36px; height:36px; border-radius:9px; background:#F6E0D9; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 2h8l4 4v16H6V2Z" stroke="#BD4332" stroke-width="2" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#BD4332" stroke-width="2"/></svg></span><div style="flex:1;"><div style="font-size:14px; font-weight:700;">{{ d.name }}</div><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft); margin-top:2px;">{{ d.meta }}</div></div><span style="font-size:12.5px; font-weight:700; color:var(--brand); cursor:pointer;">Descargar</span></div>
+                </sc-for>
+                <button class="tos-hard" style="align-self:flex-start; margin-top:6px; font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; color:var(--ink); background:var(--surface); border:2px dashed var(--line); border-radius:11px; padding:10px 16px; box-shadow:none; cursor:pointer;">+ Subir documento</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isETon }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:680px;">
+                <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px 22px;">
+                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span style="width:24px; height:24px; border-radius:7px; background:var(--ink); display:flex; align-items:center; justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#C6F24E" stroke-width="2" stroke-linejoin="round"/></svg></span><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;">Onboarding</span><span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px; color:var(--soft);">{{ obDone }}/5</span><button style="display:inline-flex; align-items:center; gap:6px; font-family:'Archivo',sans-serif; font-weight:700; font-size:12px; color:var(--brand); background:var(--brandSoft); border:1px solid #BFE0D2; border-radius:9px; padding:6px 11px; cursor:pointer;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="var(--brand)" stroke-width="2" stroke-linejoin="round"/></svg>Regenerar con IA</button></div>
+                  <div style="display:flex; align-items:flex-start; gap:9px; background:var(--brandSoft); border:1px solid #BFE0D2; border-radius:11px; padding:10px 12px; margin:12px 0 4px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink:0; margin-top:1px;"><path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="var(--brand)" stroke-width="2" stroke-linejoin="round"/></svg><span style="font-size:12px; line-height:1.45; color:#2C5247;">El <b>agente de onboarding</b> propuso esta checklist según el rol y departamento. Edítala, marca tareas o regenérala — el seguimiento es tuyo.</span></div>
+                  <div style="height:7px; border-radius:99px; background:var(--bg); overflow:hidden; margin:10px 0 16px;"><div style="width:{{ obPct }}; height:100%; background:var(--brand);"></div></div>
+                  <div style="display:flex; flex-direction:column; gap:8px;">
+                    <sc-for list="{{ onboarding }}" as="o" hint-placeholder-count="5">
+                      <div style="display:flex; align-items:center; gap:11px; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:11px;"><span style="width:18px; height:18px; flex-shrink:0; border-radius:6px; border:2px solid {{ o.box }}; background:{{ o.boxBg }}; display:flex; align-items:center; justify-content:center;"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="{{ o.check }}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span style="flex:1; font-size:13.5px; font-weight:600; color:{{ o.color }}; text-decoration:{{ o.deco }};">{{ o.t }}</span><span style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">{{ o.who }}</span></div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isETvac }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:680px;">
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px;">
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">DISPONIBLES</div><div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:30px; letter-spacing:-1px; margin-top:6px;">18</div></div>
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">DISFRUTADOS</div><div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:30px; letter-spacing:-1px; margin-top:6px;">4</div></div>
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">PENDIENTES</div><div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:30px; letter-spacing:-1px; margin-top:6px; color:var(--accent);">1</div></div>
+                </div>
+                <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 18px; display:flex; align-items:center; gap:12px;"><span style="font-size:13.5px; font-weight:700; flex:1;">Vacaciones · 23 jun – 30 jun</span><span style="font-size:13px; color:var(--soft);">6 días</span><span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 11px; background:#F8E7C4; color:#946312;">pendiente</span></div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isEThoras }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:680px; background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line);"><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;">Semana 9–13 jun</span><span style="font-family:'Space Mono',monospace; font-size:12px; color:var(--brand); font-weight:700;">37,5 h</span></div>
+                <sc-for list="{{ timesheet }}" as="ts" hint-placeholder-count="5">
+                  <div style="display:flex; align-items:center; gap:14px; padding:13px 18px; border-bottom:1px solid var(--line);"><span style="font-family:'Space Mono',monospace; font-size:12px; color:var(--soft); width:56px;">{{ ts.day }}</span><span style="flex:1; font-size:13.5px;">{{ ts.note }}</span><span style="font-size:13.5px; font-weight:700; white-space:nowrap;">{{ ts.hours }} h</span></div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isETperf }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:760px;">
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px;">
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;">
+                    <div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">CICLO ACTUAL</div>
+                    <div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:22px; letter-spacing:-.6px; margin-top:7px;">H1 2026</div>
+                    <div style="font-size:12.5px; color:var(--soft); margin-top:3px;">Revisión 360 · cierra 30 jun</div>
+                  </div>
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;">
+                    <div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">VALORACIÓN GLOBAL</div>
+                    <div style="display:flex; align-items:baseline; gap:6px; margin-top:7px;"><span style="font-family:'Archivo',sans-serif; font-weight:900; font-size:28px; letter-spacing:-1px;">4,2</span><span style="font-size:13px; color:var(--soft);">/ 5</span></div>
+                    <span style="display:inline-block; margin-top:6px; font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 10px; background:#DCEFE3; color:#1B6B4F;">Supera expectativas</span>
+                  </div>
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;">
+                    <div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">PRÓXIMO 1:1</div>
+                    <div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:22px; letter-spacing:-.6px; margin-top:7px;">21 jun</div>
+                    <div style="font-size:12.5px; color:var(--soft); margin-top:3px;">con {{ emp.reports }}</div>
+                  </div>
+                </div>
+                <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px 20px; margin-bottom:14px;">
+                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;"><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;">Objetivos del ciclo</span><span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">OKR · 3 activos</span></div>
+                  <div style="display:flex; flex-direction:column; gap:14px;">
+                    <sc-for list="{{ perfGoals }}" as="g" hint-placeholder-count="3">
+                      <div>
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:7px;"><span style="flex:1; font-size:13.5px; font-weight:600;">{{ g.t }}</span><span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 10px; background:{{ g.bg }}; color:{{ g.color }};">{{ g.status }}</span><span style="font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--ink); width:38px; text-align:right;">{{ g.pct }}%</span></div>
+                        <div style="height:7px; border-radius:99px; background:var(--bg); overflow:hidden;"><div style="width:{{ g.w }}; height:100%; background:var(--brand);"></div></div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="position:relative; overflow:hidden; background:var(--ink); color:#F4F0E8; border-radius:16px; padding:20px; margin-bottom:14px;">
+                  <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px;"><span style="width:26px; height:26px; border-radius:8px; background:rgba(198,242,78,.16); display:flex; align-items:center; justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#C6F24E" stroke-width="2" stroke-linejoin="round"/></svg></span><span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:14px;">Agente de desempeño</span><span style="margin-left:auto; font-family:'Space Mono',monospace; font-size:10.5px; color:#C6F24E; background:rgba(198,242,78,.12); border:1px solid rgba(198,242,78,.3); border-radius:999px; padding:3px 10px;">Borrador</span></div>
+                  <p style="font-size:13.5px; line-height:1.6; color:#CFCAC0; margin:0 0 12px;">Resumen del ciclo a partir de feedback del manager, autoevaluación, 1:1s y progreso de objetivos: <span style="color:#fff; font-weight:600;">desempeño sólido, por encima de expectativas.</span> Fortaleza clara en sistemas de diseño; área de crecimiento: <span style="color:#fff; font-weight:600;">liderazgo de squads</span> y exposición a discovery. Rating sugerido <span style="color:#C6F24E; font-weight:700;">4,2 / 5</span>.</p>
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><button style="font-family:'Archivo',sans-serif; font-weight:800; font-size:12px; color:var(--ink); background:var(--lime); border:none; border-radius:9px; padding:8px 14px; cursor:pointer;">Usar como borrador de review</button><span style="font-family:'Space Mono',monospace; font-size:10.5px; color:#8C877E;">El agente redacta · tú revisas y apruebas</span></div>
+                </div>
+                <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:8px 20px;">
+                  <sc-for list="{{ perfFeedback }}" as="fb" hint-placeholder-count="2">
+                    <div onClick="{{ fb.open }}" class="tos-nav" style="display:flex; gap:14px; padding:15px 12px; margin:0 -12px; border-bottom:1px solid var(--line); cursor:{{ fb.cursor }}; border-radius:10px;">
+                      <span style="width:11px; height:11px; flex-shrink:0; border-radius:50%; background:var(--brand); margin-top:4px;"></span>
+                      <div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">{{ fb.who }} <span style="font-weight:600; color:var(--soft);">· {{ fb.role }}</span></div><div style="font-size:13px; color:#54504A; margin-top:3px; line-height:1.5;">{{ fb.text }}</div><div style="display:flex; align-items:center; gap:10px; margin-top:6px;"><span style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">{{ fb.when }}</span><span style="font-family:'Space Mono',monospace; font-size:10.5px; font-weight:700; color:var(--brand);">{{ fb.arrow }}</span></div></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+          </sc-if>
+
+          <!-- ================= CANDIDATOS (tabla global) ================= -->
+          <sc-if value="{{ isCandidates }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="margin-bottom:18px;"><div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin-bottom:6px;">Reclutamiento</div><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:34px; letter-spacing:-1px; line-height:1; margin:0;">Candidatos</h2><p style="font-size:14px; color:var(--soft); margin:8px 0 0;">Todas las candidaturas en todos los procesos.</p></div>
+            <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;">
+              <div style="display:flex; align-items:center; padding:12px 18px; border-bottom:1px solid var(--line); font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--soft);"><span style="flex:1.5;">Candidato</span><span style="flex:1.3;">Oferta</span><span style="flex:.9;">Etapa</span><span style="flex:.9;">Origen</span><span style="flex:.7;">Fecha</span><span style="flex:.5; text-align:right;">Fit</span></div>
+              <sc-for list="{{ candRows }}" as="r" hint-placeholder-count="6">
+                <div onClick="{{ r.open }}" class="tos-nav" style="display:flex; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line); cursor:pointer;">
+                  <span style="flex:1.5; display:flex; align-items:center; gap:10px; min-width:0;"><span style="width:32px; height:32px; flex-shrink:0; border-radius:50%; background:{{ r.bg }}; color:{{ r.color }}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px;">{{ r.initials }}</span><span style="font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.name }}</span></span>
+                  <span style="flex:1.3; font-size:13px; color:#54504A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:8px;">{{ r.job }}</span>
+                  <span style="flex:.9;"><span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 9px; background:var(--surface2); color:#54504A; border:1px solid var(--line);">{{ r.stage }}</span></span>
+                  <span style="flex:.9; font-family:'Space Mono',monospace; font-size:11px; color:var(--soft);">{{ r.src }}</span>
+                  <span style="flex:.7; font-family:'Space Mono',monospace; font-size:11px; color:var(--soft);">{{ r.date }}</span>
+                  <span style="flex:.5; display:flex; justify-content:flex-end;"><span style="display:inline-flex; align-items:center; height:23px; padding:0 8px; border-radius:999px; font-size:11.5px; font-weight:800; background:{{ r.fitBg }}; color:{{ r.fitColor }};">{{ r.fit }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= TIMESHEETS ================= -->
+          <sc-if value="{{ isTimesheets }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+              <div><div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin-bottom:6px;">Personas</div><h2 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:34px; letter-spacing:-1px; line-height:1; margin:0;">Horas</h2></div>
+              <button class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--accent); border:2px solid var(--ink); border-radius:11px; padding:10px 16px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Registrar horas</button>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px;">
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">HORAS ESTA SEMANA</div><div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; margin-top:6px;">147,5</div></div>
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">PENDIENTES DE APROBAR</div><div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; margin-top:6px; color:var(--accent);">1</div></div>
+              <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;"><div style="font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">EMPLEADOS ACTIVOS</div><div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:32px; letter-spacing:-1px; margin-top:6px;">4</div></div>
+            </div>
+            <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;">
+              <div style="display:flex; align-items:center; padding:12px 18px; border-bottom:1px solid var(--line); font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--soft);"><span style="flex:1.6;">Empleado</span><span style="flex:1.2;">Semana</span><span style="flex:.7;">Horas</span><span style="flex:1; text-align:right;">Estado</span></div>
+              <sc-for list="{{ tsweek }}" as="r" hint-placeholder-count="4">
+                <div style="display:flex; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line);">
+                  <span style="flex:1.6; display:flex; align-items:center; gap:10px;"><span style="width:32px; height:32px; border-radius:50%; background:{{ r.bg }}; color:{{ r.color }}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px;">{{ r.initials }}</span><span style="font-size:13.5px; font-weight:700;">{{ r.name }}</span></span>
+                  <span style="flex:1.2; font-family:'Space Mono',monospace; font-size:12px; color:var(--soft);">9–13 jun</span>
+                  <span style="flex:.7; font-size:13.5px; font-weight:700; white-space:nowrap;">{{ r.hours }} h</span>
+                  <span style="flex:1; display:flex; justify-content:flex-end;"><span style="font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 11px; background:{{ r.badgeBg }}; color:{{ r.badgeColor }};">{{ r.badge }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+        </div>
+      </div>
+    </div>
+    <sc-if value="{{ moveOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ moveCancel }}" style="position:fixed; inset:0; z-index:60; background:rgba(26,26,23,.5); display:flex; align-items:center; justify-content:center; padding:24px;">
+      <div onClick="{{ stop }}" style="width:100%; max-width:448px; max-height:88vh; overflow-y:auto; background:var(--surface); border:1.5px solid var(--ink); border-radius:18px; box-shadow:8px 8px 0 var(--shadow);">
+        <div style="padding:22px 24px 0;">
+          <div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:20px; letter-spacing:-.5px;">Mover a {{ moveName }}</div>
+          <div style="display:flex; align-items:center; gap:9px; margin-top:12px;">
+            <span style="font-size:12px; font-weight:700; border-radius:999px; padding:4px 11px; background:var(--surface2); color:#54504A; border:1px solid var(--line);">{{ moveFrom }}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="var(--soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span style="font-size:12px; font-weight:700; border-radius:999px; padding:4px 11px; background:{{ moveToBg }}; color:{{ moveToColor }};">{{ moveTo }}</span>
+          </div>
+        </div>
+        <div style="padding:18px 24px 0;">
+          <sc-if value="{{ moveIsDiscard }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-bottom:16px;">
+              <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft); margin-bottom:9px;">Motivo del descarte · obligatorio</div>
+              <div style="display:flex; flex-direction:column; gap:7px;">
+                <sc-for list="{{ moveReasons }}" as="r" hint-placeholder-count="5">
+                  <div data-reason="{{ r.value }}" onClick="{{ pickReason }}" style="{{ r.style }}">{{ r.label }}</div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <div style="font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--soft); margin-bottom:9px;">{{ moveNoteLabel }}</div>
+          <textarea onInput="{{ onMoveNote }}" placeholder="Contexto adicional para el historial…" style="width:100%; resize:none; height:58px; font-family:'Hanken Grotesk',sans-serif; font-size:13.5px; color:var(--ink); background:var(--bg); border:1.5px solid var(--line); border-radius:11px; padding:10px 12px; outline:none;"></textarea>
+          <div style="display:flex; align-items:center; gap:7px; margin-top:12px; font-family:'Space Mono',monospace; font-size:10.5px; color:var(--soft);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Se registrará con tu usuario y la fecha en el historial.
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; padding:18px 24px 22px;">
+          <button onClick="{{ moveCancel }}" style="font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--soft); background:transparent; border:none; padding:10px 14px; cursor:pointer;">Cancelar</button>
+          <button onClick="{{ moveConfirm }}" class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:{{ moveConfirmBg }}; border:2px solid var(--ink); border-radius:11px; padding:10px 20px; box-shadow:3px 3px 0 var(--shadow); cursor:{{ moveConfirmCursor }}; opacity:{{ moveConfirmOpacity }};">Confirmar</button>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ perfDetail }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closePerfDetail }}" style="position:fixed; inset:0; z-index:60; background:rgba(26,26,23,.5); display:flex; align-items:center; justify-content:center; padding:24px;">
+      <div onClick="{{ stop }}" style="width:100%; max-width:540px; max-height:88vh; overflow-y:auto; background:var(--surface); border:1.5px solid var(--ink); border-radius:18px; box-shadow:8px 8px 0 var(--shadow);">
+        <div style="padding:22px 24px; border-bottom:1px solid var(--line);">
+          <div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:19px; letter-spacing:-.5px;">{{ perfDetail.title }}</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:8px;"><span style="font-family:'Space Mono',monospace; font-size:11px; color:var(--soft);">{{ perfDetail.reviewer }} · {{ perfDetail.when }}</span><span style="margin-left:auto; font-size:14px; color:#E0A23C; letter-spacing:2px;">{{ perfDetail.overallStars }}</span></div>
+        </div>
+        <div style="padding:6px 24px 4px;">
+          <sc-for list="{{ perfDetail.questions }}" as="q" hint-placeholder-count="4">
+            <div style="padding:14px 0; border-bottom:1px solid var(--line);">
+              <div style="display:flex; align-items:center; gap:10px;"><span style="flex:1; font-size:14px; font-weight:700;">{{ q.q }}</span><span style="font-size:14px; color:#E0A23C; letter-spacing:2px;">{{ q.stars }}</span></div>
+              <div style="font-size:13px; color:#54504A; margin-top:5px; line-height:1.5;">{{ q.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex; justify-content:flex-end; padding:16px 24px 20px;"><button onClick="{{ closePerfDetail }}" class="tos-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; color:#fff; background:var(--brand); border:2px solid var(--ink); border-radius:11px; padding:10px 20px; box-shadow:3px 3px 0 var(--shadow); cursor:pointer;">Cerrar</button></div>
+      </div>
+    </div>
+    </sc-if>
+    <div style="font-family:'Space Mono',monospace; font-size:11px; color:var(--soft); margin-top:14px; text-align:center;">TalentOS · front completo con el nuevo sistema de diseño · datos de ejemplo</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1372},&quot;brand&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#0E5C4A&quot;,&quot;options&quot;:[&quot;#0E5C4A&quot;,&quot;#1D4ED8&quot;,&quot;#3F3DD6&quot;]},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#F1543F&quot;,&quot;options&quot;:[&quot;#F1543F&quot;,&quot;#F0883C&quot;,&quot;#E0498B&quot;]}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.rootRef = React.createRef();
+    this.state = {
+      screen: "dashboard",
+      jobTab: "pipeline",
+      candTab: "perfil",
+      currentCand: "a7",
+      jobF: { status: null, sector: null, dept: null },
+      brief: "",
+      drafted: false,
+      wizStep: 1,
+      currentEmp: 0,
+      empTab: "info",
+      draggingId: null,
+      overCol: null,
+      moveOpen: false,
+      movePend: null,
+      moveReason: "",
+      moveNote: "",
+      notes: [
+        { body: "Muy buen encaje cultural en la primera llamada; confirma expectativa salarial en la siguiente.", author: "michael@empresa.com", when: "14 jun 2026 · 11:20" },
+        { body: "Portfolio sólido en design systems. Pendiente pedir referencias del último equipo.", author: "nina@empresa.com", when: "10 jun 2026 · 09:05" },
+      ],
+      noteDraft: "",
+      ivByCand: {
+        a7: [
+          { stage: "Entrevista técnica", who: "Michael Muñoz", dur: "45 min", when: "18 jun · 10:00", badge: "programada", status: "scheduled" },
+          { stage: "Cultural fit", who: "Marta Aguilar", dur: "30 min", when: "12 jun · 16:00", badge: "completada · 4/5", status: "done" },
+        ],
+      },
+      ivMode: "list",
+      ivType: "Entrevista técnica",
+      ivDate: "",
+      ivTime: "",
+      ivDur: "45 min",
+      ivInterviewer: "Michael Muñoz",
+      ivParticipants: [],
+      ivCandName: "",
+      ivCandEmail: "",
+      ivSlots: [],
+      perfDetail: null,
+      apps: [
+        { id: "a1", name: "Lucía Fernández", src: "Career site", fit: 82, stage: "aplicado" },
+        { id: "a2", name: "Marc Oller", src: "LinkedIn", fit: 64, stage: "aplicado" },
+        { id: "a3", name: "Aisha Ndiaye", src: "Infojobs", fit: 47, stage: "aplicado" },
+        { id: "a4", name: "Pablo Ruiz", src: "Referido", fit: 71, stage: "aplicado" },
+        { id: "a5", name: "Núria Camps", src: "Career site", fit: 88, stage: "screening" },
+        { id: "a6", name: "Diego Salas", src: "LinkedIn", fit: 59, stage: "screening" },
+        { id: "a7", name: "Elena Vidal", src: "Referido", fit: 91, stage: "entrevista" },
+        { id: "a8", name: "Tomás Iglesias", src: "Career site", fit: 73, stage: "entrevista" },
+        { id: "a9", name: "Sofía Marín", src: "Career site", fit: 95, stage: "oferta" },
+        { id: "a10", name: "Javier Soto", src: "Referido", fit: 90, stage: "contratado" },
+        { id: "a11", name: "Bruno Costa", src: "Indeed", fit: 38, stage: "descartado" },
+      ],
+    };
+    this.CHANNELS = [
+      { name: "LinkedIn", views: "1.240", apps: 18, cpa: "18 €", dot: "var(--brand)", cpaColor: "#54504A" },
+      { name: "Infojobs", views: "2.100", apps: 23, cpa: "11 €", dot: "var(--accent)", cpaColor: "#1B6B4F" },
+      { name: "Indeed", views: "1.680", apps: 14, cpa: "14 €", dot: "#E0A23C", cpaColor: "#946312" },
+      { name: "Career site", views: "540", apps: 9, cpa: "Gratis", dot: "#5A4C86", cpaColor: "#1B6B4F" },
+    ];
+    this.INTERVIEWS = [
+      { stage: "Entrevista técnica", who: "Michael Muñoz", dur: "45 min", when: "18 jun · 10:00", badge: "programada", bg: "#F8E7C4", color: "#946312" },
+      { stage: "Cultural fit", who: "Marta Aguilar", dur: "30 min", when: "12 jun · 16:00", badge: "completada · 4/5", bg: "#DCEFE3", color: "#1B6B4F" },
+    ];
+    this.TEAM = [
+      { name: "Michael Muñoz", role: "Eng Manager" },
+      { name: "Marta Aguilar", role: "Product Designer" },
+      { name: "Nina Bauch", role: "Recruiter" },
+      { name: "Sam Pollich", role: "Head of Product" },
+    ];
+    this.IV_TYPES = ["Screening", "Entrevista técnica", "Cultural fit", "Entrevista final"];
+    this.IV_DURS = ["30 min", "45 min", "60 min"];
+    this.IV_SLOTS = ["Lun 16 · 10:00", "Lun 16 · 12:30", "Mar 17 · 09:00", "Mar 17 · 16:00", "Mié 18 · 11:00"];
+    this.PERF_REVIEW = {
+      title: "Revisión 360 · H1 2026",
+      reviewer: "Michael Muñoz · Manager",
+      when: "7 jun 2026",
+      overall: 4,
+      questions: [
+        { q: "Impacto y resultados", r: 5, note: "Lideró el rediseño del design system con impacto medible en consistencia." },
+        { q: "Colaboración", r: 4, note: "Excelente con producto e ingeniería; podría delegar más." },
+        { q: "Autonomía", r: 4, note: "Avanza sin supervisión en proyectos ambiguos." },
+        { q: "Crecimiento", r: 4, note: "Quiere más exposición a discovery con cliente." },
+      ],
+    };
+    this.HISTORY = [
+      { from: "Screening", to: "Entrevista", who: "Michael Muñoz", when: "14 jun 2026", reason: "Screening superado, encaje salarial confirmado.", dot: "#3B7FC4" },
+      { from: "Aplicado", to: "Screening", who: "Nina Bauch", when: "10 jun 2026", reason: "CV alineado con el perfil del rol.", dot: "#E0A23C" },
+      { from: "Candidatura", to: "Aplicado", who: "Career site", when: "8 jun 2026", reason: "Candidatura recibida vía career site.", dot: "#9C9588" },
+    ];
+    this.ONBOARDING = [
+      { t: "Crear cuenta y accesos", done: true, who: "IT" },
+      { t: "Firmar contrato", done: true, who: "People" },
+      { t: "Sesión de bienvenida con el equipo", done: false, who: "Manager" },
+      { t: "Configurar entorno de trabajo", done: false, who: "IT" },
+      { t: "Revisar objetivos del primer mes", done: false, who: "Manager" },
+    ];
+    this.DOCS = [
+      { name: "Contrato laboral.pdf", meta: "PDF · 240 KB · 8 jun 2026" },
+      { name: "NDA.pdf", meta: "PDF · 120 KB · 8 jun 2026" },
+      { name: "Política de empresa.pdf", meta: "PDF · 1,2 MB · 8 jun 2026" },
+    ];
+    this.TIMESHEET = [
+      { day: "Lun 9", hours: "8", note: "Onboarding y setup" },
+      { day: "Mar 10", hours: "8", note: "Discovery" },
+      { day: "Mié 11", hours: "7,5", note: "Diseño" },
+      { day: "Jue 12", hours: "8", note: "Diseño y review" },
+      { day: "Vie 13", hours: "6", note: "Sync de equipo" },
+    ];
+    this.TSWEEK = [
+      { name: "Aguilar, Marta", hours: "37,5", status: "enviado", av: 2 },
+      { name: "Adams, Okey", hours: "40", status: "aprobado", av: 1 },
+      { name: "Abernathy, Rex", hours: "38", status: "aprobado", av: 0 },
+      { name: "Bauch, Nina", hours: "32", status: "pendiente", av: 4 },
+    ];
+    this.COLS = [
+      { id: "aplicado", name: "Aplicado", dot: "#9C9588" },
+      { id: "screening", name: "Screening", dot: "#E0A23C" },
+      { id: "entrevista", name: "Entrevista", dot: "#3B7FC4" },
+      { id: "oferta", name: "Oferta", dot: "var(--accent)" },
+      { id: "contratado", name: "Contratado", dot: "var(--brand)" },
+      { id: "descartado", name: "Descartado", dot: "#BD4332" },
+    ];
+    this.AV = [
+      { bg: "#DCEFE4", color: "#0E5C4A" }, { bg: "#F6D9D2", color: "#BD4332" },
+      { bg: "#E7E0F2", color: "#5A4C86" }, { bg: "#F8E7C4", color: "#946312" },
+      { bg: "#D6E4F2", color: "#2B5E8A" }, { bg: "#E9F0D2", color: "#52610F" },
+    ];
+    this.JOBS = [
+      { tag: "PD", title: "Senior Product Designer", meta: "Madrid · Jornada completa · Producto", salary: "55.000 € – 75.000 €", count: 41, status: "active", ai: true, iconBg: "#DCEFE4", iconColor: "#0E5C4A" },
+      { tag: "AE", title: "Account Executive", meta: "Barcelona · Jornada completa · Ventas", salary: "32.000 € – 45.000 €", count: 28, status: "active", iconBg: "#F6E0D9", iconColor: "#BD4332" },
+      { tag: "GM", title: "Growth Marketing Lead", meta: "Remoto · Jornada completa · Marketing", salary: "48.000 € – 62.000 €", count: 17, status: "active", iconBg: "#E7E0F2", iconColor: "#5A4C86" },
+      { tag: "FS", title: "Full Stack Developer", meta: "Valencia · Temporal · Ingeniería", salary: "40.000 € – 58.000 €", count: 12, status: "draft", iconBg: "#D6E4F2", iconColor: "#2B5E8A" },
+      { tag: "CS", title: "Customer Success Manager", meta: "Madrid · Parcial · Customer Success", salary: "28.000 € – 36.000 €", count: 9, status: "active", iconBg: "#F8E7C4", iconColor: "#946312" },
+      { tag: "DA", title: "Data Analyst", meta: "Remoto · Prácticas", salary: "18.000 € – 24.000 €", count: 6, status: "closed", iconBg: "#E9F0D2", iconColor: "#52610F" },
+    ];
+    this.EMP = [
+      { name: "Abernathy, Rex", role: "Account Manager", email: "rex_abernathy@hfm.com", loc: "Boston HQ · US", reports: "Greenholt, Eulah", av: 0 },
+      { name: "Adams, Okey", role: "Senior Account Executive", email: "okey_adams@hfm.com", loc: "Boston HQ · US", reports: "Pollich, Sam", av: 1 },
+      { name: "Aguilar, Marta", role: "Product Designer", email: "marta_aguilar@hfm.com", loc: "Madrid · ES", reports: "Muñoz, Michael", av: 2 },
+      { name: "Bauch, Nina", role: "Recruiter", email: "nina_bauch@hfm.com", loc: "Remoto · ES", reports: "Greenholt, Eulah", av: 4 },
+    ];
+    this.TODOS = [
+      { t: "Revisar 3 candidatos top en Senior Product Designer", tag: "PIPELINE", done: false },
+      { t: "Aprobar las vacaciones de Marta Aguilar", tag: "VACACIONES", done: false },
+      { t: "Publicar la oferta de Growth Marketing Lead", tag: "OFERTAS", done: false },
+      { t: "Onboarding de Nina Bauch", tag: "PERSONAS", done: true },
+    ];
+    this.TIMEOFF = [
+      { name: "Aguilar, Marta", type: "Vacaciones", range: "23 jun – 30 jun", days: 6, status: "pending", av: 2 },
+      { name: "Adams, Okey", type: "Enfermedad", range: "12 jun", days: 1, status: "approved", av: 1 },
+      { name: "Bauch, Nina", type: "Vacaciones", range: "1 jul – 15 jul", days: 11, status: "pending", av: 4 },
+    ];
+  }
+
+  componentDidMount() { this.applyTheme(); }
+  componentDidUpdate() { this.applyTheme(); }
+  applyTheme() {
+    const el = this.rootRef.current;
+    if (!el) return;
+    el.style.setProperty("--brand", this.props.brand ?? "#0E5C4A");
+    el.style.setProperty("--accent", this.props.accent ?? "#F1543F");
+  }
+
+  initials(n) { return n.replace(",", "").split(/\s+/).slice(0, 2).map((p) => (p[0] || "").toUpperCase()).join(""); }
+  fit(s) { return s >= 75 ? { bg: "#D9EFE2", color: "#0E5C4A" } : s >= 50 ? { bg: "#F8E7C4", color: "#946312" } : { bg: "#F6D9D2", color: "#BD4332" }; }
+  jobBadge(s) { return s === "active" ? { label: "activa", bg: "#DCEFE3", color: "#1B6B4F" } : s === "draft" ? { label: "borrador", bg: "#ECE8DF", color: "#79746B" } : { label: "cerrada", bg: "#F1E2DD", color: "#B5503C" }; }
+  toBadge(s) { return s === "approved" ? { label: "aprobada", bg: "#DCEFE3", color: "#1B6B4F" } : s === "rejected" ? { label: "rechazada", bg: "#F6D9D2", color: "#BD4332" } : { label: "pendiente", bg: "#F8E7C4", color: "#946312" }; }
+
+  navStyle(active) {
+    const base = { display: "flex", alignItems: "center", gap: "11px", padding: "9px 11px", borderRadius: "10px", fontSize: "14px", fontWeight: 600, cursor: "pointer", marginBottom: "2px" };
+    return active
+      ? { ...base, background: "var(--brand)", color: "#fff", boxShadow: "2px 2px 0 var(--shadow)" }
+      : { ...base, color: "var(--soft)" };
+  }
+
+  renderVals() {
+    const s = this.state.screen;
+    const columns = this.COLS.map((col) => {
+      const cards = this.state.apps.filter((a) => a.stage === col.id).sort((a, b) => b.fit - a.fit).map((a, i) => {
+        const f = this.fit(a.fit);
+        const av = this.AV[(a.id.charCodeAt(1) + i) % this.AV.length];
+        return { ...a, initials: this.initials(a.name), avatarBg: av.bg, avatarColor: av.color, fitBg: f.bg, fitColor: f.color, isTop: a.fit >= 85, open: () => this.setState({ screen: "candidateDetail", currentCand: a.id, candTab: "perfil" }), onDragStart: () => this.setState({ draggingId: a.id }), onDragEnd: () => this.setState({ draggingId: null, overCol: null }) };
+      });
+      return {
+        id: col.id, name: col.name, dot: col.dot, count: cards.length, cards,
+        edge: this.state.overCol === col.id ? "var(--brand)" : "transparent",
+        onDragOver: (e) => { e.preventDefault(); if (this.state.overCol !== col.id) this.setState({ overCol: col.id }); },
+        onDragLeave: () => { if (this.state.overCol === col.id) this.setState({ overCol: null }); },
+        onDrop: (e) => { e.preventDefault(); const id = this.state.draggingId; if (!id) { this.setState({ overCol: null }); return; } const app = this.state.apps.find((a) => a.id === id); if (!app || app.stage === col.id) { this.setState({ draggingId: null, overCol: null }); return; } this.setState({ movePend: { id, to: col.id }, moveOpen: true, moveReason: "", moveNote: "", draggingId: null, overCol: null }); },
+      };
+    });
+
+    const META = { PD: ["Tecnología", "Producto"], AE: ["Comercial", "Ventas"], GM: ["Marketing", "Marketing"], FS: ["Tecnología", "Engineering"], CS: ["Tecnología", "Customer Success"], DA: ["Tecnología", "Datos"] };
+    const withMeta = this.JOBS.map((j) => ({ ...j, sector: META[j.tag][0], dept: META[j.tag][1] }));
+    const f = this.state.jobF;
+    let filteredJobs = withMeta;
+    if (f.status) filteredJobs = filteredJobs.filter((j) => j.status === f.status);
+    if (f.sector) filteredJobs = filteredJobs.filter((j) => j.sector === f.sector);
+    if (f.dept) filteredJobs = filteredJobs.filter((j) => j.dept === f.dept);
+    const jobs = filteredJobs.map((j) => { const b = this.jobBadge(j.status); return { ...j, badge: b.label, badgeBg: b.bg, badgeColor: b.color, ai: !!j.ai }; });
+    const chipOn = { fontSize: "12.5px", fontWeight: 700, background: "var(--brand)", color: "#fff", border: "1px solid var(--brand)", borderRadius: "999px", padding: "6px 13px", cursor: "pointer", whiteSpace: "nowrap" };
+    const chipOff = { fontSize: "12.5px", fontWeight: 600, background: "var(--surface)", color: "var(--soft)", border: "1px solid var(--line)", borderRadius: "999px", padding: "6px 13px", cursor: "pointer", whiteSpace: "nowrap" };
+    const noFilter = !f.status && !f.sector && !f.dept;
+    const setF = (type, val) => () => this.setState((st) => { if (type === "all") return { jobF: { status: null, sector: null, dept: null } }; const nf = { ...st.jobF }; nf[type] = nf[type] === val ? null : val; return { jobF: nf }; });
+    const jSectors = [...new Set(withMeta.map((j) => j.sector))];
+    const jDepts = [...new Set(withMeta.map((j) => j.dept))];
+    const jobChips = [
+      { label: "Todas · " + withMeta.length, style: noFilter ? chipOn : chipOff, onClick: setF("all") },
+      ...[["active", "activa"], ["draft", "borrador"], ["closed", "cerrada"]].map((s) => ({ label: s[1], style: f.status === s[0] ? chipOn : chipOff, onClick: setF("status", s[0]) })),
+      ...jSectors.map((s) => ({ label: s, style: f.sector === s ? chipOn : chipOff, onClick: setF("sector", s) })),
+      ...jDepts.map((d) => ({ label: d, style: f.dept === d ? chipOn : chipOff, onClick: setF("dept", d) })),
+    ];
+    const employees = this.EMP.map((e, i) => { const av = this.AV[e.av]; return { ...e, initials: this.initials(e.name), bg: av.bg, color: av.color, open: () => this.setState({ screen: "empDetail", currentEmp: i, empTab: "info" }) }; });
+    const timeoff = this.TIMEOFF.map((r) => { const av = this.AV[r.av]; const b = this.toBadge(r.status); return { ...r, initials: this.initials(r.name), bg: av.bg, color: av.color, badge: b.label, badgeBg: b.bg, badgeColor: b.color }; });
+    const todos = this.TODOS.map((t) => t.done
+      ? { ...t, box: "var(--brand)", boxBg: "var(--brand)", check: "#fff", color: "var(--soft)", deco: "line-through" }
+      : { ...t, box: "var(--line)", boxBg: "transparent", check: "transparent", color: "var(--ink)", deco: "none" });
+
+    const tabStyle = (active) => active
+      ? { fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#fff", background: "var(--ink)", borderRadius: "8px", padding: "7px 15px", cursor: "pointer", whiteSpace: "nowrap" }
+      : { fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "13px", color: "var(--soft)", padding: "7px 15px", cursor: "pointer", whiteSpace: "nowrap" };
+    const jobTab = this.state.jobTab, candTab = this.state.candTab;
+    const jt = { pipeline: tabStyle(jobTab === "pipeline"), distribucion: tabStyle(jobTab === "distribucion"), descripcion: tabStyle(jobTab === "descripcion") };
+    const ct = { perfil: tabStyle(candTab === "perfil"), analisis: tabStyle(candTab === "analisis"), entrevistas: tabStyle(candTab === "entrevistas"), historial: tabStyle(candTab === "historial"), notas: tabStyle(candTab === "notas") };
+    const candRaw = this.state.apps.find((a) => a.id === this.state.currentCand) || this.state.apps[6];
+    const cf = this.fit(candRaw.fit);
+    const cav = this.AV[candRaw.id.charCodeAt(1) % this.AV.length];
+    const cand = { ...candRaw, initials: this.initials(candRaw.name), email: candRaw.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ".") + "@email.com", fitBg: cf.bg, fitColor: cf.color, avatarBg: cav.bg, avatarColor: cav.color, stageName: (this.COLS.find((c) => c.id === candRaw.stage) || {}).name || "—" };
+
+    const drafted = this.state.drafted;
+    const draftTitle = drafted ? "Senior Product Designer" : "Se generará con el borrador";
+    const draftLoc = drafted ? "Remoto (España)" : "—";
+    const draftType = drafted ? "Jornada completa · Tecnología" : "—";
+    const draftDesc = drafted ? "Buscamos un Senior Product Designer para liderar el diseño de extremo a extremo de productos B2B SaaS, con foco en design systems y discovery. Trabajarás con producto e ingeniería de la investigación al lanzamiento." : "El borrador aparecerá aquí cuando lo generes.";
+    const draftSkills = drafted ? ["Product Strategy", "Design Systems", "User Research", "Prototyping", "Figma"] : ["—"];
+    const draftTitleColor = drafted ? "var(--ink)" : "var(--soft)";
+    const draftDescColor = drafted ? "#3A3833" : "var(--soft)";
+    const wz = this.state.wizStep;
+    const wizSteps = ["Fuente", "Normalización", "Duplicados", "Importar"].map((nm, i) => { const n = i + 1, active = wz === n, done = wz > n; return { n, name: nm, bg: active ? "var(--brand)" : (done ? "var(--brandSoft)" : "var(--surface)"), color: active ? "#fff" : (done ? "var(--brand)" : "var(--soft)"), border: active ? "var(--brand)" : "var(--line)", weight: active ? 700 : 600, label: active ? "var(--ink)" : "var(--soft)" }; });
+
+    const empRaw = this.EMP[this.state.currentEmp] || this.EMP[0];
+    const eav = this.AV[empRaw.av];
+    const eparts = empRaw.name.split(", ");
+    const emp = { ...empRaw, initials: this.initials(empRaw.name), bg: eav.bg, color: eav.color, lastName: eparts[0], firstName: eparts[1] || "", id: "EMP-00" + (this.state.currentEmp + 1) };
+    const eTab = this.state.empTab;
+    const et = { info: tabStyle(eTab === "info"), docs: tabStyle(eTab === "docs"), onboarding: tabStyle(eTab === "onboarding"), vac: tabStyle(eTab === "vac"), horas: tabStyle(eTab === "horas"), perf: tabStyle(eTab === "perf") };
+    const onboarding = this.ONBOARDING.map((o) => o.done
+      ? { ...o, box: "var(--brand)", boxBg: "var(--brand)", check: "#fff", color: "var(--soft)", deco: "line-through" }
+      : { ...o, box: "var(--line)", boxBg: "transparent", check: "transparent", color: "var(--ink)", deco: "none" });
+    const obDone = this.ONBOARDING.filter((o) => o.done).length;
+    const obPct = Math.round((obDone / this.ONBOARDING.length) * 100) + "%";
+
+    const stageName = (id) => (this.COLS.find((c) => c.id === id) || {}).name || id;
+    const jobsForApp = ["Senior Product Designer", "Account Executive", "Growth Marketing Lead"];
+    const candRows = this.state.apps.map((a, i) => { const ff = this.fit(a.fit); const av = this.AV[a.id.charCodeAt(1) % this.AV.length]; return { name: a.name, initials: this.initials(a.name), bg: av.bg, color: av.color, job: jobsForApp[i % 3], stage: stageName(a.stage), src: a.src, date: "12 jun", fit: a.fit, fitBg: ff.bg, fitColor: ff.color, open: () => this.setState({ screen: "candidateDetail", currentCand: a.id, candTab: "perfil" }) }; });
+    const tsweek = this.TSWEEK.map((r) => { const av = this.AV[r.av]; const b = r.status === "aprobado" ? { l: "aprobado", bg: "#DCEFE3", c: "#1B6B4F" } : r.status === "pendiente" ? { l: "pendiente", bg: "#F8E7C4", c: "#946312" } : { l: "enviado", bg: "#D6E4F2", c: "#2B5E8A" }; return { ...r, initials: this.initials(r.name), bg: av.bg, color: av.color, badge: b.l, badgeBg: b.bg, badgeColor: b.c }; });
+
+    // ── Mover de etapa: diálogo con motivo (obligatorio solo en Descartado) ──
+    const DISCARD_REASONS = ["No encaja con el perfil", "Experiencia insuficiente", "Expectativas salariales fuera de rango", "Retiró su candidatura", "Posición cubierta por otro candidato", "Proceso pausado / cancelado", "Otro"];
+    const mp = this.state.movePend;
+    const mApp = mp ? this.state.apps.find((a) => a.id === mp.id) : null;
+    const moveIsDiscard = !!mp && mp.to === "descartado";
+    const reasonStyle = (on) => `font-size:13px; font-weight:600; padding:9px 13px; border-radius:11px; cursor:pointer; border:1.5px solid ${on ? "var(--brand)" : "var(--line)"}; background:${on ? "var(--brandSoft)" : "var(--bg)"}; color:${on ? "var(--brand)" : "var(--ink)"};`;
+    const moveCanConfirm = !!mp && (!moveIsDiscard || !!this.state.moveReason);
+
+    // ── Notas internas del candidato ──
+    const notesList = this.state.notes.map((n, i) => ({ ...n, id: i }));
+
+    // ── Desempeño del empleado (net-new, no existe en el MVP) ──
+    const perfGoals = [
+      { t: "Lanzar el nuevo design system v2", pct: 80, status: "En curso", bg: "#DCEFE3", color: "#1B6B4F" },
+      { t: "Reducir deuda de UI en checkout", pct: 55, status: "En curso", bg: "#DCEFE3", color: "#1B6B4F" },
+      { t: "Mentorizar a 1 diseñador junior", pct: 40, status: "En riesgo", bg: "#F8E7C4", color: "#946312" },
+    ].map((g) => ({ ...g, w: g.pct + "%" }));
+    const perfFeedback = [
+      { who: "Feedback de manager", role: "Revisión intermedia", when: "7 jun 2026", text: "Gran trabajo liderando el rediseño; impacto claro en la consistencia del producto.", detail: true },
+      { who: "Autoevaluación", role: "1:1", when: "31 may 2026", text: "Pide más exposición a discovery con cliente el próximo trimestre.", detail: false },
+    ].map((fb) => ({ ...fb, open: fb.detail ? () => this.setState({ perfDetail: this.PERF_REVIEW }) : () => {}, cursor: fb.detail ? "pointer" : "default", arrow: fb.detail ? "Ver cuestionario completo →" : "" }));
+    const pdRaw = this.state.perfDetail;
+    const perfDetail = pdRaw ? { ...pdRaw, overallStars: "★★★★★".slice(0, pdRaw.overall) + "☆☆☆☆☆".slice(0, 5 - pdRaw.overall), questions: pdRaw.questions.map((q) => ({ ...q, stars: "★★★★★".slice(0, q.r) + "☆☆☆☆☆".slice(0, 5 - q.r) })) } : null;
+
+    // ── Entrevistas: agendar (manual / disponibilidad) ──
+    const pill = (on) => `font-size:12.5px; font-weight:600; padding:7px 13px; border-radius:999px; cursor:pointer; white-space:nowrap; border:1.5px solid ${on ? "var(--brand)" : "var(--line)"}; background:${on ? "var(--brandSoft)" : "var(--surface)"}; color:${on ? "var(--brand)" : "var(--soft)"};`;
+    const ivList = (this.state.ivByCand[this.state.currentCand] || []).map((iv) => ({ ...iv, bg: iv.status === "done" ? "#DCEFE3" : "#F8E7C4", color: iv.status === "done" ? "#1B6B4F" : "#946312", canFeedback: iv.status === "scheduled" }));
+    const ivEmpty = ivList.length === 0;
+    const ivNeedsSchedule = ivEmpty && candRaw.stage === "entrevista";
+    const ivMode = this.state.ivMode;
+    const ivWhen = (this.state.ivDate ? this.state.ivDate : "fecha por definir") + (this.state.ivTime ? " · " + this.state.ivTime : "");
+    const ivPartsText = this.state.ivParticipants.length ? this.state.ivParticipants.join(", ") : "—";
+    const openScheduler = () => this.setState({ ivMode: "manual", ivCandName: cand.name, ivCandEmail: cand.email, ivParticipants: [], ivDate: "", ivTime: "", ivSlots: [] });
+
+    return {
+      rootRef: this.rootRef,
+      moveOpen: this.state.moveOpen,
+      moveName: mApp ? mApp.name : "",
+      moveFrom: mApp ? ((this.COLS.find((c) => c.id === mApp.stage) || {}).name || "—") : "",
+      moveTo: mp ? ((this.COLS.find((c) => c.id === mp.to) || {}).name || "—") : "",
+      moveToBg: moveIsDiscard ? "#F6D9D2" : "#DCEFE3",
+      moveToColor: moveIsDiscard ? "#BD4332" : "#1B6B4F",
+      moveIsDiscard,
+      moveNoteLabel: "Nota (opcional)",
+      moveReasons: DISCARD_REASONS.map((r) => ({ value: r, label: r, style: reasonStyle(this.state.moveReason === r) })),
+      moveConfirmBg: moveCanConfirm ? "var(--brand)" : "#C2B8A4",
+      moveConfirmOpacity: moveCanConfirm ? "1" : ".7",
+      moveConfirmCursor: moveCanConfirm ? "pointer" : "not-allowed",
+      stop: (e) => e.stopPropagation(),
+      onMoveNote: (e) => this.setState({ moveNote: e.target.value }),
+      pickReason: (e) => this.setState({ moveReason: e.currentTarget.getAttribute("data-reason") }),
+      moveCancel: () => this.setState({ moveOpen: false, movePend: null, moveReason: "", moveNote: "" }),
+      moveConfirm: () => { if (!moveCanConfirm) return; const { id, to } = this.state.movePend; this.setState((st) => ({ apps: st.apps.map((a) => (a.id === id ? { ...a, stage: to } : a)), moveOpen: false, movePend: null, moveReason: "", moveNote: "" })); },
+      isCTnotas: candTab === "notas", notesList, noteKey: this.state.notes.length,
+      onNoteDraft: (e) => this.setState({ noteDraft: e.target.value }),
+      addNote: () => { const b = (this.state.noteDraft || "").trim(); if (!b) return; this.setState((st) => ({ notes: [{ body: b, author: "tú@empresa.com", when: "ahora" }, ...st.notes], noteDraft: "" })); },
+      isETperf: eTab === "perf", perfGoals, perfFeedback,
+      isEmpDetail: this.state.screen === "empDetail", emp, et, onboarding, docs: this.DOCS, timesheet: this.TIMESHEET, obDone, obPct,
+      isETinfo: eTab === "info", isETdocs: eTab === "docs", isETon: eTab === "onboarding", isETvac: eTab === "vac", isEThoras: eTab === "horas",
+      goEmpTab: (e) => this.setState({ empTab: e.currentTarget.getAttribute("data-tab") }),
+      navTo: (e) => this.setState({ screen: e.currentTarget.getAttribute("data-screen") }),
+      back: (e) => this.setState({ screen: e.currentTarget.getAttribute("data-back") }),
+      openJob: () => this.setState({ screen: "jobDetail", jobTab: "pipeline" }),
+      kanbanAutoScroll: (e) => { const el = e.currentTarget; const rect = el.getBoundingClientRect(); const edge = 90; const x = e.clientX; if (x > rect.right - edge) el.scrollLeft += 22; else if (x < rect.left + edge) el.scrollLeft -= 22; },
+      goJobTab: (e) => this.setState({ jobTab: e.currentTarget.getAttribute("data-tab") }),
+      goCandTab: (e) => this.setState({ candTab: e.currentTarget.getAttribute("data-tab") }),
+      isJobDetail: this.state.screen === "jobDetail", isCandidateDetail: this.state.screen === "candidateDetail",
+      isJTpipeline: jobTab === "pipeline", isJTdist: jobTab === "distribucion", isJTdesc: jobTab === "descripcion",
+      isCTperfil: candTab === "perfil", isCTanalisis: candTab === "analisis", isCTentrev: candTab === "entrevistas", isCThist: candTab === "historial",
+      jt, ct, cand, channels: this.CHANNELS, interviews: ivList, history: this.HISTORY,
+      ivList, ivEmpty, ivNeedsSchedule,
+      ivIsList: ivMode === "list", ivIsManual: ivMode === "manual", ivIsAvail: ivMode === "avail", ivIsSent: ivMode === "sent",
+      openScheduler,
+      ivToManual: () => this.setState({ ivMode: "manual" }),
+      ivToAvail: () => this.setState({ ivMode: "avail" }),
+      ivCancel: () => this.setState({ ivMode: "list" }),
+      ivTypeChips: this.IV_TYPES.map((t) => ({ label: t, style: pill(this.state.ivType === t), onClick: () => this.setState({ ivType: t }) })),
+      ivDurChips: this.IV_DURS.map((d) => ({ label: d, style: pill(this.state.ivDur === d), onClick: () => this.setState({ ivDur: d }) })),
+      interviewerChips: this.TEAM.map((m) => ({ name: m.name, role: m.role, style: pill(this.state.ivInterviewer === m.name), onClick: () => this.setState({ ivInterviewer: m.name }) })),
+      participantChips: this.TEAM.map((m) => ({ name: m.name, role: m.role, style: pill(this.state.ivParticipants.includes(m.name)), onClick: () => this.setState((st) => ({ ivParticipants: st.ivParticipants.includes(m.name) ? st.ivParticipants.filter((p) => p !== m.name) : [...st.ivParticipants, m.name] })) })),
+      slotChips: this.IV_SLOTS.map((sl) => ({ label: sl, style: pill(this.state.ivSlots.includes(sl)), onClick: () => this.setState((st) => ({ ivSlots: st.ivSlots.includes(sl) ? st.ivSlots.filter((x) => x !== sl) : [...st.ivSlots, sl] })) })),
+      ivDate: this.state.ivDate, ivTime: this.state.ivTime, ivCandName: this.state.ivCandName, ivCandEmail: this.state.ivCandEmail,
+      onIvDate: (e) => this.setState({ ivDate: e.target.value }),
+      onIvTime: (e) => this.setState({ ivTime: e.target.value }),
+      onIvName: (e) => this.setState({ ivCandName: e.target.value }),
+      onIvEmail: (e) => this.setState({ ivCandEmail: e.target.value }),
+      pvType: this.state.ivType, pvWhen: ivWhen, pvDur: this.state.ivDur, pvInterviewer: this.state.ivInterviewer, pvParticipants: ivPartsText,
+      ivSlotsText: this.state.ivSlots.length ? this.state.ivSlots.join("  ·  ") : "selecciona huecos arriba",
+      ivCanSend: !!this.state.ivDate && !!this.state.ivTime,
+      ivCanSendAvail: this.state.ivSlots.length > 0,
+      sendInvite: () => { if (!this.state.ivDate || !this.state.ivTime) return; const id = this.state.currentCand; const iv = { stage: this.state.ivType, who: this.state.ivInterviewer, dur: this.state.ivDur, when: this.state.ivDate + " · " + this.state.ivTime, badge: "programada", status: "scheduled" }; this.setState((st) => ({ ivByCand: { ...st.ivByCand, [id]: [iv, ...(st.ivByCand[id] || [])] }, ivMode: "sent" })); },
+      sendAvailability: () => { if (!this.state.ivSlots.length) return; const id = this.state.currentCand; const iv = { stage: this.state.ivType, who: this.state.ivInterviewer, dur: this.state.ivDur, when: "a confirmar por el candidato", badge: "disponibilidad enviada", status: "scheduled" }; this.setState((st) => ({ ivByCand: { ...st.ivByCand, [id]: [iv, ...(st.ivByCand[id] || [])] }, ivMode: "sent" })); },
+      perfDetail, closePerfDetail: () => this.setState({ perfDetail: null }),
+      ns: {
+        dashboard: this.navStyle(s === "dashboard"), jobs: this.navStyle(s === "jobs" || s === "jobDetail" || s === "newJob" || s === "importJob"),
+        candidates: this.navStyle(s === "candidates" || s === "candidateDetail" || s === "pipeline"), timesheets: this.navStyle(s === "timesheets"), employees: this.navStyle(s === "employees" || s === "empDetail"),
+        org: this.navStyle(s === "org"), timeoff: this.navStyle(s === "timeoff"), settings: this.navStyle(s === "settings"),
+      },
+      isDashboard: s === "dashboard", isJobs: s === "jobs", isPipeline: s === "pipeline",
+      isEmployees: s === "employees", isOrg: s === "org", isTimeoff: s === "timeoff", isSettings: s === "settings",
+      isCandidates: s === "candidates", isTimesheets: s === "timesheets", candRows, tsweek,
+      columns, jobs, jobChips, noJobs: jobs.length === 0, employees, timeoff, todos,
+      openNew: () => this.setState({ screen: "newJob", brief: "", drafted: false }),
+      openImport: () => this.setState({ screen: "importJob", wizStep: 1 }),
+      onBrief: (e) => this.setState({ brief: e.target.value }),
+      genDraft: () => this.setState({ drafted: true }),
+      wizNext: () => this.setState((st) => ({ wizStep: Math.min(4, st.wizStep + 1) })),
+      wizBack: () => this.setState((st) => ({ wizStep: Math.max(1, st.wizStep - 1) })),
+      isNewJob: this.state.screen === "newJob", isImport: this.state.screen === "importJob",
+      drafted, notDrafted: !drafted, brief: this.state.brief,
+      draftTitle, draftLoc, draftType, draftDesc, draftSkills, draftTitleColor, draftDescColor,
+      wizSteps, isWiz1: wz === 1, isWiz2: wz === 2, isWiz3: wz === 3, isWiz4: wz === 4, wizCanBack: wz > 1, wizCanNext: wz < 4,
+    };
+  }
+}
+</script>
+</body>
+</html>

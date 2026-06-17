@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,500;0,600;0,700;0,800;0,900;1,800;1,900&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  ::selection { background: #C6F24E; color: #1A1A17; }
+  .car-scroll::-webkit-scrollbar { width: 10px; }
+  .car-scroll::-webkit-scrollbar-thumb { background: #DAD3C5; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+  .car-job { transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease; }
+  .car-job:hover { transform: translateY(-2px); border-color: #C9BFA8; box-shadow: 0 14px 30px -18px rgba(26,26,23,.45); }
+  .car-hard { transition: transform .1s ease, box-shadow .1s ease; }
+  .car-hard:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #1A1A17; }
+  .car-hard:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #1A1A17; }
+  .car-field { transition: border-color .12s ease, box-shadow .12s ease; }
+  .car-field:focus { outline: none; border-color: #0E5C4A; box-shadow: 0 0 0 3px #DCEFE4; }
+  .car-rtab { transition: background .12s ease, color .12s ease; }
+</style>
+</helmet>
+
+<div ref="{{ rootRef }}" data-screen-label="TalentOS Career — público" style="--bg:#F4F0E8; --surface:#FCFAF6; --surface2:#F8F4EB; --ink:#1A1A17; --soft:#79746B; --line:#E7E1D4; --brand:#0E5C4A; --brandSoft:#DCEFE4; --accent:#F1543F; --lime:#C6F24E; --limeSoft:#EAF7C4; --shadow:#1A1A17; font-family:'Hanken Grotesk',system-ui,sans-serif; background:#ECEAE4; color:var(--ink); min-height:100vh; padding:26px; -webkit-font-smoothing:antialiased;">
+
+  <div style="max-width:1080px; margin:0 auto;">
+
+    <!-- ===== BROWSER CHROME ===== -->
+    <div style="border:1px solid var(--line); border-bottom:none; border-radius:16px 16px 0 0; background:var(--surface); padding:11px 16px; display:flex; align-items:center; gap:14px;">
+      <div style="display:flex; gap:7px;">
+        <span style="width:11px; height:11px; border-radius:50%; background:#F1543F;"></span>
+        <span style="width:11px; height:11px; border-radius:50%; background:#F2C24B;"></span>
+        <span style="width:11px; height:11px; border-radius:50%; background:#5BC98F;"></span>
+      </div>
+      <div style="flex:1; display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:7px 12px; min-width:0;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><rect x="4" y="10" width="16" height="11" rx="2" stroke="var(--brand)" stroke-width="2"/><path d="M8 10V7a4 4 0 018 0v3" stroke="var(--brand)" stroke-width="2"/></svg>
+        <span style="font-family:'Space Mono',monospace; font-size:12px; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ url }}</span>
+      </div>
+      <div style="display:flex; gap:5px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:4px;">
+        <div data-route="login" onClick="{{ go }}" class="car-rtab" style="{{ tab.login }}">Login</div>
+        <div data-route="careers" onClick="{{ go }}" class="car-rtab" style="{{ tab.careers }}">Career site</div>
+        <div data-route="job" onClick="{{ go }}" class="car-rtab" style="{{ tab.job }}">Oferta + Aplicar</div>
+      </div>
+    </div>
+
+    <!-- ===== VIEWPORT ===== -->
+    <div class="car-scroll" style="border:1px solid var(--line); border-radius:0 0 16px 16px; background:var(--bg); height:760px; overflow-y:auto; box-shadow:0 30px 60px -34px rgba(26,26,23,.4);">
+
+      <!-- ================= LOGIN ================= -->
+      <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+      <div style="min-height:100%; display:flex; align-items:center; justify-content:center; padding:48px 20px; background:radial-gradient(130% 80% at 50% -10%, #F7F3EB 0%, var(--bg) 60%);">
+        <div style="width:100%; max-width:392px;">
+          <div style="background:var(--surface); border:1.5px solid var(--ink); border-radius:18px; box-shadow:7px 7px 0 var(--shadow); overflow:hidden;">
+            <div style="padding:34px 32px 26px; text-align:center; border-bottom:1px solid var(--line);">
+              <div style="width:48px; height:48px; margin:0 auto 14px; border-radius:13px; background:var(--brand); display:flex; align-items:center; justify-content:center; box-shadow:3px 3px 0 var(--shadow);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" stroke-width="2" stroke-linejoin="round"/></svg>
+              </div>
+              <div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:26px; letter-spacing:-.8px;">TalentOS</div>
+              <div style="font-size:14px; color:var(--soft); margin-top:5px;">{{ loginSub }}</div>
+            </div>
+            <div style="padding:26px 32px 30px;">
+              <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Email</label>
+                <input class="car-field" type="email" placeholder="tu@empresa.com" style="width:100%; font-family:inherit; font-size:14px; padding:11px 13px; border:1.5px solid var(--line); border-radius:11px; background:var(--bg); color:var(--ink);">
+              </div>
+              <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Contraseña</label>
+                <input class="car-field" type="password" placeholder="••••••••" style="width:100%; font-family:inherit; font-size:14px; padding:11px 13px; border:1.5px solid var(--line); border-radius:11px; background:var(--bg); color:var(--ink);">
+              </div>
+              <button class="car-hard" style="width:100%; font-family:'Archivo',sans-serif; font-weight:800; font-size:15px; color:var(--bg); background:var(--brand); border:1.5px solid var(--ink); border-radius:12px; padding:12px; cursor:pointer; box-shadow:3px 3px 0 var(--shadow);">{{ loginCta }}</button>
+              <div onClick="{{ toggleMode }}" style="margin-top:18px; text-align:center; font-size:13px; color:var(--soft); cursor:pointer;">{{ loginToggle }}</div>
+            </div>
+          </div>
+          <div style="text-align:center; margin-top:18px; font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1px; color:var(--soft);">ACCESO INTERNO · EQUIPO DE RECLUTAMIENTO</div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ================= CAREER SITE ================= -->
+      <sc-if value="{{ isCareers }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <!-- company header -->
+        <div style="background:var(--surface); border-bottom:1px solid var(--line); padding:44px 28px 38px; position:relative; overflow:hidden;">
+          <div style="position:absolute; inset:0; background:radial-gradient(90% 140% at 88% 0%, var(--limeSoft) 0%, transparent 55%); pointer-events:none;"></div>
+          <div style="max-width:760px; margin:0 auto; position:relative; display:flex; align-items:center; gap:20px;">
+            <div style="width:74px; height:74px; flex-shrink:0; border-radius:18px; background:var(--brand); color:var(--lime); display:flex; align-items:center; justify-content:center; font-family:'Archivo',sans-serif; font-weight:900; font-size:34px; box-shadow:4px 4px 0 var(--shadow);">A</div>
+            <div>
+              <div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--brand); margin-bottom:6px;">Estamos contratando</div>
+              <h1 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:34px; letter-spacing:-1.2px; line-height:1; margin:0;">Trabaja en <span style="font-style:italic; color:var(--accent);">Acme Talent</span></h1>
+              <p style="font-size:14.5px; color:var(--soft); margin:10px 0 0; max-width:520px; line-height:1.5;">Construimos software para equipos de operaciones. Más de 80 personas en Madrid, Barcelona y remoto.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- jobs list -->
+        <div style="max-width:760px; margin:0 auto; padding:32px 28px 20px;">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px;">
+            <h2 style="font-family:'Space Mono',monospace; font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--soft); margin:0;">3 posiciones abiertas</h2>
+            <span style="font-size:12.5px; color:var(--soft);">Madrid · Barcelona · Zaragoza</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:13px;">
+            <sc-for list="{{ jobs }}" as="job" hint-placeholder-count="3">
+              <div data-job="{{ job.id }}" onClick="{{ openJob }}" class="car-job" style="cursor:pointer; background:var(--surface); border:1.5px solid var(--line); border-radius:16px; padding:21px 22px;">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">
+                  <div style="min-width:0;">
+                    <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:19px; letter-spacing:-.4px;">{{ job.title }}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:14px; margin-top:9px; font-size:13px; color:var(--soft);">
+                      <span style="display:inline-flex; align-items:center; gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.6 7-11a7 7 0 10-14 0c0 5.4 7 11 7 11Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="2"/></svg>{{ job.location }}</span>
+                      <span style="display:inline-flex; align-items:center; gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/></svg>{{ job.typeLabel }}</span>
+                      <span style="display:inline-flex; align-items:center; gap:5px; font-family:'Space Mono',monospace; color:var(--ink);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="var(--soft)" stroke-width="2"/><path d="M12 7v10M9.5 9.5h3.2a1.8 1.8 0 010 3.6H9.5m0 0h3.4" stroke="var(--soft)" stroke-width="2" stroke-linecap="round"/></svg>{{ job.salary }}</span>
+                    </div>
+                  </div>
+                  <div style="flex-shrink:0; width:34px; height:34px; border-radius:50%; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:14px;">
+                  <sc-for list="{{ job.topSkills }}" as="sk" hint-placeholder-count="3">
+                    <span style="font-size:12px; font-weight:600; padding:4px 11px; border-radius:999px; background:var(--brandSoft); color:var(--brand);">{{ sk }}</span>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="text-align:center; margin:38px 0 30px; font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1px; color:var(--soft);">POWERED BY <span style="color:var(--brand); font-weight:700;">TALENTOS</span></div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ================= PUBLIC JOB + APPLY ================= -->
+      <sc-if value="{{ isJob }}" hint-placeholder-val="{{ true }}">
+      <div style="max-width:760px; margin:0 auto; padding:30px 28px 40px;">
+
+        <div data-route="careers" onClick="{{ go }}" style="display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--soft); cursor:pointer; margin-bottom:18px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Todas las posiciones de Acme Talent
+        </div>
+
+        <!-- job card -->
+        <div style="background:var(--surface); border:1.5px solid var(--ink); border-radius:18px; padding:30px 30px 28px; box-shadow:6px 6px 0 var(--shadow);">
+          <h1 style="font-family:'Archivo',sans-serif; font-weight:900; font-size:30px; letter-spacing:-1px; line-height:1.04; margin:0;">{{ active.title }}</h1>
+          <div style="display:flex; flex-wrap:wrap; gap:16px; margin-top:14px; font-size:13.5px; color:var(--soft);">
+            <span style="display:inline-flex; align-items:center; gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.6 7-11a7 7 0 10-14 0c0 5.4 7 11 7 11Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="2"/></svg>{{ active.location }}</span>
+            <span style="display:inline-flex; align-items:center; gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/></svg>{{ active.typeLabel }}</span>
+            <span style="display:inline-flex; align-items:center; gap:6px; font-family:'Space Mono',monospace; color:var(--ink);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="var(--soft)" stroke-width="2"/><path d="M12 7v10M9.5 9.5h3.2a1.8 1.8 0 010 3.6H9.5m0 0h3.4" stroke="var(--soft)" stroke-width="2" stroke-linecap="round"/></svg>{{ active.salary }}</span>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:16px;">
+            <sc-for list="{{ active.skills }}" as="sk" hint-placeholder-count="4">
+              <span style="font-size:12px; font-weight:600; padding:4px 11px; border-radius:999px; background:var(--brandSoft); color:var(--brand);">{{ sk }}</span>
+            </sc-for>
+          </div>
+
+          <div style="height:1px; background:var(--line); margin:24px 0;"></div>
+
+          <div style="display:flex; flex-direction:column; gap:5px;">
+            <sc-for list="{{ active.blocks }}" as="b" hint-placeholder-count="5">
+              <div style="{{ b.style }}">{{ b.text }}</div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- apply form / success -->
+        <div style="margin-top:22px;">
+          <sc-if value="{{ applied }}" hint-placeholder-val="{{ false }}">
+            <div style="background:var(--surface); border:1.5px solid var(--ink); border-radius:18px; padding:48px 30px; text-align:center; box-shadow:6px 6px 0 var(--shadow);">
+              <div style="width:58px; height:58px; margin:0 auto 16px; border-radius:50%; background:var(--limeSoft); border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div style="font-family:'Archivo',sans-serif; font-weight:900; font-size:24px; letter-spacing:-.6px;">¡Candidatura enviada!</div>
+              <p style="font-size:14px; color:var(--soft); margin:9px auto 0; max-width:380px; line-height:1.5;">Revisaremos tu perfil y te contactaremos pronto. Recibirás una copia en tu email.</p>
+              <div style="margin-top:14px; display:inline-flex; align-items:center; gap:7px; font-family:'Space Mono',monospace; font-size:11px; color:var(--soft); background:var(--bg); border:1px solid var(--line); border-radius:999px; padding:5px 13px;">
+                <span style="width:7px; height:7px; border-radius:50%; background:var(--brand);"></span>origen registrado · career_site
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ showForm }}" hint-placeholder-val="{{ true }}">
+            <div style="background:var(--surface); border:1.5px solid var(--line); border-radius:18px; padding:28px 30px 30px;">
+              <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:20px; letter-spacing:-.4px;">Aplicar a esta oferta</div>
+              <div style="font-size:13px; color:var(--soft); margin-top:4px;">Cuéntanos sobre ti. Los campos con * son obligatorios.</div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:22px;">
+                <div>
+                  <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Nombre completo *</label>
+                  <input class="car-field" style="width:100%; font-family:inherit; font-size:14px; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);">
+                </div>
+                <div>
+                  <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Email *</label>
+                  <input class="car-field" type="email" style="width:100%; font-family:inherit; font-size:14px; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);">
+                </div>
+                <div>
+                  <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Teléfono</label>
+                  <input class="car-field" style="width:100%; font-family:inherit; font-size:14px; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);">
+                </div>
+                <div>
+                  <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Ubicación</label>
+                  <input class="car-field" placeholder="Madrid" style="width:100%; font-family:inherit; font-size:14px; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);">
+                </div>
+                <div>
+                  <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Años de experiencia</label>
+                  <input class="car-field" type="number" value="0" style="width:100%; font-family:inherit; font-size:14px; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);">
+                </div>
+                <div>
+                  <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">CV (PDF, máx. 8 MB)</label>
+                  <div style="display:flex; align-items:center; gap:9px; font-size:13px; color:var(--soft); padding:9px 12px; border:1.5px dashed var(--line); border-radius:10px; background:var(--bg); cursor:pointer;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Subir archivo
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:15px;">
+                <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Skills (separadas por comas)</label>
+                <input class="car-field" placeholder="React, TypeScript, …" style="width:100%; font-family:inherit; font-size:14px; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);">
+              </div>
+              <div style="margin-top:15px;">
+                <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Cuéntanos brevemente sobre ti</label>
+                <textarea class="car-field" rows="3" style="width:100%; font-family:inherit; font-size:14px; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); resize:vertical;"></textarea>
+              </div>
+
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:22px; flex-wrap:wrap;">
+                <div style="font-size:11.5px; color:var(--soft); display:inline-flex; align-items:center; gap:7px; font-family:'Space Mono',monospace;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 018 0v3" stroke="currentColor" stroke-width="2"/></svg>
+                  Tus datos se tratan según el RGPD
+                </div>
+                <button onClick="{{ submit }}" class="car-hard" style="font-family:'Archivo',sans-serif; font-weight:800; font-size:15px; color:var(--bg); background:var(--accent); border:1.5px solid var(--ink); border-radius:12px; padding:12px 26px; cursor:pointer; box-shadow:3px 3px 0 var(--shadow);">Enviar candidatura</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="text-align:center; margin:34px 0 6px; font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1px; color:var(--soft);">POWERED BY <span style="color:var(--brand); font-weight:700;">TALENTOS</span></div>
+      </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { route: 'careers', mode: 'signin', activeId: 'j1', applied: false };
+
+  jobs() {
+    return [
+      {
+        id: 'j1',
+        title: 'Senior Frontend Engineer',
+        location: 'Madrid (híbrido)',
+        typeLabel: 'Jornada completa',
+        salary: '55.000 € – 70.000 €',
+        skills: ['React', 'TypeScript', 'Next.js', 'Testing', 'CSS'],
+        blocks: [
+          { h: 'Sobre el rol' },
+          { p: 'Buscamos un/a Senior Frontend Engineer para liderar el desarrollo de nuestra plataforma web.' },
+          { h: 'Responsabilidades' },
+          { li: 'Construir interfaces con React y TypeScript' },
+          { li: 'Definir estándares de calidad del frontend' },
+          { li: 'Mentorizar al equipo' },
+          { h: 'Requisitos' },
+          { li: '5+ años con React' },
+          { li: 'Experiencia con design systems' },
+        ],
+      },
+      {
+        id: 'j2',
+        title: 'Customer Success Manager',
+        location: 'Barcelona',
+        typeLabel: 'Jornada completa',
+        salary: '32.000 € – 42.000 €',
+        skills: ['Customer Success', 'SaaS', 'CRM', 'Inglés', 'Comunicación'],
+        blocks: [
+          { h: 'Sobre el rol' },
+          { p: 'Gestionarás la relación con nuestras cuentas clave y su adopción del producto.' },
+          { h: 'Requisitos' },
+          { li: '3+ años en Customer Success B2B SaaS' },
+          { li: 'Inglés alto' },
+        ],
+      },
+      {
+        id: 'j3',
+        title: 'Técnico/a de Mantenimiento Industrial',
+        location: 'Zaragoza',
+        typeLabel: 'Jornada completa',
+        salary: '24.000 € – 30.000 €',
+        skills: ['Electromecánica', 'PLC', 'Mantenimiento preventivo', 'Turnos'],
+        blocks: [
+          { h: 'Sobre el rol' },
+          { p: 'Mantenimiento preventivo y correctivo de línea de producción.' },
+          { h: 'Requisitos' },
+          { li: 'FP en electromecánica' },
+          { li: 'Disponibilidad para turnos' },
+        ],
+      },
+    ];
+  }
+
+  renderBlocks(blocks) {
+    return blocks.map((b) => {
+      if (b.h) return { text: b.h, style: "font-family:'Archivo',sans-serif; font-weight:800; font-size:15px; letter-spacing:.2px; text-transform:uppercase; color:var(--brand); margin:14px 0 4px;" };
+      if (b.li) return { text: '•  ' + b.li, style: 'font-size:14.5px; color:var(--ink); line-height:1.55; padding-left:4px;' };
+      return { text: b.p, style: 'font-size:14.5px; color:var(--ink); line-height:1.6;' };
+    });
+  }
+
+  renderVals() {
+    const route = this.state.route;
+    const list = this.jobs();
+    const active = list.find((j) => j.id === this.state.activeId) || list[0];
+    const tabStyle = (on) => `font-family:'Space Mono',monospace; font-size:11px; font-weight:700; letter-spacing:.5px; padding:5px 11px; border-radius:7px; cursor:pointer; white-space:nowrap; ${on ? 'background:var(--brand); color:var(--bg);' : 'background:transparent; color:var(--soft);'}`;
+    const urls = {
+      login: 'talentos.app/login',
+      careers: 'acme.talentos.app/careers/acme',
+      job: 'acme.talentos.app/careers/acme/jobs/' + active.id,
+    };
+
+    return {
+      rootRef: (el) => {},
+      url: urls[route] || urls.careers,
+      tab: { login: tabStyle(route === 'login'), careers: tabStyle(route === 'careers'), job: tabStyle(route === 'job') },
+      go: (e) => {
+        const r = e.currentTarget.getAttribute('data-route');
+        this.setState({ route: r, applied: false });
+      },
+      isLogin: route === 'login',
+      isCareers: route === 'careers',
+      isJob: route === 'job',
+      // login
+      loginSub: this.state.mode === 'signin' ? 'Accede a tu workspace' : 'Crea tu cuenta',
+      loginCta: this.state.mode === 'signin' ? 'Entrar' : 'Crear cuenta',
+      loginToggle: this.state.mode === 'signin' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión',
+      toggleMode: () => this.setState((s) => ({ mode: s.mode === 'signin' ? 'signup' : 'signin' })),
+      // careers
+      jobs: list.map((j) => ({ ...j, topSkills: j.skills.slice(0, 3) })),
+      openJob: (e) => {
+        const id = e.currentTarget.getAttribute('data-job');
+        this.setState({ route: 'job', activeId: id, applied: false });
+      },
+      // job + apply
+      active: { ...active, blocks: this.renderBlocks(active.blocks) },
+      applied: this.state.applied,
+      showForm: !this.state.applied,
+      submit: () => this.setState({ applied: true }),
+    };
+  }
+}
+</script>
+</body>
+</html>
