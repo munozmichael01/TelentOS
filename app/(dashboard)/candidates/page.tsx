@@ -16,7 +16,7 @@ export default async function CandidatesPage() {
 
   return (
     <div>
-      <PageHeader title="Candidatos" description="Todas las candidaturas en todos los procesos." />
+      <PageHeader title="Candidatos" description="Reclutamiento" />
       {(applications ?? []).length === 0 ? (
         <EmptyState
           title="Sin candidaturas"

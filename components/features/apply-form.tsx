@@ -2,16 +2,28 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 
-/**
- * Formulario público de candidatura del career site. Propaga los utm_* de la
- * URL (si llegó desde una campaña) y por defecto marca origen career_site.
- */
+const fieldInput: React.CSSProperties = {
+  width: "100%",
+  fontFamily: "inherit",
+  fontSize: "14px",
+  padding: "10px 12px",
+  border: "1.5px solid #E7E1D4",
+  borderRadius: "10px",
+  background: "#F4F0E8",
+  color: "#1A1A17",
+  outline: "none",
+};
+
+const fieldLabel: React.CSSProperties = {
+  display: "block",
+  fontSize: "12.5px",
+  fontWeight: 700,
+  marginBottom: "6px",
+  color: "#3A3833",
+};
+
 export function ApplyForm({ jobId }: { jobId: string }) {
   const params = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
@@ -42,56 +54,101 @@ export function ApplyForm({ jobId }: { jobId: string }) {
 
   if (done) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border bg-card p-10 text-center">
-        <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-        <p className="font-semibold">¡Candidatura enviada!</p>
-        <p className="text-sm text-muted-foreground">Revisaremos tu perfil y te contactaremos pronto.</p>
+      <div style={{ background: "#FCFAF6", border: "1.5px solid #1A1A17", borderRadius: "18px", padding: "48px 30px", textAlign: "center", boxShadow: "6px 6px 0 #1A1A17" }}>
+        <div style={{ width: "58px", height: "58px", margin: "0 auto 16px", borderRadius: "50%", background: "#EAF7C4", border: "1.5px solid #1A1A17", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M5 13l4 4L19 7" stroke="#0E5C4A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "24px", letterSpacing: "-.6px" }}>
+          ¡Candidatura enviada!
+        </div>
+        <p style={{ fontSize: "14px", color: "#79746B", margin: "9px auto 0", maxWidth: "380px", lineHeight: 1.5 }}>
+          Revisaremos tu perfil y te contactaremos pronto. Recibirás una copia en tu email.
+        </p>
+        <div style={{ marginTop: "14px", display: "inline-flex", alignItems: "center", gap: "7px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "999px", padding: "5px 13px" }}>
+          <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#0E5C4A", flexShrink: 0 }} />
+          origen registrado · career_site
+        </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 rounded-xl border bg-card p-6">
-      <h2 className="font-semibold">Aplicar a esta oferta</h2>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="name">Nombre completo *</Label>
-          <Input id="name" name="name" required />
+    <form onSubmit={onSubmit} style={{ background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: "18px", padding: "28px 30px 30px" }}>
+      <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "20px", letterSpacing: "-.4px" }}>
+        Aplicar a esta oferta
+      </div>
+      <div style={{ fontSize: "13px", color: "#79746B", marginTop: "4px" }}>
+        Cuéntanos sobre ti. Los campos con * son obligatorios.
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginTop: "22px" }}>
+        <div>
+          <label style={fieldLabel}>Nombre completo *</label>
+          <input name="name" required style={fieldInput} />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email *</Label>
-          <Input id="email" name="email" type="email" required />
+        <div>
+          <label style={fieldLabel}>Email *</label>
+          <input name="email" type="email" required style={fieldInput} />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="phone">Teléfono</Label>
-          <Input id="phone" name="phone" />
+        <div>
+          <label style={fieldLabel}>Teléfono</label>
+          <input name="phone" style={fieldInput} />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="location">Ubicación</Label>
-          <Input id="location" name="location" placeholder="Madrid" />
+        <div>
+          <label style={fieldLabel}>Ubicación</label>
+          <input name="location" placeholder="Madrid" style={fieldInput} />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="experience_years">Años de experiencia</Label>
-          <Input id="experience_years" name="experience_years" type="number" min={0} defaultValue={0} />
+        <div>
+          <label style={fieldLabel}>Años de experiencia</label>
+          <input name="experience_years" type="number" min={0} defaultValue={0} style={fieldInput} />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="cv">CV (PDF, máx. 8 MB)</Label>
-          <Input id="cv" name="cv" type="file" accept=".pdf,.doc,.docx" />
+        <div>
+          <label style={fieldLabel}>CV (PDF, máx. 8 MB)</label>
+          <div style={{ display: "flex", alignItems: "center", gap: "9px", fontSize: "13px", color: "#79746B", padding: "9px 12px", border: "1.5px dashed #E7E1D4", borderRadius: "10px", background: "#F4F0E8", cursor: "pointer", position: "relative" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Subir archivo
+            <input name="cv" type="file" accept=".pdf,.doc,.docx" style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }} />
+          </div>
         </div>
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="skills">Skills (separadas por comas)</Label>
-        <Input id="skills" name="skills" placeholder="React, TypeScript, …" />
+
+      <div style={{ marginTop: "15px" }}>
+        <label style={fieldLabel}>Skills (separadas por comas)</label>
+        <input name="skills" placeholder="React, TypeScript, …" style={fieldInput} />
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="summary">Cuéntanos brevemente sobre ti</Label>
-        <Textarea id="summary" name="summary" rows={3} />
+      <div style={{ marginTop: "15px" }}>
+        <label style={fieldLabel}>Cuéntanos brevemente sobre ti</label>
+        <textarea name="summary" rows={3} style={{ ...fieldInput, resize: "none", lineHeight: 1.55 }} />
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
-        {submitting && <Loader2 className="animate-spin" />}
+
+      {error && <p style={{ fontSize: "13px", color: "#BD4332", marginTop: "10px" }}>{error}</p>}
+
+      <button
+        type="submit"
+        disabled={submitting}
+        style={{
+          marginTop: "22px",
+          fontFamily: "'Archivo',sans-serif",
+          fontWeight: 800,
+          fontSize: "14px",
+          color: "#fff",
+          background: "#0E5C4A",
+          border: "2px solid #1A1A17",
+          borderRadius: "12px",
+          padding: "12px 24px",
+          boxShadow: "3px 3px 0 #1A1A17",
+          cursor: submitting ? "not-allowed" : "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "8px",
+          opacity: submitting ? 0.7 : 1,
+        }}
+      >
+        {submitting && <Loader2 size={14} className="animate-spin" />}
         Enviar candidatura
-      </Button>
+      </button>
     </form>
   );
 }

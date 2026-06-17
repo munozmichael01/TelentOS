@@ -2,24 +2,31 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles, TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AgentHint } from "@/components/agent-hint";
+import { Loader2 } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
 import type { ChannelPlan } from "@/agents/agent-channel-optimizer";
 
-/**
- * Distribución de la oferta: el agente propone el plan (canales, presupuesto,
- * copy por canal) y el humano selecciona qué activar. Las campañas activas se
- * monitorizan con métricas simuladas (mock de integraciones reales).
- */
+const CHANNEL_DOTS: Record<string, string> = {
+  infojobs: "#3B7FC4",
+  linkedin: "#2867B2",
+  indeed: "#2164F3",
+  "career site": "#0E5C4A",
+  glassdoor: "#0CAA41",
+  default: "#9C9588",
+};
+
+function channelDot(name: string) {
+  const key = (name ?? "").toLowerCase();
+  return Object.entries(CHANNEL_DOTS).find(([k]) => key.includes(k))?.[1] ?? CHANNEL_DOTS.default;
+}
+
+function cpaColor(cpa: number) {
+  if (cpa <= 30) return "#1B6B4F";
+  if (cpa <= 80) return "#946312";
+  return "#BD4332";
+}
+
 export function ChannelPlanner({ jobId, campaigns }: { jobId: string; campaigns: Campaign[] }) {
   const router = useRouter();
   const [objective, setObjective] = useState<"volume" | "quality" | "cpa">("volume");
@@ -88,148 +95,240 @@ export function ChannelPlanner({ jobId, campaigns }: { jobId: string; campaigns:
     router.refresh();
   }
 
+  const objectiveLabel: Record<string, string> = {
+    volume: "Volumen",
+    quality: "Calidad",
+    cpa: "Mín. CPA",
+  };
+
   return (
-    <div className="space-y-6">
-      <Card className="border-primary/30">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Agente de optimización de canales
-          </CardTitle>
-          <CardDescription>
-            Define objetivo y presupuesto; el agente recomienda canales, reparto y copy según la performance histórica.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1.5">
-              <Label>Objetivo</Label>
-              <Select value={objective} onValueChange={(v) => setObjective(v as typeof objective)}>
-                <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="volume">Volumen de candidatos</SelectItem>
-                  <SelectItem value="quality">Calidad de candidatos</SelectItem>
-                  <SelectItem value="cpa">Minimizar coste por aplicación</SelectItem>
-                </SelectContent>
-              </Select>
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      {/* ── optimizer form ── */}
+      <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "22px 24px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+          <span style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#DCEFE4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M4 19V9M10 19V5M16 19v-7M20 19V11" stroke="#0E5C4A" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </span>
+          <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Distribución de canales</span>
+        </div>
+
+        <p style={{ fontSize: "13.5px", lineHeight: 1.55, color: "#79746B", margin: "0 0 16px" }}>
+          Define objetivo y presupuesto; el agente recomienda canales, reparto y copy según la performance histórica.
+        </p>
+
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "12px" }}>
+          {/* Objetivo */}
+          <div>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B", marginBottom: "7px" }}>
+              Objetivo
             </div>
-            <div className="space-y-1.5">
-              <Label>Presupuesto (€)</Label>
-              <Input type="number" className="w-32" value={budget} onChange={(e) => setBudget(e.target.value)} />
-            </div>
-            <Button onClick={optimize} disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
-              Optimizar
-            </Button>
+            <select
+              value={objective}
+              onChange={(e) => setObjective(e.target.value as typeof objective)}
+              style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", fontWeight: 600, color: "#1A1A17", background: "#F4F0E8", border: "1.5px solid #E7E1D4", borderRadius: "11px", padding: "9px 12px", outline: "none", cursor: "pointer" }}
+            >
+              <option value="volume">Volumen de candidatos</option>
+              <option value="quality">Calidad de candidatos</option>
+              <option value="cpa">Minimizar coste por aplicación</option>
+            </select>
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
-
-          {plan && (
-            <AgentHint>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold">Plan recomendado</span>
-                  {planMode === "fallback" && <Badge variant="warning">modo heurístico</Badge>}
-                </div>
-                <p className="text-xs text-muted-foreground">{plan.rationale}</p>
-                <div className="space-y-2">
-                  {plan.recommendations.map((r) => (
-                    <label
-                      key={r.channel_id}
-                      className="flex cursor-pointer items-start gap-3 rounded-md border bg-background p-3"
-                    >
-                      <input
-                        type="checkbox"
-                        className="mt-1"
-                        checked={selected.has(r.channel_id)}
-                        onChange={(e) => {
-                          const next = new Set(selected);
-                          e.target.checked ? next.add(r.channel_id) : next.delete(r.channel_id);
-                          setSelected(next);
-                        }}
-                      />
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium">{r.channel_name}</span>
-                          <Badge variant="outline">prioridad {r.priority}</Badge>
-                          <Badge variant="secondary">{formatMoney(r.budget)}</Badge>
-                          <span className="text-xs text-muted-foreground">
-                            ~{r.expected_applications} aplicaciones · CPA est. {formatMoney(r.expected_cpa)}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{r.reason}</p>
-                        <p className="rounded bg-muted px-2 py-1 text-xs italic">“{r.copy}”</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-                <Button onClick={activate} disabled={activating || selected.size === 0}>
-                  {activating && <Loader2 className="animate-spin" />}
-                  Activar {selected.size} canales
-                </Button>
-              </div>
-            </AgentHint>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+          {/* Presupuesto */}
           <div>
-            <CardTitle className="text-base">Campañas y resultados por canal</CardTitle>
-            <CardDescription>Views, aplicaciones, coste por aplicación y conversión.</CardDescription>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B", marginBottom: "7px" }}>
+              Presupuesto (€)
+            </div>
+            <input
+              type="number"
+              value={budget}
+              onChange={(e) => setBudget(e.target.value)}
+              style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", fontWeight: 600, width: "110px", color: "#1A1A17", background: "#F4F0E8", border: "1.5px solid #E7E1D4", borderRadius: "11px", padding: "9px 12px", outline: "none" }}
+            />
+          </div>
+
+          <button
+            onClick={optimize}
+            disabled={loading}
+            style={{
+              fontFamily: "'Archivo',sans-serif",
+              fontWeight: 800,
+              fontSize: "13px",
+              color: "#fff",
+              background: "#0E5C4A",
+              border: "2px solid #1A1A17",
+              borderRadius: "11px",
+              padding: "10px 18px",
+              boxShadow: "3px 3px 0 #1A1A17",
+              cursor: loading ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              opacity: loading ? 0.7 : 1,
+            }}
+          >
+            {loading && <Loader2 size={13} className="animate-spin" />}
+            Optimizar
+          </button>
+        </div>
+
+        {error && <p style={{ fontSize: "13px", color: "#BD4332", marginTop: "12px" }}>{error}</p>}
+      </div>
+
+      {/* ── agent recommendation panel ── */}
+      {plan && (
+        <div style={{ position: "relative", overflow: "hidden", background: "#1A1A17", color: "#F4F0E8", borderRadius: "16px", padding: "18px 20px" }}>
+          {/* header */}
+          <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "10px" }}>
+            <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "rgba(198,242,78,.16)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M4 19V9M10 19V5M16 19v-7M20 19V11" stroke="#C6F24E" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </span>
+            <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px" }}>Agente de canales</span>
+            {planMode === "fallback" && (
+              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#E0A23C", background: "rgba(224,162,60,.12)", border: "1px solid rgba(224,162,60,.3)", borderRadius: "999px", padding: "3px 10px" }}>
+                heurístico
+              </span>
+            )}
+            <span style={{ marginLeft: "auto", fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#C6F24E", background: "rgba(198,242,78,.12)", border: "1px solid rgba(198,242,78,.3)", borderRadius: "999px", padding: "3px 10px", whiteSpace: "nowrap" }}>
+              {objectiveLabel[objective]} · {formatMoney(Number(budget))}
+            </span>
+          </div>
+
+          {/* rationale */}
+          <p style={{ fontSize: "14px", lineHeight: 1.55, color: "#CFCAC0", margin: "0 0 12px" }}>
+            {plan.rationale}
+          </p>
+
+          {/* per-channel checkboxes */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "7px", marginBottom: "14px" }}>
+            {plan.recommendations.map((r) => {
+              const on = selected.has(r.channel_id);
+              return (
+                <label
+                  key={r.channel_id}
+                  style={{ display: "flex", alignItems: "flex-start", gap: "10px", background: on ? "rgba(198,242,78,.06)" : "#26241F", border: `1px solid ${on ? "rgba(198,242,78,.3)" : "#38352E"}`, borderRadius: "11px", padding: "11px 13px", cursor: "pointer" }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={(e) => {
+                      const next = new Set(selected);
+                      e.target.checked ? next.add(r.channel_id) : next.delete(r.channel_id);
+                      setSelected(next);
+                    }}
+                    style={{ marginTop: "2px", accentColor: "#C6F24E", flexShrink: 0 }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "13.5px", fontWeight: 700, color: "#F4F0E8" }}>{r.channel_name}</span>
+                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#C6F24E", background: "rgba(198,242,78,.10)", border: "1px solid rgba(198,242,78,.25)", borderRadius: "999px", padding: "2px 8px" }}>
+                        prioridad {r.priority}
+                      </span>
+                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#8C877E" }}>
+                        {formatMoney(r.budget)} · ~{r.expected_applications} aplic. · CPA {formatMoney(r.expected_cpa)}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: "12.5px", color: "#8C877E", margin: "0 0 5px" }}>{r.reason}</p>
+                    <p style={{ fontSize: "12px", fontStyle: "italic", color: "#CFCAC0", background: "#1A1A17", borderRadius: "7px", padding: "5px 9px", margin: 0 }}>
+                      &ldquo;{r.copy}&rdquo;
+                    </p>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+
+          {/* actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <button
+              onClick={activate}
+              disabled={activating || selected.size === 0}
+              style={{
+                fontFamily: "'Archivo',sans-serif",
+                fontWeight: 800,
+                fontSize: "12px",
+                color: "#1A1A17",
+                background: selected.size > 0 ? "#C6F24E" : "#38352E",
+                border: "none",
+                borderRadius: "9px",
+                padding: "8px 14px",
+                cursor: activating || selected.size === 0 ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                opacity: selected.size === 0 ? 0.6 : 1,
+              }}
+            >
+              {activating && <Loader2 size={13} className="animate-spin" />}
+              Aplicar recomendación{selected.size > 0 ? ` (${selected.size})` : ""}
+            </button>
+            <span style={{ marginLeft: "auto", fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#8C877E" }}>Tú decides</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── campaigns table ── */}
+      <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", overflow: "hidden" }}>
+        {/* table header */}
+        <div style={{ display: "flex", alignItems: "center", padding: "11px 18px", borderBottom: "1px solid #E7E1D4", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0", flex: 1 }}>
+            <span style={{ flex: 1.4, fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "1px", color: "#79746B" }}>Canal</span>
+            <span style={{ flex: 1, textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "1px", color: "#79746B" }}>Views</span>
+            <span style={{ flex: 1, textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "1px", color: "#79746B" }}>Aplicaciones</span>
+            <span style={{ flex: 1, textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "1px", color: "#79746B" }}>CPA</span>
           </div>
           {campaigns.length > 0 && (
-            <Button variant="outline" size="sm" onClick={simulate} disabled={simulating}>
-              {simulating ? <Loader2 className="animate-spin" /> : <TrendingUp />}
+            <button
+              onClick={simulate}
+              disabled={simulating}
+              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12px", color: "#0E5C4A", background: "#DCEFE4", border: "none", borderRadius: "8px", padding: "5px 11px", cursor: simulating ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "5px", marginLeft: "12px" }}
+            >
+              {simulating && <Loader2 size={11} className="animate-spin" />}
               Simular 1 día
-            </Button>
+            </button>
           )}
-        </CardHeader>
-        <CardContent>
-          {campaigns.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              Sin campañas activas. Usa el agente para generar un plan de distribución.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Canal</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Presupuesto</TableHead>
-                  <TableHead className="text-right">Gasto</TableHead>
-                  <TableHead className="text-right">Views</TableHead>
-                  <TableHead className="text-right">Aplicaciones</TableHead>
-                  <TableHead className="text-right">CPA</TableHead>
-                  <TableHead className="text-right">Conversión</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {campaigns.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.channels?.name}</TableCell>
-                    <TableCell>
-                      <Badge variant={c.status === "active" ? "success" : "secondary"}>{c.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{formatMoney(c.budget)}</TableCell>
-                    <TableCell className="text-right">{formatMoney(c.spend)}</TableCell>
-                    <TableCell className="text-right">{c.views.toLocaleString("es-ES")}</TableCell>
-                    <TableCell className="text-right">{c.applications}</TableCell>
-                    <TableCell className="text-right">
-                      {c.applications > 0 ? formatMoney(Number(c.spend) / c.applications) : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {c.views > 0 ? `${((c.applications / c.views) * 100).toFixed(1)}%` : "—"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {campaigns.length === 0 ? (
+          <p style={{ textAlign: "center", fontSize: "13px", color: "#79746B", padding: "32px 18px" }}>
+            Sin campañas activas. Usa el agente para generar un plan de distribución.
+          </p>
+        ) : (
+          campaigns.map((c) => {
+            const name = c.channels?.name ?? "—";
+            const dot = channelDot(name);
+            const cpa = c.applications > 0 ? Number(c.spend) / c.applications : null;
+            return (
+              <div
+                key={c.id}
+                style={{ display: "flex", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid #E7E1D4" }}
+              >
+                <span style={{ flex: 1.4, display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ width: "9px", height: "9px", borderRadius: "50%", background: dot, flexShrink: 0 }} />
+                  <span style={{ fontSize: "13.5px", fontWeight: 700 }}>{name}</span>
+                  {c.status === "active" && (
+                    <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#1B6B4F", background: "#DCEFE3", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "2px 7px" }}>
+                      activa
+                    </span>
+                  )}
+                </span>
+                <span style={{ flex: 1, textAlign: "right", fontSize: "13px", color: "#79746B" }}>
+                  {c.views.toLocaleString("es-ES")}
+                </span>
+                <span style={{ flex: 1, textAlign: "right", fontSize: "13px", fontWeight: 700 }}>
+                  {c.applications}
+                </span>
+                <span style={{ flex: 1, textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "12.5px", fontWeight: 700, color: cpa != null ? cpaColor(cpa) : "#9C9588" }}>
+                  {cpa != null ? formatMoney(cpa) : "—"}
+                </span>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

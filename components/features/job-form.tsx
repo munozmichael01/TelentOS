@@ -2,15 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles, Wand2, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AgentHint } from "@/components/agent-hint";
+import { Loader2, X } from "lucide-react";
 import type { Job } from "@/lib/types";
 import type { JobDraft } from "@/agents/agent-job-writer";
 
@@ -34,13 +26,6 @@ const EMPTY: FormState = {
   category: "", experience_min_years: "0",
 };
 
-/**
- * Formulario de oferta con el agente job-writer integrado en flujo:
- *  - "Generar borrador": brief corto → borrador completo.
- *  - "Sugerencias del agente": con el estado actual del formulario, propone
- *    título/skills/salario/descr.; el usuario aplica cada sugerencia o todas.
- * El agente nunca guarda: solo rellena el formulario y el humano confirma.
- */
 export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(
@@ -63,7 +48,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
   const [brief, setBrief] = useState("");
   const [skillInput, setSkillInput] = useState("");
   const [suggestion, setSuggestion] = useState<JobDraft | null>(null);
-  const [agentMode, setAgentMode] = useState<"ok" | "fallback" | null>(null);
+  const [drafted, setDrafted] = useState(source === "ai");
   const [loadingAgent, setLoadingAgent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -98,12 +83,32 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error del agente");
       setSuggestion(data.output);
-      setAgentMode(data.status);
+      if (mode === "draft") {
+        applySuggestionDirect(data.output);
+        setDrafted(true);
+      }
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));
     } finally {
       setLoadingAgent(false);
     }
+  }
+
+  function applySuggestionDirect(s: JobDraft) {
+    setForm((f) => ({
+      ...f,
+      title: s.title || f.title,
+      description: s.description || f.description,
+      skills: s.skills.length ? s.skills : f.skills,
+      salary_min: s.salary_min ? String(s.salary_min) : f.salary_min,
+      salary_max: s.salary_max ? String(s.salary_max) : f.salary_max,
+      location: s.location || f.location,
+      employment_type: s.employment_type || f.employment_type,
+      sector: s.sector || f.sector,
+      category: s.category || f.category,
+      experience_min_years: s.experience_min_years ? String(s.experience_min_years) : f.experience_min_years,
+    }));
+    setUsedAI(true);
   }
 
   function applySuggestion(fields?: (keyof JobDraft)[]) {
@@ -166,179 +171,337 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
     setSkillInput("");
   }
 
-  return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-      <div className="space-y-4">
-        {!job && (
-          <Card className="border-primary/30">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wand2 className="h-4 w-4 text-primary" />
-                Generar borrador con IA
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex gap-2">
-              <Input
-                placeholder='Describe el rol en una frase: "SDR junior para Barcelona, mercado francés"'
-                value={brief}
-                onChange={(e) => setBrief(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && brief.trim() && askAgent("draft")}
-              />
-              <Button onClick={() => askAgent("draft")} disabled={!brief.trim() || loadingAgent}>
-                {loadingAgent ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                Generar
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+  const fieldLabel = {
+    fontFamily: "'Space Mono',monospace",
+    fontSize: "10.5px",
+    textTransform: "uppercase" as const,
+    letterSpacing: ".5px",
+    color: "#79746B",
+    marginBottom: "7px",
+  };
+  const fieldInput = {
+    fontFamily: "'Hanken Grotesk',sans-serif",
+    fontSize: "13.5px",
+    fontWeight: 600,
+    color: "#1A1A17",
+    background: "#F4F0E8",
+    border: "1.5px solid #E7E1D4",
+    borderRadius: "10px",
+    padding: "10px 13px",
+    outline: "none",
+    width: "100%",
+  } as const;
 
-        <Card>
-          <CardContent className="space-y-4 pt-6">
-            <div className="space-y-1.5">
-              <Label htmlFor="title">Título *</Label>
-              <Input id="title" value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Senior Frontend Engineer" />
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "16px", alignItems: "start" }}>
+      {/* ── left column ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        {/* dark agent panel */}
+        <div style={{ background: "#1A1A17", color: "#F4F0E8", borderRadius: "16px", padding: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "12px" }}>
+            <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "rgba(198,242,78,.16)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px" }}>Agente redactor</span>
+          </div>
+          <div style={{ fontSize: "13px", color: "#CFCAC0", marginBottom: "10px", lineHeight: 1.55 }}>
+            Describe el rol en una frase y genero el borrador completo: título, descripción, skills y salario de mercado.
+          </div>
+          <textarea
+            value={brief}
+            onChange={(e) => setBrief(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && brief.trim() && askAgent("draft")}
+            placeholder='Ej.: Product designer senior para B2B SaaS, remoto, con foco en design systems'
+            style={{ width: "100%", resize: "none", height: "62px", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", color: "#1A1A17", background: "#FCFAF6", border: "none", borderRadius: "10px", padding: "11px 13px", outline: "none" }}
+          />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "12px" }}>
+            <button
+              onClick={() => askAgent("draft")}
+              disabled={!brief.trim() || loadingAgent}
+              style={{
+                fontFamily: "'Archivo',sans-serif",
+                fontWeight: 800,
+                fontSize: "13px",
+                color: "#1A1A17",
+                background: brief.trim() ? "#C6F24E" : "#38352E",
+                border: "none",
+                borderRadius: "10px",
+                padding: "10px 16px",
+                cursor: brief.trim() && !loadingAgent ? "pointer" : "not-allowed",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                opacity: !brief.trim() || loadingAgent ? 0.6 : 1,
+              }}
+            >
+              {loadingAgent && <Loader2 size={13} className="animate-spin" />}
+              Generar borrador con IA
+            </button>
+            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#8C877E" }}>
+              Edítalo todo después · tú decides
+            </span>
+          </div>
+        </div>
+
+        {/* form card */}
+        <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "22px" }}>
+          {drafted && (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "7px", background: "#EAF7C4", border: "1px solid #D6E89A", borderRadius: "999px", padding: "5px 11px", marginBottom: "18px" }}>
+              <span style={{ display: "inline-flex", width: "15px", height: "15px", borderRadius: "50%", background: "#C6F24E", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="#46540F" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#46540F" }}>Borrador generado · revísalo y ajusta lo que quieras</span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="location">Ubicación</Label>
-                <Input id="location" value={form.location} onChange={(e) => set("location", e.target.value)} placeholder="Madrid (híbrido)" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Tipo</Label>
-                <Select value={form.employment_type} onValueChange={(v) => set("employment_type", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full_time">Jornada completa</SelectItem>
-                    <SelectItem value="part_time">Jornada parcial</SelectItem>
-                    <SelectItem value="contract">Temporal / contrato</SelectItem>
-                    <SelectItem value="internship">Prácticas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          )}
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <div style={fieldLabel}>Título *</div>
+              <input
+                value={form.title}
+                onChange={(e) => set("title", e.target.value)}
+                placeholder="Senior Frontend Engineer"
+                style={fieldInput}
+              />
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="salary_min">Salario mín. (€)</Label>
-                <Input id="salary_min" type="number" value={form.salary_min} onChange={(e) => set("salary_min", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="salary_max">Salario máx. (€)</Label>
-                <Input id="salary_max" type="number" value={form.salary_max} onChange={(e) => set("salary_max", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="exp">Experiencia mín. (años)</Label>
-                <Input id="exp" type="number" value={form.experience_min_years} onChange={(e) => set("experience_min_years", e.target.value)} />
-              </div>
+            <div>
+              <div style={fieldLabel}>Ubicación</div>
+              <input
+                value={form.location}
+                onChange={(e) => set("location", e.target.value)}
+                placeholder="Madrid (híbrido)"
+                style={fieldInput}
+              />
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="sector">Sector</Label>
-                <Input id="sector" value={form.sector} onChange={(e) => set("sector", e.target.value)} placeholder="Tecnología" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="department">Departamento</Label>
-                <Input id="department" value={form.department} onChange={(e) => set("department", e.target.value)} placeholder="Engineering" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="category">Categoría</Label>
-                <Input id="category" value={form.category} onChange={(e) => set("category", e.target.value)} placeholder="Software" />
-              </div>
+            <div>
+              <div style={fieldLabel}>Tipo</div>
+              <select
+                value={form.employment_type}
+                onChange={(e) => set("employment_type", e.target.value)}
+                style={{ ...fieldInput, cursor: "pointer" }}
+              >
+                <option value="full_time">Jornada completa</option>
+                <option value="part_time">Jornada parcial</option>
+                <option value="contract">Temporal / contrato</option>
+                <option value="internship">Prácticas</option>
+              </select>
             </div>
-            <div className="space-y-1.5">
-              <Label>Skills requeridas</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }}
-                  placeholder="Añadir skill y pulsar Enter"
-                />
-                <Button type="button" variant="secondary" onClick={addSkill}>Añadir</Button>
-              </div>
-              <div className="flex flex-wrap gap-1.5 pt-1">
+            <div>
+              <div style={fieldLabel}>Salario mín. (€)</div>
+              <input type="number" value={form.salary_min} onChange={(e) => set("salary_min", e.target.value)} style={fieldInput} />
+            </div>
+            <div>
+              <div style={fieldLabel}>Salario máx. (€)</div>
+              <input type="number" value={form.salary_max} onChange={(e) => set("salary_max", e.target.value)} style={fieldInput} />
+            </div>
+            <div>
+              <div style={fieldLabel}>Exp. mínima (años)</div>
+              <input type="number" value={form.experience_min_years} onChange={(e) => set("experience_min_years", e.target.value)} style={fieldInput} />
+            </div>
+            <div>
+              <div style={fieldLabel}>Sector</div>
+              <input value={form.sector} onChange={(e) => set("sector", e.target.value)} placeholder="Tecnología" style={fieldInput} />
+            </div>
+            <div>
+              <div style={fieldLabel}>Departamento</div>
+              <input value={form.department} onChange={(e) => set("department", e.target.value)} placeholder="Engineering" style={fieldInput} />
+            </div>
+            <div>
+              <div style={fieldLabel}>Categoría</div>
+              <input value={form.category} onChange={(e) => set("category", e.target.value)} placeholder="Software" style={fieldInput} />
+            </div>
+          </div>
+
+          {/* skills */}
+          <div style={{ marginTop: "16px" }}>
+            <div style={fieldLabel}>Skills requeridas</div>
+            <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+              <input
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }}
+                placeholder="Añadir skill y pulsar Enter"
+                style={{ ...fieldInput, flex: 1, marginTop: 0 }}
+              />
+              <button
+                type="button"
+                onClick={addSkill}
+                style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12.5px", color: "#1A1A17", background: "#F4F0E8", border: "1.5px solid #E7E1D4", borderRadius: "10px", padding: "9px 13px", cursor: "pointer" }}
+              >
+                Añadir
+              </button>
+            </div>
+            {form.skills.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "9px" }}>
                 {form.skills.map((s) => (
-                  <Badge key={s} variant="secondary" className="gap-1">
+                  <span key={s} style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "12.5px", fontWeight: 600, background: "#F8F4EB", color: "#54504A", border: "1px solid #E7E1D4", borderRadius: "999px", padding: "5px 10px" }}>
                     {s}
-                    <button onClick={() => set("skills", form.skills.filter((x) => x !== s))}>
-                      <X className="h-3 w-3" />
+                    <button
+                      onClick={() => set("skills", form.skills.filter((x) => x !== s))}
+                      style={{ display: "flex", alignItems: "center", color: "#9C9588", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                    >
+                      <X size={11} />
                     </button>
-                  </Badge>
+                  </span>
                 ))}
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="description">Descripción (Markdown)</Label>
-              <Textarea
-                id="description"
-                rows={14}
-                value={form.description}
-                onChange={(e) => set("description", e.target.value)}
-                placeholder={"## Sobre el rol\n...\n\n## Responsabilidades\n- ..."}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            )}
+          </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <div className="flex gap-2">
-          <Button onClick={() => save("active")} disabled={!form.title.trim() || saving}>
-            {saving && <Loader2 className="animate-spin" />}
-            {job ? "Guardar cambios" : "Publicar oferta"}
-          </Button>
-          {!job && (
-            <Button variant="outline" onClick={() => save("draft")} disabled={!form.title.trim() || saving}>
-              Guardar como borrador
-            </Button>
-          )}
+          {/* description */}
+          <div style={{ marginTop: "16px" }}>
+            <div style={fieldLabel}>Descripción (Markdown)</div>
+            <textarea
+              rows={14}
+              value={form.description}
+              onChange={(e) => set("description", e.target.value)}
+              placeholder={"## Sobre el rol\n...\n\n## Responsabilidades\n- ..."}
+              style={{ ...fieldInput, resize: "none", lineHeight: 1.55, marginTop: "4px" }}
+            />
+          </div>
+
+          {error && <p style={{ fontSize: "13px", color: "#BD4332", marginTop: "10px" }}>{error}</p>}
+
+          {/* action buttons */}
+          <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+            <button
+              onClick={() => save("active")}
+              disabled={!form.title.trim() || saving}
+              style={{
+                fontFamily: "'Archivo',sans-serif",
+                fontWeight: 800,
+                fontSize: "13px",
+                color: "#fff",
+                background: form.title.trim() ? "#0E5C4A" : "#C2B8A4",
+                border: "2px solid #1A1A17",
+                borderRadius: "11px",
+                padding: "10px 18px",
+                boxShadow: form.title.trim() ? "3px 3px 0 #1A1A17" : "none",
+                cursor: form.title.trim() && !saving ? "pointer" : "not-allowed",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              {saving && <Loader2 size={14} className="animate-spin" />}
+              {job ? "Guardar cambios" : "Publicar oferta"}
+            </button>
+            {!job && (
+              <button
+                onClick={() => save("draft")}
+                disabled={!form.title.trim() || saving}
+                style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "13px", color: "#79746B", background: "transparent", border: "none", padding: "10px 14px", cursor: "pointer" }}
+              >
+                Guardar como borrador
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Panel lateral del agente */}
-      <div className="space-y-3">
-        <Button
-          variant="outline"
-          className="w-full border-primary/40 text-primary hover:text-primary"
-          onClick={() => askAgent("assist")}
-          disabled={loadingAgent || !form.title.trim()}
-        >
-          {loadingAgent ? <Loader2 className="animate-spin" /> : <Sparkles />}
-          Pedir sugerencias al agente
-        </Button>
-        {!form.title.trim() && (
-          <p className="text-center text-xs text-muted-foreground">Escribe al menos el título para pedir sugerencias.</p>
-        )}
-        {suggestion && (
-          <AgentHint>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold">Propuesta del agente</span>
-                {agentMode === "fallback" && <Badge variant="warning">modo heurístico</Badge>}
+      {/* ── right rail: suggestions ── */}
+      <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "20px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "14px" }}>
+          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B" }}>
+            Sugerencias del agente
+          </div>
+          {form.title.trim() && (
+            <button
+              onClick={() => askAgent("assist")}
+              disabled={loadingAgent}
+              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "11px", color: "#0E5C4A", background: "#DCEFE4", border: "none", borderRadius: "8px", padding: "5px 10px", cursor: loadingAgent ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+            >
+              {loadingAgent && <Loader2 size={10} className="animate-spin" />}
+              Actualizar
+            </button>
+          )}
+        </div>
+
+        {suggestion ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            {/* salary range */}
+            {(suggestion.salary_min || suggestion.salary_max) && (
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#0E5C4A", marginBottom: "8px" }}>Rango de mercado</div>
+                <div style={{ background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "11px", padding: "12px 13px", marginBottom: "4px" }}>
+                  <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "20px", letterSpacing: "-.5px" }}>
+                    {suggestion.salary_min.toLocaleString("es-ES")} – {suggestion.salary_max.toLocaleString("es-ES")} €
+                  </div>
+                  <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", marginTop: "3px" }}>
+                    {suggestion.sector || "Mercado"} · {suggestion.employment_type === "full_time" ? "Full-time" : suggestion.employment_type} · España
+                  </div>
+                </div>
+                <button
+                  onClick={() => applySuggestion(["salary_min", "salary_max"])}
+                  style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#0E5C4A", textDecoration: "underline", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                >
+                  aplicar salario
+                </button>
               </div>
-              <div className="space-y-2 text-xs">
-                <div>
-                  <span className="font-medium">Título:</span> {suggestion.title}{" "}
-                  <button className="text-primary underline" onClick={() => applySuggestion(["title"])}>aplicar</button>
+            )}
+
+            {/* skills */}
+            {suggestion.skills.length > 0 && (
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#0E5C4A", marginBottom: "8px" }}>Skills sugeridas</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "6px" }}>
+                  {suggestion.skills.map((s) => (
+                    <span key={s} style={{ fontSize: "11.5px", fontWeight: 600, background: "#EAF7C4", color: "#46540F", border: "1px solid #D6E89A", borderRadius: "999px", padding: "4px 9px", whiteSpace: "nowrap" }}>
+                      + {s}
+                    </span>
+                  ))}
                 </div>
-                <div>
-                  <span className="font-medium">Salario:</span> {suggestion.salary_min.toLocaleString("es-ES")}–{suggestion.salary_max.toLocaleString("es-ES")} €{" "}
-                  <button className="text-primary underline" onClick={() => applySuggestion(["salary_min", "salary_max"])}>aplicar</button>
-                </div>
-                <div>
-                  <span className="font-medium">Skills:</span> {suggestion.skills.join(", ")}{" "}
-                  <button className="text-primary underline" onClick={() => applySuggestion(["skills"])}>aplicar</button>
-                </div>
-                <div>
-                  <span className="font-medium">Descripción:</span> {suggestion.description.slice(0, 140)}…{" "}
-                  <button className="text-primary underline" onClick={() => applySuggestion(["description"])}>aplicar</button>
-                </div>
-                <p className="italic text-muted-foreground">{suggestion.rationale}</p>
+                <button
+                  onClick={() => applySuggestion(["skills"])}
+                  style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#0E5C4A", textDecoration: "underline", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                >
+                  aplicar skills
+                </button>
               </div>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => applySuggestion()}>Aplicar todo</Button>
-                <Button size="sm" variant="ghost" onClick={() => setSuggestion(null)}>Descartar</Button>
+            )}
+
+            {/* title/description suggestion */}
+            {suggestion.title && (
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#0E5C4A", marginBottom: "8px" }}>Título sugerido</div>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "#3A3833", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "10px", padding: "9px 12px", marginBottom: "4px" }}>
+                  {suggestion.title}
+                </div>
+                <button
+                  onClick={() => applySuggestion(["title"])}
+                  style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#0E5C4A", textDecoration: "underline", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                >
+                  aplicar título
+                </button>
               </div>
+            )}
+
+            {suggestion.rationale && (
+              <p style={{ fontSize: "12.5px", fontStyle: "italic", color: "#79746B", lineHeight: 1.55, margin: 0 }}>{suggestion.rationale}</p>
+            )}
+
+            {/* apply all */}
+            <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+              <button
+                onClick={() => applySuggestion()}
+                style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "12px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "9px", padding: "8px 13px", boxShadow: "2px 2px 0 #1A1A17", cursor: "pointer" }}
+              >
+                Aplicar todo
+              </button>
+              <button
+                onClick={() => setSuggestion(null)}
+                style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "12px", color: "#79746B", background: "transparent", border: "none", padding: "8px 10px", cursor: "pointer" }}
+              >
+                Descartar
+              </button>
             </div>
-          </AgentHint>
+          </div>
+        ) : (
+          <div style={{ fontSize: "13px", color: "#79746B", lineHeight: 1.55 }}>
+            Escribe una frase arriba y pulsa <b style={{ color: "#1A1A17" }}>Generar borrador</b>. El agente propone título, descripción, skills y rango salarial de mercado.
+          </div>
         )}
       </div>
     </div>

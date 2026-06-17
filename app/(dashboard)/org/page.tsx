@@ -46,7 +46,7 @@ export default async function OrgPage() {
 
   return (
     <div>
-      <PageHeader title="Organigrama" description="Quién reporta a quién." />
+      <PageHeader title="Organigrama" description="Personas" />
       {roots.length === 0 ? (
         <EmptyState title="Sin empleados" description="Da de alta empleados para ver el organigrama." />
       ) : (

@@ -17,7 +17,7 @@ export default async function TimesheetsPage() {
 
   return (
     <div>
-      <PageHeader title="Registro de horas" description="Registro básico de horas por empleado." />
+      <PageHeader title="Registro de horas" description="Workspace" />
       <div className="mb-6">
         <TimesheetForm employees={employees ?? []} />
       </div>

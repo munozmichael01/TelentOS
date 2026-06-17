@@ -1,12 +1,25 @@
-import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Marca visual común de "esto lo propone un agente; tú decides". */
+/** Affordance inline "esto lo propone un agente; tú decides" — fondo claro. */
 export function AgentHint({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm", className)}>
-      <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-      <div className="min-w-0 flex-1">{children}</div>
+    <div
+      className={cn("relative overflow-hidden rounded-[16px]", className)}
+      style={{ background: "#1A1A17", color: "#F4F0E8", padding: "18px 20px" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Panel oscuro estándar de agente — igual que AgentHint pero nominalmente distinto para evitar ambigüedad. */
+export function AgentPanel({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn("relative overflow-hidden rounded-[16px]", className)}
+      style={{ background: "#1A1A17", color: "#F4F0E8", padding: "18px 20px" }}
+    >
+      {children}
     </div>
   );
 }

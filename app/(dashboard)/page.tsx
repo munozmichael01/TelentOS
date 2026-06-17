@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Briefcase, Users, UserSquare2, Palmtree, Inbox } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { FitBadge } from "@/components/fit-badge";
@@ -25,18 +24,17 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <PageHeader title="Dashboard" description="Visión general de tu operación de talento." />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Ofertas activas" value={jobs.count ?? 0} icon={Briefcase} />
-        <StatCard label="Candidaturas abiertas" value={applications.count ?? 0} icon={Users} />
-        <StatCard label="Empleados" value={employees.count ?? 0} icon={UserSquare2} />
-        <StatCard label="Ausencias pendientes" value={timeoff.count ?? 0} icon={Palmtree} />
+      <PageHeader title="Dashboard" description="" />
+      <div className="grid gap-[14px] sm:grid-cols-2 lg:grid-cols-4 mb-[18px]">
+        <StatCard label="Ofertas activas" value={jobs.count ?? 0} />
+        <StatCard label="Candidaturas abiertas" value={applications.count ?? 0} />
+        <StatCard label="Empleados" value={employees.count ?? 0} />
+        <StatCard label="Ausencias pendientes" value={timeoff.count ?? 0} />
       </div>
 
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Inbox className="h-4 w-4" />
             Últimas candidaturas
           </CardTitle>
         </CardHeader>

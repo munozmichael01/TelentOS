@@ -101,6 +101,9 @@ export default async function ApplicationPage({ params }: { params: { id: string
                 interviews={interviews ?? []}
                 templates={(templates ?? []) as EvaluationTemplate[]}
                 stages={(stages ?? []) as JobStage[]}
+                candidateName={candidate.name}
+                candidateEmail={candidate.email}
+                managers={managers ?? []}
               />
             </TabsContent>
             <TabsContent value="notes">
@@ -131,7 +134,7 @@ export default async function ApplicationPage({ params }: { params: { id: string
         </div>
 
         <div>
-          <CandidateAnalyzerPanel applicationId={app.id} />
+          <CandidateAnalyzerPanel applicationId={app.id} fitScore={app.fit_score} />
         </div>
       </div>
     </div>

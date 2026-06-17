@@ -20,7 +20,7 @@ export default async function EmployeesPage() {
 
   return (
     <div>
-      <PageHeader title="Empleados" description="Directorio del equipo. Los contratados desde el ATS llegan aquí automáticamente.">
+      <PageHeader title="Empleados" description="Personas">
         <EmployeeForm managers={list.map((e) => ({ id: e.id, name: e.name }))} />
       </PageHeader>
 

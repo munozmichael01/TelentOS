@@ -1,29 +1,36 @@
-import { Card, CardContent } from "@/components/ui/card";
-import type { LucideIcon } from "lucide-react";
-
 export function StatCard({
   label,
   value,
-  icon: Icon,
   hint,
 }: {
   label: string;
   value: string | number;
-  icon: LucideIcon;
+  icon?: unknown;
   hint?: string;
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className="rounded-lg bg-primary/10 p-2.5">
-          <Icon className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <div className="text-2xl font-bold leading-tight">{value}</div>
-          <div className="text-xs text-muted-foreground">{label}</div>
-          {hint && <div className="text-[11px] text-muted-foreground/70">{hint}</div>}
-        </div>
-      </CardContent>
-    </Card>
+    <div
+      className="card-hover"
+      style={{
+        background: "#FCFAF6",
+        border: "1px solid #E7E1D4",
+        borderRadius: "14px",
+        padding: "16px 18px",
+      }}
+    >
+      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "10.5px", color: "#79746B" }}>
+        {label.toUpperCase()}
+      </div>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", marginTop: "6px" }}>
+        <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "32px", letterSpacing: "-1px", lineHeight: 1 }}>
+          {value}
+        </span>
+        {hint && (
+          <span style={{ fontSize: "12px", fontWeight: 700, paddingBottom: "4px", color: "#1B6B4F" }}>
+            {hint}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }

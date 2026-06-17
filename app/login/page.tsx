@@ -4,7 +4,16 @@ export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "48px 20px",
+        background: "radial-gradient(130% 80% at 50% -10%, #F7F3EB 0%, #F4F0E8 60%)",
+      }}
+    >
       <LoginForm />
     </div>
   );

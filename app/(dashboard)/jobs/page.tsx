@@ -57,7 +57,7 @@ export default async function JobsPage({
 
   return (
     <div>
-      <PageHeader title="Ofertas" description="Crea, importa y distribuye tus ofertas de empleo.">
+      <PageHeader title="Ofertas" description="Reclutamiento">
         <Button variant="outline" asChild>
           <Link href="/jobs/import"><FileUp />Importar</Link>
         </Button>

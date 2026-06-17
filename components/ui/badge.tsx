@@ -3,16 +3,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none",
+  "inline-flex items-center rounded-[999px] px-[10px] py-[3px] text-[11.5px] font-bold transition-colors",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground shadow",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
-        destructive: "border-transparent bg-destructive text-destructive-foreground shadow",
-        outline: "text-foreground",
-        success: "border-transparent bg-emerald-100 text-emerald-800",
-        warning: "border-transparent bg-amber-100 text-amber-800",
+        default:     "bg-[#1A1A17] text-[#FCFAF6] border border-[#1A1A17]",
+        outline:     "bg-[#FCFAF6] text-[#79746B] border-[1.5px] border-[#E7E1D4]",
+        secondary:   "bg-[#F4F0E8] text-[#79746B] border border-[#E7E1D4]",
+        success:     "bg-[#DCEFE3] text-[#1B6B4F]",
+        warning:     "bg-[#F8E7C4] text-[#946312]",
+        destructive: "bg-[#F6D9D2] text-[#BD4332]",
+        info:        "bg-[#D6E4F2] text-[#2B5E8A]",
+        lime:        "bg-[#EAF7C4] text-[#46540F] border border-[#D6E89A]",
+        brand:       "bg-[#DCEFE4] text-[#0E5C4A]",
       },
     },
     defaultVariants: { variant: "default" },

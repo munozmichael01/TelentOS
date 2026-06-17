@@ -1,48 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,500;0,600;0,700;0,800;0,900;1,800;1,900&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 243 75% 59%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 243 75% 59%;
-    --radius: 0.5rem;
-  }
-}
+    /* shadcn semantic tokens → TalentOS palette */
+    --background: 40 35% 93%;          /* papel cálido #F4F0E8 */
+    --foreground: 60 7% 10%;           /* ink #1A1A17 */
+    --card: 45 40% 98%;                /* surface #FCFAF6 */
+    --card-foreground: 60 7% 10%;
+    --popover: 45 40% 98%;
+    --popover-foreground: 60 7% 10%;
+    --primary: 166 74% 21%;            /* brand teal #0E5C4A */
+    --primary-foreground: 75 60% 95%;
+    --secondary: 42 30% 92%;
+    --secondary-foreground: 60 7% 12%;
+    --muted: 42 28% 90%;
+    --muted-foreground: 40 7% 45%;
+    --accent: 7 86% 60%;               /* coral #F1543F */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 9 60% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 42 28% 87%;              /* line #E7E1D4 */
+    --input: 42 28% 87%;
+    --ring: 166 74% 21%;
+    --radius: 0.7rem;
 
-@layer base {
+    /* Design tokens directos (para estilos inline / arbitrary values) */
+    --brand: #0E5C4A;
+    --brand-soft: #DCEFE4;
+    --accent-color: #F1543F;
+    --accent-ink: #C7402E;
+    --lime: #C6F24E;
+    --lime-soft: #EAF7C4;
+    --bg: #F4F0E8;
+    --surface: #FCFAF6;
+    --surface-2: #F8F4EB;
+    --ink: #1A1A17;
+    --soft: #79746B;
+    --line: #E7E1D4;
+    --success: #1B6B4F;   --success-bg: #DCEFE3;
+    --warning: #946312;   --warning-bg: #F8E7C4;
+    --danger:  #BD4332;   --danger-bg:  #F6D9D2;
+    --info:    #2B5E8A;   --info-bg:    #D6E4F2;
+  }
+
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
+
+  ::selection {
+    background: #C6F24E;
+    color: #1A1A17;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: 'Hanken Grotesk', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Scrollbar cálida */
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-thumb {
+    background: #DAD3C5;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
   }
 }
 
-/* Render básico del markdown de las descripciones de oferta */
-.job-description h2 {
-  @apply mt-5 mb-2 text-base font-semibold;
+/* ── Botón primario (acento + sombra dura) ── */
+.btn-primary {
+  @apply inline-flex items-center gap-2 font-display font-extrabold text-sm
+         text-white bg-[#F1543F] border-2 border-[#1A1A17] rounded-[11px]
+         px-4 py-2.5 cursor-pointer transition-all select-none;
+  box-shadow: 3px 3px 0 #1A1A17;
 }
-.job-description ul {
-  @apply list-disc pl-5 space-y-1;
+.btn-primary:hover  { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #1A1A17; }
+.btn-primary:active { transform: translate(2px,2px);   box-shadow: 1px 1px 0 #1A1A17; }
+
+/* ── Botón secundario ── */
+.btn-secondary {
+  @apply inline-flex items-center gap-2 font-display font-bold text-sm
+         text-[#1A1A17] bg-[#FCFAF6] border-2 border-[#1A1A17] rounded-[11px]
+         px-4 py-2.5 cursor-pointer transition-all select-none;
+  box-shadow: 3px 3px 0 #1A1A17;
 }
-.job-description p {
-  @apply my-2;
+.btn-secondary:hover  { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #1A1A17; }
+.btn-secondary:active { transform: translate(2px,2px);   box-shadow: 1px 1px 0 #1A1A17; }
+
+/* ── Tarjeta con hover ── */
+.card-hover {
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
 }
+.card-hover:hover {
+  border-color: #D4CCBA;
+  box-shadow: 0 6px 16px -10px rgba(26,26,23,.4);
+}
+
+/* ── Nav item ── */
+.nav-item {
+  @apply flex items-center gap-[11px] px-[11px] py-[9px] rounded-[10px]
+         text-[14px] font-semibold text-[#79746B] cursor-pointer select-none;
+  transition: background .12s ease, color .12s ease;
+}
+.nav-item:hover { background: #EFEBE1; }
+.nav-item.active {
+  @apply text-white bg-[#0E5C4A];
+  box-shadow: 2px 2px 0 #1A1A17;
+}
+
+/* ── Markdown descripción de oferta ── */
+.job-description h2 { @apply mt-5 mb-2 text-base font-semibold; }
+.job-description ul  { @apply list-disc pl-5 space-y-1; }
+.job-description p   { @apply my-2; }
