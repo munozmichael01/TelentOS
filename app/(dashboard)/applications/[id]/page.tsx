@@ -21,7 +21,7 @@ export default async function ApplicationPage({ params }: { params: { id: string
 
   const { data: app } = await supabase
     .from("applications")
-    .select("*, candidates(*), jobs(*), job_stages(name), ai_analysis")
+    .select("*, candidates(*), jobs(*), job_stages(name)")
     .eq("id", params.id)
     .maybeSingle();
   if (!app) notFound();

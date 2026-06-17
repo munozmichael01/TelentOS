@@ -29,6 +29,7 @@ export function ApplyForm({ jobId }: { jobId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const [cvName, setCvName] = useState("");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -106,10 +107,10 @@ export function ApplyForm({ jobId }: { jobId: string }) {
         </div>
         <div>
           <label style={fieldLabel}>CV (PDF, máx. 8 MB)</label>
-          <div style={{ display: "flex", alignItems: "center", gap: "9px", fontSize: "13px", color: "#79746B", padding: "9px 12px", border: "1.5px dashed #E7E1D4", borderRadius: "10px", background: "#F4F0E8", cursor: "pointer", position: "relative" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Subir archivo
-            <input name="cv" type="file" accept=".pdf,.doc,.docx" style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "9px", fontSize: "13px", color: cvName ? "#1A1A17" : "#79746B", padding: "9px 12px", border: `1.5px ${cvName ? "solid #0E5C4A" : "dashed #E7E1D4"}`, borderRadius: "10px", background: cvName ? "#EAF7C4" : "#F4F0E8", cursor: "pointer", position: "relative", transition: "all .15s ease" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" stroke={cvName ? "#0E5C4A" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{cvName || "Subir archivo"}</span>
+            <input name="cv" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setCvName(e.target.files?.[0]?.name ?? "")} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }} />
           </div>
         </div>
       </div>

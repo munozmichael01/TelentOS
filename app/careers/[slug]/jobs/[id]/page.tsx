@@ -59,15 +59,23 @@ export default async function PublicJobPage({ params }: { params: { slug: string
             </span>
           </div>
 
-          {job.skills.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "7px", marginTop: "16px" }}>
-              {job.skills.map((s: string) => (
-                <span key={s} style={{ fontSize: "12px", fontWeight: 600, padding: "4px 11px", borderRadius: "999px", background: "#DCEFE4", color: "#0E5C4A" }}>
-                  {s}
-                </span>
-              ))}
-            </div>
-          )}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", marginTop: "18px" }}>
+            {job.skills.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+                {job.skills.map((s: string) => (
+                  <span key={s} style={{ fontSize: "12px", fontWeight: 600, padding: "4px 11px", borderRadius: "999px", background: "#DCEFE4", color: "#0E5C4A" }}>
+                    {s}
+                  </span>
+                ))}
+              </div>
+            )}
+            <a
+              href="#apply-form"
+              style={{ flexShrink: 0, fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "12px", padding: "10px 20px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none", display: "inline-block" }}
+            >
+              Inscribirme →
+            </a>
+          </div>
 
           {job.description && (
             <>
@@ -80,7 +88,7 @@ export default async function PublicJobPage({ params }: { params: { slug: string
         </div>
 
         {/* apply form */}
-        <div style={{ marginTop: "22px" }}>
+        <div id="apply-form" style={{ marginTop: "22px" }}>
           <Suspense>
             <ApplyForm jobId={job.id} />
           </Suspense>
