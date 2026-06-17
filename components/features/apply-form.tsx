@@ -84,7 +84,7 @@ export function ApplyForm({ jobId }: { jobId: string }) {
         Cuéntanos sobre ti. Los campos con * son obligatorios.
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginTop: "22px" }}>
+      <div className="career-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginTop: "22px" }}>
         <div>
           <label style={fieldLabel}>Nombre completo *</label>
           <input name="name" required style={fieldInput} />

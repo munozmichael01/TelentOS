@@ -114,12 +114,17 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const [userEmail, setUserEmail] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
       setUserEmail(data.user?.email ?? "");
     });
   }, []);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   async function signOut() {
     await createClient().auth.signOut();
@@ -134,10 +139,17 @@ export function AppShell({
 
   return (
     /* outer page */
-    <div style={{ background: "#ECEAE4", minHeight: "100vh", padding: "26px", WebkitFontSmoothing: "antialiased" }}>
+    <div className="app-outer" style={{ background: "#ECEAE4", minHeight: "100vh", padding: "26px", WebkitFontSmoothing: "antialiased" }}>
       <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
+        {/* Mobile overlay — close sidebar when tapping outside */}
+        {sidebarOpen && (
+          <div
+            onClick={() => setSidebarOpen(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(26,26,23,.45)", zIndex: 49 }}
+          />
+        )}
         {/* app container */}
-        <div style={{
+        <div className="app-container" style={{
           display: "flex",
           border: "1px solid #E7E1D4",
           borderRadius: "18px",
@@ -148,13 +160,21 @@ export function AppShell({
         }}>
 
           {/* ── SIDEBAR ── */}
-          <aside style={{ width: "234px", flexShrink: 0, background: "#FCFAF6", borderRight: "1px solid #E7E1D4", display: "flex", flexDirection: "column" }}>
+          <aside className={`app-sidebar${sidebarOpen ? " open" : ""}`} style={{ width: "234px", flexShrink: 0, background: "#FCFAF6", borderRight: "1px solid #E7E1D4", display: "flex", flexDirection: "column" }}>
             {/* logo row */}
             <div style={{ height: "62px", display: "flex", alignItems: "center", gap: "10px", padding: "0 18px", borderBottom: "1px solid #E7E1D4" }}>
               <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 #1A1A17" }}>
                 <LogoMark />
               </div>
               <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "18px", letterSpacing: "-.5px" }}>TalentOS</span>
+              {/* Close button — only shown on mobile via CSS */}
+              <button
+                className="app-sidebar-close"
+                onClick={() => setSidebarOpen(false)}
+                style={{ marginLeft: "auto", width: "28px", height: "28px", borderRadius: "8px", border: "none", background: "#F4F0E8", color: "#79746B", cursor: "pointer", alignItems: "center", justifyContent: "center" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
+              </button>
             </div>
 
             {/* nav */}
@@ -215,7 +235,15 @@ export function AppShell({
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
             {/* topbar */}
             <div style={{ height: "62px", flexShrink: 0, display: "flex", alignItems: "center", gap: "14px", padding: "0 22px", borderBottom: "1px solid #E7E1D4", background: "#FCFAF6" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "9px", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "11px", padding: "8px 13px", width: "300px", maxWidth: "40%" }}>
+              {/* Hamburger — only shown on mobile via CSS */}
+              <button
+                className="app-hamburger"
+                onClick={() => setSidebarOpen(true)}
+                style={{ alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "10px", border: "none", background: "#F4F0E8", color: "#1A1A17", cursor: "pointer", flexShrink: 0 }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
+              </button>
+              <div className="app-topbar-search" style={{ display: "flex", alignItems: "center", gap: "9px", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "11px", padding: "8px 13px", width: "300px", maxWidth: "40%" }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                   <circle cx="11" cy="11" r="7" stroke="#79746B" strokeWidth="2"/>
                   <path d="M20 20l-3.5-3.5" stroke="#79746B" strokeWidth="2" strokeLinecap="round"/>
@@ -238,6 +266,7 @@ export function AppShell({
 
             {/* content */}
             <div
+              className="app-content"
               style={{
                 flex: 1,
                 overflow: "auto",

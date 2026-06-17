@@ -121,3 +121,105 @@
 .job-description h2 { @apply mt-5 mb-2 text-base font-semibold; }
 .job-description ul  { @apply list-disc pl-5 space-y-1; }
 .job-description p   { @apply my-2; }
+
+/* ── App shell: hamburger/close (hidden by default, shown on mobile) ── */
+.app-hamburger     { display: none; }
+.app-sidebar-close { display: none; }
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE  ≤ 767 px
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+
+  /* == Landing page == */
+
+  /* Nav: hide links and "Iniciar sesión" text link */
+  .landing-nav-links { display: none !important; }
+  .landing-nav-login { display: none !important; }
+
+  /* Pipeline preview: let it scroll horizontally */
+  .landing-pipeline-inner {
+    overflow-x: auto !important;
+    padding-bottom: 4px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Solution / feature rows: collapse 2-col grid to 1 col */
+  .landing-2col {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding: 20px !important;
+  }
+
+  /* ATS row has reversed visual order on desktop; reset for mobile */
+  .landing-ats-text    { order: 1 !important; }
+  .landing-ats-preview { order: 2 !important; }
+
+  /* Career site 2-col section */
+  .landing-career-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding: 20px !important;
+  }
+
+  /* IA mockup inner grid */
+  .landing-ia-mockup { grid-template-columns: 1fr !important; }
+  .landing-ia-left {
+    border-right: none !important;
+    border-bottom: 1px solid #E7E1D4 !important;
+  }
+
+  /* CTA final section */
+  .landing-cta-grid {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  /* Testimonial: tighter padding */
+  .landing-testimonial {
+    padding: 24px 20px 22px 28px !important;
+  }
+
+  /* Career site apply form: stack fields vertically */
+  .career-form-grid { grid-template-columns: 1fr !important; }
+
+  /* == App shell == */
+
+  /* Remove outer chrome padding and border-radius */
+  .app-outer {
+    padding: 0 !important;
+  }
+  .app-container {
+    border-radius: 0 !important;
+    min-height: 100dvh !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Sidebar becomes a fixed left-side drawer */
+  .app-sidebar {
+    position: fixed !important;
+    z-index: 50 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    transform: translateX(-100%) !important;
+    transition: transform .28s cubic-bezier(.4, 0, .2, 1) !important;
+    border-right: 1px solid #E7E1D4 !important;
+    border-radius: 0 !important;
+  }
+  .app-sidebar.open {
+    transform: translateX(0) !important;
+    box-shadow: 8px 0 32px rgba(26,26,23,.22) !important;
+  }
+
+  /* Show mobile-only controls */
+  .app-sidebar-close { display: flex !important; }
+  .app-hamburger     { display: flex !important; }
+
+  /* Hide search box in topbar on mobile */
+  .app-topbar-search { display: none !important; }
+
+  /* Reduce content padding */
+  .app-content { padding: 16px !important; }
+}

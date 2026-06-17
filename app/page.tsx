@@ -47,14 +47,14 @@ export default function LandingPage() {
             </div>
             <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "18px", letterSpacing: "-.5px" }}>TalentOS</span>
           </div>
-          <div style={{ display: "flex", gap: "24px", marginLeft: "14px" }}>
+          <div className="landing-nav-links" style={{ display: "flex", gap: "24px", marginLeft: "14px" }}>
             {["Producto", "La IA", "Recursos"].map((l) => (
               <span key={l} style={{ fontSize: "14px", fontWeight: 600, color: "#79746B", cursor: "pointer" }}>{l}</span>
             ))}
             <span onClick={() => scrollTo(howRef)} style={{ fontSize: "14px", fontWeight: 600, color: "#79746B", cursor: "pointer" }}>Cómo funciona</span>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "12px" }}>
-            <Link href="/login" style={{ fontSize: "14px", fontWeight: 700, color: "#79746B", textDecoration: "none" }}>Iniciar sesión</Link>
+            <Link href="/login" className="landing-nav-login" style={{ fontSize: "14px", fontWeight: 700, color: "#79746B", textDecoration: "none" }}>Iniciar sesión</Link>
             <button
               onClick={() => scrollTo(ctaRef)}
               style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#F1543F", border: "2px solid #1A1A17", borderRadius: "11px", padding: "9px 15px", boxShadow: "3px 3px 0 #133F35", cursor: "pointer" }}
@@ -106,7 +106,7 @@ export default function LandingPage() {
               app.talentos.com/jobs/senior-product-designer
             </span>
           </div>
-          <div style={{ padding: "20px", display: "flex", gap: "12px", overflow: "hidden" }}>
+          <div className="landing-pipeline-inner" style={{ padding: "20px", display: "flex", gap: "12px", overflow: "hidden" }}>
             {PREVIEW_COLS.map((col) => (
               <div key={col.name} style={{ width: "200px", flexShrink: 0, background: "#F8F4EB", borderRadius: "12px", padding: "9px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "7px", padding: "3px 5px 9px" }}>
@@ -181,7 +181,7 @@ export default function LandingPage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {/* Ofertas */}
-          <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "18px", padding: "30px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px", alignItems: "center" }}>
+          <div className="landing-2col" style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "18px", padding: "30px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px", alignItems: "center" }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "11px", marginBottom: "14px" }}>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px", color: "#79746B" }}>001</span>
@@ -220,8 +220,8 @@ export default function LandingPage() {
           </div>
 
           {/* ATS */}
-          <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "18px", padding: "30px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px", alignItems: "center" }}>
-            <div style={{ order: 2 }}>
+          <div className="landing-2col" style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "18px", padding: "30px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px", alignItems: "center" }}>
+            <div className="landing-ats-text" style={{ order: 2 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "11px", marginBottom: "14px" }}>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px", color: "#79746B" }}>002</span>
                 <div style={{ width: "38px", height: "38px", borderRadius: "11px", background: "#F6E0D9", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -239,7 +239,7 @@ export default function LandingPage() {
                 <span style={{ fontSize: "13.5px", fontWeight: 700, color: "#46540F" }}>Fit score y registro de quién movió a quién, y por qué</span>
               </div>
             </div>
-            <div style={{ order: 1, background: "#F8F4EB", border: "1px solid #E7E1D4", borderRadius: "14px", padding: "18px" }}>
+            <div className="landing-ats-preview" style={{ order: 1, background: "#F8F4EB", border: "1px solid #E7E1D4", borderRadius: "14px", padding: "18px" }}>
               <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", marginBottom: "12px" }}>PIPELINE · SENIOR PRODUCT DESIGNER</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {[
@@ -258,7 +258,7 @@ export default function LandingPage() {
           </div>
 
           {/* HRIS */}
-          <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "18px", padding: "30px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px", alignItems: "center" }}>
+          <div className="landing-2col" style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "18px", padding: "30px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px", alignItems: "center" }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "11px", marginBottom: "14px" }}>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px", color: "#79746B" }}>003</span>
@@ -306,7 +306,7 @@ export default function LandingPage() {
 
       {/* CAREER SITE */}
       <section style={{ maxWidth: "1180px", margin: "0 auto", padding: "8px 24px 60px" }}>
-        <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "20px", padding: "34px", display: "grid", gridTemplateColumns: "1fr 1.05fr", gap: "36px", alignItems: "center" }}>
+        <div className="landing-career-grid" style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "20px", padding: "34px", display: "grid", gridTemplateColumns: "1fr 1.05fr", gap: "36px", alignItems: "center" }}>
           <div>
             <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px", letterSpacing: "2px", textTransform: "uppercase", color: "#F1543F", marginBottom: "12px" }}>Career site</div>
             <h2 style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "36px", lineHeight: 1, letterSpacing: "-1.3px", margin: "0 0 14px" }}>
@@ -380,8 +380,8 @@ export default function LandingPage() {
                 <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#7FB519" }} />Agente activo
               </span>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "0.82fr 1.18fr", color: "#1A1A17" }}>
-              <div style={{ padding: "20px", borderRight: "1px solid #E7E1D4" }}>
+            <div className="landing-ia-mockup" style={{ display: "grid", gridTemplateColumns: "0.82fr 1.18fr", color: "#1A1A17" }}>
+              <div className="landing-ia-left" style={{ padding: "20px", borderRight: "1px solid #E7E1D4" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
                   <span style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#E7E0F2", color: "#5A4C86", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "13px" }}>EV</span>
                   <div>
@@ -456,7 +456,7 @@ export default function LandingPage() {
             <div key={n} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "22px", letterSpacing: "-.5px", color: "#79746B" }}>{n}</div>
           ))}
         </div>
-        <div style={{ maxWidth: "860px", margin: "0 auto", position: "relative", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "22px", padding: "38px 44px 34px 50px", boxShadow: "0 26px 54px -34px rgba(26,26,23,.42)", overflow: "hidden" }}>
+        <div className="landing-testimonial" style={{ maxWidth: "860px", margin: "0 auto", position: "relative", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "22px", padding: "38px 44px 34px 50px", boxShadow: "0 26px 54px -34px rgba(26,26,23,.42)", overflow: "hidden" }}>
           <span style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: "5px", background: "#F1543F" }} />
           <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#79746B", marginBottom: "16px" }}>Testimonio</div>
           <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "25px", lineHeight: 1.32, letterSpacing: "-.5px" }}>
@@ -474,7 +474,7 @@ export default function LandingPage() {
 
       {/* CTA FINAL */}
       <section ref={ctaRef} style={{ background: "#0E5C4A", color: "#fff", padding: "76px 24px" }}>
-        <div style={{ maxWidth: "960px", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "48px", alignItems: "center" }}>
+        <div className="landing-cta-grid" style={{ maxWidth: "960px", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "48px", alignItems: "center" }}>
           <div>
             <h2 style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "clamp(34px,5vw,48px)", lineHeight: 0.98, letterSpacing: "-1.8px", margin: 0 }}>
               Menos herramientas. <span style={{ fontStyle: "italic", color: "#C6F24E" }}>Más foco</span> en las personas.
