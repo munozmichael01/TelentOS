@@ -86,7 +86,7 @@ const LogoMark = () => (
 );
 
 const NAV = [
-  { href: "/", label: "Dashboard", Icon: IconDashboard },
+  { href: "/dashboard", label: "Dashboard", Icon: IconDashboard },
   { section: "Reclutamiento" },
   { href: "/jobs",       label: "Ofertas",     Icon: IconBriefcase },
   { href: "/candidates", label: "Candidatos",  Icon: IconCandidates },

@@ -114,6 +114,9 @@
   box-shadow: 2px 2px 0 #1A1A17;
 }
 
+/* ── Career site job card hover ── */
+.career-job-card:hover { border-color: #0E5C4A !important; }
+
 /* ── Markdown descripción de oferta ── */
 .job-description h2 { @apply mt-5 mb-2 text-base font-semibold; }
 .job-description ul  { @apply list-disc pl-5 space-y-1; }

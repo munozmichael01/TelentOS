@@ -74,10 +74,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
               href={`/careers/${params.slug}/jobs/${job.id}`}
               style={{ textDecoration: "none", color: "inherit" }}
             >
-              <div style={{ background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: "16px", padding: "21px 22px", cursor: "pointer", transition: "border-color .12s ease" }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#0E5C4A")}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#E7E1D4")}
-              >
+              <div className="career-job-card" style={{ background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: "16px", padding: "21px 22px", cursor: "pointer", transition: "border-color .12s ease" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "19px", letterSpacing: "-.4px" }}>
