@@ -1,9 +1,8 @@
-import { Suspense } from "react";
-import { LoginForm } from "@/components/features/login-form";
+import { ResetPasswordForm } from "@/components/features/reset-password-form";
 
 export const dynamic = "force-dynamic";
 
-export default function LoginPage() {
+export default function ResetPasswordPage() {
   return (
     <div
       style={{
@@ -15,9 +14,7 @@ export default function LoginPage() {
         background: "radial-gradient(130% 80% at 50% -10%, #F7F3EB 0%, #F4F0E8 60%)",
       }}
     >
-      <Suspense>
-        <LoginForm />
-      </Suspense>
+      <ResetPasswordForm />
     </div>
   );
 }
