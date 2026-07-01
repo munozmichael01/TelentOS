@@ -101,6 +101,7 @@ const NAV = [
   { section: "Reclutamiento" },
   { href: "/jobs",               label: "Ofertas",      Icon: IconBriefcase },
   { href: "/candidates",         label: "Candidatos",   Icon: IconCandidates },
+  { href: "/career-site",        label: "Career Site",  Icon: IconGlobe },
   { section: "Personas" },
   { href: "/employees",          label: "Empleados",    Icon: IconEmployee },
   { href: "/org",                label: "Organigrama",  Icon: IconOrg },
