@@ -10,6 +10,7 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const employee_id = url.searchParams.get("employee_id");
+  const employee_ids = url.searchParams.get("employee_ids");
   const date = url.searchParams.get("date");
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
@@ -21,7 +22,11 @@ export async function GET(req: Request) {
     .order("date", { ascending: false })
     .order("start_time", { ascending: false });
 
-  if (employee_id) query = query.eq("employee_id", employee_id);
+  if (employee_ids) {
+    query = query.in("employee_id", employee_ids.split(",").filter(Boolean));
+  } else if (employee_id) {
+    query = query.eq("employee_id", employee_id);
+  }
   if (date) query = query.eq("date", date);
   if (from) query = query.gte("date", from);
   if (to) query = query.lte("date", to);

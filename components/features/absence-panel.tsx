@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { AbsenceRequest, AbsenceType, Employee, AbsenceStatus } from "@/lib/types";
+import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
 
 /* ─── Style helpers ─────────────────────────────────────────────────── */
 
@@ -628,17 +629,17 @@ export function AbsencePanel({
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const [empFilter, setEmpFilter] = useState("");
+  const [empFilter, setEmpFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const hasAdvancedFilter = !!empFilter || !!typeFilter || !!dateFrom || !!dateTo;
+  const hasAdvancedFilter = empFilter.length > 0 || !!typeFilter || !!dateFrom || !!dateTo;
 
   const filtered = useMemo(() => {
     let result = requests;
     if (filter !== "all") result = result.filter((r) => r.status === filter);
-    if (empFilter) result = result.filter((r) => r.employee_id === empFilter);
+    if (empFilter.length > 0) result = result.filter((r) => empFilter.includes(r.employee_id));
     if (typeFilter) result = result.filter((r) => r.absence_type_id === typeFilter);
     if (dateFrom) result = result.filter((r) => r.end_date >= dateFrom);
     if (dateTo) result = result.filter((r) => r.start_date <= dateTo);
@@ -709,13 +710,7 @@ export function AbsencePanel({
 
       {/* ─── Advanced filters ──────────────────────────────────────── */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "160px" }}>
-          <div style={{ ...FL, marginBottom: "2px" }}>Empleado</div>
-          <select value={empFilter} onChange={(e) => setEmpFilter(e.target.value)} style={{ ...FI, padding: "8px 10px", fontSize: "13px" }}>
-            <option value="">Todos</option>
-            {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
-          </select>
-        </div>
+        <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} />
         <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "140px" }}>
           <div style={{ ...FL, marginBottom: "2px" }}>Tipo</div>
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ ...FI, padding: "8px 10px", fontSize: "13px" }}>
@@ -733,7 +728,7 @@ export function AbsencePanel({
         </div>
         {hasAdvancedFilter && (
           <button
-            onClick={() => { setEmpFilter(""); setTypeFilter(""); setDateFrom(""); setDateTo(""); }}
+            onClick={() => { setEmpFilter([]); setTypeFilter(""); setDateFrom(""); setDateTo(""); }}
             style={{ ...BTN_GHOST, border: `1.5px solid #E7E1D4`, borderRadius: "9px", padding: "8px 14px", fontSize: "12px", whiteSpace: "nowrap" }}
           >
             Limpiar

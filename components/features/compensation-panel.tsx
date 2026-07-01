@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { CompensationRecord } from "@/lib/types";
+import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
 
 // ── Design tokens ──────────────────────────────────────────────────
 const T = {
@@ -346,6 +347,7 @@ export function CompensationPanel({
   const [customMode, setCustomMode] = useState(false);
   const [customFrom, setCustomFrom] = useState(monthBounds(now.getFullYear(), now.getMonth()).from);
   const [customTo, setCustomTo] = useState(monthBounds(now.getFullYear(), now.getMonth()).to);
+  const [empFilter, setEmpFilter] = useState<string[]>([]);
 
   const { from: monthFrom, to: monthTo } = monthBounds(year, month);
   const periodFrom = customMode ? customFrom : monthFrom;
@@ -408,8 +410,13 @@ export function CompensationPanel({
     setYear(y); setMonth(m); setCustomMode(false);
   }
 
-  const totalWorked = summaries.reduce((acc, s) => acc + s.worked, 0);
   const withHours = summaries.filter((s) => s.worked > 0).length;
+  const withoutHours = summaries.filter((s) => s.worked === 0);
+  const pendingCount = summaries.filter((s) => s.worked > 0 && !s.confirmed).length;
+
+  const visibleSummaries = empFilter.length > 0
+    ? summaries.filter((s) => empFilter.includes(s.id))
+    : summaries;
 
   return (
     <div>
@@ -434,9 +441,9 @@ export function CompensationPanel({
           {/* Summary stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px", marginBottom: "28px" }}>
             {[
-              { label: "Total trabajado", value: fmt(totalWorked), color: T.brand },
-              { label: "Empleados con horas", value: String(withHours), color: T.ink },
-              { label: "Pendientes de confirmar", value: String(summaries.filter(s => s.worked > 0 && !s.confirmed).length), color: summaries.filter(s => s.worked > 0 && !s.confirmed).length > 0 ? T.warnText : T.soft },
+              { label: "Con horas registradas", value: String(withHours), color: T.brand },
+              { label: "Sin horas este período", value: String(withoutHours.length), color: withoutHours.length > 0 ? T.warnText : T.soft },
+              { label: "Pendientes de confirmar", value: String(pendingCount), color: pendingCount > 0 ? T.warnText : T.soft },
             ].map(({ label, value, color }) => (
               <div key={label} style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "12px", padding: "16px 18px" }}>
                 <div style={{ fontFamily: T.mono, fontSize: "10px", color: T.soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "6px" }}>{label}</div>
@@ -445,9 +452,31 @@ export function CompensationPanel({
             ))}
           </div>
 
+          {/* Sin horas callout */}
+          {withoutHours.length > 0 && empFilter.length === 0 && (
+            <div style={{ marginBottom: "24px", padding: "16px 20px", background: T.warnBg, border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px" }}>
+              <div style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.warnText, marginBottom: "10px" }}>
+                Sin horas registradas este período
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {withoutHours.map((s) => (
+                  <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#FCFAF6", border: `1.5px solid ${T.line}`, borderRadius: "999px", padding: "5px 12px 5px 8px" }}>
+                    <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "linear-gradient(135deg,#D0D0C8,#B0ADA6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.head, fontWeight: 900, fontSize: "10px", color: "#fff", flexShrink: 0 }}>
+                      {s.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span style={{ fontFamily: T.body, fontSize: "13px", fontWeight: 600, color: T.soft }}>{s.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Per-employee breakdown */}
           <div style={{ marginBottom: "32px" }}>
-            <SL>Horas del período</SL>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", gap: "12px", flexWrap: "wrap" }}>
+              <SL>Horas del período</SL>
+              <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} label="Filtrar empleados" />
+            </div>
             <div style={{ border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.body }}>
                 <thead>
@@ -460,14 +489,14 @@ export function CompensationPanel({
                   </tr>
                 </thead>
                 <tbody>
-                  {summaries.length === 0 ? (
+                  {visibleSummaries.length === 0 ? (
                     <tr>
                       <td colSpan={4} style={{ padding: "40px", textAlign: "center", color: T.soft, background: T.surface }}>
                         <div style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>Sin empleados activos</div>
                       </td>
                     </tr>
-                  ) : summaries.map((s, i) => (
-                    <tr key={s.id} style={{ background: i % 2 === 0 ? T.surface : T.bg, borderBottom: i < summaries.length - 1 ? `1px solid ${T.line}` : undefined }}>
+                  ) : visibleSummaries.map((s, i) => (
+                    <tr key={s.id} style={{ background: i % 2 === 0 ? T.surface : T.bg, borderBottom: i < visibleSummaries.length - 1 ? `1px solid ${T.line}` : undefined }}>
                       <td style={{ padding: "12px 14px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.head, fontWeight: 900, fontSize: "12px", color: "#063D31", flexShrink: 0 }}>

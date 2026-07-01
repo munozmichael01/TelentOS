@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 import type { AbsenceRequest, CompanyHoliday, Employee } from "@/lib/types";
 import Link from "next/link";
+import { CalendarWithFilter } from "@/components/features/calendar-with-filter";
 
 /* ─── Style helpers ──────────────────────────────────────────────────── */
 
@@ -491,10 +492,10 @@ export default async function TimeOffCalendarPage({
           </div>
         </div>
       ) : (
-        <CalendarGrid
+        <CalendarWithFilter
           year={year}
           month={month}
-          employees={allEmployees}
+          allEmployees={allEmployees}
           absences={allAbsences}
           holidays={allHolidays}
         />

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Square, Trash2, Play, Clock, ChevronDown, X } from "lucide-react";
 import type { TimeEntry, TimerState, Employee } from "@/lib/types";
+import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
 
 // ── Design tokens ─────────────────────────────────────────────────
 const T = {
@@ -297,13 +298,13 @@ function EntriesTable({ initialEntries, employees }: {
   const today = new Date().toISOString().slice(0, 10);
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [empFilter, setEmpFilter] = useState("");
+  const [empFilter, setEmpFilter] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
   const [fetched, setFetched] = useState<TimeEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const hasFilter = !!empFilter || dateFrom !== today || dateTo !== today;
+  const hasFilter = empFilter.length > 0 || dateFrom !== today || dateTo !== today;
 
   useEffect(() => {
     if (hasFilter) {
@@ -318,7 +319,7 @@ function EntriesTable({ initialEntries, employees }: {
     setLoading(true);
     try {
       const p = new URLSearchParams();
-      if (empFilter) p.set("employee_id", empFilter);
+      if (empFilter.length > 0) p.set("employee_ids", empFilter.join(","));
       p.set("from", dateFrom);
       p.set("to", dateTo);
       const res = await fetch(`/api/time-entries?${p}`);
@@ -352,13 +353,7 @@ function EntriesTable({ initialEntries, employees }: {
 
       {/* Filter bar */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "160px" }}>
-          <Label>Empleado</Label>
-          <select value={empFilter} onChange={(e) => setEmpFilter(e.target.value)} style={selectStyle}>
-            <option value="">Todos</option>
-            {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
-          </select>
-        </div>
+        <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} />
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <Label>Desde</Label>
           <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={inputStyle} />
@@ -369,7 +364,7 @@ function EntriesTable({ initialEntries, employees }: {
         </div>
         {hasFilter && (
           <button
-            onClick={() => { setEmpFilter(""); setDateFrom(today); setDateTo(today); }}
+            onClick={() => { setEmpFilter([]); setDateFrom(today); setDateTo(today); }}
             style={{
               padding: "9px 14px", borderRadius: "8px",
               border: `1.5px solid ${T.line}`, background: T.bg,
