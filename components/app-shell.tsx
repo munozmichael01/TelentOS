@@ -68,8 +68,8 @@ const IconCompensacion = () => (
 );
 const IconSettings = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth="2"/>
-    <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
   </svg>
 );
 const IconGlobe = () => (
@@ -138,6 +138,9 @@ export function AppShell({
   const router = useRouter();
   const [userEmail, setUserEmail] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(() =>
+    typeof window !== "undefined" && window.location.pathname.startsWith("/settings")
+  );
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
@@ -147,6 +150,7 @@ export function AppShell({
 
   useEffect(() => {
     setSidebarOpen(false);
+    if (pathname.startsWith("/settings")) setSettingsOpen(true);
   }, [pathname]);
 
   async function signOut() {
@@ -220,40 +224,65 @@ export function AppShell({
                 }
                 const active = isActive(item.href);
                 const hasChildren = "children" in item && item.children;
+
+                if (hasChildren) {
+                  const isOpen = settingsOpen;
+                  return (
+                    <div key={item.href}>
+                      <button
+                        onClick={() => setSettingsOpen((o) => !o)}
+                        className="nav-item"
+                        style={{
+                          width: "100%", background: "none", border: "none",
+                          cursor: "pointer", justifyContent: "space-between",
+                        }}
+                      >
+                        <span style={{ display: "flex", alignItems: "center", gap: "11px" }}>
+                          <item.Icon />
+                          {item.label}
+                        </span>
+                        <svg
+                          width="13" height="13" viewBox="0 0 24 24" fill="none"
+                          style={{ flexShrink: 0, transition: "transform .2s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                        >
+                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                      {isOpen && (
+                        <div style={{ marginLeft: "14px", marginTop: "2px", borderLeft: "2px solid #E7E1D4", paddingLeft: "10px", marginBottom: "4px" }}>
+                          {item.children!.map((child) => {
+                            const childActive = pathname === child.href;
+                            return (
+                              <Link
+                                key={child.href}
+                                href={child.href}
+                                className="nav-item"
+                                style={{
+                                  fontSize: "13px",
+                                  padding: "6px 10px",
+                                  ...(childActive ? { background: "#EFEBE1", color: "#0E5C4A", fontWeight: 700 } : {}),
+                                }}
+                              >
+                                {child.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
                 return (
-                  <div key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="nav-item"
-                      style={active && !hasChildren ? { background: "#0E5C4A", color: "#fff", boxShadow: "2px 2px 0 #1A1A17" } : undefined}
-                    >
-                      <item.Icon />
-                      {item.label}
-                    </Link>
-                    {hasChildren && (
-                      <div style={{ marginLeft: "14px", marginTop: "2px", borderLeft: "2px solid #E7E1D4", paddingLeft: "10px", marginBottom: "4px" }}>
-                        {item.children!.map((child) => {
-                          const childActive = pathname === child.href;
-                          return (
-                            <Link
-                              key={child.href}
-                              href={child.href}
-                              className="nav-item"
-                              style={{
-                                fontSize: "13px",
-                                padding: "6px 10px",
-                                ...(childActive
-                                  ? { background: "#EFEBE1", color: "#0E5C4A", fontWeight: 700 }
-                                  : {}),
-                              }}
-                            >
-                              {child.label}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="nav-item"
+                    style={active ? { background: "#0E5C4A", color: "#fff", boxShadow: "2px 2px 0 #1A1A17" } : undefined}
+                  >
+                    <item.Icon />
+                    {item.label}
+                  </Link>
                 );
               })}
               {careersSlug && (

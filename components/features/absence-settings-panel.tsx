@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Pencil, Trash2, Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -196,17 +196,17 @@ function EmptyAbsenceTypes() {
     setErr("");
     try {
       const res = await fetch("/api/absence-types/seed-defaults", { method: "POST" });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error ?? "Error al crear los tipos por defecto");
-      }
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "Error al crear los tipos por defecto");
       router.refresh();
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
-    } finally {
       setSeeding(false);
     }
   }
+
+  // Auto-seed on first visit
+  useEffect(() => { seed(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "48px 24px", textAlign: "center" }}>
