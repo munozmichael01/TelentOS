@@ -109,8 +109,18 @@ const NAV = [
   { href: "/horas",              label: "Horas",        Icon: IconHoras },
   { href: "/horas/compensacion", label: "Compensación", Icon: IconCompensacion },
   { section: "Workspace" },
-  { href: "/settings",           label: "Ajustes",      Icon: IconSettings },
-] as const;
+  {
+    href: "/settings",
+    label: "Ajustes",
+    Icon: IconSettings,
+    children: [
+      { href: "/settings",            label: "Empresa" },
+      { href: "/settings/absences",   label: "Ausencias" },
+      { href: "/settings/schedules",  label: "Horarios" },
+      { href: "/settings/compliance", label: "Compliance" },
+    ],
+  },
+];
 
 function initials(email: string) {
   const parts = email.split("@")[0].split(/[._-]/);
@@ -150,13 +160,11 @@ export function AppShell({
     if (pathname === href) return true;
     if (!pathname.startsWith(href + "/")) return false;
     // Don't mark parent active when a more-specific sibling nav item matches
-    const hasChildMatch = NAV.some(
-      (item) =>
-        "href" in item &&
-        item.href !== href &&
-        item.href.startsWith(href + "/") &&
-        (pathname === item.href || pathname.startsWith(item.href + "/"))
-    );
+    const hasChildMatch = NAV.some((item) => {
+      if (!("href" in item) || !item.href) return false;
+      const h = item.href as string;
+      return h !== href && h.startsWith(href + "/") && (pathname === h || pathname.startsWith(h + "/"));
+    });
     return !hasChildMatch;
   }
 
@@ -211,16 +219,41 @@ export function AppShell({
                   );
                 }
                 const active = isActive(item.href);
+                const inSection = pathname === item.href || pathname.startsWith(item.href + "/");
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="nav-item"
-                    style={active ? { background: "#0E5C4A", color: "#fff", boxShadow: "2px 2px 0 #1A1A17" } : undefined}
-                  >
-                    <item.Icon />
-                    {item.label}
-                  </Link>
+                  <div key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="nav-item"
+                      style={active ? { background: "#0E5C4A", color: "#fff", boxShadow: "2px 2px 0 #1A1A17" } : undefined}
+                    >
+                      <item.Icon />
+                      {item.label}
+                    </Link>
+                    {"children" in item && item.children && inSection && (
+                      <div style={{ marginLeft: "14px", marginTop: "2px", borderLeft: "2px solid #E7E1D4", paddingLeft: "10px" }}>
+                        {item.children.map((child) => {
+                          const childActive = pathname === child.href;
+                          return (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              className="nav-item"
+                              style={{
+                                fontSize: "13px",
+                                padding: "6px 10px",
+                                ...(childActive
+                                  ? { background: "#EFEBE1", color: "#0E5C4A", fontWeight: 700 }
+                                  : {}),
+                              }}
+                            >
+                              {child.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
               {careersSlug && (
