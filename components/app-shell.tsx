@@ -219,20 +219,20 @@ export function AppShell({
                   );
                 }
                 const active = isActive(item.href);
-                const inSection = pathname === item.href || pathname.startsWith(item.href + "/");
+                const hasChildren = "children" in item && item.children;
                 return (
                   <div key={item.href}>
                     <Link
                       href={item.href}
                       className="nav-item"
-                      style={active ? { background: "#0E5C4A", color: "#fff", boxShadow: "2px 2px 0 #1A1A17" } : undefined}
+                      style={active && !hasChildren ? { background: "#0E5C4A", color: "#fff", boxShadow: "2px 2px 0 #1A1A17" } : undefined}
                     >
                       <item.Icon />
                       {item.label}
                     </Link>
-                    {"children" in item && item.children && inSection && (
-                      <div style={{ marginLeft: "14px", marginTop: "2px", borderLeft: "2px solid #E7E1D4", paddingLeft: "10px" }}>
-                        {item.children.map((child) => {
+                    {hasChildren && (
+                      <div style={{ marginLeft: "14px", marginTop: "2px", borderLeft: "2px solid #E7E1D4", paddingLeft: "10px", marginBottom: "4px" }}>
+                        {item.children!.map((child) => {
                           const childActive = pathname === child.href;
                           return (
                             <Link
