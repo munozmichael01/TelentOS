@@ -10,11 +10,15 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
 
-  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
+  // If we arrived from an expired reset link, drop straight into forgot mode
+  const isExpiredLink = !!urlError;
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">(
+    isExpiredLink ? "forgot" : "signin"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(urlError ?? "");
+  const [error, setError] = useState(isExpiredLink ? "El enlace expiró. Introduce tu email y te enviamos uno nuevo." : "");
   const [info, setInfo] = useState("");
 
   async function submit(e: React.FormEvent) {

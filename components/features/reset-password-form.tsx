@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, KeyRound, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -12,6 +12,14 @@ export function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const [noSession, setNoSession] = useState(false);
+
+  // Verify there is an active recovery session — if not, show a helpful message
+  useEffect(() => {
+    createClient().auth.getSession().then(({ data }) => {
+      if (!data.session) setNoSession(true);
+    });
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -78,7 +86,29 @@ export function ResetPasswordForm() {
 
         {/* Body */}
         <div style={{ padding: "26px 32px 30px" }}>
-          {done ? (
+          {noSession ? (
+            <div style={{ textAlign: "center", padding: "12px 0" }}>
+              <div style={{ fontSize: "36px", marginBottom: "12px" }}>🔗</div>
+              <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "18px", marginBottom: "8px" }}>
+                El enlace expiró
+              </div>
+              <p style={{ fontSize: "13px", color: "#79746B", marginBottom: "20px", lineHeight: "1.5" }}>
+                Solicita un nuevo enlace de recuperación desde la pantalla de inicio de sesión.
+              </p>
+              <button
+                onClick={() => router.push("/login")}
+                style={{
+                  padding: "10px 20px", borderRadius: "10px",
+                  border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17",
+                  background: "#0E5C4A", color: "#fff",
+                  fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "14px",
+                  cursor: "pointer",
+                }}
+              >
+                Volver al login
+              </button>
+            </div>
+          ) : done ? (
             <div style={{ textAlign: "center", padding: "12px 0" }}>
               <CheckCircle2 size={40} color="#0E5C4A" style={{ margin: "0 auto 14px", display: "block" }} />
               <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "18px", marginBottom: "8px" }}>
