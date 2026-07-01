@@ -45,14 +45,25 @@ const IconOrg = () => (
 );
 const IconVacaciones = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
-    <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+    <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+const IconCalendar = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+    <path d="M16 2v4M8 2v4M3 10h18M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
   </svg>
 );
 const IconHoras = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-    <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
-    <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+    <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+const IconCompensacion = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
   </svg>
 );
 const IconSettings = () => (
@@ -86,17 +97,19 @@ const LogoMark = () => (
 );
 
 const NAV = [
-  { href: "/dashboard", label: "Dashboard", Icon: IconDashboard },
+  { href: "/dashboard",          label: "Dashboard",    Icon: IconDashboard },
   { section: "Reclutamiento" },
-  { href: "/jobs",       label: "Ofertas",     Icon: IconBriefcase },
-  { href: "/candidates", label: "Candidatos",  Icon: IconCandidates },
+  { href: "/jobs",               label: "Ofertas",      Icon: IconBriefcase },
+  { href: "/candidates",         label: "Candidatos",   Icon: IconCandidates },
   { section: "Personas" },
-  { href: "/employees",  label: "Empleados",   Icon: IconEmployee },
-  { href: "/org",        label: "Organigrama", Icon: IconOrg },
-  { href: "/timesheets", label: "Horas",       Icon: IconHoras },
-  { href: "/timeoff",    label: "Vacaciones",  Icon: IconVacaciones },
+  { href: "/employees",          label: "Empleados",    Icon: IconEmployee },
+  { href: "/org",                label: "Organigrama",  Icon: IconOrg },
+  { href: "/timeoff",            label: "Ausencias",    Icon: IconVacaciones },
+  { href: "/timeoff/calendar",   label: "Calendario",   Icon: IconCalendar },
+  { href: "/horas",              label: "Horas",        Icon: IconHoras },
+  { href: "/horas/compensacion", label: "Compensación", Icon: IconCompensacion },
   { section: "Workspace" },
-  { href: "/settings",   label: "Ajustes",     Icon: IconSettings },
+  { href: "/settings",           label: "Ajustes",      Icon: IconSettings },
 ] as const;
 
 function initials(email: string) {

@@ -176,6 +176,317 @@ export type TimeOffRequest = {
   employees?: Employee;
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FEATURE 1 — Tipos de ausencia y políticas de permisos
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AllowanceUnit = "days" | "hours";
+
+export type AllowanceType = {
+  id: string;
+  company_id: string;
+  name: string;
+  unit: AllowanceUnit;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AbsenceType = {
+  id: string;
+  company_id: string;
+  name: string;
+  color: string;
+  icon: string;
+  requires_approval: boolean;
+  deducts_from_allowance: boolean;
+  allowance_type_id: string | null;
+  is_public: boolean;
+  requires_document: boolean;
+  allow_half_day: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  allowance_types?: AllowanceType;
+};
+
+export type AllowanceCycleType = "annual" | "monthly";
+export type AllowanceAssignmentTiming = "start_of_cycle" | "end_of_cycle";
+export type AllowanceExpiryRule = "immediate" | "never" | "after_period";
+
+export type AllowancePolicy = {
+  id: string;
+  company_id: string;
+  allowance_type_id: string;
+  name: string;
+  amount: number;
+  cycle_type: AllowanceCycleType;
+  cycle_start_month: number | null;
+  assignment_timing: AllowanceAssignmentTiming;
+  expiry_rule: AllowanceExpiryRule;
+  expiry_period_months: number | null;
+  carryover_limit: number | null;
+  allow_negative: boolean;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+  allowance_types?: AllowanceType;
+};
+
+export type EmployeeAllowance = {
+  id: string;
+  employee_id: string;
+  policy_id: string;
+  valid_from: string;
+  valid_until: string | null;
+  created_at: string;
+  updated_at: string;
+  allowance_policies?: AllowancePolicy;
+};
+
+export type AdjustmentType = "manual_hr" | "carryover" | "expiry" | "company_holiday";
+
+export type AllowanceAdjustmentLog = {
+  id: string;
+  employee_allowance_id: string;
+  adjusted_by_employee_id: string | null;
+  amount: number;
+  reason: string;
+  type: AdjustmentType;
+  created_at: string;
+};
+
+export type CompanyHoliday = {
+  id: string;
+  company_id: string;
+  name: string;
+  date: string;
+  repeats_annually: boolean;
+  is_half_day: boolean;
+  deducts_from_allowance: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+// Calculated balance — not stored, derived at query time
+export type AllowanceBalance = {
+  allowance_type: AllowanceType;
+  policy: AllowancePolicy;
+  employee_allowance: EmployeeAllowance;
+  granted: number;
+  carryover: number;
+  adjustments: number;
+  taken: number;
+  pending: number;
+  holidays: number;
+  expired: number;
+  available: number; // granted + carryover + adjustments - taken - pending - holidays - expired
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FEATURE 2 — Solicitudes de ausencia
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AbsencePeriod = "morning" | "afternoon" | "full";
+export type AbsenceStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export type AbsenceRequest = {
+  id: string;
+  company_id: string;
+  employee_id: string;
+  created_by_employee_id: string | null;
+  absence_type_id: string;
+  start_date: string;
+  start_period: AbsencePeriod;
+  end_date: string;
+  end_period: AbsencePeriod;
+  working_days_count: number;
+  status: AbsenceStatus;
+  approved_by_employee_id: string | null;
+  approved_at: string | null;
+  rejection_reason: string | null;
+  comment: string | null;
+  document_url: string | null;
+  substitute_employee_id: string | null;
+  notify_employee_ids: string[];
+  created_at: string;
+  updated_at: string;
+  employees?: Employee;
+  absence_types?: AbsenceType;
+  approved_by?: Employee;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FEATURE 4 — Horarios de trabajo
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type WeekType = "single" | "rotating";
+
+export type TimeSlot = {
+  start: string; // "HH:MM"
+  end: string;
+};
+
+export type WorkScheduleTemplate = {
+  id: string;
+  company_id: string;
+  name: string;
+  week_type: WeekType;
+  is_default: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  weeks?: WorkScheduleWeek[];
+};
+
+export type WorkScheduleWeek = {
+  id: string;
+  template_id: string;
+  week_label: string;
+  week_index: number;
+  days?: WorkScheduleDay[];
+};
+
+export type WorkScheduleDay = {
+  id: string;
+  week_id: string;
+  day_of_week: number; // 0=Mon … 6=Sun
+  is_working_day: boolean;
+  slots: TimeSlot[];
+  total_minutes: number;
+};
+
+export type EmployeeSchedule = {
+  id: string;
+  employee_id: string;
+  template_id: string;
+  valid_from: string;
+  valid_until: string | null;
+  created_at: string;
+  updated_at: string;
+  work_schedule_templates?: WorkScheduleTemplate;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FEATURE 5 — Registro de horas (Time Tracking)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TimeEntryType = "work" | "break";
+export type TimeEntrySource = "manual" | "timer" | "terminal";
+
+export type TimeEntry = {
+  id: string;
+  company_id: string;
+  employee_id: string;
+  date: string;
+  start_time: string;
+  end_time: string | null;
+  duration_minutes: number | null;
+  entry_type: TimeEntryType;
+  comment: string | null;
+  timezone: string;
+  source: TimeEntrySource;
+  created_at: string;
+  updated_at: string;
+  employees?: Employee;
+};
+
+export type TimerState = {
+  id: string;
+  employee_id: string;
+  started_at: string;
+  entry_type: TimeEntryType;
+};
+
+export type DailySummary = {
+  date: string;
+  work_minutes: number;
+  break_minutes: number;
+  entries: TimeEntry[];
+  has_open_timer: boolean;
+  scheduled_minutes: number;
+  balance_minutes: number;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FEATURE 6 — Compensación (Banco de horas)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type CompensationType = "time_off" | "payment";
+
+export type CompensationRecord = {
+  id: string;
+  company_id: string;
+  employee_id: string;
+  processed_by_employee_id: string | null;
+  period_start: string;
+  period_end: string;
+  scheduled_minutes: number;
+  worked_minutes: number;
+  balance_minutes: number;
+  compensated_minutes: number;
+  compensation_type: CompensationType;
+  conversion_factor: number;
+  comment: string | null;
+  created_at: string;
+  employees?: Employee;
+};
+
+export type CompensationBalance = {
+  accumulated_minutes: number;      // total balance uncompensated
+  compensated_minutes: number;      // already compensated
+  pending_minutes: number;          // balance - compensated
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FEATURE 7 — Compliance
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type BreakRule = {
+  after_minutes: number;
+  min_break_minutes: number;
+};
+
+export type ComplianceConfig = {
+  id: string;
+  company_id: string;
+  max_work_minutes_per_day: number | null;
+  max_start_time_minutes: number | null;
+  min_break_minutes: number | null;
+  allow_start_with_break: boolean;
+  allow_end_with_break: boolean;
+  break_rules: BreakRule[];
+  alert_on_max_hours: boolean;
+  alert_on_overtime_threshold_minutes: number | null;
+  alert_on_missing_break: boolean;
+  updated_at: string;
+  updated_by: string | null;
+};
+
+export type ViolationType =
+  | "max_hours_exceeded"
+  | "early_start"
+  | "missing_break"
+  | "insufficient_break";
+
+export type ComplianceViolation = {
+  id: string;
+  company_id: string;
+  employee_id: string;
+  date: string;
+  time_entry_id: string | null;
+  violation_type: ViolationType;
+  description: string;
+  acknowledged_at: string | null;
+  acknowledged_by_employee_id: string | null;
+  created_at: string;
+  employees?: Employee;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pipeline por defecto al crear una oferta (configurable después por oferta)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Pipeline por defecto al crear una oferta (configurable después por oferta)
 export const DEFAULT_STAGES = [
   { name: "Aplicado", order_index: 0, is_terminal: false },

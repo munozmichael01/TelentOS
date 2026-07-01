@@ -59,7 +59,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
   if (!employee) notFound();
   const emp = employee as Employee;
 
-  const [{ data: manager }, { data: all }, { data: tasks }, { data: docs }, { data: hours }, { data: timeoff }] =
+  const [{ data: manager }, { data: all }, { data: tasks }, { data: docs }, { data: hours }, { data: timeoff }, { data: allowances }, { data: schedules }] =
     await Promise.all([
       emp.manager_id
         ? supabase.from("employees").select("id, name").eq("id", emp.manager_id).maybeSingle()
@@ -69,6 +69,14 @@ export default async function EmployeePage({ params }: { params: { id: string } 
       supabase.from("employee_documents").select("*").eq("employee_id", params.id).order("created_at", { ascending: false }),
       supabase.from("timesheets").select("*").eq("employee_id", params.id).order("work_date", { ascending: false }).limit(30),
       supabase.from("time_off_requests").select("*").eq("employee_id", params.id).order("created_at", { ascending: false }),
+      supabase.from("employee_allowances")
+        .select("id, valid_from, valid_until, allowance_policies(name, amount, allowance_types(name, unit))")
+        .eq("employee_id", params.id)
+        .order("valid_from", { ascending: false }),
+      supabase.from("employee_schedules")
+        .select("*, work_schedule_templates(name, week_type, weeks:work_schedule_weeks(week_label, week_index, days:work_schedule_days(day_of_week, is_working_day, total_minutes)))")
+        .eq("employee_id", params.id)
+        .order("valid_from", { ascending: false }),
     ]);
 
   const approvedDays = (timeoff ?? [])
@@ -152,6 +160,8 @@ export default async function EmployeePage({ params }: { params: { id: string } 
           <TabsTrigger value="documents">Documentos ({(docs ?? []).length})</TabsTrigger>
           <TabsTrigger value="timeoff">Vacaciones</TabsTrigger>
           <TabsTrigger value="timesheets">Horas</TabsTrigger>
+          <TabsTrigger value="permisos">Permisos</TabsTrigger>
+          <TabsTrigger value="horario">Horario</TabsTrigger>
         </TabsList>
 
         {/* ── Información ── */}
@@ -262,6 +272,207 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                 </div>
               ))}
             </div>
+          </div>
+        </TabsContent>
+        {/* ── Permisos ── */}
+        <TabsContent value="permisos">
+          <div style={{ maxWidth: "680px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px" }}>
+                Permisos y ausencias
+              </div>
+              <Link
+                href="/settings/absences"
+                style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none", display: "inline-block" }}
+              >
+                Asignar permiso
+              </Link>
+            </div>
+
+            {(allowances ?? []).length === 0 ? (
+              <div style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "36px 24px", textAlign: "center", boxShadow: "3px 3px 0 #1A1A17" }}>
+                <div style={{ fontSize: "32px", marginBottom: "10px" }}>📋</div>
+                <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "6px" }}>
+                  Este empleado no tiene permisos asignados
+                </div>
+                <div style={{ fontSize: "13px", color: "#79746B", marginBottom: "16px" }}>
+                  Configura políticas de permisos y asígnalas desde ajustes.
+                </div>
+                <Link
+                  href="/settings/absences"
+                  style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "underline" }}
+                >
+                  Ir a Políticas de ausencias →
+                </Link>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {(allowances ?? []).map((a: any) => {
+                  const policy = a.allowance_policies as any;
+                  const atype = policy?.allowance_types as any;
+                  return (
+                    <div key={a.id} style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "18px 20px", boxShadow: "3px 3px 0 #1A1A17" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                        <div>
+                          <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "4px" }}>
+                            {policy?.name ?? "—"}
+                          </div>
+                          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B" }}>
+                            {atype?.name ?? "—"} · {atype?.unit ?? "—"}
+                          </div>
+                        </div>
+                        <div style={{ background: "#EAF7C4", border: "1.5px solid #1A1A17", borderRadius: "999px", padding: "4px 12px", fontSize: "12px", fontWeight: 700, color: "#0E5C4A", whiteSpace: "nowrap" }}>
+                          {policy?.amount != null ? `${policy.amount} ${atype?.unit ?? ""}` : "—"}
+                        </div>
+                      </div>
+
+                      {/* progress bar placeholder */}
+                      <div style={{ marginTop: "14px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+                          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B" }}>Concedido</span>
+                          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", fontStyle: "italic" }}>Balance calculado dinámicamente</span>
+                        </div>
+                        <div style={{ height: "8px", background: "#E7E1D4", borderRadius: "999px", overflow: "hidden", border: "1px solid #1A1A17" }}>
+                          <div style={{ height: "100%", width: "100%", background: "#0E5C4A", borderRadius: "999px" }} />
+                        </div>
+                      </div>
+
+                      {/* date range */}
+                      <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
+                        <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "6px", padding: "3px 8px" }}>
+                          Desde: {a.valid_from ? formatDate(a.valid_from) : "—"}
+                        </span>
+                        <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "6px", padding: "3px 8px" }}>
+                          Hasta: {a.valid_until ? formatDate(a.valid_until) : "Sin fecha de fin"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ── Horario ── */}
+        <TabsContent value="horario">
+          <div style={{ maxWidth: "760px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px" }}>
+                Horario de trabajo
+              </div>
+              <Link
+                href="/settings/schedules"
+                style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none", display: "inline-block" }}
+              >
+                Asignar horario
+              </Link>
+            </div>
+
+            {(schedules ?? []).length === 0 ? (
+              <div style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "36px 24px", textAlign: "center", boxShadow: "3px 3px 0 #1A1A17" }}>
+                <div style={{ fontSize: "32px", marginBottom: "10px" }}>🗓️</div>
+                <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "6px" }}>
+                  No hay horario asignado
+                </div>
+                <div style={{ fontSize: "13px", color: "#79746B", marginBottom: "16px" }}>
+                  Asigna una plantilla de horario a este empleado desde ajustes.
+                </div>
+                <Link
+                  href="/settings/schedules"
+                  style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "underline" }}
+                >
+                  Ir a Horarios →
+                </Link>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {(schedules ?? []).map((s: any) => {
+                  const tpl = s.work_schedule_templates as any;
+                  const DAY_LABELS = ["L", "M", "X", "J", "V", "S", "D"];
+                  const weeks: any[] = tpl?.weeks
+                    ? [...tpl.weeks].sort((a: any, b: any) => a.week_index - b.week_index)
+                    : [];
+
+                  return (
+                    <div key={s.id} style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "20px", boxShadow: "3px 3px 0 #1A1A17" }}>
+                      {/* header */}
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "16px" }}>
+                        <div>
+                          <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "4px" }}>
+                            {tpl?.name ?? "—"}
+                          </div>
+                          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B" }}>
+                            {tpl?.week_type === "fixed" ? "Semana fija" : tpl?.week_type === "rotating" ? "Semanas rotativas" : tpl?.week_type ?? "—"}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "6px", padding: "3px 8px" }}>
+                            Desde: {s.valid_from ? formatDate(s.valid_from) : "—"}
+                          </span>
+                          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "6px", padding: "3px 8px" }}>
+                            Hasta: {s.valid_until ? formatDate(s.valid_until) : "Sin fecha de fin"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* weeks grid */}
+                      {weeks.map((week: any) => {
+                        const days: any[] = week.days ?? [];
+                        const sortedDays = [...days].sort((a: any, b: any) => a.day_of_week - b.day_of_week);
+                        const weekTotalMinutes = sortedDays.reduce((sum: number, d: any) => sum + (d.is_working_day ? Number(d.total_minutes ?? 0) : 0), 0);
+                        const weekTotalHours = (weekTotalMinutes / 60).toFixed(1).replace(/\.0$/, "");
+
+                        return (
+                          <div key={week.week_index} style={{ marginBottom: "14px" }}>
+                            {weeks.length > 1 && (
+                              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B", marginBottom: "8px" }}>
+                                {week.week_label ?? `Semana ${week.week_index + 1}`}
+                              </div>
+                            )}
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "6px" }}>
+                              {DAY_LABELS.map((label, idx) => {
+                                const day = sortedDays.find((d: any) => d.day_of_week === idx);
+                                const isWorking = day?.is_working_day ?? false;
+                                const hours = isWorking && day?.total_minutes
+                                  ? `${(Number(day.total_minutes) / 60).toFixed(1).replace(/\.0$/, "")}h`
+                                  : "—";
+                                return (
+                                  <div
+                                    key={idx}
+                                    style={{
+                                      background: isWorking ? "#0E5C4A" : "#E7E1D4",
+                                      border: "1.5px solid #1A1A17",
+                                      borderRadius: "10px",
+                                      padding: "10px 6px",
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: isWorking ? "#EAF7C4" : "#79746B", marginBottom: "4px" }}>
+                                      {label}
+                                    </div>
+                                    <div style={{ fontFamily: "'Archivo',sans-serif", fontSize: "12px", fontWeight: 800, color: isWorking ? "#fff" : "#79746B" }}>
+                                      {hours}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <div style={{ marginTop: "8px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#0E5C4A", fontWeight: 700 }}>
+                              Total semana: {weekTotalHours}h
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {weeks.length === 0 && (
+                        <p style={{ fontSize: "13px", color: "#79746B", margin: 0 }}>Sin semanas configuradas en esta plantilla.</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>
