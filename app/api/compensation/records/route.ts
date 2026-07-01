@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       balance_minutes,
       compensated_minutes: 0,
       compensation_type: body.compensation_type ?? "time_off",
-      conversion_factor: body.conversion_factor ?? null,
+      conversion_factor: body.conversion_factor ?? 1.0,
       comment: body.comment ?? null,
     })
     .select()

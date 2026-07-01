@@ -36,7 +36,7 @@ export default async function TimeOffPage() {
   ] = await Promise.all([
     supabase
       .from("absence_requests")
-      .select("*, employees(name, role_title, department), absence_types(name, color, icon)")
+      .select("*, employees!employee_id(name, role_title, department), absence_types(name, color, icon)")
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
       .limit(50),

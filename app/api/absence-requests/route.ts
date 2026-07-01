@@ -121,7 +121,7 @@ export async function GET(req: Request) {
   let query = supabase
     .from("absence_requests")
     .select(
-      "*, employee:employees(name, role_title), absence_type:absence_types(name, color, icon)"
+      "*, employees!employee_id(name, role_title), absence_types(name, color, icon)"
     )
     .eq("company_id", company.id)
     .order("created_at", { ascending: false });
@@ -224,11 +224,9 @@ export async function POST(req: Request) {
       comment: body.comment ?? null,
       document_url: body.document_url ?? null,
       substitute_employee_id: body.substitute_employee_id ?? null,
-      notify_employee_ids: body.notify_employee_ids ?? null,
+      notify_employee_ids: body.notify_employee_ids ?? [],
     })
-    .select(
-      "*, employee:employees(name, role_title), absence_type:absence_types(name, color, icon)"
-    )
+    .select("*, employees!employee_id(name, role_title), absence_types(name, color, icon)")
     .single();
   if (dbError) return jsonError(dbError.message, 500);
 

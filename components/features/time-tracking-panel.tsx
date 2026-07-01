@@ -285,21 +285,62 @@ function ActiveTimers({ timers }: { timers: (TimerState & { employees?: { id: st
   );
 }
 
-// ── Entries Table ──────────────────────────────────────────────────
-function EntriesTable({ entries }: { entries: TimeEntry[] }) {
+// ── Entries Table (self-fetching, with filters) ────────────────────
+function fmtShortDate(iso: string) {
+  return new Date(iso + "T12:00:00").toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" });
+}
+
+function EntriesTable({ initialEntries, employees }: {
+  initialEntries: TimeEntry[];
+  employees: { id: string; name: string }[];
+}) {
+  const today = new Date().toISOString().slice(0, 10);
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [empFilter, setEmpFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState(today);
+  const [dateTo, setDateTo] = useState(today);
+  const [fetched, setFetched] = useState<TimeEntry[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const hasFilter = !!empFilter || dateFrom !== today || dateTo !== today;
+
+  useEffect(() => {
+    if (hasFilter) {
+      load();
+    } else {
+      setFetched(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empFilter, dateFrom, dateTo]);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const p = new URLSearchParams();
+      if (empFilter) p.set("employee_id", empFilter);
+      p.set("from", dateFrom);
+      p.set("to", dateTo);
+      const res = await fetch(`/api/time-entries?${p}`);
+      const json = await res.json();
+      setFetched(json.entries ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function del(id: string) {
     setDeleting(id);
     try {
       await fetch(`/api/time-entries/${id}`, { method: "DELETE" });
       router.refresh();
+      if (hasFilter) setFetched((prev) => prev ? prev.filter((e) => e.id !== id) : null);
     } finally {
       setDeleting(null);
     }
   }
 
+  const entries = fetched ?? initialEntries;
   const typeLabel: Record<string, string> = { work: "Trabajo", break: "Descanso" };
   const typeBg: Record<string, string> = { work: T.limeSoft, break: "#F0EEE9" };
   const typeText: Record<string, string> = { work: "#2D6E3E", break: T.soft };
@@ -307,12 +348,46 @@ function EntriesTable({ entries }: { entries: TimeEntry[] }) {
 
   return (
     <div style={{ marginBottom: "32px" }}>
-      <SectionLabel>Entradas de hoy</SectionLabel>
+      <SectionLabel>Entradas</SectionLabel>
+
+      {/* Filter bar */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "160px" }}>
+          <Label>Empleado</Label>
+          <select value={empFilter} onChange={(e) => setEmpFilter(e.target.value)} style={selectStyle}>
+            <option value="">Todos</option>
+            {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+          </select>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <Label>Desde</Label>
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={inputStyle} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <Label>Hasta</Label>
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={inputStyle} />
+        </div>
+        {hasFilter && (
+          <button
+            onClick={() => { setEmpFilter(""); setDateFrom(today); setDateTo(today); }}
+            style={{
+              padding: "9px 14px", borderRadius: "8px",
+              border: `1.5px solid ${T.line}`, background: T.bg,
+              fontFamily: T.mono, fontSize: "10px", letterSpacing: "0.5px",
+              color: T.soft, cursor: "pointer", whiteSpace: "nowrap",
+            }}
+          >
+            Limpiar filtros
+          </button>
+        )}
+        {loading && <Loader2 size={14} className="animate-spin" style={{ color: T.soft, alignSelf: "center" }} />}
+      </div>
+
       <div style={{ border: `2px solid #1A1A17`, boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.body }}>
           <thead>
             <tr style={{ background: T.bg, borderBottom: `2px solid ${T.line}` }}>
-              {["Empleado", "Tipo", "Inicio", "Fin", "Duración", "Fuente", ""].map((h) => (
+              {["Empleado", "Fecha", "Tipo", "Inicio", "Fin", "Duración", "Fuente", ""].map((h) => (
                 <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, fontWeight: 500, whiteSpace: "nowrap" }}>
                   {h}
                 </th>
@@ -322,10 +397,10 @@ function EntriesTable({ entries }: { entries: TimeEntry[] }) {
           <tbody>
             {entries.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ padding: "40px", textAlign: "center", color: T.soft, background: T.surface }}>
+                <td colSpan={8} style={{ padding: "40px", textAlign: "center", color: T.soft, background: T.surface }}>
                   <Clock size={28} style={{ margin: "0 auto 10px", display: "block", opacity: 0.4 }} />
                   <div style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>
-                    Sin entradas hoy
+                    Sin entradas
                   </div>
                 </td>
               </tr>
@@ -342,6 +417,9 @@ function EntriesTable({ entries }: { entries: TimeEntry[] }) {
                   {e.employees?.role_title && (
                     <div style={{ fontSize: "11px", color: T.soft, fontWeight: 400 }}>{e.employees.role_title}</div>
                   )}
+                </td>
+                <td style={{ padding: "12px 14px", fontFamily: T.mono, fontSize: "12px", whiteSpace: "nowrap" }}>
+                  {fmtShortDate(e.date)}
                 </td>
                 <td style={{ padding: "12px 14px" }}>
                   <Pill color={typeText[e.entry_type] ?? T.soft} bg={typeBg[e.entry_type] ?? T.bg}>
@@ -663,8 +741,8 @@ export function TimeTrackingPanel({
       {/* Active timers */}
       <ActiveTimers timers={activeTimers} />
 
-      {/* Today's entries */}
-      <EntriesTable entries={todayEntries} />
+      {/* Entries with filters */}
+      <EntriesTable initialEntries={todayEntries} employees={employees} />
 
       {/* Weekly summary */}
       <WeeklySummary entries={allEntries} employees={employees} />

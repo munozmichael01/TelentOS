@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { AbsenceRequest, AbsenceType, Employee, AbsenceStatus } from "@/lib/types";
 
@@ -203,7 +203,7 @@ function CreateModal({
 
   const selectedType = absenceTypes.find((t) => t.id === typeId);
 
-  async function calculateDays() {
+  const calculateDays = useCallback(async () => {
     if (!startDate || !endDate) return;
     setCalculating(true);
     try {
@@ -219,7 +219,11 @@ function CreateModal({
     } finally {
       setCalculating(false);
     }
-  }
+  }, [startDate, startPeriod, endDate, endPeriod]);
+
+  useEffect(() => {
+    calculateDays();
+  }, [calculateDays]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -307,7 +311,7 @@ function CreateModal({
               <input
                 type="date"
                 value={startDate}
-                onChange={(e) => { setStartDate(e.target.value); setCalculatedDays(null); }}
+                onChange={(e) => setStartDate(e.target.value)}
                 required
                 style={FI}
               />
@@ -322,7 +326,7 @@ function CreateModal({
                     <button
                       key={p}
                       type="button"
-                      onClick={() => { setStartPeriod(p); setCalculatedDays(null); }}
+                      onClick={() => setStartPeriod(p)}
                       style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontWeight: on ? 700 : 500, fontSize: "11.5px", color: on ? "#0E5C4A" : "#54504A", background: on ? "#DCEFE4" : "#F4F0E8", border: `1.5px solid ${on ? "#A8D9BC" : "#E7E1D4"}`, borderRadius: "8px", padding: "5px 10px", cursor: "pointer" }}
                     >
                       {labels[p]}
@@ -340,7 +344,7 @@ function CreateModal({
               <input
                 type="date"
                 value={endDate}
-                onChange={(e) => { setEndDate(e.target.value); setCalculatedDays(null); }}
+                onChange={(e) => setEndDate(e.target.value)}
                 required
                 style={FI}
               />
@@ -355,7 +359,7 @@ function CreateModal({
                     <button
                       key={p}
                       type="button"
-                      onClick={() => { setEndPeriod(p); setCalculatedDays(null); }}
+                      onClick={() => setEndPeriod(p)}
                       style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontWeight: on ? 700 : 500, fontSize: "11.5px", color: on ? "#0E5C4A" : "#54504A", background: on ? "#DCEFE4" : "#F4F0E8", border: `1.5px solid ${on ? "#A8D9BC" : "#E7E1D4"}`, borderRadius: "8px", padding: "5px 10px", cursor: "pointer" }}
                     >
                       {labels[p]}
@@ -366,22 +370,21 @@ function CreateModal({
             </div>
           </div>
 
-          {/* Calculate days */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <button
-              type="button"
-              onClick={calculateDays}
-              disabled={!startDate || !endDate || calculating}
-              style={{ ...BTN_OUTLINE, opacity: !startDate || !endDate ? .5 : 1 }}
-            >
-              {calculating ? "Calculando…" : "Calcular días laborables"}
-            </button>
-            {calculatedDays !== null && (
-              <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "16px", color: "#0E5C4A" }}>
-                {calculatedDays} {calculatedDays === 1 ? "día" : "días"}
+          {/* Working days (auto-calculated) */}
+          {(calculating || calculatedDays !== null) && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", background: "#F4F0E8", borderRadius: "10px", border: "1.5px solid #E7E1D4" }}>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "10.5px", color: "#79746B", textTransform: "uppercase", letterSpacing: ".5px" }}>
+                Días laborables
               </span>
-            )}
-          </div>
+              {calculating ? (
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "12px", color: "#79746B" }}>calculando…</span>
+              ) : (
+                <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "20px", color: "#0E5C4A", letterSpacing: "-0.5px" }}>
+                  {calculatedDays} {calculatedDays === 1 ? "día" : "días"}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Comment */}
           <div>
@@ -621,10 +624,22 @@ export function AbsencePanel({
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
+  const [empFilter, setEmpFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  const hasAdvancedFilter = !!empFilter || !!typeFilter || !!dateFrom || !!dateTo;
+
   const filtered = useMemo(() => {
-    if (filter === "all") return requests;
-    return requests.filter((r) => r.status === filter);
-  }, [requests, filter]);
+    let result = requests;
+    if (filter !== "all") result = result.filter((r) => r.status === filter);
+    if (empFilter) result = result.filter((r) => r.employee_id === empFilter);
+    if (typeFilter) result = result.filter((r) => r.absence_type_id === typeFilter);
+    if (dateFrom) result = result.filter((r) => r.end_date >= dateFrom);
+    if (dateTo) result = result.filter((r) => r.start_date <= dateTo);
+    return result;
+  }, [requests, filter, empFilter, typeFilter, dateFrom, dateTo]);
 
   const counts = useMemo(() => ({
     all: requests.length,
@@ -686,6 +701,40 @@ export function AbsencePanel({
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
           Nueva ausencia
         </button>
+      </div>
+
+      {/* ─── Advanced filters ──────────────────────────────────────── */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "160px" }}>
+          <div style={{ ...FL, marginBottom: "2px" }}>Empleado</div>
+          <select value={empFilter} onChange={(e) => setEmpFilter(e.target.value)} style={{ ...FI, padding: "8px 10px", fontSize: "13px" }}>
+            <option value="">Todos</option>
+            {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+          </select>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "140px" }}>
+          <div style={{ ...FL, marginBottom: "2px" }}>Tipo</div>
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ ...FI, padding: "8px 10px", fontSize: "13px" }}>
+            <option value="">Todos</option>
+            {absenceTypes.map((t) => <option key={t.id} value={t.id}>{t.icon ? `${t.icon} ` : ""}{t.name}</option>)}
+          </select>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <div style={{ ...FL, marginBottom: "2px" }}>Desde</div>
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ ...FI, padding: "8px 10px", fontSize: "13px" }} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <div style={{ ...FL, marginBottom: "2px" }}>Hasta</div>
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{ ...FI, padding: "8px 10px", fontSize: "13px" }} />
+        </div>
+        {hasAdvancedFilter && (
+          <button
+            onClick={() => { setEmpFilter(""); setTypeFilter(""); setDateFrom(""); setDateTo(""); }}
+            style={{ ...BTN_GHOST, border: `1.5px solid #E7E1D4`, borderRadius: "9px", padding: "8px 14px", fontSize: "12px", whiteSpace: "nowrap" }}
+          >
+            Limpiar
+          </button>
+        )}
       </div>
 
       {/* ─── Request list ──────────────────────────────────────────── */}

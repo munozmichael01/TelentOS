@@ -43,9 +43,7 @@ export async function POST(
     })
     .eq("id", params.id)
     .eq("company_id", company.id)
-    .select(
-      "*, employee:employees(name, role_title), absence_type:absence_types(name, color, icon)"
-    )
+    .select("*")
     .maybeSingle();
   if (dbError) return jsonError(dbError.message, 500);
   if (!data) return jsonError("Solicitud de ausencia no encontrada", 404);

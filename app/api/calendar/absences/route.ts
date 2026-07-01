@@ -24,7 +24,7 @@ export async function GET(req: Request) {
   const { data, error: dbError } = await supabase
     .from("absence_requests")
     .select(
-      "*, employee:employees(name), absence_type:absence_types(name, color, icon)"
+      "*, employees!employee_id(name), absence_types(name, color, icon)"
     )
     .eq("company_id", company.id)
     .in("status", ["pending", "approved"])

@@ -409,7 +409,7 @@ export default async function TimeOffCalendarPage({
   ] = await Promise.all([
     supabase
       .from("absence_requests")
-      .select("*, employees(name), absence_types(name, color, icon)")
+      .select("*, employees!employee_id(name), absence_types(name, color, icon)")
       .eq("company_id", company.id)
       .in("status", ["pending", "approved"])
       .lte("start_date", to)

@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 
   let query = supabase
     .from("time_entries")
-    .select("*, employee:employees(name)")
+    .select("*, employees(name, role_title)")
     .eq("company_id", company.id)
     .order("date", { ascending: false })
     .order("start_time", { ascending: false });
@@ -45,9 +45,10 @@ export async function POST(req: Request) {
 
   let duration_minutes: number | null = null;
   if (body.end_time) {
-    duration_minutes = Math.round(
-      (new Date(body.end_time).getTime() - new Date(body.start_time).getTime()) / 60000
-    );
+    const [sh, sm] = String(body.start_time).split(":").map(Number);
+    const [eh, em] = String(body.end_time).split(":").map(Number);
+    const diff = (eh * 60 + em) - (sh * 60 + sm);
+    if (diff > 0) duration_minutes = diff;
   }
 
   const { data, error: dbError } = await supabase

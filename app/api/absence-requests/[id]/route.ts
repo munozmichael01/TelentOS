@@ -19,7 +19,7 @@ export async function GET(
   const { data, error: dbError } = await supabase
     .from("absence_requests")
     .select(
-      "*, employee:employees(name, role_title), absence_type:absence_types(name, color, icon)"
+      "*, employees!employee_id(name, role_title), absence_types(name, color, icon)"
     )
     .eq("id", params.id)
     .eq("company_id", company.id)
@@ -87,7 +87,7 @@ export async function PUT(
     .eq("id", params.id)
     .eq("company_id", company.id)
     .select(
-      "*, employee:employees(name, role_title), absence_type:absence_types(name, color, icon)"
+      "*, employees!employee_id(name, role_title), absence_types(name, color, icon)"
     )
     .maybeSingle();
   if (dbError) return jsonError(dbError.message, 500);
