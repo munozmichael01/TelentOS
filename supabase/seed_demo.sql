@@ -548,3 +548,26 @@ INSERT INTO notes (id, application_id, author_email, body) VALUES
    'demo@acme.example.com',
    'Rosa pide trabajo 100% remoto. Revisada política de empresa — es compatible. Expectativa salarial: 40.000 €, dentro del rango de la oferta.')
 ON CONFLICT DO NOTHING;
+
+-- ── BLOQUE 8: AJUSTES DE PERMISOS (allowance_adjustment_log) ─────────────────
+-- Traspasos 2025→2026, ajustes manuales HR y caducidades
+-- Procesados por Nuria Pla (employee 003 = 60000000-0000-0000-0000-000000000003)
+
+INSERT INTO allowance_adjustment_log
+  (id, employee_allowance_id, adjusted_by_employee_id, amount, reason, type)
+VALUES
+  -- Traspasos (carryover) vacaciones 2025 → 2026
+  ('ae000000-0000-0000-0000-000000000001','aa000000-0000-0000-0000-000000000001','60000000-0000-0000-0000-000000000003', 3,'Traspaso vacaciones 2025 → 2026','carryover'),
+  ('ae000000-0000-0000-0000-000000000002','aa000000-0000-0000-0000-000000000002','60000000-0000-0000-0000-000000000003', 5,'Traspaso vacaciones 2025 → 2026','carryover'),
+  ('ae000000-0000-0000-0000-000000000003','aa000000-0000-0000-0000-000000000004','60000000-0000-0000-0000-000000000003', 2,'Traspaso vacaciones 2025 → 2026','carryover'),
+  ('ae000000-0000-0000-0000-000000000004','aa000000-0000-0000-0000-000000000005','60000000-0000-0000-0000-000000000003', 1,'Traspaso vacaciones 2025 → 2026','carryover'),
+  ('ae000000-0000-0000-0000-000000000005','aa000000-0000-0000-0000-000000000007','60000000-0000-0000-0000-000000000003', 4,'Traspaso vacaciones 2025 → 2026','carryover'),
+  ('ae000000-0000-0000-0000-000000000006','aa000000-0000-0000-0000-000000000009','60000000-0000-0000-0000-000000000003', 1,'Traspaso vacaciones 2025 → 2026','carryover'),
+  -- Ajustes manuales (manual_hr)
+  ('ae000000-0000-0000-0000-000000000007','aa000000-0000-0000-0000-000000000002','60000000-0000-0000-0000-000000000003', 1,'Premio rendimiento Q4 2025','manual_hr'),
+  ('ae000000-0000-0000-0000-000000000008','aa000000-0000-0000-0000-000000000007','60000000-0000-0000-0000-000000000003', 2,'Ajuste responsabilidades adicionales COO','manual_hr'),
+  ('ae000000-0000-0000-0000-000000000009','aa000000-0000-0000-0000-000000000004','60000000-0000-0000-0000-000000000003',-1,'Corrección error administrativo dic 2025','manual_hr'),
+  -- Caducidades (expiry) — valores negativos
+  ('ae000000-0000-0000-0000-000000000010','aa000000-0000-0000-0000-000000000001','60000000-0000-0000-0000-000000000003',-1,'Caducidad días traspaso 2024 no consumidos','expiry'),
+  ('ae000000-0000-0000-0000-000000000011','aa000000-0000-0000-0000-000000000007','60000000-0000-0000-0000-000000000003',-2,'Caducidad parcial traspaso 2025 (límite carryover)','expiry')
+ON CONFLICT DO NOTHING;
