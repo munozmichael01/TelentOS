@@ -77,12 +77,12 @@ export default async function EmployeePage({ params }: { params: { id: string } 
       .limit(30),
     // New absence system
     supabase.from("absence_requests")
-      .select("*, absence_types(name, color, icon, deducts_from_allowance)")
+      .select("*, absence_types(name, color, icon, deducts_from_allowance, allowance_type_id)")
       .eq("employee_id", params.id)
       .order("start_date", { ascending: false }),
-    // Allowances with policies
+    // Allowances with policies (full fields for balance computation)
     supabase.from("employee_allowances")
-      .select("id, valid_from, valid_until, allowance_policies(name, amount, allowance_types(name, unit))")
+      .select("id, valid_from, valid_until, allowance_policies(id, name, amount, cycle_type, cycle_start_month, expiry_rule, expiry_period_months, carryover_limit, allowance_type_id, allowance_types(id, name, unit))")
       .eq("employee_id", params.id)
       .order("valid_from", { ascending: false }),
     // Schedules
@@ -98,18 +98,94 @@ export default async function EmployeePage({ params }: { params: { id: string } 
       .limit(12),
   ]);
 
-  // ── Balance calculation (simplified) ──
-  const totalGranted = (allowances ?? []).reduce((sum, a) => {
-    const p = (a as any).allowance_policies;
-    return sum + Number(p?.amount ?? 0);
-  }, 0);
-  const usedDays = (absences ?? [])
-    .filter((r: any) => r.status === "approved" && r.absence_types?.deducts_from_allowance)
-    .reduce((sum: number, r: any) => sum + Number(r.working_days_count ?? 0), 0);
-  const pendingDays = (absences ?? [])
-    .filter((r: any) => r.status === "pending" && r.absence_types?.deducts_from_allowance)
-    .reduce((sum: number, r: any) => sum + Number(r.working_days_count ?? 0), 0);
-  const availableDays = Math.max(0, totalGranted - usedDays - pendingDays);
+  // ── Adjustment logs (sequential — needs allowance IDs) ──
+  const allowanceIds = (allowances ?? []).map((a: any) => a.id);
+  const { data: rawAdjLogs } = await (
+    allowanceIds.length > 0
+      ? supabase.from("allowance_adjustment_log").select("*").in("employee_allowance_id", allowanceIds)
+      : Promise.resolve({ data: [] as any[] })
+  );
+  const adjustmentLogs: any[] = rawAdjLogs ?? [];
+
+  // ── Per-policy balance calculation ──
+  const today = new Date().toISOString().slice(0, 10);
+  const currentYear = new Date(today).getFullYear();
+
+  function cycleFor(cycleStartMonth: number): { start: Date; end: Date } {
+    const m = (cycleStartMonth ?? 1) - 1;
+    // If today is before the cycle start month this year, use previous year's cycle
+    const now = new Date();
+    const cycleThisYear = new Date(currentYear, m, 1);
+    const year = now < cycleThisYear ? currentYear - 1 : currentYear;
+    return { start: new Date(year, m, 1), end: new Date(year + 1, m, 0) };
+  }
+
+  function expiryDate(policy: any, cycleEnd: Date): string | null {
+    if (!policy || policy.expiry_rule === "never") return null;
+    if (policy.expiry_rule === "immediate") return cycleEnd.toISOString().slice(0, 10);
+    if (policy.expiry_rule === "after_period" && policy.expiry_period_months) {
+      const d = new Date(cycleEnd);
+      d.setMonth(d.getMonth() + Number(policy.expiry_period_months));
+      return d.toISOString().slice(0, 10);
+    }
+    return null;
+  }
+
+  type PolicyBalance = {
+    allowanceId: string; policyName: string; typeName: string; typeUnit: string;
+    granted: number; isProrated: boolean;
+    carryover: number; manual: number; holidayDeductions: number; expired: number;
+    usedApproved: number; usedPending: number;
+    available: number; expiryDate: string | null;
+    validFrom: string; validUntil: string | null;
+  };
+
+  const policyBalances: PolicyBalance[] = (allowances ?? []).map((a: any) => {
+    const policy = a.allowance_policies as any;
+    const atype = policy?.allowance_types as any;
+    const { start: cycleStart, end: cycleEnd } = cycleFor(policy?.cycle_start_month ?? 1);
+
+    // Pro-rata: use max of cycle start and allowance valid_from
+    const effectiveStart = new Date(Math.max(cycleStart.getTime(), new Date(a.valid_from + "T00:00:00").getTime()));
+    const isProrated = effectiveStart > cycleStart;
+    const totalMs = cycleEnd.getTime() - cycleStart.getTime();
+    const remainMs = cycleEnd.getTime() - effectiveStart.getTime();
+    const amount = Number(policy?.amount ?? 0);
+    const granted = isProrated ? Math.ceil(amount * remainMs / totalMs) : amount;
+
+    // Adjustment logs for this allowance
+    const logs = adjustmentLogs.filter((l: any) => l.employee_allowance_id === a.id);
+    const carryover = logs.filter((l: any) => l.type === "carryover").reduce((s: number, l: any) => s + Number(l.amount), 0);
+    const manual = logs.filter((l: any) => l.type === "manual_hr").reduce((s: number, l: any) => s + Number(l.amount), 0);
+    const holidayDeductions = logs.filter((l: any) => l.type === "company_holiday").reduce((s: number, l: any) => s + Number(l.amount), 0);
+    const expired = logs.filter((l: any) => l.type === "expiry").reduce((s: number, l: any) => s + Number(l.amount), 0);
+
+    // Absences matching this policy's allowance_type_id
+    const policyTypeId: string | null = policy?.allowance_type_id ?? null;
+    const relevant = (absences ?? []).filter((r: any) => {
+      const rt = r.absence_types as any;
+      return rt?.deducts_from_allowance === true &&
+        (policyTypeId === null || rt?.allowance_type_id === policyTypeId);
+    });
+    const usedApproved = relevant.filter((r: any) => r.status === "approved").reduce((s: number, r: any) => s + Number(r.working_days_count ?? 0), 0);
+    const usedPending  = relevant.filter((r: any) => r.status === "pending").reduce((s: number, r: any) => s + Number(r.working_days_count ?? 0), 0);
+
+    const available = Math.max(0, granted + carryover + manual + holidayDeductions + expired - usedApproved - usedPending);
+
+    return {
+      allowanceId: a.id, policyName: policy?.name ?? "—",
+      typeName: atype?.name ?? "—", typeUnit: atype?.unit ?? "días",
+      granted, isProrated, carryover, manual, holidayDeductions, expired,
+      usedApproved, usedPending, available,
+      expiryDate: expiryDate(policy, cycleEnd),
+      validFrom: a.valid_from, validUntil: a.valid_until,
+    };
+  });
+
+  const totalGranted  = policyBalances.reduce((s, b) => s + b.granted, 0);
+  const usedDays      = policyBalances.reduce((s, b) => s + b.usedApproved, 0);
+  const pendingDays   = policyBalances.reduce((s, b) => s + b.usedPending, 0);
+  const availableDays = policyBalances.reduce((s, b) => s + b.available, 0);
 
   // ── Time entries totals ──
   const totalWorkedMin = (entries ?? []).reduce((sum, e) => sum + (e.duration_minutes ?? 0), 0);
@@ -231,22 +307,84 @@ export default async function EmployeePage({ params }: { params: { id: string } 
         <TabsContent value="ausencias">
           <div style={{ maxWidth: "760px" }}>
             {/* Stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "14px", marginBottom: "20px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "14px", marginBottom: "24px" }}>
               {[
-                { label: "Disponibles", value: availableDays, sub: `de ${totalGranted} concedidos` },
-                { label: "Usados", value: usedDays, sub: "días aprobados" },
-                { label: "Pendientes", value: pendingDays, sub: "por aprobar" },
-              ].map(({ label, value, sub }) => (
-                <div key={label} style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "14px", padding: "16px 18px" }}>
+                { label: "Disponibles", value: availableDays, sub: `de ${totalGranted} concedidos`, color: "#1B6B4F", bg: "#DCEFE3" },
+                { label: "Usados", value: usedDays, sub: "días aprobados", color: "#1A1A17", bg: "#FCFAF6" },
+                { label: "Pendientes", value: pendingDays, sub: "por aprobar", color: pendingDays > 0 ? "#946312" : "#79746B", bg: pendingDays > 0 ? "#F8E7C4" : "#FCFAF6" },
+              ].map(({ label, value, sub, color, bg }) => (
+                <div key={label} style={{ background: bg, border: "1px solid #E7E1D4", borderRadius: "14px", padding: "16px 18px" }}>
                   <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B" }}>{label}</div>
-                  <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "30px", letterSpacing: "-1px", marginTop: "6px" }}>{value}</div>
+                  <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "30px", letterSpacing: "-1px", marginTop: "6px", color }}>{value}</div>
                   <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#79746B", marginTop: "2px" }}>{sub}</div>
                 </div>
               ))}
             </div>
 
+            {/* Per-policy breakdown cards */}
+            {policyBalances.map((bal) => {
+              const rows: { label: string; value: number; sign: "+" | "-" | ""; alwaysShow?: boolean }[] = [
+                { label: `Política${bal.isProrated ? " (prorateada)" : ""}`, value: bal.granted, sign: "+", alwaysShow: true },
+                { label: "Traspaso año anterior", value: bal.carryover, sign: bal.carryover >= 0 ? "+" : "" },
+                { label: "Ajustes manuales", value: bal.manual, sign: bal.manual >= 0 ? "+" : "" },
+                { label: "Ausencias aprobadas", value: bal.usedApproved, sign: "-", alwaysShow: true },
+                { label: "Ausencias pendientes", value: bal.usedPending, sign: "-" },
+                { label: "Festivos empresa", value: Math.abs(bal.holidayDeductions), sign: "-" },
+                { label: "Caducado", value: Math.abs(bal.expired), sign: "-" },
+              ];
+              const visibleRows = rows.filter(r => r.alwaysShow || r.value !== 0);
+              return (
+                <div key={bal.allowanceId} style={{ marginBottom: "20px" }}>
+                  {/* Header */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+                    <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".6px", color: "#79746B" }}>
+                      {bal.typeName} — composición
+                    </div>
+                    {bal.expiryDate && (
+                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: ".5px", color: "#946312", background: "#F8E7C4", border: "1px solid #E8C97A", borderRadius: "999px", padding: "3px 10px" }}>
+                        Caduca el {formatDate(bal.expiryDate)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                      <thead>
+                        <tr style={{ background: "#F4F0E8", borderBottom: "2px solid #E7E1D4" }}>
+                          <th style={{ padding: "9px 14px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Origen</th>
+                          <th style={{ padding: "9px 14px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Cantidad</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {visibleRows.map((row, i) => {
+                          const isNeg = row.sign === "-" && row.value > 0;
+                          const isPos = row.sign === "+" && row.value > 0;
+                          const valColor = isNeg ? "#BD4332" : isPos ? "#1B6B4F" : "#79746B";
+                          return (
+                            <tr key={row.label} style={{ background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8", borderBottom: "1px solid #E7E1D4" }}>
+                              <td style={{ padding: "10px 14px", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", color: row.value === 0 ? "#79746B" : "#1A1A17" }}>{row.label}</td>
+                              <td style={{ padding: "10px 14px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "12px", fontWeight: 700, color: valColor }}>
+                                {row.value === 0 ? "0" : `${row.sign}${row.value}`}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {/* Total row */}
+                        <tr style={{ background: "#F4F0E8", borderTop: "2px solid #1A1A17" }}>
+                          <td style={{ padding: "11px 14px", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "13.5px" }}>Disponible</td>
+                          <td style={{ padding: "11px 14px", textAlign: "right", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "15px", color: bal.available > 0 ? "#1B6B4F" : bal.available === 0 ? "#79746B" : "#BD4332" }}>
+                            {bal.available} {bal.typeUnit}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
+
             {/* Link to manage */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px", marginTop: policyBalances.length ? "4px" : "0" }}>
               <Link href="/timeoff" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
                 + Nueva ausencia
               </Link>
@@ -453,34 +591,44 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                 </Link>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {(allowances ?? []).map((a: any) => {
-                  const policy = a.allowance_policies as any;
-                  const atype = policy?.allowance_types as any;
-                  const granted = Number(policy?.amount ?? 0);
-                  // Compute used for this specific policy's allowance_type
-                  const policyUsed = usedDays; // simplified — fine for single policy
-                  const policyPending = pendingDays;
-                  const policyAvail = Math.max(0, granted - policyUsed - policyPending);
-                  const pct = granted > 0 ? Math.min(100, Math.round((policyUsed / granted) * 100)) : 0;
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {policyBalances.map((bal) => {
+                  const pct = bal.granted > 0 ? Math.min(100, Math.round((bal.usedApproved / bal.granted) * 100)) : 0;
+                  const breakdownRows: { label: string; value: number; sign: "+" | "-" | "" }[] = [
+                    { label: `Política${bal.isProrated ? " (prorateada)" : ""}`, value: bal.granted, sign: "+" },
+                    { label: "Traspaso año anterior", value: bal.carryover, sign: bal.carryover >= 0 ? "+" : "" },
+                    { label: "Ajustes manuales", value: bal.manual, sign: bal.manual >= 0 ? "+" : "" },
+                    { label: "Ausencias aprobadas", value: bal.usedApproved, sign: "-" },
+                    { label: "Ausencias pendientes", value: bal.usedPending, sign: "-" },
+                    { label: "Festivos empresa", value: Math.abs(bal.holidayDeductions), sign: "-" },
+                    { label: "Caducado", value: Math.abs(bal.expired), sign: "-" },
+                  ];
                   return (
-                    <div key={a.id} style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "18px 20px", boxShadow: "3px 3px 0 #1A1A17" }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                    <div key={bal.allowanceId} style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "18px 20px", boxShadow: "3px 3px 0 #1A1A17" }}>
+                      {/* Header row */}
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "14px" }}>
                         <div>
-                          <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "4px" }}>{policy?.name ?? "—"}</div>
+                          <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "4px" }}>{bal.policyName}</div>
                           <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B" }}>
-                            {atype?.name ?? "—"} · {atype?.unit ?? "—"}
+                            {bal.typeName} · {bal.typeUnit}
                           </div>
                         </div>
-                        <div style={{ background: "#EAF7C4", border: "1.5px solid #1A1A17", borderRadius: "999px", padding: "4px 12px", fontSize: "12px", fontWeight: 700, color: "#0E5C4A", whiteSpace: "nowrap" }}>
-                          {policyAvail} / {granted} {atype?.unit ?? ""}
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          {bal.expiryDate && (
+                            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: ".5px", color: "#946312", background: "#F8E7C4", border: "1px solid #E8C97A", borderRadius: "999px", padding: "3px 10px", whiteSpace: "nowrap" }}>
+                              Caduca {formatDate(bal.expiryDate)}
+                            </span>
+                          )}
+                          <span style={{ background: "#EAF7C4", border: "1.5px solid #1A1A17", borderRadius: "999px", padding: "4px 12px", fontSize: "12px", fontWeight: 700, fontFamily: "'Archivo',sans-serif", color: "#0E5C4A", whiteSpace: "nowrap" }}>
+                            {bal.available} / {bal.granted} {bal.typeUnit}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Real progress bar */}
-                      <div style={{ marginTop: "14px" }}>
+                      {/* Progress bar */}
+                      <div style={{ marginBottom: "16px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-                          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B" }}>{policyUsed} usados · {policyPending} pendientes</span>
+                          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B" }}>{bal.usedApproved} usados · {bal.usedPending} pendientes</span>
                           <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B" }}>{pct}%</span>
                         </div>
                         <div style={{ height: "8px", background: "#E7E1D4", borderRadius: "999px", overflow: "hidden", border: "1px solid #1A1A17" }}>
@@ -488,12 +636,46 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
+                      {/* Breakdown table */}
+                      <div style={{ border: "1.5px solid #E7E1D4", borderRadius: "10px", overflow: "hidden", marginBottom: "12px" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
+                          <thead>
+                            <tr style={{ background: "#F4F0E8", borderBottom: "1.5px solid #E7E1D4" }}>
+                              <th style={{ padding: "7px 12px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Origen</th>
+                              <th style={{ padding: "7px 12px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Cantidad</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {breakdownRows.map((row, i) => {
+                              const isNeg = row.sign === "-" && row.value > 0;
+                              const isPos = row.sign === "+" && row.value > 0;
+                              const valColor = isNeg ? "#BD4332" : isPos ? "#1B6B4F" : "#79746B";
+                              return (
+                                <tr key={row.label} style={{ borderBottom: i < breakdownRows.length - 1 ? "1px solid #E7E1D4" : undefined, background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8" }}>
+                                  <td style={{ padding: "8px 12px", fontFamily: "'Hanken Grotesk',sans-serif", color: row.value === 0 ? "#B0AB9F" : "#1A1A17" }}>{row.label}</td>
+                                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: row.value === 0 ? "#B0AB9F" : valColor }}>
+                                    {row.value === 0 ? "0" : `${row.sign}${row.value}`}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                            <tr style={{ background: "#F4F0E8", borderTop: "1.5px solid #1A1A17" }}>
+                              <td style={{ padding: "9px 12px", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "13px" }}>Disponible</td>
+                              <td style={{ padding: "9px 12px", textAlign: "right", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "14px", color: bal.available > 0 ? "#1B6B4F" : "#79746B" }}>
+                                {bal.available} {bal.typeUnit}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Valid from/until */}
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                         <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "6px", padding: "3px 8px" }}>
-                          Desde: {a.valid_from ? formatDate(a.valid_from) : "—"}
+                          Suscripción desde: {bal.validFrom ? formatDate(bal.validFrom) : "—"}
                         </span>
                         <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "6px", padding: "3px 8px" }}>
-                          Hasta: {a.valid_until ? formatDate(a.valid_until) : "Sin fecha de fin"}
+                          {bal.validUntil ? `Hasta: ${formatDate(bal.validUntil)}` : "Sin fecha de fin"}
                         </span>
                       </div>
                     </div>
