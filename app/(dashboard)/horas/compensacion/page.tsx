@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { CompensationPanel } from "@/components/features/compensation-panel";
 import { createClient } from "@/lib/supabase/server";
-import type { CompensationRecord, Employee } from "@/lib/types";
+import type { Employee } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,19 +14,12 @@ export default async function CompensacionPage() {
     .limit(1)
     .maybeSingle();
 
-  const [{ data: records }, { data: employees }] = await Promise.all([
-    supabase
-      .from("compensation_records")
-      .select("*, employees(name, role_title)")
-      .eq("company_id", company?.id ?? "")
-      .order("period_end", { ascending: false }),
-    supabase
-      .from("employees")
-      .select("id, name")
-      .eq("status", "active")
-      .eq("company_id", company?.id ?? "")
-      .order("name"),
-  ]);
+  const { data: employees } = await supabase
+    .from("employees")
+    .select("id, name")
+    .eq("status", "active")
+    .eq("company_id", company?.id ?? "")
+    .order("name");
 
   return (
     <div>
@@ -35,7 +28,6 @@ export default async function CompensacionPage() {
         description="Gestión de horas extra y compensaciones"
       />
       <CompensationPanel
-        records={(records ?? []) as unknown as CompensationRecord[]}
         employees={(employees ?? []) as Pick<Employee, "id" | "name">[]}
       />
     </div>

@@ -45,9 +45,9 @@ function fmtStartedAt(iso: string) {
 function calcDuration(entry: TimeEntry) {
   if (entry.duration_minutes != null) return fmt(entry.duration_minutes);
   if (!entry.end_time) return "—";
-  const [sh, sm] = entry.start_time.split(":").map(Number);
-  const [eh, em] = entry.end_time.split(":").map(Number);
-  const diff = (eh * 60 + em) - (sh * 60 + sm);
+  const start = new Date(entry.start_time as string);
+  const end = new Date(entry.end_time as string);
+  const diff = Math.round((end.getTime() - start.getTime()) / 60000);
   return fmt(diff > 0 ? diff : 0);
 }
 

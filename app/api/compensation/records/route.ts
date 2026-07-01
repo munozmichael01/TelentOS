@@ -15,7 +15,7 @@ export async function GET(req: Request) {
 
   let query = supabase
     .from("compensation_records")
-    .select("*, employee:employees(name)")
+    .select("*, employees(name, role_title)")
     .eq("company_id", company.id)
     .order("period_start", { ascending: false });
 

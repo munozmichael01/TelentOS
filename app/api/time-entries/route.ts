@@ -43,11 +43,14 @@ export async function POST(req: Request) {
   if (!body?.date) return jsonError("Se requiere date");
   if (!body?.start_time) return jsonError("Se requiere start_time");
 
+  // start_time/end_time columns are timestamptz — combine date + HH:MM into ISO
+  const toTs = (d: string, t: string) => new Date(`${d}T${t}`).toISOString();
+  const startTs = toTs(body.date, body.start_time);
+  const endTs = body.end_time ? toTs(body.date, body.end_time) : null;
+
   let duration_minutes: number | null = null;
-  if (body.end_time) {
-    const [sh, sm] = String(body.start_time).split(":").map(Number);
-    const [eh, em] = String(body.end_time).split(":").map(Number);
-    const diff = (eh * 60 + em) - (sh * 60 + sm);
+  if (endTs) {
+    const diff = Math.round((new Date(endTs).getTime() - new Date(startTs).getTime()) / 60000);
     if (diff > 0) duration_minutes = diff;
   }
 
@@ -57,8 +60,8 @@ export async function POST(req: Request) {
       company_id: company.id,
       employee_id: body.employee_id,
       date: body.date,
-      start_time: body.start_time,
-      end_time: body.end_time ?? null,
+      start_time: startTs,
+      end_time: endTs,
       duration_minutes,
       entry_type: body.entry_type ?? "work",
       comment: body.comment ?? null,

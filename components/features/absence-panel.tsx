@@ -210,7 +210,11 @@ function CreateModal({
       const res = await fetch("/api/absence-requests/calculate-days", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ start_date: startDate, start_period: startPeriod, end_date: endDate, end_period: endPeriod }),
+        body: JSON.stringify({
+          employee_id: employeeId || undefined,
+          start_date: startDate, start_period: startPeriod,
+          end_date: endDate, end_period: endPeriod,
+        }),
       });
       const data = await res.json();
       setCalculatedDays(data.working_days_count ?? null);
@@ -219,7 +223,7 @@ function CreateModal({
     } finally {
       setCalculating(false);
     }
-  }, [startDate, startPeriod, endDate, endPeriod]);
+  }, [employeeId, startDate, startPeriod, endDate, endPeriod]);
 
   useEffect(() => {
     calculateDays();

@@ -105,16 +105,8 @@ export async function POST(req: Request) {
   if (error) return error;
 
   const body = await req.json().catch(() => null);
-  if (
-    !body?.employee_id ||
-    !body?.start_date ||
-    !body?.start_period ||
-    !body?.end_date ||
-    !body?.end_period
-  ) {
-    return jsonError(
-      "Se requieren: employee_id, start_date, start_period, end_date, end_period"
-    );
+  if (!body?.start_date || !body?.start_period || !body?.end_date || !body?.end_period) {
+    return jsonError("Se requieren: start_date, start_period, end_date, end_period");
   }
 
   if (body.end_date < body.start_date) {
@@ -131,15 +123,15 @@ export async function POST(req: Request) {
 
   const companyId = body.company_id ?? company.id;
 
-  const working_days = await calcWorkingDays(
+  const working_days_count = await calcWorkingDays(
     supabase,
     companyId,
-    body.employee_id,
+    body.employee_id ?? "",   // falls back to Mon–Fri when empty
     body.start_date,
     body.start_period,
     body.end_date,
     body.end_period
   );
 
-  return NextResponse.json({ working_days });
+  return NextResponse.json({ working_days_count });
 }
