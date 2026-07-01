@@ -147,7 +147,17 @@ export function AppShell({
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
-    return pathname === href || pathname.startsWith(href + "/");
+    if (pathname === href) return true;
+    if (!pathname.startsWith(href + "/")) return false;
+    // Don't mark parent active when a more-specific sibling nav item matches
+    const hasChildMatch = NAV.some(
+      (item) =>
+        "href" in item &&
+        item.href !== href &&
+        item.href.startsWith(href + "/") &&
+        (pathname === item.href || pathname.startsWith(item.href + "/"))
+    );
+    return !hasChildMatch;
   }
 
   return (

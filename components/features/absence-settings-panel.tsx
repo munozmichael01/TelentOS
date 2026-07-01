@@ -184,6 +184,62 @@ function ConfirmDelete({
   );
 }
 
+// ─── Empty state with seed CTA ───────────────────────────────────────────────
+
+function EmptyAbsenceTypes() {
+  const router = useRouter();
+  const [seeding, setSeeding] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function seed() {
+    setSeeding(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/absence-types/seed-defaults", { method: "POST" });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error ?? "Error al crear los tipos por defecto");
+      }
+      router.refresh();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  return (
+    <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "48px 24px", textAlign: "center" }}>
+      <div style={{ fontSize: "44px", marginBottom: "14px" }}>🗂️</div>
+      <p style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "20px", color: "#1A1A17", marginBottom: "8px" }}>
+        Sin tipos de ausencia
+      </p>
+      <p style={{ fontSize: "14px", color: "#79746B", marginBottom: "24px", maxWidth: "380px", margin: "0 auto 24px" }}>
+        Crea los tipos uno a uno o usa los <strong>6 tipos por defecto</strong> que incluyen vacaciones, baja por enfermedad, permiso familiar y más.
+      </p>
+      {err && <p style={{ fontSize: "13px", color: "#BD4332", marginBottom: "12px" }}>{err}</p>}
+      <button
+        onClick={seed}
+        disabled={seeding}
+        style={{
+          fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px",
+          color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17",
+          borderRadius: "11px", padding: "11px 24px", boxShadow: "3px 3px 0 #1A1A17",
+          cursor: seeding ? "not-allowed" : "pointer",
+          display: "inline-flex", alignItems: "center", gap: "8px",
+          opacity: seeding ? 0.7 : 1,
+        }}
+      >
+        {seeding ? <Loader2 size={14} className="animate-spin" /> : "✨"}
+        Crear tipos por defecto
+      </button>
+      <div style={{ marginTop: "10px", fontSize: "12px", color: "#79746B" }}>
+        También crea un tipo de saldo <em>Días de vacaciones (22 días)</em> y su política anual
+      </div>
+    </div>
+  );
+}
+
 // ─── Tab 1: Tipos de ausencia ─────────────────────────────────────────────────
 
 function AbsenceTypesTab({
@@ -282,35 +338,7 @@ function AbsenceTypesTab({
       </div>
 
       {absenceTypes.length === 0 ? (
-        <div
-          style={{
-            ...SECTION,
-            textAlign: "center",
-            padding: "48px 24px",
-          }}
-        >
-          <div style={{ fontSize: "40px", marginBottom: "12px" }}>📋</div>
-          <p
-            style={{
-              fontFamily: "'Archivo', sans-serif",
-              fontWeight: 900,
-              fontSize: "18px",
-              color: "#1A1A17",
-              marginBottom: "8px",
-            }}
-          >
-            Sin tipos de ausencia
-          </p>
-          <p
-            style={{
-              fontFamily: "'Hanken Grotesk', system-ui",
-              fontSize: "14px",
-              color: "#79746B",
-            }}
-          >
-            Crea tu primer tipo de ausencia para empezar
-          </p>
-        </div>
+        <EmptyAbsenceTypes />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {absenceTypes.map((t) => (
