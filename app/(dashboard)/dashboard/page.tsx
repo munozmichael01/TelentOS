@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "active"),
     supabase.from("applications").select("id", { count: "exact", head: true }).eq("status", "open"),
     supabase.from("employees").select("id", { count: "exact", head: true }).eq("status", "active"),
-    supabase.from("time_off_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("absence_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase
       .from("applications")
       .select("id, fit_score, created_at, source, utm, candidates(name), jobs(title)")

@@ -155,27 +155,6 @@ export type OnboardingTask = {
   generated_by: "manual" | "agent";
 };
 
-export type Timesheet = {
-  id: string;
-  employee_id: string;
-  work_date: string;
-  hours: number;
-  notes: string | null;
-};
-
-export type TimeOffRequest = {
-  id: string;
-  employee_id: string;
-  start_date: string;
-  end_date: string;
-  days: number;
-  type: "vacation" | "sick" | "other";
-  status: "pending" | "approved" | "rejected";
-  approver: string | null;
-  comment: string | null;
-  employees?: Employee;
-};
-
 // ─────────────────────────────────────────────────────────────────────────────
 // FEATURE 1 — Tipos de ausencia y políticas de permisos
 // ─────────────────────────────────────────────────────────────────────────────

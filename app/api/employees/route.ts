@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
   if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
-  const { data, error: dbError } = await supabase
+  const { data: employee, error: dbError } = await supabase
     .from("employees")
     .insert({
       company_id: company.id,
@@ -26,5 +26,45 @@ export async function POST(req: Request) {
     .select()
     .single();
   if (dbError) return jsonError(dbError.message, 500);
-  return NextResponse.json({ employee: data });
+
+  // Auto-assign default allowance policy and schedule template
+  const today = new Date().toISOString().split("T")[0];
+
+  const [{ data: defaultPolicy }, { data: defaultTemplate }] = await Promise.all([
+    supabase
+      .from("allowance_policies")
+      .select("id")
+      .eq("company_id", company.id)
+      .eq("is_default", true)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("work_schedule_templates")
+      .select("id")
+      .eq("company_id", company.id)
+      .eq("is_default", true)
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  await Promise.all([
+    defaultPolicy
+      ? supabase.from("employee_allowances").insert({
+          employee_id: employee.id,
+          policy_id: defaultPolicy.id,
+          valid_from: today,
+          valid_until: null,
+        })
+      : Promise.resolve(),
+    defaultTemplate
+      ? supabase.from("employee_schedules").insert({
+          employee_id: employee.id,
+          template_id: defaultTemplate.id,
+          valid_from: today,
+          valid_until: null,
+        })
+      : Promise.resolve(),
+  ]);
+
+  return NextResponse.json({ employee });
 }
