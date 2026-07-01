@@ -150,7 +150,7 @@ function WeekPreview({ week }: { week: ScheduleWeek }) {
         }}
       >
         {DAYS_ES.map((label, i) => {
-          const day = week.days.find((d) => d.day_of_week === i + 1);
+          const day = week.days.find((d) => d.day_of_week === i);
           const active = day?.is_working ?? false;
           return (
             <div key={label} style={{ textAlign: "center" }}>
@@ -370,15 +370,16 @@ export function ScheduleSettingsPanel({
   function buildWeeksPayload() {
     const weeksToProcess = weekType === "single" ? [weekA] : [weekA, weekB];
     return weeksToProcess.map((week, wi) => ({
-      week_number: wi + 1,
+      week_index: wi,
+      week_label: `Semana ${wi + 1}`,
       days: week.map((d, di) => ({
-        day_of_week: di + 1,
-        is_working: d.is_working,
+        day_of_week: di,        // 0=Mon … 6=Sun, matches calculate-days logic
+        is_working_day: d.is_working,
         total_minutes: d.is_working
           ? Math.max(0, timeToMinutes(d.end) - timeToMinutes(d.start))
           : 0,
-        time_slots: d.is_working
-          ? [{ start_time: d.start, end_time: d.end }]
+        slots: d.is_working
+          ? [{ start: d.start, end: d.end }]
           : [],
       })),
     }));
