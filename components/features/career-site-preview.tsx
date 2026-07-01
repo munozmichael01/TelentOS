@@ -111,13 +111,15 @@ export function CareerSitePreview({
             <div style={{ display: "flex", gap: "6px", overflowX: "auto" }}>
               {(content.aboutGallery ?? []).slice(0, 4).map((g, i) => (
                 <div key={i} style={{ width: "80px", height: "54px", borderRadius: "8px", background: line, flexShrink: 0, overflow: "hidden" }}>
-                  {g.type === "image" && g.url && (
+                  {g.type === "image" && g.url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={g.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  )}
-                  {g.type === "video" && (
-                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: soft, fontSize: "18px" }}>▶</div>
-                  )}
+                  ) : g.type === "video" ? (
+                    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: soft, gap: "3px" }}>
+                      <span style={{ fontSize: "16px" }}>▶</span>
+                      <span style={{ ...mono, fontSize: "7px", letterSpacing: ".5px", textTransform: "uppercase" }}>video</span>
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -204,6 +206,9 @@ export function CareerSitePreview({
                     )}
                     <div style={{ fontSize: "9px", fontWeight: 700, marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
                     <div style={{ ...mono, fontSize: "8px", color: soft, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.position}</div>
+                    {p.linkedinUrl && (
+                      <a href={p.linkedinUrl} target="_blank" rel="noreferrer" style={{ ...mono, fontSize: "7.5px", color: "#0A66C2", textDecoration: "none" }}>in</a>
+                    )}
                   </div>
                 ))}
               </div>

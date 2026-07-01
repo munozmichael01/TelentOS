@@ -128,13 +128,7 @@ function initials(email: string) {
   return parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("") || email[0]?.toUpperCase() || "?";
 }
 
-export function AppShell({
-  children,
-  careersSlug,
-}: {
-  children: React.ReactNode;
-  careersSlug?: string | null;
-}) {
+export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [userEmail, setUserEmail] = useState("");
@@ -286,17 +280,6 @@ export function AppShell({
                   </Link>
                 );
               })}
-              {careersSlug && (
-                <a
-                  href={`/careers/${careersSlug}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="nav-item"
-                >
-                  <IconGlobe />
-                  Career site ↗
-                </a>
-              )}
             </nav>
 
             {/* user footer */}

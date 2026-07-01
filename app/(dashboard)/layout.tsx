@@ -18,5 +18,5 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Ensure HRIS defaults exist for this company (no-op if already seeded)
   if (company) await seedHrisDefaults(supabase, company.id);
 
-  return <AppShell careersSlug={company?.slug}>{children}</AppShell>;
+  return <AppShell>{children}</AppShell>;
 }

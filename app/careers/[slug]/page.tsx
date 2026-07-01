@@ -7,6 +7,14 @@ import type { CareerSiteContent } from "@/lib/career-site-types";
 
 export const dynamic = "force-dynamic";
 
+function getVideoEmbed(url: string): string | null {
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const vim = url.match(/vimeo\.com\/(\d+)/);
+  if (vim) return `https://player.vimeo.com/video/${vim[1]}`;
+  return null;
+}
+
 const TYPE_LABEL: Record<string, string> = {
   full_time: "Jornada completa", part_time: "Parcial", contract: "Temporal", internship: "Prácticas",
 };
@@ -133,6 +141,18 @@ export default async function CareersPage({ params }: { params: { slug: string }
                   {g.type === "image" && g.url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={g.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : g.type === "video" && g.url ? (
+                    getVideoEmbed(g.url) ? (
+                      <iframe
+                        src={getVideoEmbed(g.url)!}
+                        style={{ width: "100%", height: "100%", border: "none" }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      // eslint-disable-next-line jsx-a11y/media-has-caption
+                      <video src={g.url} controls style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    )
                   ) : (
                     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", color: soft }}>▶</div>
                   )}
@@ -227,6 +247,13 @@ export default async function CareersPage({ params }: { params: { slug: string }
                     )}
                     <div style={{ fontWeight: 700, fontSize: "13px", marginTop: "8px" }}>{p.name}</div>
                     <div style={{ ...mono, fontSize: "10px", color: soft, marginTop: "2px" }}>{p.position}</div>
+                    {p.linkedinUrl && (
+                      <a href={p.linkedinUrl} target="_blank" rel="noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "3px", marginTop: "4px", fontSize: "11px", fontWeight: 600, color: "#0A66C2", textDecoration: "none" }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14zm-.5 15.5v-5.3a3.26 3.26 0 00-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 011.4 1.4v4.93h2.79zM6.88 8.56a1.68 1.68 0 001.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 00-1.69 1.69c0 .93.76 1.68 1.69 1.68zm1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+                        LinkedIn
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>

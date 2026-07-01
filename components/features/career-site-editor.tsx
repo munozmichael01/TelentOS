@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import Link from "next/link";
+import { useState, useCallback, useRef } from "react";
 import type { Company } from "@/lib/types";
 import type {
   CareerSitePage, CareerSiteContent,
@@ -9,6 +8,7 @@ import type {
   CSTeamProfile, CSTestimonial, CSFAQ, CSSocialLink, CSGalleryItem,
 } from "@/lib/career-site-types";
 import { CareerSitePreview } from "@/components/features/career-site-preview";
+import { EmojiPicker } from "@/components/features/emoji-picker";
 
 /* ─── Design tokens ─────────────────────────────────────────────────────── */
 const T = {
@@ -32,6 +32,105 @@ const FL: React.CSSProperties = {
   fontFamily: "'Space Mono',monospace", fontSize: "10px",
   textTransform: "uppercase" as const, letterSpacing: ".8px", color: T.soft,
 };
+
+/* ─── ImageUploadField ───────────────────────────────────────────────────── */
+
+function ImageUploadField({
+  label, value, onChange, accept = "image/*",
+}: {
+  label: string; value: string; onChange: (url: string) => void; accept?: string;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadErr(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch("/api/career-site/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (json.url) onChange(json.url);
+      else setUploadErr(json.error ?? "Error al subir");
+    } catch {
+      setUploadErr("Error de conexión");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  return (
+    <div style={{ marginBottom: "12px" }}>
+      <label style={labelStyle}>{label}</label>
+      <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+        {value && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={value} alt=""
+            style={{ width: "58px", height: "42px", objectFit: "cover", borderRadius: "8px", border: `1.5px solid ${T.line}`, flexShrink: 0, background: T.line }}
+          />
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            style={{
+              fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "12px", fontWeight: 600,
+              padding: "6px 11px", borderRadius: "8px", border: `1.5px solid ${T.line}`,
+              background: T.surface, cursor: uploading ? "default" : "pointer",
+              color: uploading ? T.soft : T.ink, marginBottom: "6px",
+              display: "inline-flex", alignItems: "center", gap: "5px",
+            }}
+          >
+            {uploading ? "Subiendo…" : "↑ Subir archivo"}
+          </button>
+          {uploadErr && <div style={{ fontSize: "11px", color: T.accent, marginBottom: "4px" }}>{uploadErr}</div>}
+          <input
+            style={{ ...inputStyle, fontSize: "12.5px" }}
+            placeholder="o pega una URL…"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          <input ref={fileRef} type="file" accept={accept} style={{ display: "none" }} onChange={handleFile} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── EmojiButton ────────────────────────────────────────────────────────── */
+
+function EmojiButton({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: "relative", display: "inline-block" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          fontSize: "20px", width: "44px", height: "44px", borderRadius: "9px",
+          border: `1.5px solid ${T.line}`, background: T.bg, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          lineHeight: 1,
+        }}
+      >
+        {value || "➕"}
+      </button>
+      {open && (
+        <EmojiPicker
+          onSelect={(e) => { onChange(e); setOpen(false); }}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
 
 /* ─── Sub-components ────────────────────────────────────────────────────── */
 
@@ -255,24 +354,16 @@ export function CareerSiteEditor({
     transition: "background .14s",
   });
 
-  /* ── Metrics ── */
-  const metrics = content.aboutMetrics ?? [];
-  /* ── Gallery ── */
-  const gallery = content.aboutGallery ?? [];
-  /* ── Brands ── */
-  const brands = content.brands ?? [];
-  /* ── Culture values ── */
-  const cultureValues = content.cultureValues ?? [];
-  /* ── Benefits ── */
-  const benefits = content.benefits ?? [];
-  /* ── Team ── */
-  const teamProfiles = content.teamProfiles ?? [];
-  /* ── Testimonials ── */
-  const testimonials = content.testimonials ?? [];
-  /* ── FAQs ── */
-  const faqs = content.faqs ?? [];
-  /* ── Social ── */
-  const socialLinks = content.socialLinks ?? [];
+  /* ── Array state shortcuts ── */
+  const metrics      = content.aboutMetrics   ?? [];
+  const gallery      = content.aboutGallery   ?? [];
+  const brands       = content.brands         ?? [];
+  const cultureVals  = content.cultureValues  ?? [];
+  const benefits     = content.benefits       ?? [];
+  const teamProfiles = content.teamProfiles   ?? [];
+  const testimonials = content.testimonials   ?? [];
+  const faqs         = content.faqs           ?? [];
+  const socialLinks  = content.socialLinks    ?? [];
 
   return (
     <div>
@@ -344,7 +435,6 @@ export function CareerSiteEditor({
             flexWrap: "wrap", padding: "12px 16px", background: T.surface,
             border: `1px solid ${T.line}`, borderRadius: "13px",
           }}>
-            {/* Status badge */}
             <span style={{
               ...FL, padding: "4px 10px", borderRadius: "999px",
               background: isPublished ? T.successBg : T.warnBg,
@@ -352,12 +442,8 @@ export function CareerSiteEditor({
             }}>
               {isPublished ? "Publicado" : "Borrador"}
             </span>
-            {savedAt && (
-              <span style={{ ...FL, color: T.soft }}>Guardado {savedAt}</span>
-            )}
-            {error && (
-              <span style={{ fontSize: "12px", color: T.accent }}>{error}</span>
-            )}
+            {savedAt && <span style={{ ...FL, color: T.soft }}>Guardado {savedAt}</span>}
+            {error && <span style={{ fontSize: "12px", color: T.accent }}>{error}</span>}
 
             <div style={{ marginLeft: "auto", display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {/* Translate */}
@@ -397,7 +483,6 @@ export function CareerSiteEditor({
                 )}
               </div>
 
-              {/* Save draft */}
               <button
                 onClick={saveDraft}
                 disabled={saving || publishing}
@@ -410,7 +495,6 @@ export function CareerSiteEditor({
                 {saving ? "Guardando…" : "Guardar borrador"}
               </button>
 
-              {/* Publish / Unpublish */}
               {isPublished ? (
                 <button
                   onClick={unpublish}
@@ -453,10 +537,11 @@ export function CareerSiteEditor({
                   <input style={inputStyle} placeholder="Únete al equipo que transforma el sector"
                     value={content.headline ?? ""} onChange={(e) => upd("headline", e.target.value)} />
                 </Field>
-                <Field label="URL imagen hero (1920×600 px recomendado)">
-                  <input style={inputStyle} placeholder="https://…"
-                    value={content.heroImageUrl ?? ""} onChange={(e) => upd("heroImageUrl", e.target.value)} />
-                </Field>
+                <ImageUploadField
+                  label="Imagen hero (1920×600 px recomendado)"
+                  value={content.heroImageUrl ?? ""}
+                  onChange={(url) => upd("heroImageUrl", url)}
+                />
               </SectionPanel>
 
               {/* Sobre nosotros */}
@@ -493,19 +578,25 @@ export function CareerSiteEditor({
                 badge={gallery.length ? `${gallery.length}` : undefined}>
                 {gallery.map((g, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("aboutGallery", i)}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "8px" }}>
-                      <Field label="URL de imagen o video">
-                        <input style={inputStyle} placeholder="https://…"
+                    <Field label="Tipo">
+                      <select style={{ ...inputStyle, width: "auto" }} value={g.type}
+                        onChange={(e) => updArr<CSGalleryItem>("aboutGallery", i, "type", e.target.value)}>
+                        <option value="image">Imagen</option>
+                        <option value="video">Video (YouTube / Vimeo / URL directa)</option>
+                      </select>
+                    </Field>
+                    {g.type === "image" ? (
+                      <ImageUploadField
+                        label="Imagen"
+                        value={g.url}
+                        onChange={(url) => updArr<CSGalleryItem>("aboutGallery", i, "url", url)}
+                      />
+                    ) : (
+                      <Field label="URL del video">
+                        <input style={inputStyle} placeholder="https://youtube.com/watch?v=… o https://vimeo.com/…"
                           value={g.url} onChange={(e) => updArr<CSGalleryItem>("aboutGallery", i, "url", e.target.value)} />
                       </Field>
-                      <Field label="Tipo">
-                        <select style={{ ...inputStyle, width: "auto" }} value={g.type}
-                          onChange={(e) => updArr<CSGalleryItem>("aboutGallery", i, "type", e.target.value)}>
-                          <option value="image">Imagen</option>
-                          <option value="video">Video</option>
-                        </select>
-                      </Field>
-                    </div>
+                    )}
                   </ArrayItemCard>
                 ))}
                 <AddBtn onClick={() => addItem<CSGalleryItem>("aboutGallery", { url: "", type: "image" })} label="Añadir elemento" />
@@ -524,16 +615,15 @@ export function CareerSiteEditor({
                       <input style={inputStyle} value={b.name}
                         onChange={(e) => updArr<CSBrand>("brands", i, "name", e.target.value)} />
                     </Field>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                      <Field label="URL logo">
-                        <input style={inputStyle} placeholder="https://…" value={b.logoUrl ?? ""}
-                          onChange={(e) => updArr<CSBrand>("brands", i, "logoUrl", e.target.value)} />
-                      </Field>
-                      <Field label="Website">
-                        <input style={inputStyle} placeholder="https://…" value={b.website ?? ""}
-                          onChange={(e) => updArr<CSBrand>("brands", i, "website", e.target.value)} />
-                      </Field>
-                    </div>
+                    <ImageUploadField
+                      label="Logo de marca"
+                      value={b.logoUrl ?? ""}
+                      onChange={(url) => updArr<CSBrand>("brands", i, "logoUrl", url)}
+                    />
+                    <Field label="Website">
+                      <input style={inputStyle} placeholder="https://…" value={b.website ?? ""}
+                        onChange={(e) => updArr<CSBrand>("brands", i, "website", e.target.value)} />
+                    </Field>
                   </ArrayItemCard>
                 ))}
                 <AddBtn onClick={() => addItem<CSBrand>("brands", { name: "", logoUrl: "", website: "" })} label="Añadir marca" />
@@ -541,7 +631,7 @@ export function CareerSiteEditor({
 
               {/* Cultura y valores */}
               <SectionPanel id="culture" title="Cultura y valores" open={openSection === "culture"} onToggle={toggleSection}
-                badge={cultureValues.length ? `${cultureValues.length} valores` : undefined}>
+                badge={cultureVals.length ? `${cultureVals.length} valores` : undefined}>
                 <Field label="Título de sección">
                   <input style={inputStyle} placeholder="Nuestra cultura"
                     value={content.cultureTitle ?? ""} onChange={(e) => upd("cultureTitle", e.target.value)} />
@@ -550,13 +640,19 @@ export function CareerSiteEditor({
                   <textarea style={textareaStyle} rows={3}
                     value={content.cultureDescription ?? ""} onChange={(e) => upd("cultureDescription", e.target.value)} />
                 </Field>
-                {cultureValues.map((v, i) => (
+                {cultureVals.map((v, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("cultureValues", i)}>
-                    <div style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: "8px" }}>
-                      <Field label="Emoji"><input style={inputStyle} placeholder="🚀" maxLength={4}
-                        value={v.icon} onChange={(e) => updArr<CSCultureValue>("cultureValues", i, "icon", e.target.value)} /></Field>
-                      <Field label="Nombre del valor"><input style={inputStyle} placeholder="Innovación constante"
-                        value={v.name} onChange={(e) => updArr<CSCultureValue>("cultureValues", i, "name", e.target.value)} /></Field>
+                    <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px", alignItems: "end" }}>
+                      <Field label="Emoji">
+                        <EmojiButton
+                          value={v.icon}
+                          onChange={(e) => updArr<CSCultureValue>("cultureValues", i, "icon", e)}
+                        />
+                      </Field>
+                      <Field label="Nombre del valor">
+                        <input style={inputStyle} placeholder="Innovación constante"
+                          value={v.name} onChange={(e) => updArr<CSCultureValue>("cultureValues", i, "name", e.target.value)} />
+                      </Field>
                     </div>
                   </ArrayItemCard>
                 ))}
@@ -585,11 +681,17 @@ export function CareerSiteEditor({
                 </Field>
                 {benefits.map((b, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("benefits", i)}>
-                    <div style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: "8px" }}>
-                      <Field label="Emoji"><input style={inputStyle} placeholder="💰" maxLength={4}
-                        value={b.icon} onChange={(e) => updArr<CSBenefit>("benefits", i, "icon", e.target.value)} /></Field>
-                      <Field label="Beneficio"><input style={inputStyle} placeholder="Seguro médico privado"
-                        value={b.name} onChange={(e) => updArr<CSBenefit>("benefits", i, "name", e.target.value)} /></Field>
+                    <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px", alignItems: "end" }}>
+                      <Field label="Emoji">
+                        <EmojiButton
+                          value={b.icon}
+                          onChange={(e) => updArr<CSBenefit>("benefits", i, "icon", e)}
+                        />
+                      </Field>
+                      <Field label="Beneficio">
+                        <input style={inputStyle} placeholder="Seguro médico privado"
+                          value={b.name} onChange={(e) => updArr<CSBenefit>("benefits", i, "name", e.target.value)} />
+                      </Field>
                     </div>
                   </ArrayItemCard>
                 ))}
@@ -610,18 +712,27 @@ export function CareerSiteEditor({
                 {teamProfiles.map((p, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("teamProfiles", i)}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                      <Field label="Nombre"><input style={inputStyle}
-                        value={p.name} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "name", e.target.value)} /></Field>
-                      <Field label="Cargo"><input style={inputStyle}
-                        value={p.position} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "position", e.target.value)} /></Field>
+                      <Field label="Nombre">
+                        <input style={inputStyle}
+                          value={p.name} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "name", e.target.value)} />
+                      </Field>
+                      <Field label="Cargo">
+                        <input style={inputStyle}
+                          value={p.position} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "position", e.target.value)} />
+                      </Field>
                     </div>
-                    <Field label="URL foto">
-                      <input style={inputStyle} placeholder="https://…"
-                        value={p.photoUrl ?? ""} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "photoUrl", e.target.value)} />
+                    <ImageUploadField
+                      label="Foto"
+                      value={p.photoUrl ?? ""}
+                      onChange={(url) => updArr<CSTeamProfile>("teamProfiles", i, "photoUrl", url)}
+                    />
+                    <Field label="LinkedIn (opcional)">
+                      <input style={inputStyle} placeholder="https://linkedin.com/in/…"
+                        value={p.linkedinUrl ?? ""} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "linkedinUrl", e.target.value)} />
                     </Field>
                   </ArrayItemCard>
                 ))}
-                <AddBtn onClick={() => addItem<CSTeamProfile>("teamProfiles", { name: "", position: "", photoUrl: "" })} label="Añadir persona" />
+                <AddBtn onClick={() => addItem<CSTeamProfile>("teamProfiles", { name: "", position: "", photoUrl: "", linkedinUrl: "" })} label="Añadir persona" />
               </SectionPanel>
 
               {/* Testimonios */}
@@ -639,10 +750,11 @@ export function CareerSiteEditor({
                       <textarea style={textareaStyle} rows={3}
                         value={t.text} onChange={(e) => updArr<CSTestimonial>("testimonials", i, "text", e.target.value)} />
                     </Field>
-                    <Field label="URL foto (opcional)">
-                      <input style={inputStyle} placeholder="https://…"
-                        value={t.photoUrl ?? ""} onChange={(e) => updArr<CSTestimonial>("testimonials", i, "photoUrl", e.target.value)} />
-                    </Field>
+                    <ImageUploadField
+                      label="Foto (opcional)"
+                      value={t.photoUrl ?? ""}
+                      onChange={(url) => updArr<CSTestimonial>("testimonials", i, "photoUrl", url)}
+                    />
                   </ArrayItemCard>
                 ))}
                 <AddBtn onClick={() => addItem<CSTestimonial>("testimonials", { name: "", position: "", text: "", photoUrl: "" })} label="Añadir testimonio" />
