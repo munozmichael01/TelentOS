@@ -247,7 +247,6 @@ export default async function EmployeePage({ params }: { params: { id: string } 
           <TabsTrigger value="ausencias">Ausencias ({(absences ?? []).length})</TabsTrigger>
           <TabsTrigger value="horas">Horas</TabsTrigger>
           <TabsTrigger value="compensacion">Compensación</TabsTrigger>
-          <TabsTrigger value="permisos">Permisos</TabsTrigger>
           <TabsTrigger value="horario">Horario</TabsTrigger>
         </TabsList>
 
@@ -303,136 +302,192 @@ export default async function EmployeePage({ params }: { params: { id: string } 
           </div>
         </TabsContent>
 
-        {/* ── Ausencias ── */}
+        {/* ── Ausencias (balances + historial) ── */}
         <TabsContent value="ausencias">
           <div style={{ maxWidth: "760px" }}>
-            {/* Stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "14px", marginBottom: "24px" }}>
-              {[
-                { label: "Disponibles", value: availableDays, sub: `de ${totalGranted} concedidos`, color: "#1B6B4F", bg: "#DCEFE3" },
-                { label: "Usados", value: usedDays, sub: "días aprobados", color: "#1A1A17", bg: "#FCFAF6" },
-                { label: "Pendientes", value: pendingDays, sub: "por aprobar", color: pendingDays > 0 ? "#946312" : "#79746B", bg: pendingDays > 0 ? "#F8E7C4" : "#FCFAF6" },
-              ].map(({ label, value, sub, color, bg }) => (
-                <div key={label} style={{ background: bg, border: "1px solid #E7E1D4", borderRadius: "14px", padding: "16px 18px" }}>
-                  <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B" }}>{label}</div>
-                  <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "30px", letterSpacing: "-1px", marginTop: "6px", color }}>{value}</div>
-                  <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#79746B", marginTop: "2px" }}>{sub}</div>
-                </div>
-              ))}
+
+            {/* ── Balances ── */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px" }}>Balances</div>
+              <Link href="/settings/absences" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none", display: "inline-block" }}>
+                Asignar permiso
+              </Link>
             </div>
 
-            {/* Per-policy breakdown cards */}
-            {policyBalances.map((bal) => {
-              const rows: { label: string; value: number; sign: "+" | "-" | ""; alwaysShow?: boolean }[] = [
-                { label: `Política${bal.isProrated ? " (prorateada)" : ""}`, value: bal.granted, sign: "+", alwaysShow: true },
-                { label: "Traspaso año anterior", value: bal.carryover, sign: bal.carryover >= 0 ? "+" : "" },
-                { label: "Ajustes manuales", value: bal.manual, sign: bal.manual >= 0 ? "+" : "" },
-                { label: "Ausencias aprobadas", value: bal.usedApproved, sign: "-", alwaysShow: true },
-                { label: "Ausencias pendientes", value: bal.usedPending, sign: "-" },
-                { label: "Festivos empresa", value: Math.abs(bal.holidayDeductions), sign: "-" },
-                { label: "Caducado", value: Math.abs(bal.expired), sign: "-" },
-              ];
-              const visibleRows = rows.filter(r => r.alwaysShow || r.value !== 0);
-              return (
-                <div key={bal.allowanceId} style={{ marginBottom: "20px" }}>
-                  {/* Header */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
-                    <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".6px", color: "#79746B" }}>
-                      {bal.typeName} — composición
-                    </div>
-                    {bal.expiryDate && (
-                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: ".5px", color: "#946312", background: "#F8E7C4", border: "1px solid #E8C97A", borderRadius: "999px", padding: "3px 10px" }}>
-                        Caduca el {formatDate(bal.expiryDate)}
-                      </span>
-                    )}
-                  </div>
+            {!(allowances ?? []).length ? (
+              <div style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "36px 24px", textAlign: "center", boxShadow: "3px 3px 0 #1A1A17", marginBottom: "32px" }}>
+                <div style={{ fontSize: "32px", marginBottom: "10px" }}>📋</div>
+                <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "6px" }}>Sin permisos asignados</div>
+                <div style={{ fontSize: "13px", color: "#79746B", marginBottom: "16px" }}>Los nuevos empleados reciben la política por defecto automáticamente.</div>
+                <Link href="/settings/absences" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "underline" }}>
+                  Ir a Políticas de ausencias →
+                </Link>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "36px" }}>
+                {policyBalances.map((bal) => {
+                  const pct = bal.granted > 0 ? Math.min(100, Math.round((bal.usedApproved / bal.granted) * 100)) : 0;
+                  const breakdownRows: { label: string; value: number; sign: "+" | "-" | "" }[] = [
+                    { label: `Política${bal.isProrated ? " (prorateada)" : ""}`, value: bal.granted, sign: "+" },
+                    { label: "Traspaso año anterior", value: bal.carryover, sign: bal.carryover >= 0 ? "+" : "" },
+                    { label: "Ajustes manuales", value: bal.manual, sign: bal.manual >= 0 ? "+" : "" },
+                    { label: "Ausencias aprobadas", value: bal.usedApproved, sign: "-" },
+                    { label: "Ausencias pendientes", value: bal.usedPending, sign: "-" },
+                    { label: "Festivos empresa", value: Math.abs(bal.holidayDeductions), sign: "-" },
+                    { label: "Caducado", value: Math.abs(bal.expired), sign: "-" },
+                  ];
+                  return (
+                    <div key={bal.allowanceId} style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "18px 20px", boxShadow: "3px 3px 0 #1A1A17" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "14px" }}>
+                        <div>
+                          <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "4px" }}>{bal.policyName}</div>
+                          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B" }}>
+                            {bal.typeName} · {bal.typeUnit}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          {bal.expiryDate && (
+                            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: ".5px", color: "#946312", background: "#F8E7C4", border: "1px solid #E8C97A", borderRadius: "999px", padding: "3px 10px", whiteSpace: "nowrap" }}>
+                              Caduca {formatDate(bal.expiryDate)}
+                            </span>
+                          )}
+                          <span style={{ background: "#EAF7C4", border: "1.5px solid #1A1A17", borderRadius: "999px", padding: "4px 12px", fontSize: "12px", fontWeight: 700, fontFamily: "'Archivo',sans-serif", color: "#0E5C4A", whiteSpace: "nowrap" }}>
+                            {bal.available} / {bal.granted} {bal.typeUnit}
+                          </span>
+                        </div>
+                      </div>
 
-                  <div style={{ border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                      <thead>
-                        <tr style={{ background: "#F4F0E8", borderBottom: "2px solid #E7E1D4" }}>
-                          <th style={{ padding: "9px 14px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Origen</th>
-                          <th style={{ padding: "9px 14px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Cantidad</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {visibleRows.map((row, i) => {
-                          const isNeg = row.sign === "-" && row.value > 0;
-                          const isPos = row.sign === "+" && row.value > 0;
-                          const valColor = isNeg ? "#BD4332" : isPos ? "#1B6B4F" : "#79746B";
-                          return (
-                            <tr key={row.label} style={{ background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8", borderBottom: "1px solid #E7E1D4" }}>
-                              <td style={{ padding: "10px 14px", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", color: row.value === 0 ? "#79746B" : "#1A1A17" }}>{row.label}</td>
-                              <td style={{ padding: "10px 14px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "12px", fontWeight: 700, color: valColor }}>
-                                {row.value === 0 ? "0" : `${row.sign}${row.value}`}
+                      <div style={{ marginBottom: "16px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+                          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B" }}>{bal.usedApproved} usados · {bal.usedPending} pendientes</span>
+                          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B" }}>{pct}%</span>
+                        </div>
+                        <div style={{ height: "8px", background: "#E7E1D4", borderRadius: "999px", overflow: "hidden", border: "1px solid #1A1A17" }}>
+                          <div style={{ height: "100%", width: `${pct}%`, background: pct > 80 ? "#F1543F" : "#0E5C4A", borderRadius: "999px", transition: "width .3s" }} />
+                        </div>
+                      </div>
+
+                      <div style={{ border: "1.5px solid #E7E1D4", borderRadius: "10px", overflow: "hidden", marginBottom: "12px" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
+                          <thead>
+                            <tr style={{ background: "#F4F0E8", borderBottom: "1.5px solid #E7E1D4" }}>
+                              <th style={{ padding: "7px 12px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Origen</th>
+                              <th style={{ padding: "7px 12px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Cantidad</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {breakdownRows.map((row, i) => {
+                              const isNeg = row.sign === "-" && row.value > 0;
+                              const isPos = row.sign === "+" && row.value > 0;
+                              const valColor = isNeg ? "#BD4332" : isPos ? "#1B6B4F" : "#79746B";
+                              return (
+                                <tr key={row.label} style={{ borderBottom: i < breakdownRows.length - 1 ? "1px solid #E7E1D4" : undefined, background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8" }}>
+                                  <td style={{ padding: "8px 12px", fontFamily: "'Hanken Grotesk',sans-serif", color: row.value === 0 ? "#B0AB9F" : "#1A1A17" }}>{row.label}</td>
+                                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: row.value === 0 ? "#B0AB9F" : valColor }}>
+                                    {row.value === 0 ? "0" : `${row.sign}${row.value}`}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                            <tr style={{ background: "#F4F0E8", borderTop: "1.5px solid #1A1A17" }}>
+                              <td style={{ padding: "9px 12px", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "13px" }}>Disponible</td>
+                              <td style={{ padding: "9px 12px", textAlign: "right", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "14px", color: bal.available > 0 ? "#1B6B4F" : "#79746B" }}>
+                                {bal.available} {bal.typeUnit}
                               </td>
                             </tr>
-                          );
-                        })}
-                        {/* Total row */}
-                        <tr style={{ background: "#F4F0E8", borderTop: "2px solid #1A1A17" }}>
-                          <td style={{ padding: "11px 14px", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "13.5px" }}>Disponible</td>
-                          <td style={{ padding: "11px 14px", textAlign: "right", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "15px", color: bal.available > 0 ? "#1B6B4F" : bal.available === 0 ? "#79746B" : "#BD4332" }}>
-                            {bal.available} {bal.typeUnit}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              );
-            })}
+                          </tbody>
+                        </table>
+                      </div>
 
-            {/* Link to manage */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px", marginTop: policyBalances.length ? "4px" : "0" }}>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "6px", padding: "3px 8px" }}>
+                          Desde: {bal.validFrom ? formatDate(bal.validFrom) : "—"}
+                        </span>
+                        <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "6px", padding: "3px 8px" }}>
+                          {bal.validUntil ? `Hasta: ${formatDate(bal.validUntil)}` : "Sin fecha de fin"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ── Historial ── */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px" }}>Historial</div>
               <Link href="/timeoff" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
                 + Nueva ausencia
               </Link>
             </div>
 
-            {/* Absence list */}
-            {!(absences ?? []).length ? (
-              <div style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "36px 24px", textAlign: "center", boxShadow: "3px 3px 0 #1A1A17" }}>
-                <div style={{ fontSize: "32px", marginBottom: "10px" }}>🌴</div>
-                <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Sin ausencias registradas</div>
-              </div>
-            ) : (
-              <div style={{ border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                  <thead>
-                    <tr style={{ background: "#F4F0E8", borderBottom: "2px solid #E7E1D4" }}>
-                      {["Tipo", "Desde", "Hasta", "Días", "Estado"].map(h => (
-                        <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(absences ?? []).map((r: any, i: number) => {
-                      const atype = r.absence_types;
-                      const sc = STATUS_CLR[r.status] ?? STATUS_CLR.pending;
-                      return (
-                        <tr key={r.id} style={{ background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8", borderBottom: i < (absences ?? []).length - 1 ? "1px solid #E7E1D4" : undefined }}>
-                          <td style={{ padding: "12px 14px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                              {atype?.icon && <span style={{ fontSize: "16px" }}>{atype.icon}</span>}
-                              <span style={{ fontWeight: 600 }}>{atype?.name ?? "—"}</span>
-                            </div>
-                          </td>
-                          <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.start_date)}</td>
-                          <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.end_date)}</td>
-                          <td style={{ padding: "12px 14px", fontFamily: "'Archivo',sans-serif", fontWeight: 800 }}>{r.working_days_count}</td>
-                          <td style={{ padding: "12px 14px" }}>
-                            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: sc.color, background: sc.bg, borderRadius: "6px", padding: "3px 8px" }}>
-                              {STATUS_LABEL[r.status] ?? r.status}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            {(() => {
+              const allAbs = absences ?? [];
+              if (!allAbs.length) {
+                return (
+                  <div style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "36px 24px", textAlign: "center", boxShadow: "3px 3px 0 #1A1A17" }}>
+                    <div style={{ fontSize: "32px", marginBottom: "10px" }}>🌴</div>
+                    <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Sin ausencias registradas</div>
+                  </div>
+                );
+              }
+              const byYear = new Map<number, typeof allAbs>();
+              for (const r of allAbs) {
+                const yr = new Date(r.start_date + "T12:00:00").getFullYear();
+                if (!byYear.has(yr)) byYear.set(yr, []);
+                byYear.get(yr)!.push(r);
+              }
+              const years = Array.from(byYear.keys()).sort((a, b) => b - a).slice(0, 3);
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                  {years.map((yr) => {
+                    const rows = byYear.get(yr)!;
+                    return (
+                      <div key={yr}>
+                        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".6px", color: "#79746B", marginBottom: "10px", paddingLeft: "2px" }}>
+                          {yr}
+                        </div>
+                        <div style={{ border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                            <thead>
+                              <tr style={{ background: "#F4F0E8", borderBottom: "2px solid #E7E1D4" }}>
+                                {["Tipo", "Desde", "Hasta", "Días", "Estado"].map(h => (
+                                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>{h}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rows.map((r: any, i: number) => {
+                                const atype = r.absence_types;
+                                const sc = STATUS_CLR[r.status] ?? STATUS_CLR.pending;
+                                return (
+                                  <tr key={r.id} style={{ background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8", borderBottom: i < rows.length - 1 ? "1px solid #E7E1D4" : undefined }}>
+                                    <td style={{ padding: "12px 14px" }}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                                        {atype?.icon && <span style={{ fontSize: "16px" }}>{atype.icon}</span>}
+                                        <span style={{ fontWeight: 600 }}>{atype?.name ?? "—"}</span>
+                                      </div>
+                                    </td>
+                                    <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.start_date)}</td>
+                                    <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.end_date)}</td>
+                                    <td style={{ padding: "12px 14px", fontFamily: "'Archivo',sans-serif", fontWeight: 800 }}>{r.working_days_count}</td>
+                                    <td style={{ padding: "12px 14px" }}>
+                                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: sc.color, background: sc.bg, borderRadius: "6px", padding: "3px 8px" }}>
+                                        {STATUS_LABEL[r.status] ?? r.status}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </TabsContent>
 
@@ -566,121 +621,6 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                     })}
                   </tbody>
                 </table>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        {/* ── Permisos ── */}
-        <TabsContent value="permisos">
-          <div style={{ maxWidth: "680px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-              <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px" }}>Permisos y ausencias</div>
-              <Link href="/settings/absences" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none", display: "inline-block" }}>
-                Asignar permiso
-              </Link>
-            </div>
-
-            {!(allowances ?? []).length ? (
-              <div style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "36px 24px", textAlign: "center", boxShadow: "3px 3px 0 #1A1A17" }}>
-                <div style={{ fontSize: "32px", marginBottom: "10px" }}>📋</div>
-                <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "6px" }}>Sin permisos asignados</div>
-                <div style={{ fontSize: "13px", color: "#79746B", marginBottom: "16px" }}>Los nuevos empleados reciben la política por defecto automáticamente.</div>
-                <Link href="/settings/absences" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "underline" }}>
-                  Ir a Políticas de ausencias →
-                </Link>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {policyBalances.map((bal) => {
-                  const pct = bal.granted > 0 ? Math.min(100, Math.round((bal.usedApproved / bal.granted) * 100)) : 0;
-                  const breakdownRows: { label: string; value: number; sign: "+" | "-" | "" }[] = [
-                    { label: `Política${bal.isProrated ? " (prorateada)" : ""}`, value: bal.granted, sign: "+" },
-                    { label: "Traspaso año anterior", value: bal.carryover, sign: bal.carryover >= 0 ? "+" : "" },
-                    { label: "Ajustes manuales", value: bal.manual, sign: bal.manual >= 0 ? "+" : "" },
-                    { label: "Ausencias aprobadas", value: bal.usedApproved, sign: "-" },
-                    { label: "Ausencias pendientes", value: bal.usedPending, sign: "-" },
-                    { label: "Festivos empresa", value: Math.abs(bal.holidayDeductions), sign: "-" },
-                    { label: "Caducado", value: Math.abs(bal.expired), sign: "-" },
-                  ];
-                  return (
-                    <div key={bal.allowanceId} style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "18px 20px", boxShadow: "3px 3px 0 #1A1A17" }}>
-                      {/* Header row */}
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "14px" }}>
-                        <div>
-                          <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "4px" }}>{bal.policyName}</div>
-                          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B" }}>
-                            {bal.typeName} · {bal.typeUnit}
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                          {bal.expiryDate && (
-                            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: ".5px", color: "#946312", background: "#F8E7C4", border: "1px solid #E8C97A", borderRadius: "999px", padding: "3px 10px", whiteSpace: "nowrap" }}>
-                              Caduca {formatDate(bal.expiryDate)}
-                            </span>
-                          )}
-                          <span style={{ background: "#EAF7C4", border: "1.5px solid #1A1A17", borderRadius: "999px", padding: "4px 12px", fontSize: "12px", fontWeight: 700, fontFamily: "'Archivo',sans-serif", color: "#0E5C4A", whiteSpace: "nowrap" }}>
-                            {bal.available} / {bal.granted} {bal.typeUnit}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Progress bar */}
-                      <div style={{ marginBottom: "16px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-                          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B" }}>{bal.usedApproved} usados · {bal.usedPending} pendientes</span>
-                          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B" }}>{pct}%</span>
-                        </div>
-                        <div style={{ height: "8px", background: "#E7E1D4", borderRadius: "999px", overflow: "hidden", border: "1px solid #1A1A17" }}>
-                          <div style={{ height: "100%", width: `${pct}%`, background: pct > 80 ? "#F1543F" : "#0E5C4A", borderRadius: "999px", transition: "width .3s" }} />
-                        </div>
-                      </div>
-
-                      {/* Breakdown table */}
-                      <div style={{ border: "1.5px solid #E7E1D4", borderRadius: "10px", overflow: "hidden", marginBottom: "12px" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
-                          <thead>
-                            <tr style={{ background: "#F4F0E8", borderBottom: "1.5px solid #E7E1D4" }}>
-                              <th style={{ padding: "7px 12px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Origen</th>
-                              <th style={{ padding: "7px 12px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Cantidad</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {breakdownRows.map((row, i) => {
-                              const isNeg = row.sign === "-" && row.value > 0;
-                              const isPos = row.sign === "+" && row.value > 0;
-                              const valColor = isNeg ? "#BD4332" : isPos ? "#1B6B4F" : "#79746B";
-                              return (
-                                <tr key={row.label} style={{ borderBottom: i < breakdownRows.length - 1 ? "1px solid #E7E1D4" : undefined, background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8" }}>
-                                  <td style={{ padding: "8px 12px", fontFamily: "'Hanken Grotesk',sans-serif", color: row.value === 0 ? "#B0AB9F" : "#1A1A17" }}>{row.label}</td>
-                                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: row.value === 0 ? "#B0AB9F" : valColor }}>
-                                    {row.value === 0 ? "0" : `${row.sign}${row.value}`}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                            <tr style={{ background: "#F4F0E8", borderTop: "1.5px solid #1A1A17" }}>
-                              <td style={{ padding: "9px 12px", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "13px" }}>Disponible</td>
-                              <td style={{ padding: "9px 12px", textAlign: "right", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "14px", color: bal.available > 0 ? "#1B6B4F" : "#79746B" }}>
-                                {bal.available} {bal.typeUnit}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* Valid from/until */}
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                        <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "6px", padding: "3px 8px" }}>
-                          Suscripción desde: {bal.validFrom ? formatDate(bal.validFrom) : "—"}
-                        </span>
-                        <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "6px", padding: "3px 8px" }}>
-                          {bal.validUntil ? `Hasta: ${formatDate(bal.validUntil)}` : "Sin fecha de fin"}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             )}
           </div>
