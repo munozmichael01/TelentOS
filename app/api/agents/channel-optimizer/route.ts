@@ -16,10 +16,30 @@ export async function POST(req: Request) {
     .maybeSingle();
   if (!job) return jsonError("Oferta no encontrada", 404);
 
-  const result = await runChannelOptimizer({
-    job,
-    objective: ["volume", "quality", "cpa"].includes(body.objective) ? body.objective : "volume",
-    budget: Number(body.budget) || 500,
-  });
-  return NextResponse.json(result);
+  const objective = ["volume", "quality", "cpa"].includes(body.objective) ? body.objective : "volume";
+  const budget = Number(body.budget) || 500;
+
+  const result = await runChannelOptimizer({ job, objective, budget });
+
+  // Mark any previous pending plan as superseded, then persist the new one
+  await supabase
+    .from("distribution_plans")
+    .update({ status: "superseded" })
+    .eq("job_id", body.jobId)
+    .eq("status", "pending");
+
+  const { data: saved } = await supabase
+    .from("distribution_plans")
+    .insert({
+      job_id: body.jobId,
+      objective,
+      budget,
+      plan: result.output,
+      model: result.status,
+      status: "pending",
+    })
+    .select("id")
+    .single();
+
+  return NextResponse.json({ ...result, plan_id: saved?.id ?? null });
 }

@@ -83,7 +83,7 @@ async function fallbackPlan(input: ChannelOptimizerInput): Promise<ChannelPlan> 
 export async function runChannelOptimizer(
   input: ChannelOptimizerInput
 ): Promise<AgentResult<ChannelPlan>> {
-  const user = `Oferta a distribuir:\n${JSON.stringify(input.job, null, 2)}\n\nObjetivo: ${input.objective}\nPresupuesto total: ${input.budget} EUR\n\nGenera el plan de distribución.`;
+  const user = `Oferta a distribuir:\n${JSON.stringify(input.job, null, 2)}\n\nObjetivo: ${input.objective}\nPresupuesto total: ${input.budget} EUR\n\nEMPIEZA llamando a get_job_channel_performance con job_id="${input.job.id}" para ver los datos reales de esta oferta antes de recomendar.`;
 
   return runAgent<ChannelPlan>({
     agent: "channel-optimizer",

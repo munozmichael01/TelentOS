@@ -30,7 +30,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     .select();
   if (dbError) return jsonError(dbError.message, 500);
 
-  // Publicar también activa la oferta si estaba en borrador
+  // Mark the plan as activated if a plan_id was provided
+  if (body.plan_id) {
+    await supabase
+      .from("distribution_plans")
+      .update({ status: "activated", activated_at: new Date().toISOString() })
+      .eq("id", body.plan_id)
+      .eq("status", "pending");
+  }
+
+  // Publish the job if it was still a draft
   await supabase.from("jobs").update({ status: "active" }).eq("id", params.id).eq("status", "draft");
 
   return NextResponse.json({ campaigns: data });
