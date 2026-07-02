@@ -88,6 +88,68 @@ const STARTER_QUESTIONS = [
 
 type ThreadTurn = { query: string; response: AnalystResponse };
 
+/* ── Chat sub-components ────────────────────────────────────────────────────── */
+
+function AgentAvatar({ loading = false }: { loading?: boolean }) {
+  return (
+    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
+      {loading
+        ? <Loader2 size={12} className="animate-spin" style={{ color: "#fff" }} />
+        : <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="#fff" strokeWidth="1.8"/><path d="M5 20c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
+      }
+    </div>
+  );
+}
+
+function ChipRow({ chips, onAsk, disabled }: { chips: string[]; onAsk: (q: string) => void; disabled: boolean }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+      {chips.map((q) => (
+        <button key={q} onClick={() => onAsk(q)} disabled={disabled}
+          style={{ fontFamily: "inherit", fontSize: "12px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "5px 13px", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.6 : 1, whiteSpace: "nowrap" }}>
+          {q}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function InputRow({ query, setQuery, onAsk, onKeyDown, loading, inputRef }: {
+  query: string;
+  setQuery: (v: string) => void;
+  onAsk: () => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  loading: boolean;
+  inputRef: React.Ref<HTMLInputElement>;
+}) {
+  return (
+    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+      <div style={{ position: "relative", flex: 1 }}>
+        <svg style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="15" height="15" viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="7" stroke={soft} strokeWidth="1.8"/>
+          <path d="M16.5 16.5L21 21" stroke={soft} strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M8 11.5c.5-1.5 2-2.5 3.5-2.5" stroke="#0E5C4A" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder="Pregunta sobre canales y campañas…"
+          style={{ width: "100%", paddingLeft: "40px", paddingRight: "12px", paddingTop: "10px", paddingBottom: "10px", fontFamily: "inherit", fontSize: "14px", color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "11px", outline: "none", boxSizing: "border-box" }}
+        />
+      </div>
+      <button onClick={onAsk} disabled={!query.trim() || loading}
+        style={{ flexShrink: 0, background: "#0E5C4A", color: "#fff", border: "none", borderRadius: "11px", padding: "10px 18px", fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", cursor: query.trim() && !loading ? "pointer" : "not-allowed", opacity: query.trim() && !loading ? 1 : 0.5, display: "flex", alignItems: "center", gap: "7px" }}>
+        {loading ? <Loader2 size={14} className="animate-spin" /> : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        )}
+        Preguntar
+      </button>
+    </div>
+  );
+}
+
 /* ── Tab: KPIs ──────────────────────────────────────────────────────────────── */
 
 function KPIsTab() {
@@ -162,117 +224,84 @@ function KPIsTab() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-      {/* AI Search panel */}
-      <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "16px", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+      {/* AI panel — two modes: idle (input top) / chat (input bottom) */}
+      <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "16px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
 
-        {/* Input row */}
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <div style={{ position: "relative", flex: 1 }}>
-            <svg style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="7" stroke={soft} strokeWidth="1.8"/>
-              <path d="M16.5 16.5L21 21" stroke={soft} strokeWidth="1.8" strokeLinecap="round"/>
-              <path d="M8 11.5c.5-1.5 2-2.5 3.5-2.5" stroke="#0E5C4A" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={thread.length > 0 ? "Pregunta de seguimiento…" : "Pregunta sobre canales y campañas…"}
-              style={{ width: "100%", paddingLeft: "42px", paddingRight: "14px", paddingTop: "11px", paddingBottom: "11px", fontFamily: "inherit", fontSize: "14px", color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "11px", outline: "none", boxSizing: "border-box" }}
-            />
-          </div>
-          <button
-            onClick={() => ask(query)}
-            disabled={!query.trim() || aiLoading}
-            style={{ flexShrink: 0, background: "#0E5C4A", color: "#fff", border: "none", borderRadius: "11px", padding: "11px 18px", fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", cursor: query.trim() && !aiLoading ? "pointer" : "not-allowed", opacity: query.trim() && !aiLoading ? 1 : 0.5, display: "flex", alignItems: "center", gap: "7px" }}>
-            {aiLoading ? <Loader2 size={14} className="animate-spin" /> : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12h14M12 5l7 7-7 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )}
-            Preguntar
-          </button>
-        </div>
-
-        {/* Chips — starter or contextual follow-ups from last response */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "7px", alignItems: "center" }}>
-          {chips.map((q) => (
-            <button key={q} onClick={() => ask(q)} disabled={aiLoading}
-              style={{ fontFamily: "inherit", fontSize: "12px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "5px 13px", cursor: aiLoading ? "not-allowed" : "pointer", opacity: aiLoading ? 0.6 : 1, whiteSpace: "nowrap" }}>
-              {q}
-            </button>
-          ))}
-          {thread.length > 0 && (
-            <button onClick={clearThread}
-              style={{ ...mono, fontSize: "10px", color: soft, background: "none", border: "none", cursor: "pointer", padding: "5px 6px", textDecoration: "underline", marginLeft: "4px" }}>
-              Nueva conversación
-            </button>
-          )}
-        </div>
-
-        {/* Conversation thread */}
-        {thread.length > 0 && (
-          <div style={{ borderTop: `1px solid ${line}`, paddingTop: "14px", display: "flex", flexDirection: "column", gap: "20px", maxHeight: "480px", overflowY: "auto" }}>
-            {thread.map((turn, i) => (
-              <div key={i} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {/* User question */}
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <div style={{ background: "#F4F0E8", border: `1px solid ${line}`, borderRadius: "12px 12px 4px 12px", padding: "8px 14px", maxWidth: "75%", fontSize: "13.5px", color: ink, lineHeight: "1.5" }}>
-                    {turn.query}
-                  </div>
-                </div>
-                {/* Agent response */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                  <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "13.5px", lineHeight: "1.6", color: ink }}
-                      dangerouslySetInnerHTML={{ __html: turn.response.answer.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>") }}
-                    />
-                    {turn.response.redirect && (
-                      <a href={turn.response.redirect.url}
-                        style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginTop: "8px", fontSize: "13px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "9px", padding: "6px 12px" }}>
-                        {turn.response.redirect.label}
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#0E5C4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </a>
-                    )}
-                    {/* Filters applied — only show on last turn */}
-                    {i === thread.length - 1 && Object.keys(turn.response.filters_applied ?? {}).length > 0 && (
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "8px" }}>
-                        <span style={{ ...mono, fontSize: "10px", color: soft }}>Datos filtrados:</span>
-                        {Object.entries(turn.response.filters_applied).map(([k, v]) => v && (
-                          <span key={k} style={{ ...mono, fontSize: "10px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "2px 8px" }}>
-                            {k === "period" ? v : `${k}: ${v}`}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+        {thread.length === 0 ? (
+          /* ── Idle mode: input + chips at top ── */
+          <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <InputRow query={query} setQuery={setQuery} onAsk={() => ask(query)} onKeyDown={handleKeyDown} loading={aiLoading} inputRef={inputRef} />
+            <ChipRow chips={chips} onAsk={ask} disabled={aiLoading} />
             {aiLoading && (
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Loader2 size={12} className="animate-spin" style={{ color: "#fff" }} />
-                </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Loader2 size={13} className="animate-spin" style={{ color: soft }} />
                 <span style={{ ...mono, fontSize: "11px", color: soft }}>Analizando datos…</span>
               </div>
             )}
-            <div ref={threadEndRef} />
           </div>
-        )}
+        ) : (
+          /* ── Chat mode: thread + chips + input at bottom ── */
+          <>
+            {/* Header with "Nueva conversación" button */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", borderBottom: `1px solid ${line}` }}>
+              <span style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px" }}>Análisis de canales</span>
+              <button onClick={clearThread}
+                style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "11px", color: soft, background: "#F4F0E8", border: `1px solid ${line}`, borderRadius: "8px", padding: "5px 10px", cursor: "pointer" }}>
+                + Nueva conversación
+              </button>
+            </div>
 
-        {/* Loading indicator for first message */}
-        {aiLoading && thread.length === 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingTop: "4px" }}>
-            <Loader2 size={14} className="animate-spin" style={{ color: soft }} />
-            <span style={{ ...mono, fontSize: "11px", color: soft }}>Analizando datos…</span>
-          </div>
+            {/* Thread */}
+            <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "20px", maxHeight: "420px", overflowY: "auto" }}>
+              {thread.map((turn, i) => (
+                <div key={i} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <div style={{ background: "#F4F0E8", border: `1px solid ${line}`, borderRadius: "12px 12px 4px 12px", padding: "8px 14px", maxWidth: "75%", fontSize: "13.5px", color: ink, lineHeight: "1.5" }}>
+                      {turn.query}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    <AgentAvatar />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "13.5px", lineHeight: "1.6", color: ink }}
+                        dangerouslySetInnerHTML={{ __html: turn.response.answer.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>") }}
+                      />
+                      {turn.response.redirect && (
+                        <a href={turn.response.redirect.url}
+                          style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginTop: "8px", fontSize: "13px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "9px", padding: "6px 12px" }}>
+                          {turn.response.redirect.label}
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#0E5C4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </a>
+                      )}
+                      {i === thread.length - 1 && Object.entries(turn.response.filters_applied ?? {}).some(([, v]) => Boolean(v)) && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "8px" }}>
+                          <span style={{ ...mono, fontSize: "10px", color: soft }}>Datos filtrados:</span>
+                          {Object.entries(turn.response.filters_applied).map(([k, v]) => v && (
+                            <span key={k} style={{ ...mono, fontSize: "10px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "2px 8px" }}>
+                              {k === "period" || k === "days_ago" ? String(v) : `${k}: ${v}`}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {aiLoading && (
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <AgentAvatar loading />
+                  <span style={{ ...mono, fontSize: "11px", color: soft }}>Analizando datos…</span>
+                </div>
+              )}
+              <div ref={threadEndRef} />
+            </div>
+
+            {/* Chips + input pinned at bottom */}
+            <div style={{ borderTop: `1px solid ${line}`, padding: "12px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <ChipRow chips={chips} onAsk={ask} disabled={aiLoading} />
+              <InputRow query={query} setQuery={setQuery} onAsk={() => ask(query)} onKeyDown={handleKeyDown} loading={aiLoading} inputRef={inputRef} />
+            </div>
+          </>
         )}
       </div>
 

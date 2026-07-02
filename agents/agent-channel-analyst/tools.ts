@@ -7,6 +7,7 @@ type QueryArgs = {
   sector?: string;
   location?: string;
   source?: string;
+  job_title?: string;
 };
 
 function resolvePeriod(period?: string, days_ago?: number): { days: number; label: string } {
@@ -24,7 +25,7 @@ function resolvePeriod(period?: string, days_ago?: number): { days: number; labe
 
 export async function queryChannelData(args: QueryArgs) {
   const supabase = createAdminClient();
-  const { sector = "", location = "", source = "" } = args;
+  const { sector = "", location = "", source = "", job_title = "" } = args;
 
   const { days, label: periodLabel } = resolvePeriod(args.period, args.days_ago);
   const since = days > 0 ? new Date(Date.now() - days * 86_400_000).toISOString() : null;
@@ -36,6 +37,7 @@ export async function queryChannelData(args: QueryArgs) {
   if (since) appQuery = appQuery.gte("created_at", since);
   if (sector) appQuery = appQuery.eq("jobs.sector", sector);
   if (location) appQuery = appQuery.ilike("jobs.location", `%${location}%`);
+  if (job_title) appQuery = appQuery.ilike("jobs.title", `%${job_title}%`);
 
   let campQuery = supabase
     .from("campaigns")
@@ -188,7 +190,7 @@ export async function queryChannelData(args: QueryArgs) {
     .sort((a, b) => b.total_applications - a.total_applications);
 
   const total = rows.reduce((s, r) => s + r.applications, 0);
-  return { rows, by_job, total_applications: total, period: periodLabel, filters: { sector, location, source } };
+  return { rows, by_job, total_applications: total, period: periodLabel, filters: { sector, location, source, job_title } };
 }
 
 export const tools: AgentTool[] = [
@@ -222,6 +224,10 @@ export const tools: AgentTool[] = [
             source: {
               type: "string",
               description: "Filtrar por canal específico (utm_source). Ej: 'linkedin', 'infojobs', 'indeed'.",
+            },
+            job_title: {
+              type: "string",
+              description: "Filtrar por título de oferta (match parcial). Usar cuando el usuario hace un follow-up sobre una oferta concreta mencionada antes en la conversación. Ej: 'Senior Frontend Engineer'.",
             },
           },
         },
