@@ -92,10 +92,10 @@ type ThreadTurn = { query: string; response: AnalystResponse };
 
 function AgentAvatar({ loading = false }: { loading?: boolean }) {
   return (
-    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
+    <div style={{ width: "26px", height: "26px", borderRadius: "8px", background: "#DCEFE4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
       {loading
-        ? <Loader2 size={12} className="animate-spin" style={{ color: "#fff" }} />
-        : <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="#fff" strokeWidth="1.8"/><path d="M5 20c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
+        ? <Loader2 size={12} className="animate-spin" style={{ color: "#0E5C4A" }} />
+        : <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 19V9M10 19V5M16 19v-7M20 19V11" stroke="#0E5C4A" strokeWidth="2.2" strokeLinecap="round"/></svg>
       }
     </div>
   );
@@ -244,9 +244,14 @@ function KPIsTab() {
           <>
             {/* Header with "Nueva conversación" button */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", borderBottom: `1px solid ${line}` }}>
-              <span style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px" }}>Análisis de canales</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "20px", height: "20px", borderRadius: "6px", background: "#DCEFE4", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M4 19V9M10 19V5M16 19v-7M20 19V11" stroke="#0E5C4A" strokeWidth="2.2" strokeLinecap="round"/></svg>
+                </span>
+                <span style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px" }}>Análisis de canales</span>
+              </div>
               <button onClick={clearThread}
-                style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "11px", color: soft, background: "#F4F0E8", border: `1px solid ${line}`, borderRadius: "8px", padding: "5px 10px", cursor: "pointer" }}>
+                style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "11px", color: ink, background: surface, border: `2px solid ${ink}`, borderRadius: "8px", padding: "5px 11px", boxShadow: `2px 2px 0 ${ink}`, cursor: "pointer" }}>
                 + Nueva conversación
               </button>
             </div>
@@ -322,21 +327,21 @@ function KPIsTab() {
         </div>
       )}
 
-      {/* Loading state */}
-      {dataLoading && (
+      {/* Initial load spinner — only when no data yet */}
+      {dataLoading && !data && (
         <div style={{ display: "flex", justifyContent: "center", padding: "32px" }}>
           <Loader2 size={20} className="animate-spin" style={{ color: soft }} />
         </div>
       )}
 
-      {/* Channel rows */}
-      {!dataLoading && data && visibleRows.length === 0 && (
+      {/* Channel rows — always visible once data loaded; refresh happens in background */}
+      {data && visibleRows.length === 0 && (
         <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "14px", padding: "40px", textAlign: "center", color: soft, fontSize: "14px" }}>
           Sin datos para los filtros actuales.
         </div>
       )}
 
-      {!dataLoading && visibleRows.map((row) => {
+      {visibleRows.map((row) => {
         const color = channelColor(row.source);
         const pct = maxApps > 0 ? (row.applications / maxApps) * 100 : 0;
         const isOpen = expanded === row.source;
