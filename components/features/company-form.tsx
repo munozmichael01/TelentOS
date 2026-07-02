@@ -99,15 +99,7 @@ export function CompanyForm({ company }: { company: Company | null }) {
           value={form.address}
           onChange={(v) => set("address", v)}
           placeholder="Madrid, Community of Madrid, Spain"
-          inputStyle={{
-            width: "100%", boxSizing: "border-box" as const,
-            fontFamily: "inherit", fontSize: "14px",
-            padding: "8px 10px", borderRadius: "6px",
-            border: "1px solid hsl(var(--border))",
-            background: "hsl(var(--background))",
-            color: "hsl(var(--foreground))",
-            outline: "none",
-          }}
+          className=""
         />
         <p className="text-xs text-muted-foreground">Se mostrará en la página pública del career site.</p>
       </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 import type { Channel } from "@/lib/types";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 
@@ -485,25 +486,14 @@ function ConfigTab({ channels }: { channels: Channel[] }) {
 /* ── Main component ─────────────────────────────────────────────────────────── */
 
 export function ChannelsView({ channels }: { channels: Channel[] }) {
-  const [tab, setTab] = useState<"kpis" | "config">("kpis");
-
   return (
-    <div>
-      {/* Tab switcher */}
-      <div style={{ display: "flex", gap: "4px", marginBottom: "20px", background: "#ECEAE4", borderRadius: "12px", padding: "4px", width: "fit-content" }}>
-        {[
-          { id: "kpis", label: "KPIs de canales" },
-          { id: "config", label: "Configuración" },
-        ].map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
-            style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", padding: "8px 18px", borderRadius: "9px", border: "none", cursor: "pointer", background: tab === t.id ? surface : "transparent", color: tab === t.id ? ink : soft, boxShadow: tab === t.id ? "0 1px 3px rgba(0,0,0,.08)" : "none", transition: "all .15s" }}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "kpis" && <KPIsTab />}
-      {tab === "config" && <ConfigTab channels={channels} />}
-    </div>
+    <Tabs defaultValue="kpis">
+      <TabsList className="mb-5">
+        <TabsTrigger value="kpis">KPIs de canales</TabsTrigger>
+        <TabsTrigger value="config">Configuración</TabsTrigger>
+      </TabsList>
+      <TabsContent value="kpis"><KPIsTab /></TabsContent>
+      <TabsContent value="config"><ConfigTab channels={channels} /></TabsContent>
+    </Tabs>
   );
 }

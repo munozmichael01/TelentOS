@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { Loader2, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { CompensationRecord } from "@/lib/types";
 import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
 
 // ── Design tokens ──────────────────────────────────────────────────
 const T = {
@@ -54,13 +57,6 @@ function Label({ children }: { children: React.ReactNode }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <div style={{ marginBottom: "16px" }}><Label>{label}</Label>{children}</div>;
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "9px 12px", border: `1.5px solid ${T.line}`,
-  borderRadius: "8px", background: T.bg, fontSize: "14px",
-  fontFamily: T.body, color: T.ink, outline: "none", boxSizing: "border-box",
-};
-const selectStyle: React.CSSProperties = { ...inputStyle, appearance: "none", cursor: "pointer" };
 
 // ── Period Selector ────────────────────────────────────────────────
 function PeriodSelector({
@@ -114,11 +110,11 @@ function PeriodSelector({
         {/* Custom date inputs */}
         {customMode && (
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <input type="date" value={customFrom} onChange={(e) => onCustomFrom(e.target.value)}
-              style={{ ...inputStyle, width: "150px", padding: "7px 10px", fontSize: "13px" }} />
+            <Input type="date" value={customFrom} onChange={(e) => onCustomFrom(e.target.value)}
+              className="w-[150px]" />
             <span style={{ color: T.soft, fontFamily: T.mono, fontSize: "11px" }}>→</span>
-            <input type="date" value={customTo} onChange={(e) => onCustomTo(e.target.value)}
-              style={{ ...inputStyle, width: "150px", padding: "7px 10px", fontSize: "13px" }} />
+            <Input type="date" value={customTo} onChange={(e) => onCustomTo(e.target.value)}
+              className="w-[150px]" />
           </div>
         )}
       </div>
@@ -207,10 +203,9 @@ function ConfirmModal({
         </div>
 
         <Field label="Horas programadas">
-          <input
+          <Input
             type="number" min="0" step="0.5" placeholder="Ej. 160"
             value={scheduledH} onChange={(e) => setScheduledH(e.target.value)}
-            style={inputStyle}
           />
         </Field>
 
@@ -233,15 +228,15 @@ function ConfirmModal({
         )}
 
         <Field label="Tipo">
-          <select value={compType} onChange={(e) => setCompType(e.target.value)} style={selectStyle}>
+          <NativeSelect value={compType} onChange={(e) => setCompType(e.target.value)}>
             <option value="time_off">Tiempo libre</option>
             <option value="payment">Pago</option>
-          </select>
+          </NativeSelect>
         </Field>
 
         <Field label="Comentario (opcional)">
-          <textarea value={comment} onChange={(e) => setComment(e.target.value)}
-            placeholder="Notas…" rows={2} style={{ ...inputStyle, resize: "none" }} />
+          <Textarea value={comment} onChange={(e) => setComment(e.target.value)}
+            placeholder="Notas…" rows={2} />
         </Field>
 
         {error && (

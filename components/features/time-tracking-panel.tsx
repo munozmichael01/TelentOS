@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { Loader2, Plus, Square, Trash2, Play, Clock, ChevronDown, X } from "lucide-react";
 import type { TimeEntry, TimerState, Employee } from "@/lib/types";
 import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
 
 // ── Design tokens ─────────────────────────────────────────────────
 const T = {
@@ -136,16 +139,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "9px 12px", border: `1.5px solid ${T.line}`,
-  borderRadius: "8px", background: T.bg, fontSize: "14px",
-  fontFamily: T.body, color: T.ink, outline: "none", boxSizing: "border-box",
-};
-
-const selectStyle: React.CSSProperties = {
-  ...inputStyle, appearance: "none", cursor: "pointer",
-};
 
 // ── Live Timer Display ─────────────────────────────────────────────
 function ElapsedTimer({ startedAt }: { startedAt: string }) {
@@ -356,11 +349,11 @@ function EntriesTable({ initialEntries, employees }: {
         <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} />
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <Label>Desde</Label>
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={inputStyle} />
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <Label>Hasta</Label>
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={inputStyle} />
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
         </div>
         {hasFilter && (
           <button
@@ -617,43 +610,43 @@ function CreateEntryForm({ employees, onClose }: {
       </div>
 
       <Field label="Empleado">
-        <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} style={selectStyle}>
+        <NativeSelect value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
           <option value="">Selecciona empleado…</option>
           {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
-        </select>
+        </NativeSelect>
       </Field>
 
       {mode === "entry" && (
         <Field label="Fecha">
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={inputStyle} />
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </Field>
       )}
 
       <Field label="Tipo">
-        <select value={entryType} onChange={(e) => setEntryType(e.target.value)} style={selectStyle}>
+        <NativeSelect value={entryType} onChange={(e) => setEntryType(e.target.value)}>
           <option value="work">Trabajo</option>
           <option value="break">Descanso</option>
-        </select>
+        </NativeSelect>
       </Field>
 
       {mode === "entry" && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <Field label="Hora inicio">
-              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={inputStyle} />
+              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             </Field>
             <Field label="Hora fin (opcional)">
-              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} style={inputStyle} />
+              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
             </Field>
           </div>
 
           <Field label="Comentario (opcional)">
-            <textarea
+            <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Proyecto, tarea…"
               rows={3}
-              style={{ ...inputStyle, resize: "vertical" }}
+              className="resize-y"
             />
           </Field>
         </>

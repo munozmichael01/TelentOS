@@ -4,6 +4,9 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { AbsenceRequest, AbsenceType, Employee, AbsenceStatus } from "@/lib/types";
 import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
 
 /* ─── Style helpers ─────────────────────────────────────────────────── */
 
@@ -13,19 +16,6 @@ const FL = {
   textTransform: "uppercase" as const,
   letterSpacing: ".6px",
   color: "#79746B",
-};
-
-const FI = {
-  fontFamily: "'Hanken Grotesk', sans-serif",
-  fontSize: "13.5px",
-  color: "#1A1A17",
-  background: "#F4F0E8",
-  border: "1.5px solid #E7E1D4",
-  borderRadius: "10px",
-  padding: "10px 12px",
-  outline: "none",
-  width: "100%",
-  boxSizing: "border-box" as const,
 };
 
 const BTN_PRIMARY = {
@@ -282,23 +272,23 @@ function CreateModal({
           {/* Employee */}
           <div>
             <div style={{ ...FL, marginBottom: "7px" }}>Empleado *</div>
-            <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required style={FI}>
+            <NativeSelect value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required>
               <option value="">Seleccionar empleado…</option>
               {employees.map((emp) => (
                 <option key={emp.id} value={emp.id}>{emp.name}</option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
 
           {/* Type */}
           <div>
             <div style={{ ...FL, marginBottom: "7px" }}>Tipo de ausencia *</div>
-            <select value={typeId} onChange={(e) => setTypeId(e.target.value)} required style={FI}>
+            <NativeSelect value={typeId} onChange={(e) => setTypeId(e.target.value)} required>
               <option value="">Seleccionar tipo…</option>
               {absenceTypes.map((t) => (
                 <option key={t.id} value={t.id}>{t.icon ? `${t.icon} ` : ""}{t.name}</option>
               ))}
-            </select>
+            </NativeSelect>
             {selectedType && (
               <div style={{ marginTop: "7px", display: "flex", gap: "8px", alignItems: "center" }}>
                 <TypeBadge type={selectedType} />
@@ -313,12 +303,11 @@ function CreateModal({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <div>
               <div style={{ ...FL, marginBottom: "7px" }}>Fecha inicio *</div>
-              <input
+              <Input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
-                style={FI}
               />
             </div>
             <div>
@@ -346,12 +335,11 @@ function CreateModal({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <div>
               <div style={{ ...FL, marginBottom: "7px" }}>Fecha fin *</div>
-              <input
+              <Input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 required
-                style={FI}
               />
             </div>
             <div>
@@ -394,12 +382,11 @@ function CreateModal({
           {/* Comment */}
           <div>
             <div style={{ ...FL, marginBottom: "7px" }}>Comentario</div>
-            <textarea
+            <Textarea
               rows={3}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Motivo o información adicional…"
-              style={{ ...FI, resize: "none" }}
             />
           </div>
 
@@ -450,7 +437,7 @@ function RejectModal({ requestId, onClose }: { requestId: string; onClose: () =>
         <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <div>
             <div style={{ ...FL, marginBottom: "7px" }}>Motivo (opcional)</div>
-            <textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Explica el motivo del rechazo…" style={{ ...FI, resize: "none" }} />
+            <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Explica el motivo del rechazo…" />
           </div>
           <div style={{ display: "flex", gap: "10px" }}>
             <button type="submit" disabled={saving} style={{ ...BTN_DANGER, padding: "10px 20px", fontSize: "13px", boxShadow: "3px 3px 0 #1A1A17" }}>
@@ -713,18 +700,18 @@ export function AbsencePanel({
         <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} />
         <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "140px" }}>
           <div style={{ ...FL, marginBottom: "2px" }}>Tipo</div>
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ ...FI, padding: "8px 10px", fontSize: "13px" }}>
+          <NativeSelect value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
             <option value="">Todos</option>
             {absenceTypes.map((t) => <option key={t.id} value={t.id}>{t.icon ? `${t.icon} ` : ""}{t.name}</option>)}
-          </select>
+          </NativeSelect>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <div style={{ ...FL, marginBottom: "2px" }}>Desde</div>
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ ...FI, padding: "8px 10px", fontSize: "13px" }} />
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <div style={{ ...FL, marginBottom: "2px" }}>Hasta</div>
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{ ...FI, padding: "8px 10px", fontSize: "13px" }} />
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
         </div>
         {hasAdvancedFilter && (
           <button

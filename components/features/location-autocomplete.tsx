@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { cn } from "@/lib/utils";
 
 type PhotonFeature = {
   properties: { name: string; city?: string; state?: string; country?: string; type?: string };
@@ -15,19 +16,19 @@ function formatLocation(p: PhotonFeature["properties"]): string {
   return parts.join(", ");
 }
 
-/** Unstyled wrapper — pass inputStyle + dropdownStyle for your design system */
+/** Wrapper with design system styles — pass className to override */
 export function LocationAutocomplete({
   value,
   onChange,
   placeholder = "Madrid, Spain",
-  inputStyle,
+  className,
   required,
   name = "location",
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  inputStyle?: React.CSSProperties;
+  className?: string;
   required?: boolean;
   name?: string;
 }) {
@@ -96,7 +97,10 @@ export function LocationAutocomplete({
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder={placeholder}
           autoComplete="off"
-          style={inputStyle}
+          className={cn(
+            "flex h-10 w-full rounded-[11px] border-[1.5px] border-[#E7E1D4] bg-[#F4F0E8] px-3 py-2 text-sm text-[#1A1A17] transition-colors placeholder:text-[#79746B] focus-visible:outline-none focus-visible:border-[#0E5C4A] focus-visible:ring-[3px] focus-visible:ring-[#DCEFE4]",
+            className
+          )}
         />
         {loading && (
           <div style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>

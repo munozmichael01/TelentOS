@@ -6,6 +6,9 @@ import { Loader2, X } from "lucide-react";
 import { LocationAutocomplete } from "@/components/features/location-autocomplete";
 import type { Job } from "@/lib/types";
 import type { JobDraft } from "@/agents/agent-job-writer";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type FormState = {
   title: string;
@@ -180,18 +183,6 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
     color: "#79746B",
     marginBottom: "7px",
   };
-  const fieldInput = {
-    fontFamily: "'Hanken Grotesk',sans-serif",
-    fontSize: "13.5px",
-    fontWeight: 600,
-    color: "#1A1A17",
-    background: "#F4F0E8",
-    border: "1.5px solid #E7E1D4",
-    borderRadius: "10px",
-    padding: "10px 13px",
-    outline: "none",
-    width: "100%",
-  } as const;
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "16px", alignItems: "start" }}>
@@ -260,11 +251,10 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <div style={{ gridColumn: "1 / -1" }}>
               <div style={fieldLabel}>Título *</div>
-              <input
+              <Input
                 value={form.title}
                 onChange={(e) => set("title", e.target.value)}
                 placeholder="Senior Frontend Engineer"
-                style={fieldInput}
               />
             </div>
             <div>
@@ -273,45 +263,44 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
                 value={form.location}
                 onChange={(v) => set("location", v)}
                 placeholder="Madrid (híbrido)"
-                inputStyle={{ ...fieldInput, paddingRight: "34px" }}
+                className="pr-9"
               />
             </div>
             <div>
               <div style={fieldLabel}>Tipo</div>
-              <select
+              <NativeSelect
                 value={form.employment_type}
                 onChange={(e) => set("employment_type", e.target.value)}
-                style={{ ...fieldInput, cursor: "pointer" }}
               >
                 <option value="full_time">Jornada completa</option>
                 <option value="part_time">Jornada parcial</option>
                 <option value="contract">Temporal / contrato</option>
                 <option value="internship">Prácticas</option>
-              </select>
+              </NativeSelect>
             </div>
             <div>
               <div style={fieldLabel}>Salario mín. (€)</div>
-              <input type="number" value={form.salary_min} onChange={(e) => set("salary_min", e.target.value)} style={fieldInput} />
+              <Input type="number" value={form.salary_min} onChange={(e) => set("salary_min", e.target.value)} />
             </div>
             <div>
               <div style={fieldLabel}>Salario máx. (€)</div>
-              <input type="number" value={form.salary_max} onChange={(e) => set("salary_max", e.target.value)} style={fieldInput} />
+              <Input type="number" value={form.salary_max} onChange={(e) => set("salary_max", e.target.value)} />
             </div>
             <div>
               <div style={fieldLabel}>Exp. mínima (años)</div>
-              <input type="number" value={form.experience_min_years} onChange={(e) => set("experience_min_years", e.target.value)} style={fieldInput} />
+              <Input type="number" value={form.experience_min_years} onChange={(e) => set("experience_min_years", e.target.value)} />
             </div>
             <div>
               <div style={fieldLabel}>Sector</div>
-              <input value={form.sector} onChange={(e) => set("sector", e.target.value)} placeholder="Tecnología" style={fieldInput} />
+              <Input value={form.sector} onChange={(e) => set("sector", e.target.value)} placeholder="Tecnología" />
             </div>
             <div>
               <div style={fieldLabel}>Departamento</div>
-              <input value={form.department} onChange={(e) => set("department", e.target.value)} placeholder="Engineering" style={fieldInput} />
+              <Input value={form.department} onChange={(e) => set("department", e.target.value)} placeholder="Engineering" />
             </div>
             <div>
               <div style={fieldLabel}>Categoría</div>
-              <input value={form.category} onChange={(e) => set("category", e.target.value)} placeholder="Software" style={fieldInput} />
+              <Input value={form.category} onChange={(e) => set("category", e.target.value)} placeholder="Software" />
             </div>
           </div>
 
@@ -319,12 +308,12 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
           <div style={{ marginTop: "16px" }}>
             <div style={fieldLabel}>Skills requeridas</div>
             <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
-              <input
+              <Input
                 value={skillInput}
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }}
                 placeholder="Añadir skill y pulsar Enter"
-                style={{ ...fieldInput, flex: 1, marginTop: 0 }}
+                className="flex-1"
               />
               <button
                 type="button"
@@ -354,12 +343,12 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
           {/* description */}
           <div style={{ marginTop: "16px" }}>
             <div style={fieldLabel}>Descripción (Markdown)</div>
-            <textarea
+            <Textarea
               rows={14}
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
               placeholder={"## Sobre el rol\n...\n\n## Responsabilidades\n- ..."}
-              style={{ ...fieldInput, resize: "none", lineHeight: 1.55, marginTop: "4px" }}
+              className="leading-relaxed mt-1"
             />
           </div>
 

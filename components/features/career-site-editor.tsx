@@ -2,6 +2,10 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { Company } from "@/lib/types";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
 import type {
   CareerSitePage, CareerSiteContent, CareerSiteBranding, CareerSiteMetrics,
   CSMetric, CSBrand, CSCultureValue, CSBenefit,
@@ -19,12 +23,6 @@ const T = {
   warnBg: "#F8E7C4", warnText: "#946312",
 };
 
-const inputStyle: React.CSSProperties = {
-  width: "100%", boxSizing: "border-box", fontFamily: "'Hanken Grotesk',sans-serif",
-  fontSize: "13.5px", padding: "9px 11px", border: `1.5px solid ${T.line}`,
-  borderRadius: "9px", background: T.bg, color: T.ink, outline: "none",
-};
-const textareaStyle: React.CSSProperties = { ...inputStyle, resize: "vertical" as const, minHeight: "88px" };
 const labelStyle: React.CSSProperties = {
   display: "block", fontSize: "11.5px", fontWeight: 700,
   marginBottom: "5px", color: "#3A3833",
@@ -79,7 +77,7 @@ function ImageUploadField({
             {uploading ? "Subiendo…" : "↑ Subir archivo"}
           </button>
           {uploadErr && <div style={{ fontSize: "11px", color: T.accent, marginBottom: "4px" }}>{uploadErr}</div>}
-          <input style={{ ...inputStyle, fontSize: "12.5px" }} placeholder="o pega una URL…" value={value} onChange={(e) => onChange(e.target.value)} />
+          <Input className="text-[12.5px]" placeholder="o pega una URL…" value={value} onChange={(e) => onChange(e.target.value)} />
           <input ref={fileRef} type="file" accept={accept} style={{ display: "none" }} onChange={handleFile} />
         </div>
       </div>
@@ -114,7 +112,7 @@ function ColorField({ label, value, defaultColor, onChange }: { label: string; v
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
         <input type="color" value={active} onChange={(e) => onChange(e.target.value)}
           style={{ width: "42px", height: "38px", padding: "2px 3px", borderRadius: "8px", border: `1.5px solid ${T.line}`, cursor: "pointer", background: T.bg, flexShrink: 0 }} />
-        <input style={{ ...inputStyle, fontFamily: "'Space Mono',monospace", fontSize: "12px", letterSpacing: ".5px" }}
+        <Input className="font-mono text-[12px] tracking-[.5px]"
           value={active} onChange={(e) => onChange(e.target.value)} placeholder={defaultColor} />
         {value && (
           <button type="button" onClick={() => onChange("")}
@@ -261,8 +259,6 @@ function MetricsPanel() {
 
 /* ─── Main component ────────────────────────────────────────────────────── */
 
-type Tab = "config" | "editor" | "seo" | "metrics";
-
 export function CareerSiteEditor({
   company, initialPage, activeJobsCount, configContent,
 }: {
@@ -271,7 +267,6 @@ export function CareerSiteEditor({
   activeJobsCount: number;
   configContent: React.ReactNode;
 }) {
-  const [activeTab, setActiveTab] = useState<Tab>("config");
   const [content, setContent] = useState<CareerSiteContent>(initialPage?.draft_content ?? {});
   const [branding, setBranding] = useState<CareerSiteBranding>(initialPage?.branding ?? {});
   const [isPublished, setIsPublished] = useState(initialPage?.is_published ?? false);
@@ -353,19 +348,6 @@ export function CareerSiteEditor({
     finally { setTranslating(null); }
   }
 
-  /* ── Tab bar ── */
-  const TABS: { id: Tab; label: string }[] = [
-    { id: "config",  label: "Configuración" },
-    { id: "editor",  label: "Editor"        },
-    { id: "seo",     label: "SEO"           },
-    { id: "metrics", label: "Métricas"      },
-  ];
-  const tabStyle = (active: boolean): React.CSSProperties => ({
-    fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px",
-    padding: "8px 16px", borderRadius: "9px", border: "none", cursor: "pointer",
-    background: active ? T.ink : "transparent", color: active ? "#fff" : T.soft, transition: "background .14s",
-  });
-
   /* ── Array shortcuts ── */
   const metrics      = content.aboutMetrics   ?? [];
   const gallery      = content.aboutGallery   ?? [];
@@ -400,13 +382,16 @@ export function CareerSiteEditor({
         )}
       </div>
 
-      {/* ── Tabs ── */}
-      <div style={{ display: "flex", gap: "4px", marginBottom: "20px", background: T.bg, padding: "4px", borderRadius: "12px", width: "fit-content", border: `1px solid ${T.line}` }}>
-        {TABS.map((t) => <button key={t.id} style={tabStyle(activeTab === t.id)} onClick={() => setActiveTab(t.id)}>{t.label}</button>)}
-      </div>
+      <Tabs defaultValue="config">
+      <TabsList className="mb-5">
+        <TabsTrigger value="config">Configuración</TabsTrigger>
+        <TabsTrigger value="editor">Editor</TabsTrigger>
+        <TabsTrigger value="seo">SEO</TabsTrigger>
+        <TabsTrigger value="metrics">Métricas</TabsTrigger>
+      </TabsList>
 
       {/* ──────────── CONFIGURACIÓN ──────────── */}
-      {activeTab === "config" && (
+      <TabsContent value="config">
         <div style={{ maxWidth: "600px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
           {/* Datos empresa */}
@@ -426,15 +411,15 @@ export function CareerSiteEditor({
             </div>
 
             <Field label="Tipografía: titulares">
-              <select style={inputStyle} value={branding.headingFont ?? ""} onChange={(e) => updB("headingFont", e.target.value || undefined)}>
+              <NativeSelect value={branding.headingFont ?? ""} onChange={(e) => updB("headingFont", e.target.value || undefined)}>
                 {HEADING_FONTS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
-              </select>
+              </NativeSelect>
             </Field>
 
             <Field label="Tipografía: texto">
-              <select style={inputStyle} value={branding.bodyFont ?? ""} onChange={(e) => updB("bodyFont", e.target.value || undefined)}>
+              <NativeSelect value={branding.bodyFont ?? ""} onChange={(e) => updB("bodyFont", e.target.value || undefined)}>
                 {BODY_FONTS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
-              </select>
+              </NativeSelect>
             </Field>
 
             {/* Font preview */}
@@ -458,7 +443,7 @@ export function CareerSiteEditor({
             )}
 
             <Field label="Dominio personalizado">
-              <input style={inputStyle} placeholder="careers.miempresa.com"
+              <Input placeholder="careers.miempresa.com"
                 value={branding.customDomain ?? ""} onChange={(e) => updB("customDomain", e.target.value || undefined)} />
               {branding.customDomain && (
                 <div style={{ fontSize: "11.5px", color: T.soft, marginTop: "6px", lineHeight: 1.5 }}>
@@ -484,10 +469,10 @@ export function CareerSiteEditor({
             </div>
           )}
         </div>
-      )}
+      </TabsContent>
 
       {/* ──────────── EDITOR ──────────── */}
-      {activeTab === "editor" && (
+      <TabsContent value="editor">
         <div>
           {/* Toolbar */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px", flexWrap: "wrap", padding: "12px 16px", background: T.surface, border: `1px solid ${T.line}`, borderRadius: "13px" }}>
@@ -538,22 +523,22 @@ export function CareerSiteEditor({
 
               <SectionPanel id="hero" title="Hero" open={openSection === "hero"} onToggle={toggleSection} badge={content.headline ? "1 campo" : undefined}>
                 <Field label="Titular principal">
-                  <input style={inputStyle} placeholder="Únete al equipo que transforma el sector" value={content.headline ?? ""} onChange={(e) => upd("headline", e.target.value)} />
+                  <Input placeholder="Únete al equipo que transforma el sector" value={content.headline ?? ""} onChange={(e) => upd("headline", e.target.value)} />
                 </Field>
                 <ImageUploadField label="Imagen hero (1920×600 px recomendado)" value={content.heroImageUrl ?? ""} onChange={(u) => upd("heroImageUrl", u)} />
               </SectionPanel>
 
               <SectionPanel id="about" title="Sobre nosotros" open={openSection === "about"} onToggle={toggleSection} badge={content.aboutDescription ? "con contenido" : undefined}>
-                <Field label="Título"><input style={inputStyle} placeholder="Quiénes somos" value={content.aboutTitle ?? ""} onChange={(e) => upd("aboutTitle", e.target.value)} /></Field>
-                <Field label="Descripción"><textarea style={textareaStyle} rows={4} value={content.aboutDescription ?? ""} onChange={(e) => upd("aboutDescription", e.target.value)} /></Field>
+                <Field label="Título"><Input placeholder="Quiénes somos" value={content.aboutTitle ?? ""} onChange={(e) => upd("aboutTitle", e.target.value)} /></Field>
+                <Field label="Descripción"><Textarea rows={4} value={content.aboutDescription ?? ""} onChange={(e) => upd("aboutDescription", e.target.value)} /></Field>
               </SectionPanel>
 
               <SectionPanel id="metrics" title="Métricas" open={openSection === "metrics"} onToggle={toggleSection} badge={metrics.length ? `${metrics.length}` : undefined}>
                 {metrics.map((m, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("aboutMetrics", i)}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                      <Field label="Valor"><input style={inputStyle} placeholder="200+" value={m.value} onChange={(e) => updArr<CSMetric>("aboutMetrics", i, "value", e.target.value)} /></Field>
-                      <Field label="Etiqueta"><input style={inputStyle} placeholder="empleados" value={m.label} onChange={(e) => updArr<CSMetric>("aboutMetrics", i, "label", e.target.value)} /></Field>
+                      <Field label="Valor"><Input placeholder="200+" value={m.value} onChange={(e) => updArr<CSMetric>("aboutMetrics", i, "value", e.target.value)} /></Field>
+                      <Field label="Etiqueta"><Input placeholder="empleados" value={m.label} onChange={(e) => updArr<CSMetric>("aboutMetrics", i, "label", e.target.value)} /></Field>
                     </div>
                   </ArrayItemCard>
                 ))}
@@ -564,15 +549,15 @@ export function CareerSiteEditor({
                 {gallery.map((g, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("aboutGallery", i)}>
                     <Field label="Tipo">
-                      <select style={{ ...inputStyle, width: "auto" }} value={g.type} onChange={(e) => updArr<CSGalleryItem>("aboutGallery", i, "type", e.target.value)}>
+                      <NativeSelect className="w-auto" value={g.type} onChange={(e) => updArr<CSGalleryItem>("aboutGallery", i, "type", e.target.value)}>
                         <option value="image">Imagen</option>
                         <option value="video">Video (YouTube / Vimeo / URL directa)</option>
-                      </select>
+                      </NativeSelect>
                     </Field>
                     {g.type === "image" ? (
                       <ImageUploadField label="Imagen" value={g.url} onChange={(u) => updArr<CSGalleryItem>("aboutGallery", i, "url", u)} />
                     ) : (
-                      <Field label="URL del video"><input style={inputStyle} placeholder="https://youtube.com/watch?v=… o https://vimeo.com/…" value={g.url} onChange={(e) => updArr<CSGalleryItem>("aboutGallery", i, "url", e.target.value)} /></Field>
+                      <Field label="URL del video"><Input placeholder="https://youtube.com/watch?v=… o https://vimeo.com/…" value={g.url} onChange={(e) => updArr<CSGalleryItem>("aboutGallery", i, "url", e.target.value)} /></Field>
                     )}
                   </ArrayItemCard>
                 ))}
@@ -580,25 +565,25 @@ export function CareerSiteEditor({
               </SectionPanel>
 
               <SectionPanel id="brands" title="Marcas / Partners" open={openSection === "brands"} onToggle={toggleSection} badge={brands.length ? `${brands.length}` : undefined}>
-                <Field label="Título"><input style={inputStyle} placeholder="Empresas del grupo" value={content.brandsTitle ?? ""} onChange={(e) => upd("brandsTitle", e.target.value)} /></Field>
+                <Field label="Título"><Input placeholder="Empresas del grupo" value={content.brandsTitle ?? ""} onChange={(e) => upd("brandsTitle", e.target.value)} /></Field>
                 {brands.map((b, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("brands", i)}>
-                    <Field label="Nombre"><input style={inputStyle} value={b.name} onChange={(e) => updArr<CSBrand>("brands", i, "name", e.target.value)} /></Field>
+                    <Field label="Nombre"><Input value={b.name} onChange={(e) => updArr<CSBrand>("brands", i, "name", e.target.value)} /></Field>
                     <ImageUploadField label="Logo" value={b.logoUrl ?? ""} onChange={(u) => updArr<CSBrand>("brands", i, "logoUrl", u)} />
-                    <Field label="Website"><input style={inputStyle} placeholder="https://…" value={b.website ?? ""} onChange={(e) => updArr<CSBrand>("brands", i, "website", e.target.value)} /></Field>
+                    <Field label="Website"><Input placeholder="https://…" value={b.website ?? ""} onChange={(e) => updArr<CSBrand>("brands", i, "website", e.target.value)} /></Field>
                   </ArrayItemCard>
                 ))}
                 <AddBtn onClick={() => addItem<CSBrand>("brands", { name: "", logoUrl: "", website: "" })} label="Añadir marca" />
               </SectionPanel>
 
               <SectionPanel id="culture" title="Cultura y valores" open={openSection === "culture"} onToggle={toggleSection} badge={cultureVals.length ? `${cultureVals.length} valores` : undefined}>
-                <Field label="Título"><input style={inputStyle} placeholder="Nuestra cultura" value={content.cultureTitle ?? ""} onChange={(e) => upd("cultureTitle", e.target.value)} /></Field>
-                <Field label="Descripción"><textarea style={textareaStyle} rows={3} value={content.cultureDescription ?? ""} onChange={(e) => upd("cultureDescription", e.target.value)} /></Field>
+                <Field label="Título"><Input placeholder="Nuestra cultura" value={content.cultureTitle ?? ""} onChange={(e) => upd("cultureTitle", e.target.value)} /></Field>
+                <Field label="Descripción"><Textarea rows={3} value={content.cultureDescription ?? ""} onChange={(e) => upd("cultureDescription", e.target.value)} /></Field>
                 {cultureVals.map((v, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("cultureValues", i)}>
                     <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px", alignItems: "end" }}>
                       <Field label="Emoji"><EmojiButton value={v.icon} onChange={(e) => updArr<CSCultureValue>("cultureValues", i, "icon", e)} /></Field>
-                      <Field label="Nombre del valor"><input style={inputStyle} placeholder="Innovación constante" value={v.name} onChange={(e) => updArr<CSCultureValue>("cultureValues", i, "name", e.target.value)} /></Field>
+                      <Field label="Nombre del valor"><Input placeholder="Innovación constante" value={v.name} onChange={(e) => updArr<CSCultureValue>("cultureValues", i, "name", e.target.value)} /></Field>
                     </div>
                   </ArrayItemCard>
                 ))}
@@ -606,17 +591,17 @@ export function CareerSiteEditor({
               </SectionPanel>
 
               <SectionPanel id="lookingfor" title="Qué buscamos" open={openSection === "lookingfor"} onToggle={toggleSection} badge={content.lookingForDescription ? "con contenido" : undefined}>
-                <Field label="Título"><input style={inputStyle} placeholder="El perfil que buscamos" value={content.lookingForTitle ?? ""} onChange={(e) => upd("lookingForTitle", e.target.value)} /></Field>
-                <Field label="Descripción"><textarea style={textareaStyle} rows={4} value={content.lookingForDescription ?? ""} onChange={(e) => upd("lookingForDescription", e.target.value)} /></Field>
+                <Field label="Título"><Input placeholder="El perfil que buscamos" value={content.lookingForTitle ?? ""} onChange={(e) => upd("lookingForTitle", e.target.value)} /></Field>
+                <Field label="Descripción"><Textarea rows={4} value={content.lookingForDescription ?? ""} onChange={(e) => upd("lookingForDescription", e.target.value)} /></Field>
               </SectionPanel>
 
               <SectionPanel id="benefits" title="Beneficios" open={openSection === "benefits"} onToggle={toggleSection} badge={benefits.length ? `${benefits.length}` : undefined}>
-                <Field label="Título"><input style={inputStyle} placeholder="Qué te ofrecemos" value={content.benefitsTitle ?? ""} onChange={(e) => upd("benefitsTitle", e.target.value)} /></Field>
+                <Field label="Título"><Input placeholder="Qué te ofrecemos" value={content.benefitsTitle ?? ""} onChange={(e) => upd("benefitsTitle", e.target.value)} /></Field>
                 {benefits.map((b, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("benefits", i)}>
                     <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px", alignItems: "end" }}>
                       <Field label="Emoji"><EmojiButton value={b.icon} onChange={(e) => updArr<CSBenefit>("benefits", i, "icon", e)} /></Field>
-                      <Field label="Beneficio"><input style={inputStyle} placeholder="Seguro médico privado" value={b.name} onChange={(e) => updArr<CSBenefit>("benefits", i, "name", e.target.value)} /></Field>
+                      <Field label="Beneficio"><Input placeholder="Seguro médico privado" value={b.name} onChange={(e) => updArr<CSBenefit>("benefits", i, "name", e.target.value)} /></Field>
                     </div>
                   </ArrayItemCard>
                 ))}
@@ -624,16 +609,16 @@ export function CareerSiteEditor({
               </SectionPanel>
 
               <SectionPanel id="team" title="Equipo" open={openSection === "team"} onToggle={toggleSection} badge={teamProfiles.length ? `${teamProfiles.length} personas` : undefined}>
-                <Field label="Título"><input style={inputStyle} placeholder="Conoce al equipo" value={content.teamTitle ?? ""} onChange={(e) => upd("teamTitle", e.target.value)} /></Field>
-                <Field label="Descripción"><textarea style={textareaStyle} rows={2} value={content.teamDescription ?? ""} onChange={(e) => upd("teamDescription", e.target.value)} /></Field>
+                <Field label="Título"><Input placeholder="Conoce al equipo" value={content.teamTitle ?? ""} onChange={(e) => upd("teamTitle", e.target.value)} /></Field>
+                <Field label="Descripción"><Textarea rows={2} value={content.teamDescription ?? ""} onChange={(e) => upd("teamDescription", e.target.value)} /></Field>
                 {teamProfiles.map((p, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("teamProfiles", i)}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                      <Field label="Nombre"><input style={inputStyle} value={p.name} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "name", e.target.value)} /></Field>
-                      <Field label="Cargo"><input style={inputStyle} value={p.position} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "position", e.target.value)} /></Field>
+                      <Field label="Nombre"><Input value={p.name} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "name", e.target.value)} /></Field>
+                      <Field label="Cargo"><Input value={p.position} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "position", e.target.value)} /></Field>
                     </div>
                     <ImageUploadField label="Foto" value={p.photoUrl ?? ""} onChange={(u) => updArr<CSTeamProfile>("teamProfiles", i, "photoUrl", u)} />
-                    <Field label="LinkedIn (opcional)"><input style={inputStyle} placeholder="https://linkedin.com/in/…" value={p.linkedinUrl ?? ""} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "linkedinUrl", e.target.value)} /></Field>
+                    <Field label="LinkedIn (opcional)"><Input placeholder="https://linkedin.com/in/…" value={p.linkedinUrl ?? ""} onChange={(e) => updArr<CSTeamProfile>("teamProfiles", i, "linkedinUrl", e.target.value)} /></Field>
                   </ArrayItemCard>
                 ))}
                 <AddBtn onClick={() => addItem<CSTeamProfile>("teamProfiles", { name: "", position: "", photoUrl: "", linkedinUrl: "" })} label="Añadir persona" />
@@ -643,10 +628,10 @@ export function CareerSiteEditor({
                 {testimonials.map((t, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("testimonials", i)}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                      <Field label="Nombre"><input style={inputStyle} value={t.name} onChange={(e) => updArr<CSTestimonial>("testimonials", i, "name", e.target.value)} /></Field>
-                      <Field label="Cargo"><input style={inputStyle} value={t.position} onChange={(e) => updArr<CSTestimonial>("testimonials", i, "position", e.target.value)} /></Field>
+                      <Field label="Nombre"><Input value={t.name} onChange={(e) => updArr<CSTestimonial>("testimonials", i, "name", e.target.value)} /></Field>
+                      <Field label="Cargo"><Input value={t.position} onChange={(e) => updArr<CSTestimonial>("testimonials", i, "position", e.target.value)} /></Field>
                     </div>
-                    <Field label="Texto"><textarea style={textareaStyle} rows={3} value={t.text} onChange={(e) => updArr<CSTestimonial>("testimonials", i, "text", e.target.value)} /></Field>
+                    <Field label="Texto"><Textarea rows={3} value={t.text} onChange={(e) => updArr<CSTestimonial>("testimonials", i, "text", e.target.value)} /></Field>
                     <ImageUploadField label="Foto (opcional)" value={t.photoUrl ?? ""} onChange={(u) => updArr<CSTestimonial>("testimonials", i, "photoUrl", u)} />
                   </ArrayItemCard>
                 ))}
@@ -654,11 +639,11 @@ export function CareerSiteEditor({
               </SectionPanel>
 
               <SectionPanel id="faqs" title="Preguntas frecuentes" open={openSection === "faqs"} onToggle={toggleSection} badge={faqs.length ? `${faqs.length}` : undefined}>
-                <Field label="Título"><input style={inputStyle} placeholder="Preguntas frecuentes" value={content.faqsTitle ?? ""} onChange={(e) => upd("faqsTitle", e.target.value)} /></Field>
+                <Field label="Título"><Input placeholder="Preguntas frecuentes" value={content.faqsTitle ?? ""} onChange={(e) => upd("faqsTitle", e.target.value)} /></Field>
                 {faqs.map((f, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("faqs", i)}>
-                    <Field label="Pregunta"><input style={inputStyle} value={f.question} onChange={(e) => updArr<CSFAQ>("faqs", i, "question", e.target.value)} /></Field>
-                    <Field label="Respuesta"><textarea style={textareaStyle} rows={2} value={f.answer} onChange={(e) => updArr<CSFAQ>("faqs", i, "answer", e.target.value)} /></Field>
+                    <Field label="Pregunta"><Input value={f.question} onChange={(e) => updArr<CSFAQ>("faqs", i, "question", e.target.value)} /></Field>
+                    <Field label="Respuesta"><Textarea rows={2} value={f.answer} onChange={(e) => updArr<CSFAQ>("faqs", i, "answer", e.target.value)} /></Field>
                   </ArrayItemCard>
                 ))}
                 <AddBtn onClick={() => addItem<CSFAQ>("faqs", { question: "", answer: "" })} label="Añadir pregunta" />
@@ -669,16 +654,16 @@ export function CareerSiteEditor({
                   <ArrayItemCard key={i} onRemove={() => removeItem("socialLinks", i)}>
                     <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: "8px" }}>
                       <Field label="Red">
-                        <select style={{ ...inputStyle, width: "100%" }} value={s.platform} onChange={(e) => updArr<CSSocialLink>("socialLinks", i, "platform", e.target.value)}>
+                        <NativeSelect value={s.platform} onChange={(e) => updArr<CSSocialLink>("socialLinks", i, "platform", e.target.value)}>
                           <option value="linkedin">LinkedIn</option>
                           <option value="instagram">Instagram</option>
                           <option value="twitter">Twitter / X</option>
                           <option value="facebook">Facebook</option>
                           <option value="youtube">YouTube</option>
                           <option value="tiktok">TikTok</option>
-                        </select>
+                        </NativeSelect>
                       </Field>
-                      <Field label="URL"><input style={inputStyle} placeholder="https://…" value={s.url} onChange={(e) => updArr<CSSocialLink>("socialLinks", i, "url", e.target.value)} /></Field>
+                      <Field label="URL"><Input placeholder="https://…" value={s.url} onChange={(e) => updArr<CSSocialLink>("socialLinks", i, "url", e.target.value)} /></Field>
                     </div>
                   </ArrayItemCard>
                 ))}
@@ -696,23 +681,23 @@ export function CareerSiteEditor({
             </div>
           </div>
         </div>
-      )}
+      </TabsContent>
 
       {/* ──────────── SEO ──────────── */}
-      {activeTab === "seo" && (
+      <TabsContent value="seo">
         <div style={{ maxWidth: "600px" }}>
           <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", padding: "24px" }}>
             <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "4px" }}>SEO & Compartir en redes</div>
             <p style={{ ...FL, marginBottom: "20px", fontSize: "10px" }}>Estos valores solo se aplican cuando el career site está publicado.</p>
 
             <Field label="Título para Google (SEO Title)">
-              <input style={inputStyle} placeholder={`Trabaja en ${company?.name ?? "…"} | Tu empresa`}
+              <Input placeholder={`Trabaja en ${company?.name ?? "…"} | Tu empresa`}
                 value={content.seoTitle ?? ""} onChange={(e) => upd("seoTitle", e.target.value)} />
               <div style={{ ...FL, fontSize: "10px", marginTop: "4px" }}>{(content.seoTitle ?? "").length} / 60 caracteres recomendados</div>
             </Field>
 
             <Field label="Descripción (meta description)">
-              <textarea style={{ ...textareaStyle, minHeight: "70px" }} rows={3}
+              <Textarea className="resize-y min-h-[70px]" rows={3}
                 placeholder="Únete al equipo que reimagina los recursos humanos. Trabajo remoto, formación y un equipo de primer nivel."
                 value={content.seoDescription ?? ""} onChange={(e) => upd("seoDescription", e.target.value)} />
               <div style={{ ...FL, fontSize: "10px", marginTop: "4px" }}>{(content.seoDescription ?? "").length} / 155 caracteres recomendados</div>
@@ -744,10 +729,11 @@ export function CareerSiteEditor({
             </div>
           </div>
         </div>
-      )}
+      </TabsContent>
 
       {/* ──────────── MÉTRICAS ──────────── */}
-      {activeTab === "metrics" && <MetricsPanel />}
+      <TabsContent value="metrics"><MetricsPanel /></TabsContent>
+      </Tabs>
     </div>
   );
 }

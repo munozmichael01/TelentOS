@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, KeyRound, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { Input } from "@/components/ui/input";
 
 export function ResetPasswordForm() {
   const router = useRouter();
@@ -43,19 +44,6 @@ export function ResetPasswordForm() {
     setDone(true);
     setTimeout(() => router.push("/dashboard"), 2500);
   }
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    fontFamily: "inherit",
-    fontSize: "14px",
-    padding: "11px 13px",
-    border: "1.5px solid #E7E1D4",
-    borderRadius: "11px",
-    background: "#F4F0E8",
-    color: "#1A1A17",
-    outline: "none",
-    boxSizing: "border-box",
-  };
 
   return (
     <div style={{ width: "100%", maxWidth: "392px" }}>
@@ -124,32 +112,26 @@ export function ResetPasswordForm() {
                 <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "6px" }}>
                   Nueva contraseña
                 </label>
-                <input
+                <Input
                   type="password"
                   required
                   minLength={6}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={inputStyle}
-                  onFocus={(e) => { e.target.style.borderColor = "#0E5C4A"; e.target.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "#E7E1D4"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
               <div style={{ marginBottom: "20px" }}>
                 <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "6px" }}>
                   Confirmar contraseña
                 </label>
-                <input
+                <Input
                   type="password"
                   required
                   minLength={6}
                   placeholder="••••••••"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  style={inputStyle}
-                  onFocus={(e) => { e.target.style.borderColor = "#0E5C4A"; e.target.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "#E7E1D4"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
 

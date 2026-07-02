@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { Loader2, Star } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import type { EvaluationTemplate, Interview, JobStage } from "@/lib/types";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type InterviewWithFeedback = Interview & {
   interview_feedback?: { id: string; overall: number; comments: string | null; author_email: string | null; ratings: Record<string, number> }[];
@@ -48,18 +51,6 @@ const fieldLabel = {
   letterSpacing: ".5px",
   color: "#79746B",
 };
-
-const fieldInput = {
-  fontFamily: "'Hanken Grotesk',sans-serif",
-  fontSize: "13.5px",
-  color: "#1A1A17",
-  background: "#F4F0E8",
-  border: "1.5px solid #E7E1D4",
-  borderRadius: "10px",
-  padding: "10px 12px",
-  outline: "none",
-  width: "100%",
-} as const;
 
 function generateSlots() {
   const slots: string[] = [];
@@ -252,14 +243,13 @@ export function InterviewPanel({
               {templates.length > 0 && (
                 <div style={{ marginBottom: "14px" }}>
                   <div style={{ ...fieldLabel, marginBottom: "7px" }}>Plantilla de evaluación</div>
-                  <select
+                  <NativeSelect
                     value={templateId}
                     onChange={(e) => { setTemplateId(e.target.value); setRatings({}); }}
-                    style={fieldInput}
                   >
                     <option value="">Sin plantilla</option>
                     {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
+                  </NativeSelect>
                 </div>
               )}
 
@@ -277,11 +267,10 @@ export function InterviewPanel({
 
               <div style={{ marginBottom: "18px" }}>
                 <div style={{ ...fieldLabel, marginBottom: "7px" }}>Comentarios</div>
-                <textarea
+                <Textarea
                   rows={3}
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
-                  style={{ ...fieldInput, resize: "none" }}
                 />
               </div>
 
@@ -354,11 +343,11 @@ export function InterviewPanel({
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
                   <div style={{ ...fieldLabel, marginBottom: "8px" }}>Fecha</div>
-                  <input type="date" value={ivDate} onChange={(e) => setIvDate(e.target.value)} style={fieldInput} />
+                  <Input type="date" value={ivDate} onChange={(e) => setIvDate(e.target.value)} />
                 </div>
                 <div>
                   <div style={{ ...fieldLabel, marginBottom: "8px" }}>Hora</div>
-                  <input type="time" value={ivTime} onChange={(e) => setIvTime(e.target.value)} style={fieldInput} />
+                  <Input type="time" value={ivTime} onChange={(e) => setIvTime(e.target.value)} />
                 </div>
               </div>
 
@@ -386,7 +375,7 @@ export function InterviewPanel({
               {(!managers || managers.length === 0) && (
                 <div>
                   <div style={{ ...fieldLabel, marginBottom: "8px" }}>Entrevistador/a</div>
-                  <input value={ivInterviewer} onChange={(e) => setIvInterviewer(e.target.value)} placeholder="Nombre" style={fieldInput} />
+                  <Input value={ivInterviewer} onChange={(e) => setIvInterviewer(e.target.value)} placeholder="Nombre" />
                 </div>
               )}
 
@@ -415,11 +404,11 @@ export function InterviewPanel({
               <div style={{ borderTop: "1px solid #E7E1D4", paddingTop: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
                   <div style={{ ...fieldLabel, marginBottom: "8px" }}>Candidato</div>
-                  <input value={ivCandName} onChange={(e) => setIvCandName(e.target.value)} style={fieldInput} />
+                  <Input value={ivCandName} onChange={(e) => setIvCandName(e.target.value)} />
                 </div>
                 <div>
                   <div style={{ ...fieldLabel, marginBottom: "8px" }}>Email</div>
-                  <input type="email" value={ivCandEmail} onChange={(e) => setIvCandEmail(e.target.value)} style={fieldInput} />
+                  <Input type="email" value={ivCandEmail} onChange={(e) => setIvCandEmail(e.target.value)} />
                 </div>
               </div>
             </div>

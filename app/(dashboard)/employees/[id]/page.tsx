@@ -36,6 +36,82 @@ const contractLabel: Record<string, string> = {
   contractor: "Contrato / freelance", internship: "Prácticas",
 };
 
+type OrgNode = { id: string; name: string; role_title?: string | null; manager_id?: string | null };
+
+function OrgAvatar({ name, size = 32 }: { name: string; size?: number }) {
+  const pal = avatarPalette(name);
+  return (
+    <span style={{ width: size, height: size, borderRadius: "50%", background: pal.bg, color: pal.color, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: size * 0.34, flexShrink: 0 }}>
+      {initials(name)}
+    </span>
+  );
+}
+
+function MiniOrgChart({ emp, manager, reports }: { emp: { id: string; name: string; role_title?: string | null }; manager: OrgNode | null; reports: OrgNode[] }) {
+  const MAX_VISIBLE = 4;
+  const visible = reports.slice(0, MAX_VISIBLE);
+  const overflow = reports.length - MAX_VISIBLE;
+
+  const connectorLine = (
+    <div style={{ display: "flex", justifyContent: "flex-start", paddingLeft: "20px", height: "24px" }}>
+      <div style={{ width: "1.5px", height: "100%", background: "#C8C2B8" }} />
+    </div>
+  );
+
+  return (
+    <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "22px" }}>
+      <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px", marginBottom: "18px" }}>Posición en el equipo</div>
+
+      {/* Manager */}
+      {manager && (
+        <>
+          <Link href={`/employees/${manager.id}`} style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "12px", padding: "10px 14px", textDecoration: "none", maxWidth: "340px" }}>
+            <OrgAvatar name={manager.name} size={32} />
+            <div>
+              <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#1A1A17" }}>{manager.name}</div>
+              {manager.role_title && <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#79746B", marginTop: "2px" }}>{manager.role_title}</div>}
+            </div>
+          </Link>
+          {connectorLine}
+        </>
+      )}
+
+      {/* Current employee */}
+      <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#DCEFE4", border: "1.5px solid #0E5C4A", borderRadius: "12px", padding: "10px 14px", maxWidth: "340px" }}>
+        <OrgAvatar name={emp.name} size={34} />
+        <div>
+          <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#1A1A17" }}>{emp.name}</div>
+          {emp.role_title && <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#0E5C4A", marginTop: "2px" }}>{emp.role_title}</div>}
+        </div>
+        <span style={{ marginLeft: "4px", fontFamily: "'Space Mono',monospace", fontSize: "9px", color: "#0E5C4A", background: "#C8EAD6", borderRadius: "999px", padding: "2px 8px", whiteSpace: "nowrap" }}>TÚ</span>
+      </div>
+
+      {/* Reports */}
+      {reports.length > 0 && (
+        <>
+          {connectorLine}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {visible.map((r) => (
+              <Link key={r.id} href={`/employees/${r.id}`} style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "11px", padding: "8px 12px", textDecoration: "none", transition: "background .12s" }}>
+                <OrgAvatar name={r.name} size={26} />
+                <div>
+                  <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12.5px", color: "#1A1A17" }}>{r.name}</div>
+                  {r.role_title && <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "9.5px", color: "#79746B" }}>{r.role_title}</div>}
+                </div>
+              </Link>
+            ))}
+            {overflow > 0 && (
+              <div style={{ display: "inline-flex", alignItems: "center", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "11px", padding: "8px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#79746B" }}>
+                +{overflow} más
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function fmt(min: number) {
   return `${Math.floor(min / 60)}h${min % 60 > 0 ? ` ${min % 60}m` : ""}`;
 }
@@ -63,9 +139,9 @@ export default async function EmployeePage({ params }: { params: { id: string } 
     { data: schedules }, { data: compRecords },
   ] = await Promise.all([
     emp.manager_id
-      ? supabase.from("employees").select("id, name").eq("id", emp.manager_id).maybeSingle()
+      ? supabase.from("employees").select("id, name, role_title").eq("id", emp.manager_id).maybeSingle()
       : Promise.resolve({ data: null }),
-    supabase.from("employees").select("id, name").eq("status", "active"),
+    supabase.from("employees").select("id, name, role_title, manager_id").eq("status", "active"),
     supabase.from("onboarding_tasks").select("*").eq("employee_id", params.id).order("order_index"),
     supabase.from("employee_documents").select("*").eq("employee_id", params.id).order("created_at", { ascending: false }),
     // New time tracking system
@@ -191,6 +267,8 @@ export default async function EmployeePage({ params }: { params: { id: string } 
   const totalWorkedMin = (entries ?? []).reduce((sum, e) => sum + (e.duration_minutes ?? 0), 0);
 
   const av = avatarPalette(emp.name);
+  const reports = (all ?? []).filter((e: any) => e.manager_id === emp.id);
+  const mgr = manager as (typeof manager & { role_title?: string | null }) | null;
 
   return (
     <div>
@@ -252,25 +330,33 @@ export default async function EmployeePage({ params }: { params: { id: string } 
 
         {/* ── Información ── */}
         <TabsContent value="info">
-          <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "22px", maxWidth: "760px" }}>
-            <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px", marginBottom: "18px" }}>Datos del empleado</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              {[
-                { label: "Nombre", value: emp.name },
-                { label: "Email", value: emp.email ?? "—" },
-                { label: "ID empleado", value: emp.id.slice(0, 8) + "…" },
-                { label: "Incorporación", value: formatDate(emp.start_date) },
-                { label: "Contrato", value: contractLabel[emp.contract_type] ?? emp.contract_type },
-                { label: "Manager", value: manager?.name ?? "—" },
-                { label: "Departamento", value: emp.department ?? "—" },
-                { label: "Rol", value: emp.role_title ?? "—" },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <label style={fl}>{label}</label>
-                  <div style={fv}>{value}</div>
-                </div>
-              ))}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "760px" }}>
+            {/* Datos */}
+            <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "22px" }}>
+              <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px", marginBottom: "18px" }}>Datos del empleado</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                {[
+                  { label: "Nombre", value: emp.name },
+                  { label: "Email", value: emp.email ?? "—" },
+                  { label: "ID empleado", value: emp.id.slice(0, 8) + "…" },
+                  { label: "Incorporación", value: formatDate(emp.start_date) },
+                  { label: "Contrato", value: contractLabel[emp.contract_type] ?? emp.contract_type },
+                  { label: "Manager", value: mgr?.name ?? "—" },
+                  { label: "Departamento", value: emp.department ?? "—" },
+                  { label: "Rol", value: emp.role_title ?? "—" },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <label style={fl}>{label}</label>
+                    <div style={fv}>{value}</div>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Mini org chart */}
+            {(mgr || reports.length > 0) && (
+              <MiniOrgChart emp={emp} manager={mgr} reports={reports} />
+            )}
           </div>
         </TabsContent>
 

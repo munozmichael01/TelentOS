@@ -4,19 +4,8 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { LocationAutocomplete } from "@/components/features/location-autocomplete";
-
-const fieldInput: React.CSSProperties = {
-  width: "100%",
-  fontFamily: "inherit",
-  fontSize: "14px",
-  padding: "10px 12px",
-  border: "1.5px solid #E7E1D4",
-  borderRadius: "10px",
-  background: "#F4F0E8",
-  color: "#1A1A17",
-  outline: "none",
-  boxSizing: "border-box",
-};
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 
 const fieldLabel: React.CSSProperties = {
   display: "block",
@@ -118,34 +107,34 @@ export function ApplyForm({ jobId, brandColor = "#0E5C4A" }: { jobId: string; br
       <div className="career-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginTop: "22px" }}>
         <div>
           <label style={fieldLabel}>Nombre completo *</label>
-          <input name="name" required style={fieldInput} />
+          <Input name="name" required />
         </div>
         <div>
           <label style={fieldLabel}>Email *</label>
-          <input name="email" type="email" required style={fieldInput} />
+          <Input name="email" type="email" required />
         </div>
 
         {/* Phone with prefix */}
         <div>
           <label style={fieldLabel}>Teléfono *</label>
           <div style={{ display: "flex", gap: "6px" }}>
-            <select
+            <NativeSelect
               value={prefix}
               onChange={(e) => setPrefix(e.target.value)}
-              style={{ ...fieldInput, width: "auto", minWidth: "80px", paddingRight: "6px", flexShrink: 0, cursor: "pointer" }}
+              className="w-auto min-w-[80px] flex-shrink-0"
             >
               {PREFIXES.map((p) => (
                 <option key={p.code} value={p.code}>{p.flag} {p.code}</option>
               ))}
-            </select>
-            <input
+            </NativeSelect>
+            <Input
               name="_phone_number"
               type="tel"
               required
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="612 345 678"
-              style={{ ...fieldInput, flex: 1 }}
+              className="flex-1"
             />
           </div>
         </div>
@@ -157,7 +146,7 @@ export function ApplyForm({ jobId, brandColor = "#0E5C4A" }: { jobId: string; br
             value={location}
             onChange={setLocation}
             required
-            inputStyle={{ ...fieldInput, paddingRight: "34px" }}
+            className="pr-9"
           />
         </div>
       </div>
