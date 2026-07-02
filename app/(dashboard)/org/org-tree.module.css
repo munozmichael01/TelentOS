@@ -1,0 +1,79 @@
+/* Classic top-down org chart tree using ul > li + pseudo-elements */
+
+.tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: auto;
+  padding: 8px 32px 24px;
+}
+
+.tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  position: relative;
+  padding-top: 28px;
+}
+
+/* Vertical line from parent down to the horizontal crossbar */
+.tree ul::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 1.5px solid #C8C2B8;
+  height: 28px;
+}
+
+.tree li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px;
+  position: relative;
+}
+
+/* Horizontal crossbar — left half and right half of each li */
+.tree li::before,
+.tree li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 1px;
+  border-top: 1.5px solid #C8C2B8;
+}
+
+.tree li::before { right: 50%; }
+.tree li::after  { left: 50%;  }
+
+/* Single child: no horizontal crossbar needed */
+.tree li:only-child::before,
+.tree li:only-child::after { display: none; }
+
+/* First child: crossbar only on the right side */
+.tree li:first-child::before { border-top: none; }
+
+/* Last child: crossbar only on the left side */
+.tree li:last-child::after { border-top: none; }
+
+/* Vertical drop from crossbar down to the node card */
+.nodeWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.connector {
+  width: 1.5px;
+  height: 20px;
+  background: #C8C2B8;
+}
+
+/* Only-child has no crossbar so the connector connects directly */
+.tree li:only-child .connector { display: none; }
