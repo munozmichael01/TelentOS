@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, skills, experience_min_years, location, status")
+    .select("id, company_id, skills, experience_min_years, location, status")
     .eq("id", jobId)
     .eq("status", "active")
     .maybeSingle();
@@ -39,11 +39,6 @@ export async function POST(req: Request) {
     if (!upErr) cvUrl = path; // se guarda el path; la UI interna genera signed URLs
   }
 
-  const skills = String(formData.get("skills") ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const experienceYears = parseInt(String(formData.get("experience_years") ?? "0"), 10) || 0;
   const location = String(formData.get("location") ?? "").trim() || null;
 
   // Dedupe de candidato por email
@@ -62,10 +57,10 @@ export async function POST(req: Request) {
         email,
         phone: String(formData.get("phone") ?? "").trim() || null,
         location,
-        skills,
-        experience_years: experienceYears,
+        skills: [],
+        experience_years: 0,
         cv_url: cvUrl,
-        summary: String(formData.get("summary") ?? "").trim() || null,
+        summary: null,
         source: "career_site",
       })
       .select("id")
@@ -86,7 +81,7 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   const fitScore = computeFitScore(
-    { skills, experience_years: experienceYears, location },
+    { skills: [], experience_years: 0, location },
     { skills: job.skills, experience_min_years: job.experience_min_years, location: job.location }
   );
 
@@ -120,6 +115,16 @@ export async function POST(req: Request) {
     to_stage: "Aplicado",
     reason: "Candidatura recibida desde el career site",
   });
+
+  // Registrar evento en métricas del career site
+  // Registrar evento en métricas del career site (silencioso si migración 0006 aún no aplicada)
+  try {
+    await supabase.from("career_site_events").insert({
+      company_id: job.company_id,
+      event_type: "application",
+      job_id: jobId,
+    });
+  } catch { /* no-op */ }
 
   return NextResponse.json({ ok: true, application_id: application.id });
 }

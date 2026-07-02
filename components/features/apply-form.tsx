@@ -30,6 +30,7 @@ export function ApplyForm({ jobId }: { jobId: string }) {
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
   const [cvName, setCvName] = useState("");
+  const [cvError, setCvError] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,6 +43,12 @@ export function ApplyForm({ jobId }: { jobId: string }) {
         const v = params.get(key);
         if (v) fd.append(key, v);
       }
+      if (!fd.get("cv") || (fd.get("cv") as File).size === 0) {
+        setCvError(true);
+        setSubmitting(false);
+        return;
+      }
+      setCvError(false);
       const res = await fetch("/api/careers/apply", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al enviar la candidatura");
@@ -101,27 +108,16 @@ export function ApplyForm({ jobId }: { jobId: string }) {
           <label style={fieldLabel}>Ubicación</label>
           <input name="location" placeholder="Madrid" style={fieldInput} />
         </div>
-        <div>
-          <label style={fieldLabel}>Años de experiencia</label>
-          <input name="experience_years" type="number" min={0} defaultValue={0} style={fieldInput} />
-        </div>
-        <div>
-          <label style={fieldLabel}>CV (PDF, máx. 8 MB)</label>
-          <div style={{ display: "flex", alignItems: "center", gap: "9px", fontSize: "13px", color: cvName ? "#1A1A17" : "#79746B", padding: "9px 12px", border: `1.5px ${cvName ? "solid #0E5C4A" : "dashed #E7E1D4"}`, borderRadius: "10px", background: cvName ? "#EAF7C4" : "#F4F0E8", cursor: "pointer", position: "relative", transition: "all .15s ease" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" stroke={cvName ? "#0E5C4A" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{cvName || "Subir archivo"}</span>
-            <input name="cv" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setCvName(e.target.files?.[0]?.name ?? "")} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }} />
-          </div>
-        </div>
       </div>
 
       <div style={{ marginTop: "15px" }}>
-        <label style={fieldLabel}>Skills (separadas por comas)</label>
-        <input name="skills" placeholder="React, TypeScript, …" style={fieldInput} />
-      </div>
-      <div style={{ marginTop: "15px" }}>
-        <label style={fieldLabel}>Cuéntanos brevemente sobre ti</label>
-        <textarea name="summary" rows={3} style={{ ...fieldInput, resize: "none", lineHeight: 1.55 }} />
+        <label style={fieldLabel}>CV * <span style={{ fontWeight: 400, color: "#79746B" }}>(PDF, DOC · máx. 8 MB)</span></label>
+        <div style={{ display: "flex", alignItems: "center", gap: "9px", fontSize: "13px", color: cvName ? "#1A1A17" : "#79746B", padding: "9px 12px", border: `1.5px ${cvError ? "solid #F1543F" : cvName ? "solid #0E5C4A" : "dashed #E7E1D4"}`, borderRadius: "10px", background: cvError ? "#FDE8E5" : cvName ? "#EAF7C4" : "#F4F0E8", cursor: "pointer", position: "relative", transition: "all .15s ease" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" stroke={cvError ? "#F1543F" : cvName ? "#0E5C4A" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{cvName || "Subir CV"}</span>
+          <input name="cv" type="file" accept=".pdf,.doc,.docx" onChange={(e) => { setCvName(e.target.files?.[0]?.name ?? ""); setCvError(false); }} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }} />
+        </div>
+        {cvError && <p style={{ fontSize: "12px", color: "#F1543F", marginTop: "5px" }}>El CV es obligatorio.</p>}
       </div>
 
       {error && <p style={{ fontSize: "13px", color: "#BD4332", marginTop: "10px" }}>{error}</p>}
