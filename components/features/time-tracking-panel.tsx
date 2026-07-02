@@ -8,6 +8,9 @@ import { EmployeeMultiSelect } from "@/components/features/employee-multi-select
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
+import { DateField } from "@/components/ui/date-field";
+import { DateRangeField } from "@/components/ui/date-range-field";
+import { TimeField } from "@/components/ui/time-field";
 
 // ── Design tokens ─────────────────────────────────────────────────
 const T = {
@@ -348,12 +351,8 @@ function EntriesTable({ initialEntries, employees }: {
       <div style={{ display: "flex", gap: "10px", marginBottom: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
         <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} />
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <Label>Desde</Label>
-          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <Label>Hasta</Label>
-          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          <Label>Rango de fechas</Label>
+          <DateRangeField from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
         </div>
         {hasFilter && (
           <button
@@ -618,7 +617,7 @@ function CreateEntryForm({ employees, onClose }: {
 
       {mode === "entry" && (
         <Field label="Fecha">
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <DateField value={date} onChange={setDate} />
         </Field>
       )}
 
@@ -633,10 +632,10 @@ function CreateEntryForm({ employees, onClose }: {
         <>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <Field label="Hora inicio">
-              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              <TimeField value={startTime} onChange={setStartTime} />
             </Field>
             <Field label="Hora fin (opcional)">
-              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+              <TimeField value={endTime} onChange={setEndTime} />
             </Field>
           </div>
 

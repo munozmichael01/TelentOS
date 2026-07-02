@@ -7,6 +7,7 @@ import { EmployeeMultiSelect } from "@/components/features/employee-multi-select
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
+import { DateRangeField } from "@/components/ui/date-range-field";
 
 /* ─── Style helpers ─────────────────────────────────────────────────── */
 
@@ -257,7 +258,7 @@ function CreateModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "20px", boxShadow: "8px 8px 0 #1A1A17", padding: "28px" }}
+        style={{ width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", background: "#FCFAF6", border: "1.5px solid #1A1A17", borderRadius: "18px", boxShadow: "6px 6px 0 #1A1A17", padding: "28px" }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "22px" }}>
           <h2 style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "22px", letterSpacing: "-.5px", margin: 0 }}>
@@ -299,17 +300,14 @@ function CreateModal({
             )}
           </div>
 
-          {/* Start */}
+          {/* Date range */}
+          <div>
+            <div style={{ ...FL, marginBottom: "7px" }}>Fechas *</div>
+            <DateRangeField from={startDate} to={endDate} onFromChange={setStartDate} onToChange={setEndDate} />
+          </div>
+
+          {/* Periods */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-            <div>
-              <div style={{ ...FL, marginBottom: "7px" }}>Fecha inicio *</div>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-              />
-            </div>
             <div>
               <div style={{ ...FL, marginBottom: "7px" }}>Período inicio</div>
               <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
@@ -328,19 +326,6 @@ function CreateModal({
                   );
                 })}
               </div>
-            </div>
-          </div>
-
-          {/* End */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-            <div>
-              <div style={{ ...FL, marginBottom: "7px" }}>Fecha fin *</div>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-              />
             </div>
             <div>
               <div style={{ ...FL, marginBottom: "7px" }}>Período fin</div>
@@ -430,7 +415,7 @@ function RejectModal({ requestId, onClose }: { requestId: string; onClose: () =>
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 70, background: "rgba(26,26,23,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "420px", background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "18px", boxShadow: "8px 8px 0 #1A1A17", padding: "26px" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "420px", background: "#FCFAF6", border: "1.5px solid #1A1A17", borderRadius: "18px", boxShadow: "6px 6px 0 #1A1A17", padding: "26px" }}>
         <h2 style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "20px", letterSpacing: "-.5px", margin: "0 0 16px" }}>
           Rechazar solicitud
         </h2>
@@ -706,12 +691,8 @@ export function AbsencePanel({
           </NativeSelect>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <div style={{ ...FL, marginBottom: "2px" }}>Desde</div>
-          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <div style={{ ...FL, marginBottom: "2px" }}>Hasta</div>
-          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          <div style={{ ...FL, marginBottom: "2px" }}>Rango</div>
+          <DateRangeField from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
         </div>
         {hasAdvancedFilter && (
           <button

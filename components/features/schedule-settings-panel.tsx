@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Plus, Pencil, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TimeField } from "@/components/ui/time-field";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -289,13 +290,12 @@ function ScheduleWeekBuilder({
                 >
                   Entrada
                 </Label>
-                <Input
-                  type="time"
+                <TimeField
                   value={d.start}
                   disabled={!d.is_working}
-                  onChange={(e) => {
+                  onChange={(v) => {
                     const next = [...week] as WeekForm;
-                    next[i] = { ...d, start: e.target.value };
+                    next[i] = { ...d, start: v };
                     onChange(next);
                   }}
                   style={{ height: "32px", fontSize: "13px" }}
@@ -313,13 +313,12 @@ function ScheduleWeekBuilder({
                 >
                   Salida
                 </Label>
-                <Input
-                  type="time"
+                <TimeField
                   value={d.end}
                   disabled={!d.is_working}
-                  onChange={(e) => {
+                  onChange={(v) => {
                     const next = [...week] as WeekForm;
-                    next[i] = { ...d, end: e.target.value };
+                    next[i] = { ...d, end: v };
                     onChange(next);
                   }}
                   style={{ height: "32px", fontSize: "13px" }}

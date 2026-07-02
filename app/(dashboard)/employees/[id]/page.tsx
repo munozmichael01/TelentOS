@@ -54,7 +54,7 @@ function MiniOrgChart({ emp, manager, reports }: { emp: { id: string; name: stri
 
   const connectorLine = (
     <div style={{ display: "flex", justifyContent: "flex-start", paddingLeft: "20px", height: "24px" }}>
-      <div style={{ width: "1.5px", height: "100%", background: "#C8C2B8" }} />
+      <div style={{ width: "2px", height: "100%", background: "#E7E1D4" }} />
     </div>
   );
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Plus, Pencil, Trash2, Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1199,12 +1200,9 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
             </div>
             <div className="space-y-1.5">
               <Label>Fecha *</Label>
-              <Input
-                type="date"
+              <DateField
                 value={form.date}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, date: e.target.value }))
-                }
+                onChange={(v) => setForm((f) => ({ ...f, date: v }))}
               />
             </div>
             <div className="space-y-2">

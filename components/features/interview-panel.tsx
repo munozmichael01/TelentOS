@@ -8,6 +8,8 @@ import type { EvaluationTemplate, Interview, JobStage } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
+import { DateField } from "@/components/ui/date-field";
+import { TimeField } from "@/components/ui/time-field";
 
 type InterviewWithFeedback = Interview & {
   interview_feedback?: { id: string; overall: number; comments: string | null; author_email: string | null; ratings: Record<string, number> }[];
@@ -343,11 +345,11 @@ export function InterviewPanel({
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
                   <div style={{ ...fieldLabel, marginBottom: "8px" }}>Fecha</div>
-                  <Input type="date" value={ivDate} onChange={(e) => setIvDate(e.target.value)} />
+                  <DateField value={ivDate} onChange={setIvDate} />
                 </div>
                 <div>
                   <div style={{ ...fieldLabel, marginBottom: "8px" }}>Hora</div>
-                  <Input type="time" value={ivTime} onChange={(e) => setIvTime(e.target.value)} />
+                  <TimeField value={ivTime} onChange={setIvTime} />
                 </div>
               </div>
 

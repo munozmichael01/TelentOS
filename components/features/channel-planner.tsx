@@ -425,7 +425,9 @@ export function ChannelPlanner({ jobId, campaigns: initialCampaigns }: { jobId: 
               <div>
                 <div style={{ ...mono, fontSize: "10px", textTransform: "uppercase" as const, letterSpacing: ".5px", color: soft, marginBottom: "7px" }}>Objetivo</div>
                 <select value={objective} onChange={(e) => setObjective(e.target.value as typeof objective)}
-                  style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", fontWeight: 600, color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "11px", padding: "9px 12px", outline: "none", cursor: "pointer" }}>
+                  style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", fontWeight: 600, color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "11px", padding: "9px 12px", outline: "none", cursor: "pointer" }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#0E5C4A"; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = line; e.currentTarget.style.boxShadow = "none"; }}>
                   <option value="volume">Volumen de candidatos</option>
                   <option value="quality">Calidad de candidatos</option>
                   <option value="cpa">Minimizar coste por aplicación</option>
@@ -434,7 +436,9 @@ export function ChannelPlanner({ jobId, campaigns: initialCampaigns }: { jobId: 
               <div>
                 <div style={{ ...mono, fontSize: "10px", textTransform: "uppercase" as const, letterSpacing: ".5px", color: soft, marginBottom: "7px" }}>Presupuesto (€)</div>
                 <input type="number" value={budget} onChange={(e) => setBudget(e.target.value)}
-                  style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", fontWeight: 600, width: "110px", color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "11px", padding: "9px 12px", outline: "none" }} />
+                  style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", fontWeight: 600, width: "110px", color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "11px", padding: "9px 12px", outline: "none" }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#0E5C4A"; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = line; e.currentTarget.style.boxShadow = "none"; }} />
               </div>
               <button onClick={generatePlan} disabled={optimizing}
                 style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: `2px solid ${ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: `3px 3px 0 ${ink}`, cursor: optimizing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px", opacity: optimizing ? 0.7 : 1 }}>

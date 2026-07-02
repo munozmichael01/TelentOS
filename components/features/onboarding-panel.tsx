@@ -186,6 +186,8 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
             onKeyDown={(e) => e.key === "Enter" && addTask()}
             placeholder="Nueva tarea manual…"
             style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", color: "#1A1A17", background: "#F4F0E8", border: "1.5px solid #E7E1D4", borderRadius: "10px", padding: "8px 12px", outline: "none" }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "#0E5C4A"; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "#E7E1D4"; e.currentTarget.style.boxShadow = "none"; }}
           />
           <button
             onClick={addTask}

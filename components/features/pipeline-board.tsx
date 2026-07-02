@@ -284,6 +284,8 @@ export function PipelineBoard({
                 onChange={(e) => setReasonNote(e.target.value)}
                 placeholder="Contexto adicional para el historial…"
                 style={{ width: "100%", resize: "none", height: "58px", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", color: "#1A1A17", background: "#F4F0E8", border: "1.5px solid #E7E1D4", borderRadius: "11px", padding: "10px 12px", outline: "none" }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#0E5C4A"; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "#E7E1D4"; e.currentTarget.style.boxShadow = "none"; }}
               />
               <div style={{ display: "flex", alignItems: "center", gap: "7px", marginTop: "12px", fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B" }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>

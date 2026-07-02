@@ -138,6 +138,8 @@ function InputRow({ query, setQuery, onAsk, onKeyDown, loading, inputRef }: {
           onKeyDown={onKeyDown}
           placeholder="Pregunta sobre canales y campañas…"
           style={{ width: "100%", paddingLeft: "40px", paddingRight: "12px", paddingTop: "10px", paddingBottom: "10px", fontFamily: "inherit", fontSize: "14px", color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "11px", outline: "none", boxSizing: "border-box" }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = "#0E5C4A"; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = line; e.currentTarget.style.boxShadow = "none"; }}
         />
       </div>
       <button onClick={onAsk} disabled={!query.trim() || loading}

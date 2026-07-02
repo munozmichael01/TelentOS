@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TimeField } from "@/components/ui/time-field";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertTriangle, CheckCircle, Settings } from "lucide-react";
 import type { ComplianceConfig, ComplianceViolation } from "@/lib/types";
@@ -175,16 +176,16 @@ export function ComplianceSettingsPanel({
                 value={maxHours}
                 onChange={(e) => setMaxHours(e.target.value)}
                 style={input}
+                onFocus={(e) => { e.currentTarget.style.borderColor = T.brand; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = T.line; e.currentTarget.style.boxShadow = "none"; }}
               />
               <div style={{ fontSize: "11px", color: T.soft, marginTop: "4px" }}>horas</div>
             </div>
             <div>
               <label style={fieldLabel}>Hora límite fichaje</label>
-              <input
-                type="time"
+              <TimeField
                 value={maxStart}
-                onChange={(e) => setMaxStart(e.target.value)}
-                style={input}
+                onChange={setMaxStart}
               />
               <div style={{ fontSize: "11px", color: T.soft, marginTop: "4px" }}>HH:MM</div>
             </div>
@@ -196,6 +197,8 @@ export function ComplianceSettingsPanel({
                 value={minBreak}
                 onChange={(e) => setMinBreak(e.target.value)}
                 style={input}
+                onFocus={(e) => { e.currentTarget.style.borderColor = T.brand; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = T.line; e.currentTarget.style.boxShadow = "none"; }}
               />
               <div style={{ fontSize: "11px", color: T.soft, marginTop: "4px" }}>horas</div>
             </div>

@@ -26,7 +26,7 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  border-left: 1.5px solid #C8C2B8;
+  border-left: 2px solid #E7E1D4;
   height: 28px;
 }
 
@@ -46,7 +46,7 @@
   top: 0;
   width: 50%;
   height: 1px;
-  border-top: 1.5px solid #C8C2B8;
+  border-top: 2px solid #E7E1D4;
 }
 
 .tree li::before { right: 50%; }
@@ -70,9 +70,9 @@
 }
 
 .connector {
-  width: 1.5px;
+  width: 2px;
   height: 20px;
-  background: #C8C2B8;
+  background: #E7E1D4;
 }
 
 /* Only-child has no crossbar so the connector connects directly */

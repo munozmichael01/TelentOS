@@ -88,6 +88,8 @@ export function EmployeeMultiSelect({
                 border: `1.5px solid ${T.line}`, borderRadius: "7px",
                 outline: "none", boxSizing: "border-box",
               }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = T.brand; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = T.line; e.currentTarget.style.boxShadow = "none"; }}
             />
           </div>
 

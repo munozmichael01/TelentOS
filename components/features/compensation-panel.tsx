@@ -7,6 +7,7 @@ import { EmployeeMultiSelect } from "@/components/features/employee-multi-select
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
+import { DateRangeField } from "@/components/ui/date-range-field";
 
 // ── Design tokens ──────────────────────────────────────────────────
 const T = {
@@ -109,13 +110,7 @@ function PeriodSelector({
 
         {/* Custom date inputs */}
         {customMode && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Input type="date" value={customFrom} onChange={(e) => onCustomFrom(e.target.value)}
-              className="w-[150px]" />
-            <span style={{ color: T.soft, fontFamily: T.mono, fontSize: "11px" }}>→</span>
-            <Input type="date" value={customTo} onChange={(e) => onCustomTo(e.target.value)}
-              className="w-[150px]" />
-          </div>
+          <DateRangeField from={customFrom} to={customTo} onFromChange={onCustomFrom} onToChange={onCustomTo} />
         )}
       </div>
     </div>

@@ -36,12 +36,12 @@ function NodeCard({ employee, isRoot }: { employee: OrgEmployee; isRoot: boolean
         alignItems: "center",
         gap: "10px",
         background: "#FCFAF6",
-        borderRadius: "18px",
+        borderRadius: "14px",
         padding: "18px 20px",
         textDecoration: "none",
         width: "148px",
-        border: isRoot ? "2px solid #1A1A17" : "1.5px solid #E7E1D4",
-        boxShadow: isRoot ? "4px 4px 0 #1A1A17" : "none",
+        border: isRoot ? "1.5px solid #1A1A17" : "1.5px solid #E7E1D4",
+        boxShadow: isRoot ? "3px 3px 0 #1A1A17" : "none",
         transition: "box-shadow .12s, transform .12s",
       }}
       onMouseEnter={(e) => {

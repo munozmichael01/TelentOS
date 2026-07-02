@@ -207,6 +207,8 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && brief.trim() && askAgent("draft")}
             placeholder='Ej.: Product designer senior para B2B SaaS, remoto, con foco en design systems'
             style={{ width: "100%", resize: "none", height: "62px", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", color: "#1A1A17", background: "#FCFAF6", border: "none", borderRadius: "10px", padding: "11px 13px", outline: "none" }}
+            onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 3px rgba(220,239,228,0.7)"; }}
+            onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
           />
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "12px" }}>
             <button

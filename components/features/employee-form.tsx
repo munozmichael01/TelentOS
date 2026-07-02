@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -96,7 +97,7 @@ export function EmployeeForm({
               </div>
               <div className="space-y-1.5">
                 <Label>Incorporación</Label>
-                <Input type="date" value={form.start_date} onChange={(e) => set("start_date", e.target.value)} />
+                <DateField value={form.start_date} onChange={(v) => set("start_date", v)} />
               </div>
               <div className="space-y-1.5">
                 <Label>Contrato</Label>

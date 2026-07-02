@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -73,7 +74,7 @@ export function HireButton({
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label>Fecha de incorporación</Label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <DateField value={startDate} onChange={setStartDate} />
             </div>
             <div className="space-y-1.5">
               <Label>Tipo de contrato</Label>
