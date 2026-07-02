@@ -20,20 +20,12 @@ type DistributionPlan = {
   created_at: string;
 };
 
-type ChannelInsight = {
-  source: string;
-  total_applications: number;
-  top_sector: string | null;
-  top_location: string | null;
-};
-
 type DistData = {
   company_slug: string;
   career_site: { job_views: number; applications: number };
   utm_channels: { source: string; applications: number }[];
   channels: (Channel & { utm_source: string | null })[];
   active_plan: DistributionPlan | null;
-  channel_insights: ChannelInsight[];
 };
 
 /* ── Design tokens ──────────────────────────────────────────────────────────── */
@@ -317,6 +309,14 @@ export function ChannelPlanner({ jobId, campaigns: initialCampaigns }: { jobId: 
             const utmSrc = dist?.channels.find((ch) => ch.id === c.channel_id)?.utm_source ?? name.toLowerCase();
             const isToggling = toggling === c.id;
             const budgetPct = c.budget > 0 ? Math.min(100, Math.round((Number(c.spend) / Number(c.budget)) * 100)) : 0;
+            const daysActive = c.started_at
+              ? Math.floor((Date.now() - new Date(c.started_at).getTime()) / 86_400_000)
+              : 0;
+            const alerts: { msg: string; level: "warn" | "danger" }[] = [];
+            if (c.status === "active" && daysActive >= 5 && apps === 0)
+              alerts.push({ msg: `Sin candidaturas tras ${daysActive}d activa`, level: "warn" });
+            if (budgetPct >= 90 && c.status === "active")
+              alerts.push({ msg: `Presupuesto al ${budgetPct}%`, level: budgetPct >= 100 ? "danger" : "warn" });
             return (
               <div key={c.id} style={{ padding: "16px 18px", borderBottom: `1px solid ${line}`, opacity: c.status === "paused" ? 0.65 : 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "12px" }}>
@@ -334,6 +334,15 @@ export function ChannelPlanner({ jobId, campaigns: initialCampaigns }: { jobId: 
                     </button>
                   )}
                 </div>
+                {alerts.length > 0 && (
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+                    {alerts.map((a) => (
+                      <span key={a.msg} style={{ ...mono, fontSize: "10.5px", color: a.level === "danger" ? "#BD4332" : "#946312", background: a.level === "danger" ? "#FDE8E5" : "rgba(148,99,18,.08)", border: `1px solid ${a.level === "danger" ? "#F5B4AA" : "rgba(148,99,18,.25)"}`, borderRadius: "999px", padding: "3px 10px", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                        ⚠ {a.msg}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", marginBottom: "10px" }}>
                   {[
                     ["PRESUPUESTO", formatMoney(c.budget)],
@@ -385,38 +394,7 @@ export function ChannelPlanner({ jobId, campaigns: initialCampaigns }: { jobId: 
         </div>
       )}
 
-      {/* ══ 4. Cross-job channel insights ══════════════════════════════════ */}
-      {(dist?.channel_insights ?? []).length > 0 && (
-        <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "16px", padding: "16px 20px" }}>
-          <Label>Rendimiento por canal — todas las ofertas</Label>
-          <p style={{ fontSize: "12.5px", color: soft, margin: "0 0 14px" }}>
-            Qué canal funciona mejor globalmente. Útil para calibrar dónde poner presupuesto en nuevas ofertas.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-            {dist!.channel_insights.map((ci, i) => {
-              const color = channelColor(ci.source);
-              const maxApps = dist!.channel_insights[0]?.total_applications ?? 1;
-              const pct = (ci.total_applications / maxApps) * 100;
-              return (
-                <div key={ci.source} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "9px 0", borderBottom: i < dist!.channel_insights.length - 1 ? `1px solid ${line}` : "none" }}>
-                  <span style={{ ...mono, fontSize: "11px", width: "90px", flexShrink: 0, color: ink }}>{ci.source}</span>
-                  <div style={{ flex: 1, height: "5px", background: "#F4F0E8", borderRadius: "3px", overflow: "hidden" }}>
-                    <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: "3px" }} />
-                  </div>
-                  <span style={{ ...mono, fontSize: "11px", fontWeight: 700, minWidth: "60px", textAlign: "right" }}>{ci.total_applications} aplic.</span>
-                  <div style={{ ...mono, fontSize: "10px", color: soft, minWidth: "160px", textAlign: "right" }}>
-                    {ci.top_sector && <span>{ci.top_sector}</span>}
-                    {ci.top_sector && ci.top_location && <span> · </span>}
-                    {ci.top_location && <span>{ci.top_location}</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ══ 5. AI Optimizer ════════════════════════════════════════════════ */}
+      {/* ══ 4. AI Optimizer ════════════════════════════════════════════════ */}
       <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "16px", overflow: "hidden" }}>
         <button onClick={() => setShowOptimizer((v) => !v)}
           style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>

@@ -72,6 +72,11 @@ const IconSettings = () => (
     <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
   </svg>
 );
+const IconChannels = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+    <path d="M4 19V9M10 19V5M16 19v-7M20 19V11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
 const IconGlobe = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
@@ -102,6 +107,7 @@ const NAV = [
   { href: "/jobs",               label: "Ofertas",      Icon: IconBriefcase },
   { href: "/candidates",         label: "Candidatos",   Icon: IconCandidates },
   { href: "/career-site",        label: "Career Site",  Icon: IconGlobe },
+  { href: "/canales",            label: "Canales",      Icon: IconChannels },
   { section: "Personas" },
   { href: "/employees",          label: "Empleados",    Icon: IconEmployee },
   { href: "/org",                label: "Organigrama",  Icon: IconOrg },
