@@ -3,17 +3,30 @@ import { createAdminClient } from "@/lib/supabase/server";
 
 type QueryArgs = {
   period?: string;
+  days_ago?: number;
   sector?: string;
   location?: string;
   source?: string;
 };
 
+function resolvePeriod(period?: string, days_ago?: number): { days: number; label: string } {
+  if (days_ago && days_ago > 0) return { days: days_ago, label: `${days_ago}d` };
+  const map: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90, all: 0 };
+  // also parse "Nd" format like "60d"
+  if (period) {
+    if (map[period] !== undefined) return { days: map[period], label: period };
+    const m = period.match(/^(\d+)d$/);
+    if (m) return { days: parseInt(m[1]), label: period };
+    if (period === "all") return { days: 0, label: "all" };
+  }
+  return { days: 30, label: "30d" };
+}
+
 export async function queryChannelData(args: QueryArgs) {
   const supabase = createAdminClient();
-  const { period = "30d", sector = "", location = "", source = "" } = args;
+  const { sector = "", location = "", source = "" } = args;
 
-  const periodDays: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90, all: 0 };
-  const days = periodDays[period] ?? 30;
+  const { days, label: periodLabel } = resolvePeriod(args.period, args.days_ago);
   const since = days > 0 ? new Date(Date.now() - days * 86_400_000).toISOString() : null;
 
   let appQuery = supabase
@@ -144,8 +157,38 @@ export async function queryChannelData(args: QueryArgs) {
     }
   }
 
+  // by_job: aggregate across all channels — which job received most applications and through which channels
+  const jobMap: Record<string, { title: string; sector: string | null; location: string | null; total: number; channels: Record<string, number> }> = {};
+  for (const app of applications ?? []) {
+    const utm = app.utm as Record<string, string> | null;
+    const src = utm?.utm_source ?? "direct";
+    if (source && src !== source) continue;
+    const j = app.jobs as unknown as { id: string; title: string; sector: string | null; location: string | null } | null;
+    if (!j?.id) continue;
+    if (!jobMap[j.id]) jobMap[j.id] = { title: j.title ?? "—", sector: j.sector, location: j.location, total: 0, channels: {} };
+    jobMap[j.id].total++;
+    jobMap[j.id].channels[src] = (jobMap[j.id].channels[src] ?? 0) + 1;
+  }
+
+  const by_job = Object.entries(jobMap)
+    .map(([id, v]) => ({
+      job_id: id,
+      title: v.title,
+      sector: v.sector,
+      location: v.location,
+      total_applications: v.total,
+      channels: Object.entries(v.channels)
+        .sort((a, b) => b[1] - a[1])
+        .map(([src, count]) => ({
+          source: src,
+          channel_name: channels?.find((ch) => ch.utm_source === src)?.name ?? src,
+          applications: count,
+        })),
+    }))
+    .sort((a, b) => b.total_applications - a.total_applications);
+
   const total = rows.reduce((s, r) => s + r.applications, 0);
-  return { rows, total_applications: total, period, filters: { sector, location, source } };
+  return { rows, by_job, total_applications: total, period: periodLabel, filters: { sector, location, source } };
 }
 
 export const tools: AgentTool[] = [
@@ -155,14 +198,18 @@ export const tools: AgentTool[] = [
       function: {
         name: "query_channel_data",
         description:
-          "Consulta los datos reales de rendimiento de canales de distribución de esta cuenta. Aplica los filtros que correspondan según la pregunta del usuario. Llama a esta tool SIEMPRE antes de responder.",
+          "Consulta los datos reales de rendimiento de canales y ofertas. Devuelve 'rows' (por canal) y 'by_job' (por oferta con desglose de canales). Llama SIEMPRE antes de responder.",
         parameters: {
           type: "object",
           properties: {
             period: {
               type: "string",
               enum: ["7d", "30d", "90d", "all"],
-              description: "Periodo de tiempo. '7d'=última semana, '30d'=último mes, '90d'=últimos 3 meses, 'all'=todo.",
+              description: "Periodo predefinido. Usa days_ago para periodos personalizados como '60 días'.",
+            },
+            days_ago: {
+              type: "number",
+              description: "Número exacto de días hacia atrás. Usar cuando el usuario pide '60 días', '2 meses', etc. Tiene prioridad sobre period.",
             },
             sector: {
               type: "string",
