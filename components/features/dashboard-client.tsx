@@ -3,10 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
-import { FitBadge } from "@/components/fit-badge";
 import { AgentPanel } from "@/components/agent-hint";
 import { InboxItem } from "@/components/features/inbox-item";
-import { formatDateTime, initials } from "@/lib/utils";
 import type { DashboardData, InboxItem as InboxItemType, InboxType, InboxAction, AgentInsight, PulseMetric } from "@/lib/dashboard";
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
@@ -294,8 +292,8 @@ export function DashboardClient({
           {ALL_INBOX_TYPES.filter((t) => prefs.follows.includes(t) && (countByType[t] ?? 0) > 0).length > 1 && (
             <div style={{ display: "flex", gap: "7px", flexWrap: "wrap", marginBottom: "14px" }}>
               <FilterChip
-                label="Todos"
-                count={visibleInbox.length + (filter !== null ? 0 : 0)}
+                label="Todo"
+                count={data.inbox.filter((i) => prefs.follows.includes(i.type)).length}
                 active={filter === null}
                 onClick={() => setFilter(null)}
               />
@@ -334,11 +332,9 @@ export function DashboardClient({
           {visibleInbox.length > PAGE && (
             <button
               onClick={() => setExpanded((e) => !e)}
-              style={{ marginTop: "12px", width: "100%", padding: "10px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft, background: "none", border: `1px solid ${T.line}`, borderRadius: "10px", cursor: "pointer" }}
+              style={{ marginTop: "11px", width: "100%", padding: "11px", fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.soft, background: "transparent", border: `1.5px dashed ${T.line}`, borderRadius: "11px", cursor: "pointer" }}
             >
-              {expanded
-                ? "Ver menos"
-                : `Ver toda la bandeja (${visibleInbox.length - PAGE} más)`}
+              {expanded ? "Ver menos ↑" : `Ver toda la bandeja (${visibleInbox.length}) →`}
             </button>
           )}
         </div>
@@ -348,82 +344,88 @@ export function DashboardClient({
 
           {/* Agent insights panel */}
           <AgentPanel>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-              <div>
-                <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px", color: "#F4F0E8" }}>
-                  Sugerencias del agente
-                </div>
-                {lastRefresh && (
-                  <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#79746B", marginTop: "2px" }}>
-                    Actualizado {relativeTime(lastRefresh)}
-                  </div>
-                )}
-              </div>
-              <div style={{ position: "relative" }}>
-                <button
-                  onClick={refreshInsights}
-                  disabled={!canRefresh || refreshing}
-                  title={!canRefresh ? `Marca Hecho o Ignorar en las ${openInsights.length} sugerencias actuales antes de pedir un análisis nuevo.` : "Regenerar sugerencias"}
-                  style={{
-                    fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "11px",
-                    color: canRefresh ? "#C6F24E" : "#4A4840",
-                    background: "none", border: `1px solid ${canRefresh ? "#C6F24E" : "#3A3830"}`,
-                    borderRadius: "8px", padding: "5px 10px", cursor: canRefresh ? "pointer" : "not-allowed",
-                    opacity: refreshing ? 0.6 : 1,
-                  }}
-                >
-                  {refreshing ? "…" : "↻ Actualizar"}
-                </button>
-              </div>
+            {/* Header row 1: icon + title + count */}
+            <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "5px" }}>
+              <span style={{ width: "24px", height: "24px", borderRadius: "7px", background: "rgba(198,242,78,.16)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round"/></svg>
+              </span>
+              <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px", color: "#F4F0E8" }}>
+                Sugerencias del agente
+              </span>
+              <span style={{ marginLeft: "auto", fontFamily: "'Space Mono',monospace", fontSize: "9px", color: "#C6F24E", background: "rgba(198,242,78,.12)", border: "1px solid rgba(198,242,78,.3)", borderRadius: "999px", padding: "2px 8px", flexShrink: 0 }}>
+                {openInsights.length}
+              </span>
+            </div>
+            {/* Header row 2: timestamp + update button */}
+            <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "8px" }}>
+              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "9px", color: "#8C877E" }}>
+                {lastRefresh ? `Actualizado ${relativeTime(lastRefresh)}` : "Sin analizar aún"}
+              </span>
+              <button
+                onClick={refreshInsights}
+                disabled={!canRefresh || refreshing}
+                title={!canRefresh ? `Marca Hecho o Ignorar en las ${openInsights.length} sugerencias actuales antes de pedir un análisis nuevo.` : "Regenerar sugerencias"}
+                style={{
+                  fontFamily: "'Space Mono',monospace", fontSize: "9px",
+                  color: canRefresh ? "#C6F24E" : "#5A574F",
+                  background: "none", border: "none",
+                  display: "flex", alignItems: "center", gap: "4px",
+                  padding: 0, cursor: canRefresh ? "pointer" : "not-allowed",
+                  opacity: refreshing ? 0.6 : 1,
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 018-8 8 8 0 016.9 4M20 12a8 8 0 01-8 8 8 8 0 01-6.9-4M18 3v4h-4M6 21v-4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                {refreshing ? "…" : "Actualizar"}
+              </button>
             </div>
 
             {/* Feed */}
             {shownInsights.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "20px 0", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#4A4840" }}>
-                Todo revisado ✓
+              <div style={{ textAlign: "center", padding: "20px 10px" }}>
+                <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#F4F0E8" }}>Todo revisado ✓</div>
+                <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#8C877E", marginTop: "5px" }}>Pulsa Actualizar para un nuevo análisis</div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {shownInsights.map((insight) => (
-                  <InsightCard
-                    key={insight.id}
-                    insight={insight}
-                    onTriage={triageInsight}
-                    loading={loadingInsight === insight.id}
-                  />
-                ))}
-              </div>
+              shownInsights.map((insight) => (
+                <InsightCard
+                  key={insight.id}
+                  insight={insight}
+                  onTriage={triageInsight}
+                  loading={loadingInsight === insight.id}
+                />
+              ))
             )}
+
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "9px", color: "#8C877E", marginTop: "11px" }}>
+              El agente propone · tú decides
+            </div>
           </AgentPanel>
 
           {/* Actividad reciente */}
-          <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", background: T.surface, overflow: "hidden" }}>
-            <div style={{ padding: "14px 16px", borderBottom: `1px solid ${T.line}`, fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px", color: T.ink }}>
+          <div>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: T.soft, marginBottom: "10px" }}>
               Actividad reciente
             </div>
-            <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: "6px" }}>
-              {data.activity.length === 0 && (
-                <p style={{ padding: "16px 0", textAlign: "center", fontSize: "12px", color: T.soft, fontFamily: "'Space Mono',monospace" }}>
+            <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
+              {data.activity.length === 0 ? (
+                <div style={{ padding: "20px", textAlign: "center", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft }}>
                   Sin actividad reciente
-                </p>
+                </div>
+              ) : (
+                data.activity.map((item, i) => (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    style={{ display: "flex", alignItems: "center", gap: "10px", padding: "11px 14px", borderBottom: i < data.activity.length - 1 ? `1px solid ${T.line}` : "none", textDecoration: "none" }}
+                  >
+                    <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: item.dot, flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "12.5px", fontWeight: 600, color: T.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</div>
+                    </div>
+                    <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: T.soft, flexShrink: 0 }}>{relativeTime(item.time)}</span>
+                  </Link>
+                ))
               )}
-              {data.activity.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "10px", background: T.bg, textDecoration: "none", border: `1px solid ${T.line}`, transition: "border-color .12s" }}
-                  className="hover:[border-color:#1A1A17]"
-                >
-                  <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: T.brandSoft, color: T.brand, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "10px", flexShrink: 0 }}>
-                    {initials(item.label)}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</div>
-                    <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: T.soft }}>{item.subtitle}</div>
-                  </div>
-                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: T.soft, flexShrink: 0 }}>{formatDateTime(item.time)}</span>
-                </Link>
-              ))}
             </div>
           </div>
 
@@ -445,11 +447,18 @@ function FilterChip({ label, count, active, onClick }: { label: string; count: n
     <button
       onClick={onClick}
       style={{
-        fontFamily: "'Space Mono',monospace", fontSize: "11px", padding: "5px 10px",
-        borderRadius: "999px", border: `1.5px solid ${active ? "#1A1A17" : "#E7E1D4"}`,
-        background: active ? "#1A1A17" : "transparent",
-        color: active ? "#FCFAF6" : "#79746B",
-        cursor: "pointer", display: "flex", alignItems: "center", gap: "5px",
+        fontFamily: "'Archivo',sans-serif",
+        fontWeight: active ? 800 : 600,
+        fontSize: "12px",
+        padding: "6px 13px",
+        borderRadius: "999px",
+        border: `1.5px solid ${active ? "#1A1A17" : "#E7E1D4"}`,
+        background: active ? "#1A1A17" : "#FCFAF6",
+        color: active ? "#fff" : "#79746B",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        gap: "5px",
       }}
     >
       {label}
@@ -459,22 +468,16 @@ function FilterChip({ label, count, active, onClick }: { label: string; count: n
 }
 
 function InsightCard({ insight, onTriage, loading }: { insight: AgentInsight; onTriage: (id: string, status: "done" | "ignored") => void; loading: boolean }) {
-  const isDone = insight.status === "done";
   return (
-    <div style={{ background: "#262620", borderRadius: "12px", padding: "12px 14px" }}>
-      <p style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13px", color: isDone ? "#4A4840" : "#E8E4DC", margin: "0 0 8px", lineHeight: 1.5 }}>
+    <div style={{ padding: "12px 0", borderTop: "1px solid rgba(255,255,255,.09)" }}>
+      <p style={{ fontSize: "12.5px", lineHeight: 1.5, color: insight.status === "done" ? "#4A4840" : "#E4E0D8", margin: "0 0 10px" }}>
         {insight.text}
       </p>
-      {insight.scope && (
-        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#5A5650", marginBottom: "8px" }}>
-          {insight.scope}
-        </div>
-      )}
       <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap" }}>
         {insight.action?.href && (
           <Link
             href={insight.action.href}
-            style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "11px", color: "#C6F24E", background: "none", border: "1px solid #C6F24E", borderRadius: "7px", padding: "4px 9px", textDecoration: "none" }}
+            style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "11px", color: "#1A1A17", background: "#C6F24E", border: "none", borderRadius: "8px", padding: "6px 11px", textDecoration: "none", display: "inline-block" }}
           >
             {insight.action.label}
           </Link>
@@ -484,14 +487,14 @@ function InsightCard({ insight, onTriage, loading }: { insight: AgentInsight; on
             <button
               onClick={() => onTriage(insight.id, "done")}
               disabled={loading}
-              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "11px", color: "#8FD9B8", background: "none", border: "1px solid #2A4A3E", borderRadius: "7px", padding: "4px 9px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
+              style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "11px", color: "#CFCAC0", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.14)", borderRadius: "8px", padding: "6px 10px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
             >
-              ✓ Hecho
+              Hecho
             </button>
             <button
               onClick={() => onTriage(insight.id, "ignored")}
               disabled={loading}
-              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "11px", color: "#5A5650", background: "none", border: "1px solid #3A3830", borderRadius: "7px", padding: "4px 9px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
+              style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "11px", color: "#8C877E", background: "none", border: "none", padding: "6px 6px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
             >
               Ignorar
             </button>

@@ -3,80 +3,78 @@
 import Link from "next/link";
 import type { InboxItem as InboxItemData, InboxAction, InboxType } from "@/lib/dashboard";
 
-// ─── Type tokens ──────────────────────────────────────────────────────────────
+// ─── Type tokens (extraídos del pixel-target TalentOS Dashboard.dc.html) ──────
 
-const TYPE_ACCENT: Record<InboxType, string> = {
-  compliance:  "#BD4332",
-  ausencia:    "#0E5C4A",
-  candidato:   "#F1543F",
-  onboarding:  "#946312",
-  ausente:     "#2B5E8A",
+type TypeMeta = {
+  label: string;
+  accent: string;
+  chipBg: string;
+  chipColor: string;
+  actionBg: string;
+  actionColor: string;
 };
 
-const TYPE_CHIP_BG: Record<InboxType, string> = {
-  compliance:  "#F6D9D2",
-  ausencia:    "#DCEFE4",
-  candidato:   "#FAE3DE",
-  onboarding:  "#F8E7C4",
-  ausente:     "#D6E4F2",
-};
-
-const TYPE_LABEL: Record<InboxType, string> = {
-  compliance:  "Compliance",
-  ausencia:    "Ausencia",
-  candidato:   "Candidato",
-  onboarding:  "Onboarding",
-  ausente:     "Ausente hoy",
+const TYPE_META: Record<InboxType, TypeMeta> = {
+  compliance:  { label: "Compliance",  accent: "#BD4332", chipBg: "#F6D9D2", chipColor: "#BD4332", actionBg: "#F1543F", actionColor: "#fff" },
+  ausencia:    { label: "Ausencia",    accent: "#0E5C4A", chipBg: "#DCEFE4", chipColor: "#0E5C4A", actionBg: "#0E5C4A", actionColor: "#fff" },
+  candidato:   { label: "Candidato",   accent: "#F1543F", chipBg: "#FAE3DE", chipColor: "#C7402E", actionBg: "#FCFAF6", actionColor: "#1A1A17" },
+  onboarding:  { label: "Onboarding",  accent: "#946312", chipBg: "#F8E7C4", chipColor: "#946312", actionBg: "#FCFAF6", actionColor: "#1A1A17" },
+  ausente:     { label: "Ausente hoy", accent: "#2B5E8A", chipBg: "#D6E4F2", chipColor: "#2B5E8A", actionBg: "#FCFAF6", actionColor: "#1A1A17" },
 };
 
 // ─── Action button ────────────────────────────────────────────────────────────
 
 function ActionBtn({
   action,
-  accent,
+  meta,
   onAction,
   loading,
 }: {
   action: InboxAction;
-  accent: string;
+  meta: TypeMeta;
   onAction: (action: InboxAction) => void;
   loading: boolean;
 }) {
   const isPrimary = action.kind === "primary";
 
-  const baseStyle: React.CSSProperties = {
+  const primaryStyle: React.CSSProperties = {
     fontFamily: "'Archivo', sans-serif",
-    fontWeight: 700,
+    fontWeight: 800,
     fontSize: "12px",
-    borderRadius: "8px",
-    padding: "5px 11px",
+    color: meta.actionColor,
+    background: meta.actionBg,
+    border: "1.5px solid #1A1A17",
+    borderRadius: "9px",
+    padding: "7px 13px",
+    boxShadow: "2px 2px 0 #1A1A17",
     cursor: loading ? "not-allowed" : "pointer",
-    border: "1.5px solid",
-    display: "inline-flex",
-    alignItems: "center",
     whiteSpace: "nowrap",
     opacity: loading ? 0.6 : 1,
-    transition: "opacity .12s",
-  };
-
-  const primaryStyle: React.CSSProperties = {
-    ...baseStyle,
-    background: accent,
-    color: "#fff",
-    borderColor: accent,
+    display: "inline-flex",
+    alignItems: "center",
   };
 
   const secondaryStyle: React.CSSProperties = {
-    ...baseStyle,
-    background: "transparent",
+    fontFamily: "'Archivo', sans-serif",
+    fontWeight: 700,
+    fontSize: "12px",
     color: "#79746B",
-    borderColor: "#E7E1D4",
+    background: "#FCFAF6",
+    border: "1.5px solid #E7E1D4",
+    borderRadius: "9px",
+    padding: "7px 12px",
+    cursor: loading ? "not-allowed" : "pointer",
+    whiteSpace: "nowrap",
+    opacity: loading ? 0.6 : 1,
+    display: "inline-flex",
+    alignItems: "center",
   };
 
   if (action.href && !action.apiPath) {
     return (
       <Link
         href={action.href}
+        className="di-hard"
         style={isPrimary ? primaryStyle : secondaryStyle}
         onClick={(e) => e.stopPropagation()}
       >
@@ -87,6 +85,7 @@ function ActionBtn({
 
   return (
     <button
+      className="di-hard"
       disabled={loading}
       onClick={(e) => { e.stopPropagation(); onAction(action); }}
       style={isPrimary ? primaryStyle : secondaryStyle}
@@ -107,27 +106,29 @@ export function InboxItem({
   onAction: (item: InboxItemData, action: InboxAction) => void;
   loadingActionId: string | null;
 }) {
-  const accent = TYPE_ACCENT[item.type];
-  const chipBg = TYPE_CHIP_BG[item.type];
+  const meta = TYPE_META[item.type];
 
   return (
     <div
+      className="di-row"
       style={{
         display: "flex",
         alignItems: "center",
         gap: "13px",
         background: "#FCFAF6",
         border: "1px solid #E7E1D4",
-        borderLeft: `4px solid ${accent}`,
+        borderLeft: `4px solid ${meta.accent}`,
         borderRadius: "14px",
         padding: "13px 15px",
+        cursor: "pointer",
       }}
     >
       {/* Avatar */}
-      <div
+      <span
         style={{
-          width: "36px",
-          height: "36px",
+          width: "38px",
+          height: "38px",
+          flexShrink: 0,
           borderRadius: "50%",
           background: item.avatar.bg,
           color: item.avatar.color,
@@ -136,24 +137,33 @@ export function InboxItem({
           justifyContent: "center",
           fontFamily: "'Archivo', sans-serif",
           fontWeight: 800,
-          fontSize: "11px",
-          flexShrink: 0,
+          fontSize: "12.5px",
         }}
       >
         {item.avatar.initials}
-      </div>
+      </span>
 
       {/* Text */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "13.5px", color: "#1A1A17" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "14.5px", letterSpacing: "-.2px", color: "#1A1A17" }}>
             {item.title}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", background: chipBg, color: accent, borderRadius: "999px", padding: "2px 7px", fontWeight: 700, flexShrink: 0 }}>
-            {TYPE_LABEL[item.type]}
+          <span style={{
+            fontFamily: "'Space Mono', monospace",
+            fontSize: "9px",
+            textTransform: "uppercase",
+            letterSpacing: ".5px",
+            color: meta.chipColor,
+            background: meta.chipBg,
+            borderRadius: "999px",
+            padding: "2px 8px",
+            flexShrink: 0,
+          }}>
+            {meta.label}
           </span>
         </div>
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "11px", color: "#79746B", marginTop: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "11px", color: "#79746B", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {item.subtitle}
         </div>
       </div>
@@ -165,7 +175,7 @@ export function InboxItem({
             <ActionBtn
               key={action.label}
               action={action}
-              accent={accent}
+              meta={meta}
               onAction={(a) => onAction(item, a)}
               loading={loadingActionId === `${item.id}-${action.label}`}
             />

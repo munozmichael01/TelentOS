@@ -46,9 +46,9 @@ export type AgentInsight = {
 export type ActivityItem = {
   id: string;
   label: string;
-  subtitle: string;
   time: string;
   href: string;
+  dot: string;
 };
 
 export type DashboardData = {
@@ -114,7 +114,7 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
     // Ausencias pendientes
     supabase
       .from("absence_requests")
-      .select("id, employee_id, start_date, end_date, employees(name), absence_types(name)")
+      .select("id, employee_id, start_date, end_date, employees!employee_id(name), absence_types(name)")
       .eq("company_id", company.id)
       .eq("status", "pending")
       .order("created_at", { ascending: false })
@@ -142,7 +142,7 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
     // Ausentes hoy
     supabase
       .from("absence_requests")
-      .select("id, employee_id, employees(name), absence_types(name)")
+      .select("id, employee_id, employees!employee_id(name), absence_types(name)")
       .eq("company_id", company.id)
       .eq("status", "approved")
       .lte("start_date", today)
@@ -303,13 +303,17 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
   }));
 
   // ── Activity ─────────────────────────────────────────────────────────────
-  const activity: ActivityItem[] = (recentActivity.data ?? []).map((a) => ({
-    id: a.id,
-    label: (a.candidates as unknown as { name: string } | null)?.name ?? "—",
-    subtitle: (a.jobs as unknown as { title: string } | null)?.title ?? "",
-    time: a.created_at,
-    href: `/applications/${a.id}`,
-  }));
+  const activity: ActivityItem[] = (recentActivity.data ?? []).map((a) => {
+    const candidateName = (a.candidates as unknown as { name: string } | null)?.name ?? "—";
+    const jobTitle = (a.jobs as unknown as { title: string } | null)?.title;
+    return {
+      id: a.id,
+      label: jobTitle ? `${candidateName} · ${jobTitle}` : `${candidateName} · nueva candidatura`,
+      time: a.created_at,
+      href: `/applications/${a.id}`,
+      dot: "#0E5C4A",
+    };
+  });
 
   return {
     pulse,
