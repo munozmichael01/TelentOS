@@ -116,9 +116,9 @@ export default async function CareersPage({ params }: { params: { slug: string }
 
   function SectionLabel({ text }: { text: string }) {
     return (
-      <div style={{ ...mono, fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase", color: soft, marginBottom: "16px" }}>
+      <h2 style={{ ...heading, fontWeight: 800, fontSize: "22px", letterSpacing: "-0.4px", color: ink, margin: "0 0 20px" }}>
         {text}
-      </div>
+      </h2>
     );
   }
 
@@ -417,14 +417,38 @@ export default async function CareersPage({ params }: { params: { slug: string }
         {has(cms.faqs) && (
           <section style={{ padding: "40px 0 0" }}>
             <SectionLabel text={cms.faqsTitle || "Preguntas frecuentes"} />
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <style>{`
+              .faq-item { border: 1.5px solid ${line}; border-radius: 13px; background: ${surface}; overflow: hidden; }
+              .faq-item + .faq-item { margin-top: 8px; }
+              .faq-summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; cursor: pointer; list-style: none; font-weight: 700; font-size: 14.5px; color: ${ink}; }
+              .faq-summary::-webkit-details-marker { display: none; }
+              .faq-chevron { flex-shrink: 0; transition: transform .2s; }
+              details[open] .faq-chevron { transform: rotate(180deg); }
+              .faq-body { padding: 0 18px 16px; font-size: 14px; color: ${soft}; line-height: 1.6; border-top: 1px solid ${line}; padding-top: 14px; margin: 0 18px; }
+            `}</style>
+            <div>
               {(cms.faqs ?? []).map((f, i) => (
-                <div key={i} style={{ padding: "16px 18px", background: surface, border: `1.5px solid ${line}`, borderRadius: "13px" }}>
-                  <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "6px" }}>{f.question}</div>
-                  <div style={{ fontSize: "14px", color: soft, lineHeight: 1.55 }}>{f.answer}</div>
-                </div>
+                <details key={i} className="faq-item">
+                  <summary className="faq-summary">
+                    {f.question}
+                    <svg className="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 9l6 6 6-6" stroke={soft} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </summary>
+                  <div className="faq-body">{f.answer}</div>
+                </details>
               ))}
             </div>
+            {/* FAQ structured data — Google rich results */}
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: (cms.faqs ?? []).map((f) => ({
+                "@type": "Question",
+                name: f.question,
+                acceptedAnswer: { "@type": "Answer", text: f.answer },
+              })),
+            }) }} />
           </section>
         )}
 
