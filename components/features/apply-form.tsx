@@ -47,7 +47,7 @@ const PREFIXES = [
 
 /* ── Main form ──────────────────────────────────────────────────────────── */
 
-export function ApplyForm({ jobId }: { jobId: string }) {
+export function ApplyForm({ jobId, brandColor = "#0E5C4A" }: { jobId: string; brandColor?: string }) {
   const params = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -89,7 +89,7 @@ export function ApplyForm({ jobId }: { jobId: string }) {
       <div style={{ background: "#FCFAF6", border: "1.5px solid #1A1A17", borderRadius: "18px", padding: "48px 30px", textAlign: "center", boxShadow: "6px 6px 0 #1A1A17" }}>
         <div style={{ width: "58px", height: "58px", margin: "0 auto 16px", borderRadius: "50%", background: "#EAF7C4", border: "1.5px solid #1A1A17", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-            <path d="M5 13l4 4L19 7" stroke="#0E5C4A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M5 13l4 4L19 7" stroke={brandColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
         <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "24px", letterSpacing: "-.6px" }}>
@@ -99,7 +99,7 @@ export function ApplyForm({ jobId }: { jobId: string }) {
           Revisaremos tu perfil y te contactaremos pronto. Recibirás una copia en tu email.
         </p>
         <div style={{ marginTop: "14px", display: "inline-flex", alignItems: "center", gap: "7px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "999px", padding: "5px 13px" }}>
-          <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#0E5C4A", flexShrink: 0 }} />
+          <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: brandColor, flexShrink: 0 }} />
           origen registrado · career_site
         </div>
       </div>
@@ -171,13 +171,13 @@ export function ApplyForm({ jobId }: { jobId: string }) {
           display: "flex", alignItems: "center", gap: "9px", fontSize: "13px",
           color: cvName ? "#1A1A17" : "#79746B",
           padding: "9px 12px",
-          border: `1.5px ${cvError ? "solid #F1543F" : cvName ? "solid #0E5C4A" : "dashed #E7E1D4"}`,
+          border: `1.5px ${cvError ? "solid #F1543F" : cvName ? `solid ${brandColor}` : "dashed #E7E1D4"}`,
           borderRadius: "10px",
           background: cvError ? "#FDE8E5" : cvName ? "#EAF7C4" : "#F4F0E8",
           cursor: "pointer", position: "relative", transition: "all .15s ease",
         }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M12 16V4M7 9l5-5 5 5M5 20h14" stroke={cvError ? "#F1543F" : cvName ? "#0E5C4A" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 16V4M7 9l5-5 5 5M5 20h14" stroke={cvError ? "#F1543F" : cvName ? brandColor : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
             {cvName || "Subir CV"}
@@ -204,7 +204,7 @@ export function ApplyForm({ jobId }: { jobId: string }) {
           fontWeight: 800,
           fontSize: "14px",
           color: "#fff",
-          background: "#0E5C4A",
+          background: brandColor,
           border: "2px solid #1A1A17",
           borderRadius: "12px",
           padding: "12px 24px",

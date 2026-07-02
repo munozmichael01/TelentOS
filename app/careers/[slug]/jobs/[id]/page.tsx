@@ -119,7 +119,7 @@ export default async function PublicJobPage({ params }: { params: { slug: string
         {/* Apply form */}
         <div id="apply-form" style={{ marginTop: "22px" }}>
           <Suspense>
-            <ApplyForm jobId={job.id} />
+            <ApplyForm jobId={job.id} brandColor={brandColor} />
           </Suspense>
         </div>
 
