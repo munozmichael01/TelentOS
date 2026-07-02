@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
@@ -20,6 +20,7 @@ type ReportRow = {
   spend: number;
   views: number;
   active_campaigns: number;
+  stale_campaigns?: number;
   top_sector: string | null;
   top_location: string | null;
   top_jobs: { id: string; title: string; applications: number }[];
@@ -32,6 +33,15 @@ type ReportData = {
   jobs: { id: string; title: string; sector: string | null; location: string | null }[];
   meta: { period: string; total_applications: number };
 };
+
+type AnalystResponse = {
+  answer: string;
+  suggested_questions: string[];
+  redirect: { url: string; label: string } | null;
+  filters_applied: { period?: string; sector?: string; location?: string; source?: string };
+};
+
+type HistoryEntry = { role: "user" | "assistant"; content: string };
 
 /* ── Design tokens ──────────────────────────────────────────────────────────── */
 
@@ -69,72 +79,157 @@ const KIND_LABEL: Record<string, string> = {
   career_site: "Directo",
 };
 
+const STARTER_QUESTIONS = [
+  "¿Qué canal trajo más candidaturas este mes?",
+  "¿Cuál es el canal con menor CPA?",
+  "¿Qué campañas llevan más de 5 días sin candidaturas?",
+  "¿Qué canal funciona mejor por sector?",
+];
+
 /* ── Tab: KPIs ──────────────────────────────────────────────────────────────── */
 
 function KPIsTab() {
   const [data, setData] = useState<ReportData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState("30d");
-  const [sector, setSector] = useState("");
-  const [location, setLocation] = useState("");
-  const [jobId, setJobId] = useState("");
+  const [dataLoading, setDataLoading] = useState(true);
+  const [activeFilters, setActiveFilters] = useState<{ period?: string; sector?: string; location?: string; source?: string }>({});
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // AI search state
+  const [query, setQuery] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [response, setResponse] = useState<AnalystResponse | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const loadData = useCallback(async (filters: typeof activeFilters) => {
+    setDataLoading(true);
     try {
-      const params = new URLSearchParams({ period });
-      if (sector) params.set("sector", sector);
-      if (location) params.set("location", location);
-      if (jobId) params.set("job_id", jobId);
+      const params = new URLSearchParams({ period: filters.period ?? "30d" });
+      if (filters.sector) params.set("sector", filters.sector);
+      if (filters.location) params.set("location", filters.location);
+      if (filters.source) params.set("source", filters.source);
       const r = await fetch(`/api/channels/report?${params}`);
       if (r.ok) setData(await r.json());
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
-  }, [period, sector, location, jobId]);
+  }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadData({}); }, [loadData]);
 
-  const maxApps = data?.rows[0]?.applications ?? 1;
+  const ask = useCallback(async (q: string) => {
+    if (!q.trim() || aiLoading) return;
+    setAiLoading(true);
+    setQuery("");
+    try {
+      const r = await fetch("/api/agents/channel-analyst", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q, history }),
+      });
+      if (!r.ok) return;
+      const result: AnalystResponse = await r.json();
+      setResponse(result);
+      setHistory((h) => [...h, { role: "user", content: q }, { role: "assistant", content: result.answer }]);
+      // Update data table to reflect the agent's filters
+      const newFilters = result.filters_applied ?? {};
+      setActiveFilters(newFilters);
+      loadData(newFilters);
+    } finally {
+      setAiLoading(false);
+    }
+  }, [aiLoading, history, loadData]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") ask(query);
+  };
+
+  const visibleRows = data?.rows ?? [];
+  const maxApps = visibleRows[0]?.applications ?? 1;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-      {/* Filters */}
-      <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "14px", padding: "14px 18px", display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "flex-end" }}>
-        <div>
-          <div style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "6px" }}>Periodo</div>
-          <select value={period} onChange={(e) => setPeriod(e.target.value)}
-            style={{ fontFamily: "inherit", fontSize: "13px", fontWeight: 600, color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "10px", padding: "8px 12px", outline: "none", cursor: "pointer" }}>
-            <option value="7d">Últimos 7 días</option>
-            <option value="30d">Últimos 30 días</option>
-            <option value="90d">Últimos 90 días</option>
-            <option value="all">Todo el tiempo</option>
-          </select>
+      {/* AI Search bar */}
+      <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "16px", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+        {/* Input row */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <div style={{ position: "relative", flex: 1 }}>
+            <svg style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7" stroke={soft} strokeWidth="1.8"/>
+              <path d="M16.5 16.5L21 21" stroke={soft} strokeWidth="1.8" strokeLinecap="round"/>
+              <path d="M8 11.5c.5-1.5 2-2.5 3.5-2.5" stroke="#0E5C4A" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <input
+              ref={inputRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Pregunta sobre canales y campañas…"
+              style={{ width: "100%", paddingLeft: "42px", paddingRight: "14px", paddingTop: "11px", paddingBottom: "11px", fontFamily: "inherit", fontSize: "14px", color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "11px", outline: "none", boxSizing: "border-box" }}
+            />
+          </div>
+          <button
+            onClick={() => ask(query)}
+            disabled={!query.trim() || aiLoading}
+            style={{ flexShrink: 0, background: "#0E5C4A", color: "#fff", border: "none", borderRadius: "11px", padding: "11px 18px", fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", cursor: query.trim() && !aiLoading ? "pointer" : "not-allowed", opacity: query.trim() && !aiLoading ? 1 : 0.5, display: "flex", alignItems: "center", gap: "7px" }}>
+            {aiLoading ? <Loader2 size={14} className="animate-spin" /> : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+            Preguntar
+          </button>
         </div>
-        <div>
-          <div style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "6px" }}>Sector</div>
-          <select value={sector} onChange={(e) => setSector(e.target.value)}
-            style={{ fontFamily: "inherit", fontSize: "13px", fontWeight: 600, color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "10px", padding: "8px 12px", outline: "none", cursor: "pointer", minWidth: "160px" }}>
-            <option value="">Todos</option>
-            {(data?.sectors ?? []).map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+
+        {/* Starter chips or follow-up chips */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+          {(response?.suggested_questions ?? STARTER_QUESTIONS).map((q) => (
+            <button key={q} onClick={() => ask(q)} disabled={aiLoading}
+              style={{ fontFamily: "inherit", fontSize: "12px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "5px 13px", cursor: aiLoading ? "not-allowed" : "pointer", opacity: aiLoading ? 0.6 : 1, whiteSpace: "nowrap" }}>
+              {q}
+            </button>
+          ))}
         </div>
-        <div>
-          <div style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "6px" }}>Ubicación</div>
-          <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Madrid, Barcelona…"
-            style={{ fontFamily: "inherit", fontSize: "13px", color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "10px", padding: "8px 12px", outline: "none", width: "170px" }} />
-        </div>
-        <div>
-          <div style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "6px" }}>Oferta concreta</div>
-          <select value={jobId} onChange={(e) => setJobId(e.target.value)}
-            style={{ fontFamily: "inherit", fontSize: "13px", fontWeight: 600, color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "10px", padding: "8px 12px", outline: "none", cursor: "pointer", minWidth: "200px" }}>
-            <option value="">Todas las ofertas</option>
-            {(data?.jobs ?? []).map((j) => <option key={j.id} value={j.id}>{j.title}{j.location ? ` — ${j.location}` : ""}</option>)}
-          </select>
-        </div>
-        {loading && <Loader2 size={16} className="animate-spin" style={{ color: soft, alignSelf: "center", marginTop: "20px" }} />}
+
+        {/* AI response */}
+        {response && (
+          <div style={{ borderTop: `1px solid ${line}`, paddingTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+              {/* Agent avatar */}
+              <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="#fff"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1, fontSize: "13.5px", lineHeight: "1.6", color: ink }}
+                dangerouslySetInnerHTML={{ __html: response.answer.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>") }}
+              />
+            </div>
+            {response.redirect && (
+              <a href={response.redirect.url}
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "9px", padding: "7px 13px", width: "fit-content" }}>
+                {response.redirect.label}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#0E5C4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </a>
+            )}
+            {/* Applied filters indicator */}
+            {Object.keys(response.filters_applied ?? {}).length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                <span style={{ ...mono, fontSize: "10px", color: soft }}>Datos filtrados:</span>
+                {Object.entries(response.filters_applied).map(([k, v]) => v && (
+                  <span key={k} style={{ ...mono, fontSize: "10px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "2px 8px" }}>
+                    {k === "period" ? v : `${k}: ${v}`}
+                  </span>
+                ))}
+                <button onClick={() => { setResponse(null); setHistory([]); setActiveFilters({}); loadData({}); }}
+                  style={{ ...mono, fontSize: "10px", color: soft, background: "none", border: "none", cursor: "pointer", padding: "2px 4px", textDecoration: "underline" }}>
+                  Limpiar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Summary KPI strip */}
@@ -142,9 +237,9 @@ function KPIsTab() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: "10px" }}>
           {[
             { label: "Total candidaturas", value: data.meta.total_applications.toLocaleString("es-ES") },
-            { label: "Canales activos", value: String(data.rows.filter((r) => r.applications > 0).length) },
-            { label: "Mejor canal", value: data.rows[0]?.channel_name ?? "—" },
-            { label: "CPA medio", value: data.rows.filter((r) => r.cpa).length ? formatMoney(Math.round(data.rows.filter((r) => r.cpa).reduce((s, r) => s + (r.cpa ?? 0), 0) / data.rows.filter((r) => r.cpa).length)) : "—" },
+            { label: "Canales activos", value: String(visibleRows.filter((r) => r.applications > 0).length) },
+            { label: "Mejor canal", value: visibleRows[0]?.channel_name ?? "—" },
+            { label: "CPA medio", value: visibleRows.filter((r) => r.cpa).length ? formatMoney(Math.round(visibleRows.filter((r) => r.cpa).reduce((s, r) => s + (r.cpa ?? 0), 0) / visibleRows.filter((r) => r.cpa).length)) : "—" },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: surface, border: `1px solid ${line}`, borderRadius: "13px", padding: "14px 16px" }}>
               <div style={{ ...mono, fontSize: "9.5px", color: soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "6px" }}>{label}</div>
@@ -154,24 +249,29 @@ function KPIsTab() {
         </div>
       )}
 
-      {/* Channel rows */}
-      {data && data.rows.length === 0 && (
-        <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "14px", padding: "40px", textAlign: "center", color: soft, fontSize: "14px" }}>
-          Sin datos para los filtros seleccionados.
+      {/* Loading state */}
+      {dataLoading && (
+        <div style={{ display: "flex", justifyContent: "center", padding: "32px" }}>
+          <Loader2 size={20} className="animate-spin" style={{ color: soft }} />
         </div>
       )}
 
-      {data && data.rows.map((row) => {
+      {/* Channel rows */}
+      {!dataLoading && data && visibleRows.length === 0 && (
+        <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "14px", padding: "40px", textAlign: "center", color: soft, fontSize: "14px" }}>
+          Sin datos para los filtros actuales.
+        </div>
+      )}
+
+      {!dataLoading && visibleRows.map((row) => {
         const color = channelColor(row.source);
         const pct = maxApps > 0 ? (row.applications / maxApps) * 100 : 0;
         const isOpen = expanded === row.source;
         return (
           <div key={row.source} style={{ background: surface, border: `1px solid ${line}`, borderRadius: "14px", overflow: "hidden" }}>
-            {/* Main row */}
             <button
               onClick={() => setExpanded(isOpen ? null : row.source)}
               style={{ width: "100%", display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
-              {/* Channel name + bar */}
               <div style={{ display: "flex", alignItems: "center", gap: "9px", minWidth: "160px", flexShrink: 0 }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: color, flexShrink: 0 }} />
                 <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "14px" }}>{row.channel_name}</span>
@@ -182,12 +282,10 @@ function KPIsTab() {
                 )}
               </div>
 
-              {/* Bar */}
               <div style={{ flex: 1, height: "6px", background: "#F4F0E8", borderRadius: "3px", overflow: "hidden", minWidth: "80px" }}>
                 <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: "3px" }} />
               </div>
 
-              {/* KPI columns */}
               <div style={{ display: "flex", gap: "24px", flexShrink: 0 }}>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ ...mono, fontSize: "9.5px", color: soft }}>CANDIDATURAS</div>
@@ -215,10 +313,8 @@ function KPIsTab() {
               </svg>
             </button>
 
-            {/* Expanded detail */}
             {isOpen && (
               <div style={{ borderTop: `1px solid ${line}`, padding: "16px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "20px" }}>
-                {/* Sector breakdown */}
                 <div>
                   <div style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "8px" }}>Por sector</div>
                   {row.top_sector ? (
@@ -226,7 +322,6 @@ function KPIsTab() {
                   ) : <div style={{ fontSize: "13px", color: soft }}>Sin datos</div>}
                 </div>
 
-                {/* Location breakdown */}
                 <div>
                   <div style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "8px" }}>Por ubicación</div>
                   {row.top_location ? (
@@ -234,7 +329,6 @@ function KPIsTab() {
                   ) : <div style={{ fontSize: "13px", color: soft }}>Sin datos</div>}
                 </div>
 
-                {/* Budget context */}
                 {row.budget > 0 && (
                   <div>
                     <div style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "8px" }}>Presupuesto</div>
@@ -245,7 +339,6 @@ function KPIsTab() {
                   </div>
                 )}
 
-                {/* Top jobs */}
                 {row.top_jobs.length > 0 && (
                   <div>
                     <div style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "8px" }}>Ofertas con más candidaturas</div>
@@ -266,12 +359,6 @@ function KPIsTab() {
           </div>
         );
       })}
-
-      {!data && !loading && (
-        <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "14px", padding: "40px", textAlign: "center", color: soft }}>
-          Sin datos.
-        </div>
-      )}
     </div>
   );
 }

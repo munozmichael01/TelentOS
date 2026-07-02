@@ -549,7 +549,65 @@ INSERT INTO notes (id, application_id, author_email, body) VALUES
    'Rosa pide trabajo 100% remoto. Revisada política de empresa — es compatible. Expectativa salarial: 40.000 €, dentro del rango de la oferta.')
 ON CONFLICT DO NOTHING;
 
--- ── BLOQUE 8: AJUSTES DE PERMISOS (allowance_adjustment_log) ─────────────────
+-- ── BLOQUE 8: CAMPAÑAS DE DISTRIBUCIÓN ──────────────────────────────────────
+-- Depende de que migration 0008_channels_seed.sql haya sido ejecutada primero.
+-- Los channel_id se resuelven por nombre para no depender de UUIDs generados.
+
+INSERT INTO campaigns (job_id, channel_id, status, objective, budget, priority, copy, views, spend, started_at)
+SELECT
+  '30000000-0000-0000-0000-000000000001',
+  (SELECT id FROM channels WHERE name = 'LinkedIn Jobs' LIMIT 1),
+  'active', 'quality', 600, 1,
+  '🚀 Senior Frontend Engineer en Acme Corp — React/TS, equipo de producto, 55-70k €. Madrid híbrido. Proceso en 2 semanas.',
+  2140, 420, now() - interval '20 days'
+WHERE EXISTS (SELECT 1 FROM channels WHERE name = 'LinkedIn Jobs');
+
+INSERT INTO campaigns (job_id, channel_id, status, objective, budget, priority, copy, views, spend, started_at)
+SELECT
+  '30000000-0000-0000-0000-000000000001',
+  (SELECT id FROM channels WHERE name = 'Google for Jobs' LIMIT 1),
+  'active', 'volume', 0, 2,
+  'Senior Frontend Engineer — Madrid (híbrido) — 55.000-70.000 €. Proceso ágil, feedback garantizado.',
+  890, 0, now() - interval '7 days'
+WHERE EXISTS (SELECT 1 FROM channels WHERE name = 'Google for Jobs');
+
+INSERT INTO campaigns (job_id, channel_id, status, objective, budget, priority, copy, views, spend, started_at)
+SELECT
+  '30000000-0000-0000-0000-000000000002',
+  (SELECT id FROM channels WHERE name = 'InfoJobs' LIMIT 1),
+  'active', 'volume', 300, 1,
+  'Customer Success Manager — Barcelona / Remoto — SaaS B2B. Contrato indefinido, seguro médico incluido.',
+  1650, 185, now() - interval '12 days'
+WHERE EXISTS (SELECT 1 FROM channels WHERE name = 'InfoJobs');
+
+INSERT INTO campaigns (job_id, channel_id, status, objective, budget, priority, copy, views, spend, started_at)
+SELECT
+  '30000000-0000-0000-0000-000000000002',
+  (SELECT id FROM channels WHERE name = 'Meta Ads' LIMIT 1),
+  'active', 'volume', 200, 2,
+  '¿Buscas trabajo en Customer Success? Acme Corp busca CSM con experiencia en SaaS. ¡Aplica en 2 minutos!',
+  410, 65, now() - interval '9 days'
+WHERE EXISTS (SELECT 1 FROM channels WHERE name = 'Meta Ads');
+
+INSERT INTO campaigns (job_id, channel_id, status, objective, budget, priority, copy, views, spend, started_at)
+SELECT
+  '30000000-0000-0000-0000-000000000003',
+  (SELECT id FROM channels WHERE name = 'Indeed' LIMIT 1),
+  'active', 'volume', 250, 1,
+  'Técnico/a Mantenimiento Industrial en Zaragoza. Contrato indefinido, turnos rotativos, salario competitivo.',
+  5320, 210, now() - interval '15 days'
+WHERE EXISTS (SELECT 1 FROM channels WHERE name = 'Indeed');
+
+INSERT INTO campaigns (job_id, channel_id, status, objective, budget, priority, copy, views, spend, started_at)
+SELECT
+  '30000000-0000-0000-0000-000000000003',
+  (SELECT id FROM channels WHERE name = 'Glassdoor' LIMIT 1),
+  'paused', 'quality', 150, 2,
+  'Técnico/a Mantenimiento Industrial — Empresa industrial líder en Zaragoza. Valoramos la estabilidad.',
+  230, 48, now() - interval '25 days'
+WHERE EXISTS (SELECT 1 FROM channels WHERE name = 'Glassdoor');
+
+-- ── BLOQUE 9: AJUSTES DE PERMISOS (allowance_adjustment_log) ─────────────────
 -- Traspasos 2025→2026, ajustes manuales HR y caducidades
 -- Procesados por Nuria Pla (employee 003 = 60000000-0000-0000-0000-000000000003)
 
