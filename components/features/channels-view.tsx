@@ -86,22 +86,26 @@ const STARTER_QUESTIONS = [
   "¿Qué canal funciona mejor por sector?",
 ];
 
+type ThreadTurn = { query: string; response: AnalystResponse };
+
 /* ── Tab: KPIs ──────────────────────────────────────────────────────────────── */
 
 function KPIsTab() {
   const [data, setData] = useState<ReportData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
-  const [activeFilters, setActiveFilters] = useState<{ period?: string; sector?: string; location?: string; source?: string }>({});
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  // AI search state
+  // AI conversation state
   const [query, setQuery] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [response, setResponse] = useState<AnalystResponse | null>(null);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [thread, setThread] = useState<ThreadTurn[]>([]);
+  const threadEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const loadData = useCallback(async (filters: typeof activeFilters) => {
+  const lastResponse = thread[thread.length - 1]?.response ?? null;
+  const chips = lastResponse?.suggested_questions ?? STARTER_QUESTIONS;
+
+  const loadData = useCallback(async (filters: Record<string, string>) => {
     setDataLoading(true);
     try {
       const params = new URLSearchParams({ period: filters.period ?? "30d" });
@@ -117,11 +121,21 @@ function KPIsTab() {
 
   useEffect(() => { loadData({}); }, [loadData]);
 
+  // Scroll to latest response
+  useEffect(() => {
+    if (thread.length > 0) threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [thread.length]);
+
   const ask = useCallback(async (q: string) => {
     if (!q.trim() || aiLoading) return;
     setAiLoading(true);
     setQuery("");
     try {
+      // Build history from thread for proper OpenAI context
+      const history: HistoryEntry[] = thread.flatMap((t) => [
+        { role: "user" as const, content: t.query },
+        { role: "assistant" as const, content: t.response.answer },
+      ]);
       const r = await fetch("/api/agents/channel-analyst", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -129,20 +143,18 @@ function KPIsTab() {
       });
       if (!r.ok) return;
       const result: AnalystResponse = await r.json();
-      setResponse(result);
-      setHistory((h) => [...h, { role: "user", content: q }, { role: "assistant", content: result.answer }]);
-      // Update data table to reflect the agent's filters
-      const newFilters = result.filters_applied ?? {};
-      setActiveFilters(newFilters);
-      loadData(newFilters);
+      setThread((prev) => [...prev, { query: q, response: result }]);
+      loadData(result.filters_applied ?? {});
     } finally {
       setAiLoading(false);
     }
-  }, [aiLoading, history, loadData]);
+  }, [aiLoading, thread, loadData]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") ask(query);
   };
+
+  const clearThread = () => { setThread([]); loadData({}); };
 
   const visibleRows = data?.rows ?? [];
   const maxApps = visibleRows[0]?.applications ?? 1;
@@ -150,8 +162,9 @@ function KPIsTab() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-      {/* AI Search bar */}
+      {/* AI Search panel */}
       <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "16px", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+
         {/* Input row */}
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <div style={{ position: "relative", flex: 1 }}>
@@ -165,7 +178,7 @@ function KPIsTab() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Pregunta sobre canales y campañas…"
+              placeholder={thread.length > 0 ? "Pregunta de seguimiento…" : "Pregunta sobre canales y campañas…"}
               style={{ width: "100%", paddingLeft: "42px", paddingRight: "14px", paddingTop: "11px", paddingBottom: "11px", fontFamily: "inherit", fontSize: "14px", color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "11px", outline: "none", boxSizing: "border-box" }}
             />
           </div>
@@ -182,52 +195,83 @@ function KPIsTab() {
           </button>
         </div>
 
-        {/* Starter chips or follow-up chips */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
-          {(response?.suggested_questions ?? STARTER_QUESTIONS).map((q) => (
+        {/* Chips — starter or contextual follow-ups from last response */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "7px", alignItems: "center" }}>
+          {chips.map((q) => (
             <button key={q} onClick={() => ask(q)} disabled={aiLoading}
               style={{ fontFamily: "inherit", fontSize: "12px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "5px 13px", cursor: aiLoading ? "not-allowed" : "pointer", opacity: aiLoading ? 0.6 : 1, whiteSpace: "nowrap" }}>
               {q}
             </button>
           ))}
+          {thread.length > 0 && (
+            <button onClick={clearThread}
+              style={{ ...mono, fontSize: "10px", color: soft, background: "none", border: "none", cursor: "pointer", padding: "5px 6px", textDecoration: "underline", marginLeft: "4px" }}>
+              Nueva conversación
+            </button>
+          )}
         </div>
 
-        {/* AI response */}
-        {response && (
-          <div style={{ borderTop: `1px solid ${line}`, paddingTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-              {/* Agent avatar */}
-              <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="#fff"/>
-                </svg>
+        {/* Conversation thread */}
+        {thread.length > 0 && (
+          <div style={{ borderTop: `1px solid ${line}`, paddingTop: "14px", display: "flex", flexDirection: "column", gap: "20px", maxHeight: "480px", overflowY: "auto" }}>
+            {thread.map((turn, i) => (
+              <div key={i} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {/* User question */}
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <div style={{ background: "#F4F0E8", border: `1px solid ${line}`, borderRadius: "12px 12px 4px 12px", padding: "8px 14px", maxWidth: "75%", fontSize: "13.5px", color: ink, lineHeight: "1.5" }}>
+                    {turn.query}
+                  </div>
+                </div>
+                {/* Agent response */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                  <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "13.5px", lineHeight: "1.6", color: ink }}
+                      dangerouslySetInnerHTML={{ __html: turn.response.answer.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>") }}
+                    />
+                    {turn.response.redirect && (
+                      <a href={turn.response.redirect.url}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginTop: "8px", fontSize: "13px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "9px", padding: "6px 12px" }}>
+                        {turn.response.redirect.label}
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#0E5C4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </a>
+                    )}
+                    {/* Filters applied — only show on last turn */}
+                    {i === thread.length - 1 && Object.keys(turn.response.filters_applied ?? {}).length > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "8px" }}>
+                        <span style={{ ...mono, fontSize: "10px", color: soft }}>Datos filtrados:</span>
+                        {Object.entries(turn.response.filters_applied).map(([k, v]) => v && (
+                          <span key={k} style={{ ...mono, fontSize: "10px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "2px 8px" }}>
+                            {k === "period" ? v : `${k}: ${v}`}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div style={{ flex: 1, fontSize: "13.5px", lineHeight: "1.6", color: ink }}
-                dangerouslySetInnerHTML={{ __html: response.answer.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>") }}
-              />
-            </div>
-            {response.redirect && (
-              <a href={response.redirect.url}
-                style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "9px", padding: "7px 13px", width: "fit-content" }}>
-                {response.redirect.label}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#0E5C4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </a>
-            )}
-            {/* Applied filters indicator */}
-            {Object.keys(response.filters_applied ?? {}).length > 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                <span style={{ ...mono, fontSize: "10px", color: soft }}>Datos filtrados:</span>
-                {Object.entries(response.filters_applied).map(([k, v]) => v && (
-                  <span key={k} style={{ ...mono, fontSize: "10px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "2px 8px" }}>
-                    {k === "period" ? v : `${k}: ${v}`}
-                  </span>
-                ))}
-                <button onClick={() => { setResponse(null); setHistory([]); setActiveFilters({}); loadData({}); }}
-                  style={{ ...mono, fontSize: "10px", color: soft, background: "none", border: "none", cursor: "pointer", padding: "2px 4px", textDecoration: "underline" }}>
-                  Limpiar
-                </button>
+            ))}
+            {aiLoading && (
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Loader2 size={12} className="animate-spin" style={{ color: "#fff" }} />
+                </div>
+                <span style={{ ...mono, fontSize: "11px", color: soft }}>Analizando datos…</span>
               </div>
             )}
+            <div ref={threadEndRef} />
+          </div>
+        )}
+
+        {/* Loading indicator for first message */}
+        {aiLoading && thread.length === 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingTop: "4px" }}>
+            <Loader2 size={14} className="animate-spin" style={{ color: soft }} />
+            <span style={{ ...mono, fontSize: "11px", color: soft }}>Analizando datos…</span>
           </div>
         )}
       </div>

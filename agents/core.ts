@@ -52,11 +52,12 @@ export async function runAgent<T>(opts: {
   agent: string;
   system: string;
   user: string;
+  priorMessages?: ChatCompletionMessageParam[];
   tools: AgentTool[];
   input: unknown;
   fallback: () => Promise<T> | T;
 }): Promise<AgentResult<T>> {
-  const { agent, system, user, tools, input, fallback } = opts;
+  const { agent, system, user, priorMessages, tools, input, fallback } = opts;
 
   if (!hasOpenAI()) {
     const output = await fallback();
@@ -68,6 +69,7 @@ export async function runAgent<T>(opts: {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const messages: ChatCompletionMessageParam[] = [
       { role: "system", content: system },
+      ...(priorMessages ?? []),
       { role: "user", content: user },
     ];
 

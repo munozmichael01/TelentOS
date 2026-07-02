@@ -62,17 +62,17 @@ async function fallbackAnalysis(input: ChannelAnalystInput): Promise<AnalystResp
 export async function runChannelAnalyst(
   input: ChannelAnalystInput
 ): Promise<AgentResult<AnalystResponse>> {
-  const historyBlock =
-    input.history.length > 0
-      ? `\n\nContexto de la conversación:\n${input.history.map((m) => `${m.role === "user" ? "Usuario" : "Asistente"}: ${m.content}`).join("\n")}`
-      : "";
-
-  const user = `${input.query}${historyBlock}`;
+  // Pass history as real OpenAI messages so the model has genuine conversational context
+  const priorMessages = input.history.map((m) => ({
+    role: m.role as "user" | "assistant",
+    content: m.content,
+  }));
 
   return runAgent<AnalystResponse>({
     agent: "channel-analyst",
     system: SYSTEM_PROMPT,
-    user,
+    user: input.query,
+    priorMessages,
     tools,
     input,
     fallback: () => fallbackAnalysis(input),
