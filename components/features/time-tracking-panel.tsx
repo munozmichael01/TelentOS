@@ -370,10 +370,10 @@ function EntriesTable({ initialEntries, employees }: {
         {loading && <Loader2 size={14} className="animate-spin" style={{ color: T.soft, alignSelf: "center" }} />}
       </div>
 
-      <div style={{ border: `2px solid #1A1A17`, boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
+      <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.body }}>
           <thead>
-            <tr style={{ background: T.bg, borderBottom: `2px solid ${T.line}` }}>
+            <tr style={{ borderBottom: `1px solid ${T.line}` }}>
               {["Empleado", "Fecha", "Tipo", "Inicio", "Fin", "Duración", "Fuente", ""].map((h) => (
                 <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, fontWeight: 500, whiteSpace: "nowrap" }}>
                   {h}
@@ -395,7 +395,6 @@ function EntriesTable({ initialEntries, employees }: {
               <tr
                 key={e.id}
                 style={{
-                  background: i % 2 === 0 ? T.surface : T.bg,
                   borderBottom: i < entries.length - 1 ? `1px solid ${T.line}` : undefined,
                 }}
               >
@@ -486,10 +485,10 @@ function WeeklySummary({ entries, employees }: {
   return (
     <div>
       <SectionLabel>Resumen semanal</SectionLabel>
-      <div style={{ border: `2px solid #1A1A17`, boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
+      <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.body }}>
           <thead>
-            <tr style={{ background: T.bg, borderBottom: `2px solid ${T.line}` }}>
+            <tr style={{ borderBottom: `1px solid ${T.line}` }}>
               <th style={{ padding: "10px 14px", textAlign: "left", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, fontWeight: 500 }}>Empleado</th>
               {dayLabels.map((d, i) => (
                 <th key={d} style={{ padding: "10px 10px", textAlign: "center", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: days[i] === today.toISOString().split("T")[0] ? T.brand : T.soft, fontWeight: days[i] === today.toISOString().split("T")[0] ? 700 : 500 }}>
@@ -504,7 +503,7 @@ function WeeklySummary({ entries, employees }: {
               const dayMins = empMap[empId];
               const total = Object.values(dayMins).reduce((a, b) => a + b, 0);
               return (
-                <tr key={empId} style={{ background: i % 2 === 0 ? T.surface : T.bg, borderBottom: i < empIds.length - 1 ? `1px solid ${T.line}` : undefined }}>
+                <tr key={empId} style={{ borderBottom: i < empIds.length - 1 ? `1px solid ${T.line}` : undefined }}>
                   <td style={{ padding: "11px 14px", fontWeight: 600 }}>{empById[empId]?.name ?? empId}</td>
                   {days.map((day) => {
                     const min = dayMins[day] ?? 0;

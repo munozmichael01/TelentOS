@@ -2,10 +2,20 @@ import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { FitBadge } from "@/components/fit-badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, initials } from "@/lib/utils";
+
+const AVATAR_PALETTES = [
+  { bg: "#DCEFE4", color: "#0E5C4A" },
+  { bg: "#F6D9D2", color: "#BD4332" },
+  { bg: "#E7E0F2", color: "#5A4C86" },
+  { bg: "#F8E7C4", color: "#946312" },
+  { bg: "#D6E4F2", color: "#2B5E8A" },
+];
+function avatarPalette(name: string) {
+  const code = name.charCodeAt(0) + (name.charCodeAt(1) || 0);
+  return AVATAR_PALETTES[code % AVATAR_PALETTES.length];
+}
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -32,44 +42,52 @@ export default async function DashboardPage() {
         <StatCard label="Ausencias pendientes" value={timeoff.count ?? 0} />
       </div>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            Últimas candidaturas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <div style={{ marginTop: "24px", border: "1px solid #E7E1D4", borderRadius: "14px", background: "#FCFAF6", overflow: "hidden" }}>
+        <div style={{ padding: "16px 18px", borderBottom: "1px solid #E7E1D4", fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px" }}>
+          Últimas candidaturas
+        </div>
+        <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
           {(recent.data ?? []).map((app) => {
             const candidate = app.candidates as unknown as { name: string } | null;
             const job = app.jobs as unknown as { title: string } | null;
             const utm = app.utm as Record<string, string>;
+            const name = candidate?.name ?? "—";
+            const pal = avatarPalette(name);
+            const source = utm?.utm_source === "career_site" ? "career site" : utm?.utm_source || app.source;
             return (
               <Link
                 key={app.id}
                 href={`/applications/${app.id}`}
-                className="flex items-center justify-between gap-3 rounded-md border p-3 transition-colors hover:bg-accent"
+                style={{
+                  display: "flex", alignItems: "center", gap: "12px",
+                  border: "1px solid #E7E1D4", borderRadius: "11px", padding: "9px 12px",
+                  background: "#F4F0E8", textDecoration: "none",
+                  transition: "border-color .12s, box-shadow .12s",
+                }}
+                className="hover:[border-color:#1A1A17] hover:[box-shadow:3px_3px_0_#1A1A17]"
               >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{candidate?.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{job?.title}</p>
+                <span style={{ width: "34px", height: "34px", borderRadius: "50%", background: pal.bg, color: pal.color, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "11px", flexShrink: 0 }}>
+                  {initials(name)}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px", color: "#1A1A17" }}>{name}</div>
+                  <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{job?.title}</div>
                 </div>
-                <div className="flex shrink-0 items-center gap-3">
-                  <Badge variant="outline">
-                    {utm?.utm_source === "career_site" ? "career site" : utm?.utm_source || app.source}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">{formatDateTime(app.created_at)}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#79746B", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "999px", padding: "2px 8px" }}>{source}</span>
+                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", whiteSpace: "nowrap" }}>{formatDateTime(app.created_at)}</span>
                   <FitBadge score={app.fit_score} />
                 </div>
               </Link>
             );
           })}
           {(recent.data ?? []).length === 0 && (
-            <p className="py-6 text-center text-sm text-muted-foreground">
+            <p style={{ padding: "24px 0", textAlign: "center", fontSize: "13px", color: "#79746B" }}>
               Aún no hay candidaturas. Publica una oferta y distribúyela para empezar.
             </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

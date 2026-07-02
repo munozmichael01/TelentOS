@@ -453,10 +453,10 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                         </div>
                       </div>
 
-                      <div style={{ border: "1.5px solid #E7E1D4", borderRadius: "10px", overflow: "hidden", marginBottom: "12px" }}>
+                      <div style={{ border: "1px solid #E7E1D4", borderRadius: "14px", overflow: "hidden", marginBottom: "12px" }}>
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
                           <thead>
-                            <tr style={{ background: "#F4F0E8", borderBottom: "1.5px solid #E7E1D4" }}>
+                            <tr style={{ borderBottom: "1px solid #E7E1D4" }}>
                               <th style={{ padding: "7px 12px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Origen</th>
                               <th style={{ padding: "7px 12px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Cantidad</th>
                             </tr>
@@ -467,7 +467,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                               const isPos = row.sign === "+" && row.value > 0;
                               const valColor = isNeg ? "#BD4332" : isPos ? "#1B6B4F" : "#79746B";
                               return (
-                                <tr key={row.label} style={{ borderBottom: i < breakdownRows.length - 1 ? "1px solid #E7E1D4" : undefined, background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8" }}>
+                                <tr key={row.label} style={{ borderBottom: i < breakdownRows.length - 1 ? "1px solid #E7E1D4" : undefined }}>
                                   <td style={{ padding: "8px 12px", fontFamily: "'Hanken Grotesk',sans-serif", color: row.value === 0 ? "#B0AB9F" : "#1A1A17" }}>{row.label}</td>
                                   <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: row.value === 0 ? "#B0AB9F" : valColor }}>
                                     {row.value === 0 ? "0" : `${row.sign}${row.value}`}
@@ -475,7 +475,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                                 </tr>
                               );
                             })}
-                            <tr style={{ background: "#F4F0E8", borderTop: "1.5px solid #1A1A17" }}>
+                            <tr style={{ background: "#F4F0E8", borderTop: "1px solid #E7E1D4" }}>
                               <td style={{ padding: "9px 12px", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "13px" }}>Disponible</td>
                               <td style={{ padding: "9px 12px", textAlign: "right", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "14px", color: bal.available > 0 ? "#1B6B4F" : "#79746B" }}>
                                 {bal.available} {bal.typeUnit}
@@ -533,10 +533,10 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                         <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".6px", color: "#79746B", marginBottom: "10px", paddingLeft: "2px" }}>
                           {yr}
                         </div>
-                        <div style={{ border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
+                        <div style={{ border: "1px solid #E7E1D4", borderRadius: "14px", overflow: "hidden" }}>
                           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                             <thead>
-                              <tr style={{ background: "#F4F0E8", borderBottom: "2px solid #E7E1D4" }}>
+                              <tr style={{ borderBottom: "1px solid #E7E1D4" }}>
                                 {["Tipo", "Desde", "Hasta", "Días", "Estado"].map(h => (
                                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>{h}</th>
                                 ))}
@@ -547,7 +547,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                                 const atype = r.absence_types;
                                 const sc = STATUS_CLR[r.status] ?? STATUS_CLR.pending;
                                 return (
-                                  <tr key={r.id} style={{ background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8", borderBottom: i < rows.length - 1 ? "1px solid #E7E1D4" : undefined }}>
+                                  <tr key={r.id} style={{ borderBottom: i < rows.length - 1 ? "1px solid #E7E1D4" : undefined }}>
                                     <td style={{ padding: "12px 14px" }}>
                                       <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
                                         {atype?.icon && <span style={{ fontSize: "16px" }}>{atype.icon}</span>}
@@ -606,10 +606,10 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                 <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Sin horas registradas</div>
               </div>
             ) : (
-              <div style={{ border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
+              <div style={{ border: "1px solid #E7E1D4", borderRadius: "14px", overflow: "hidden" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                   <thead>
-                    <tr style={{ background: "#F4F0E8", borderBottom: "2px solid #E7E1D4" }}>
+                    <tr style={{ borderBottom: "1px solid #E7E1D4" }}>
                       {["Fecha", "Entrada", "Salida", "Duración", "Notas"].map(h => (
                         <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>{h}</th>
                       ))}
@@ -621,7 +621,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                         ? new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
                         : iso?.slice(0, 5) ?? "—";
                       return (
-                        <tr key={e.id} style={{ background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8", borderBottom: i < (entries ?? []).length - 1 ? "1px solid #E7E1D4" : undefined }}>
+                        <tr key={e.id} style={{ borderBottom: i < (entries ?? []).length - 1 ? "1px solid #E7E1D4" : undefined }}>
                           <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(e.date)}</td>
                           <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{fmtTime(e.start_time)}</td>
                           <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{e.end_time ? fmtTime(e.end_time) : <span style={{ color: "#79746B" }}>Activo</span>}</td>
@@ -672,10 +672,10 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                 <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Sin registros de compensación</div>
               </div>
             ) : (
-              <div style={{ border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
+              <div style={{ border: "1px solid #E7E1D4", borderRadius: "14px", overflow: "hidden" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                   <thead>
-                    <tr style={{ background: "#F4F0E8", borderBottom: "2px solid #E7E1D4" }}>
+                    <tr style={{ borderBottom: "1px solid #E7E1D4" }}>
                       {["Período", "Programadas", "Trabajadas", "Balance", "Tipo"].map(h => (
                         <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>{h}</th>
                       ))}
@@ -687,7 +687,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                       const balColor = bal > 0 ? "#1B6B4F" : bal < 0 ? "#BD4332" : "#79746B";
                       const balBg = bal > 0 ? "#DCEFE3" : bal < 0 ? "#F6D9D2" : "#F4F0E8";
                       return (
-                        <tr key={r.id} style={{ background: i % 2 === 0 ? "#FCFAF6" : "#F4F0E8", borderBottom: i < (compRecords ?? []).length - 1 ? "1px solid #E7E1D4" : undefined }}>
+                        <tr key={r.id} style={{ borderBottom: i < (compRecords ?? []).length - 1 ? "1px solid #E7E1D4" : undefined }}>
                           <td style={{ padding: "12px 14px" }}>
                             <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.period_start)}</div>
                             <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#79746B" }}>→ {formatDate(r.period_end)}</div>

@@ -277,10 +277,10 @@ function RecordsTable({ records }: { records: (CompensationRecord & { employees?
   return (
     <div>
       <SL>Registros confirmados</SL>
-      <div style={{ border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
+      <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.body }}>
           <thead>
-            <tr style={{ background: T.bg, borderBottom: `2px solid ${T.line}` }}>
+            <tr style={{ borderBottom: `1px solid ${T.line}` }}>
               {["Empleado", "Período", "Programadas", "Trabajadas", "Balance", "Tipo"].map((h) => (
                 <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, fontWeight: 500, whiteSpace: "nowrap" }}>
                   {h}
@@ -294,7 +294,7 @@ function RecordsTable({ records }: { records: (CompensationRecord & { employees?
               const balClr = bal > 0 ? T.successText : bal < 0 ? T.dangerText : T.soft;
               const balBg  = bal > 0 ? T.successBg   : bal < 0 ? T.dangerBg   : T.bg;
               return (
-                <tr key={r.id} style={{ background: i % 2 === 0 ? T.surface : T.bg, borderBottom: i < records.length - 1 ? `1px solid ${T.line}` : undefined }}>
+                <tr key={r.id} style={{ borderBottom: i < records.length - 1 ? `1px solid ${T.line}` : undefined }}>
                   <td style={{ padding: "12px 14px" }}>
                     <div style={{ fontWeight: 600 }}>{r.employees?.name ?? "—"}</div>
                     {r.employees?.role_title && <div style={{ fontSize: "11px", color: T.soft }}>{r.employees.role_title}</div>}
@@ -467,10 +467,10 @@ export function CompensationPanel({
               <SL>Horas del período</SL>
               <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} label="Filtrar empleados" />
             </div>
-            <div style={{ border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px", overflow: "hidden" }}>
+            <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.body }}>
                 <thead>
-                  <tr style={{ background: T.bg, borderBottom: `2px solid ${T.line}` }}>
+                  <tr style={{ borderBottom: `1px solid ${T.line}` }}>
                     {["Empleado", "Horas trabajadas", "Estado", ""].map((h) => (
                       <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, fontWeight: 500, whiteSpace: "nowrap" }}>
                         {h}
@@ -486,7 +486,7 @@ export function CompensationPanel({
                       </td>
                     </tr>
                   ) : visibleSummaries.map((s, i) => (
-                    <tr key={s.id} style={{ background: i % 2 === 0 ? T.surface : T.bg, borderBottom: i < visibleSummaries.length - 1 ? `1px solid ${T.line}` : undefined }}>
+                    <tr key={s.id} style={{ borderBottom: i < visibleSummaries.length - 1 ? `1px solid ${T.line}` : undefined }}>
                       <td style={{ padding: "12px 14px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.head, fontWeight: 900, fontSize: "12px", color: "#063D31", flexShrink: 0 }}>

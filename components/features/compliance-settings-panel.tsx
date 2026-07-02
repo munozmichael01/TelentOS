@@ -262,12 +262,12 @@ export function ComplianceSettingsPanel({
             <div style={{ fontSize: "13px" }}>Todos los registros están dentro de las reglas configuradas</div>
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13.5px" }}>
+          <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${T.line}` }}>
                   {["Empleado", "Fecha", "Tipo", "Descripción", ""].map((h) => (
-                    <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>{h}</th>
+                    <th key={h} style={{ textAlign: "left", padding: "10px 12px", fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: T.soft }}>{h}</th>
                   ))}
                 </tr>
               </thead>

@@ -1,13 +1,16 @@
 import Link from "next/link";
-import { Plus, FileUp } from "lucide-react";
+import { Plus, FileUp, Users } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { formatSalaryRange } from "@/lib/utils";
 import type { Job } from "@/lib/types";
+
+function tileInitials(title: string): string {
+  return title.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+}
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "borrador", active: "activa", closed: "cerrada", archived: "archivada",
@@ -98,34 +101,44 @@ export default async function JobsPage({
           </div>
         </EmptyState>
       ) : (
-        <div className="space-y-2">
-          {(jobs as Job[]).map((job) => (
-            <Link key={job.id} href={`/jobs/${job.id}`}>
-              <Card className="mb-2 p-4 transition-colors hover:bg-accent/50">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{job.title}</span>
-                      <Badge variant={STATUS_VARIANT[job.status]}>{STATUS_LABEL[job.status]}</Badge>
-                      {job.source === "ai" && <Badge variant="outline">✨ IA</Badge>}
-                      {job.source.startsWith("import") && <Badge variant="outline">importada</Badge>}
-                    </div>
-                    <p className="mt-0.5 text-sm text-muted-foreground">
-                      {[job.location, TYPE_LABEL[job.employment_type], job.sector, job.department]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
+        <div className="flex flex-col gap-2">
+          {(jobs as Job[]).map((job) => {
+            const salary = formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency);
+            return (
+              <Link
+                key={job.id}
+                href={`/jobs/${job.id}`}
+                className="flex items-center gap-[18px] rounded-[14px] border border-[#E7E1D4] bg-[#F4F0E8] px-[18px] py-4 transition-[border-color,box-shadow] duration-[120ms] hover:border-[#1A1A17] hover:shadow-[3px_3px_0_#1A1A17]"
+              >
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#DCEFE4] font-[Archivo] text-base font-black text-[#0E5C4A]">
+                  {tileInitials(job.title)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-[Archivo] text-[16px] font-extrabold tracking-[-0.3px] text-[#1A1A17]">{job.title}</span>
+                    <Badge variant={STATUS_VARIANT[job.status]}>{STATUS_LABEL[job.status]}</Badge>
+                    {job.source === "ai" && <Badge variant="outline">✨ IA</Badge>}
+                    {job.source.startsWith("import") && <Badge variant="outline">importada</Badge>}
                   </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="text-muted-foreground">
-                      {formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency)}
-                    </span>
-                    <Badge variant="secondary">{countByJob.get(job.id) ?? 0} candidatos</Badge>
+                  <p className="mt-1.5 font-mono text-[11.5px] text-[#79746B]">
+                    {[job.location, TYPE_LABEL[job.employment_type], job.sector, job.department].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+                <div className="ml-auto flex shrink-0 items-center gap-5">
+                  {salary && (
+                    <div className="text-right">
+                      <div className="text-sm font-bold whitespace-nowrap">{salary}</div>
+                      <div className="mt-0.5 font-mono text-[10.5px] text-[#79746B]">salario / año</div>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-[7px] rounded-full border border-[#E7E1D4] bg-[#FCFAF6] px-3 py-1.5">
+                    <Users size={14} className="text-[#0E5C4A]" />
+                    <span className="font-[Archivo] text-[13px] font-extrabold text-[#0E5C4A]">{countByJob.get(job.id) ?? 0}</span>
                   </div>
                 </div>
-              </Card>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
