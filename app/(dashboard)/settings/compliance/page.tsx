@@ -20,7 +20,7 @@ export default async function CompliancePage() {
       .maybeSingle(),
     supabase
       .from("compliance_violations")
-      .select("*, employees(name)")
+      .select("*, employees!employee_id(name)")
       .eq("company_id", company?.id ?? "")
       .is("acknowledged_at", null)
       .order("date", { ascending: false })

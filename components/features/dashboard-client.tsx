@@ -92,6 +92,7 @@ export function DashboardClient({
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<string | null>(data.lastInsightAt);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [showUpdateTip, setShowUpdateTip] = useState(false);
 
   useEffect(() => { setPrefs(loadPrefs()); }, []);
 
@@ -203,7 +204,7 @@ export function DashboardClient({
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
           Personalizar
         </button>
@@ -361,22 +362,32 @@ export function DashboardClient({
               <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "9px", color: "#8C877E" }}>
                 {lastRefresh ? `Actualizado ${relativeTime(lastRefresh)}` : "Sin analizar aún"}
               </span>
-              <button
-                onClick={refreshInsights}
-                disabled={!canRefresh || refreshing}
-                title={!canRefresh ? `Marca Hecho o Ignorar en las ${openInsights.length} sugerencias actuales antes de pedir un análisis nuevo.` : "Regenerar sugerencias"}
-                style={{
-                  fontFamily: "'Space Mono',monospace", fontSize: "9px",
-                  color: canRefresh ? "#C6F24E" : "#5A574F",
-                  background: "none", border: "none",
-                  display: "flex", alignItems: "center", gap: "4px",
-                  padding: 0, cursor: canRefresh ? "pointer" : "not-allowed",
-                  opacity: refreshing ? 0.6 : 1,
-                }}
+              <span
+                style={{ position: "relative", display: "inline-flex" }}
+                onMouseEnter={() => !canRefresh && setShowUpdateTip(true)}
+                onMouseLeave={() => setShowUpdateTip(false)}
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 018-8 8 8 0 016.9 4M20 12a8 8 0 01-8 8 8 8 0 01-6.9-4M18 3v4h-4M6 21v-4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                {refreshing ? "…" : "Actualizar"}
-              </button>
+                <button
+                  onClick={refreshInsights}
+                  disabled={!canRefresh || refreshing}
+                  style={{
+                    fontFamily: "'Space Mono',monospace", fontSize: "9px",
+                    color: canRefresh ? "#C6F24E" : "#5A574F",
+                    background: "none", border: "none",
+                    display: "flex", alignItems: "center", gap: "4px",
+                    padding: 0, cursor: canRefresh ? "pointer" : "not-allowed",
+                    opacity: refreshing ? 0.6 : 1,
+                  }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 018-8 8 8 0 016.9 4M20 12a8 8 0 01-8 8 8 8 0 01-6.9-4M18 3v4h-4M6 21v-4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {refreshing ? "…" : "Actualizar"}
+                </button>
+                {showUpdateTip && (
+                  <span style={{ position: "absolute", top: "calc(100% + 7px)", left: 0, zIndex: 30, width: "214px", background: "#FCFAF6", color: "#1A1A17", border: "1px solid #E7E1D4", borderRadius: "9px", boxShadow: "0 12px 26px -12px rgba(0,0,0,.55)", padding: "9px 11px", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "10.5px", lineHeight: 1.5, fontWeight: 500, pointerEvents: "none" }}>
+                    Marca <strong>Hecho</strong> o <strong>Ignorar</strong> en las {openInsights.length} sugerencias actuales antes de pedir un análisis nuevo.
+                  </span>
+                )}
+              </span>
             </div>
 
             {/* Feed */}

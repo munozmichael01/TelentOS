@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 
   let query = supabase
     .from("compliance_violations")
-    .select("*, employee:employees(name)")
+    .select("*, employee:employees!employee_id(name)")
     .eq("company_id", company.id)
     .order("date", { ascending: false });
 

@@ -123,7 +123,7 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
     // Infracciones sin reconocer
     supabase
       .from("compliance_violations")
-      .select("id, employee_id, violation_type, description, employees(name)")
+      .select("id, employee_id, violation_type, description, employees!employee_id(name)")
       .eq("company_id", company.id)
       .is("acknowledged_at", null)
       .order("date", { ascending: false })
@@ -195,11 +195,14 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
     const stage = app.job_stages as unknown as { name: string } | null;
     if (!candidate || !job) continue;
 
+    // Priority escalates with days: 65 base + 1 per day stalled, capped at 82
+    const candidatePriority = Math.min(82, 65 + (daysStalled - STALL_DAYS));
+
     const pal = avatarFor(candidate.name);
     stalledItems.push({
       id: `candidato-${app.id}`,
       type: "candidato",
-      priority: 70,
+      priority: candidatePriority,
       entityId: app.id,
       title: `${candidate.name} · ${job.title}`,
       subtitle: `Fit ${app.fit_score ?? "—"} · ${daysStalled} días en ${stage?.name ?? "etapa"} sin movimiento`,
@@ -209,14 +212,19 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
   }
 
   // ── Inbox items ──────────────────────────────────────────────────────────
+
+  const COMPLIANCE_SEVERITY: Record<string, number> = {
+    max_hours_exceeded: 5, missing_break: 3, insufficient_break: 3, early_start: 0,
+  };
+
   const inbox: InboxItem[] = [
-    // Compliance (priority 90)
+    // Compliance (base 90, +severity modifier)
     ...(complianceUnack.data ?? []).map((v) => {
       const name = (v.employees as unknown as { name: string } | null)?.name ?? "—";
       return {
         id: `compliance-${v.id}`,
         type: "compliance" as const,
-        priority: 90,
+        priority: 90 + (COMPLIANCE_SEVERITY[v.violation_type] ?? 0),
         entityId: v.id,
         title: `${name} · ${VIOLATION_LABELS[v.violation_type] ?? v.violation_type}`,
         subtitle: v.description ?? "",
@@ -225,15 +233,17 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
       };
     }),
 
-    // Ausencias pendientes (priority 80)
+    // Ausencias pendientes (base 84, decrements per day until start_date)
     ...(absencePending.data ?? []).map((r) => {
       const name = (r.employees as unknown as { name: string } | null)?.name ?? "—";
       const typeName = (r.absence_types as unknown as { name: string } | null)?.name ?? "Ausencia";
       const pal = avatarFor(name);
+      const daysUntil = Math.max(0, Math.floor((new Date(r.start_date).getTime() - nowMs) / 86_400_000));
+      const absencePriority = Math.max(75, 84 - daysUntil);
       return {
         id: `ausencia-${r.id}`,
         type: "ausencia" as const,
-        priority: 80,
+        priority: absencePriority,
         entityId: r.id,
         title: `${name} · ${typeName}`,
         subtitle: `Del ${r.start_date} al ${r.end_date}`,
@@ -245,17 +255,18 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
       };
     }),
 
-    // Candidatos estancados (priority 70)
+    // Candidatos estancados (dynamic 65–82)
     ...stalledItems,
 
-    // Onboarding vencido (priority 60)
+    // Onboarding vencido (base 55, +1 per day past due, capped at 74)
     ...(onboardingOverdue.data ?? []).map((t) => {
       const emp = t.employees as unknown as { name: string; company_id: string } | null;
       const name = emp?.name ?? "—";
+      const daysPast = Math.max(0, Math.floor((nowMs - new Date(t.due_date).getTime()) / 86_400_000));
       return {
         id: `onboarding-${t.id}`,
         type: "onboarding" as const,
-        priority: 60,
+        priority: Math.min(74, 55 + daysPast),
         entityId: t.id,
         title: `${name} · ${t.title}`,
         subtitle: `Fecha límite: ${t.due_date}`,
@@ -264,7 +275,7 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
       };
     }),
 
-    // Ausentes hoy (priority 50)
+    // Ausentes hoy (fixed 50 — informativo)
     ...(absentToday.data ?? []).map((r) => {
       const name = (r.employees as unknown as { name: string } | null)?.name ?? "—";
       const typeName = (r.absence_types as unknown as { name: string } | null)?.name ?? "Ausencia";
