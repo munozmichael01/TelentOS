@@ -41,6 +41,7 @@ type AbsenceType = {
   icon: string | null;
   requires_approval: boolean;
   deducts_from_allowance: boolean;
+  allowance_type_id?: string | null;
   is_public: boolean;
   requires_document: boolean;
   allow_half_day: boolean;
@@ -256,31 +257,44 @@ function AbsenceTypesTab({
   const [error, setError] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({
+  const blankForm = {
     name: "",
     color: PRESET_COLORS[0],
     icon: "📅",
     requires_approval: true,
     deducts_from_allowance: false,
+    allowance_type_id: "",
     is_public: true,
     requires_document: false,
     allow_half_day: false,
-  });
+  };
+
+  const [form, setForm] = useState(blankForm);
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
   function openCreate() {
+    setEditId(null);
+    setForm(blankForm);
+    setError("");
+    setOpen(true);
+  }
+
+  function openEdit(t: AbsenceType) {
+    setEditId(t.id);
     setForm({
-      name: "",
-      color: PRESET_COLORS[0],
-      icon: "📅",
-      requires_approval: true,
-      deducts_from_allowance: false,
-      is_public: true,
-      requires_document: false,
-      allow_half_day: false,
+      name: t.name,
+      color: t.color,
+      icon: t.icon ?? "📅",
+      requires_approval: t.requires_approval,
+      deducts_from_allowance: t.deducts_from_allowance,
+      allowance_type_id: t.allowance_type_id ?? "",
+      is_public: t.is_public,
+      requires_document: t.requires_document,
+      allow_half_day: t.allow_half_day,
     });
     setError("");
     setOpen(true);
@@ -290,10 +304,16 @@ function AbsenceTypesTab({
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/absence-types", {
-        method: "POST",
+      const payload = {
+        ...form,
+        allowance_type_id: form.allowance_type_id || null,
+      };
+      const url = editId ? `/api/absence-types/${editId}` : "/api/absence-types";
+      const method = editId ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al guardar");
@@ -381,7 +401,9 @@ function AbsenceTypesTab({
                 style={{ display: "flex", gap: "6px", alignItems: "center" }}
               >
                 {t.deducts_from_allowance && (
-                  <Badge variant="brand">Descuenta permiso</Badge>
+                  <Badge variant="brand">
+                    Descuenta{t.allowance_types?.name ? ` · ${t.allowance_types.name}` : " permiso"}
+                  </Badge>
                 )}
                 {t.requires_approval && (
                   <Badge variant="warning">Requiere aprobación</Badge>
@@ -389,7 +411,7 @@ function AbsenceTypesTab({
                 {t.is_public && <Badge variant="outline">Público</Badge>}
               </div>
               <div style={{ display: "flex", gap: "6px" }}>
-                <Button size="icon" variant="ghost">
+                <Button size="icon" variant="ghost" onClick={() => openEdit(t)}>
                   <Pencil />
                 </Button>
                 <Button
@@ -406,11 +428,11 @@ function AbsenceTypesTab({
         </div>
       )}
 
-      {/* Create dialog */}
+      {/* Create / Edit dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuevo tipo de ausencia</DialogTitle>
+            <DialogTitle>{editId ? "Editar tipo de ausencia" : "Nuevo tipo de ausencia"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -461,9 +483,32 @@ function AbsenceTypesTab({
               />
               <Toggle
                 checked={form.deducts_from_allowance}
-                onChange={(v) => set("deducts_from_allowance", v)}
+                onChange={(v) => {
+                  set("deducts_from_allowance", v);
+                  if (!v) set("allowance_type_id", "");
+                }}
                 label="Descuenta de saldo de permisos"
               />
+              {form.deducts_from_allowance && (
+                <div className="space-y-1.5" style={{ paddingLeft: "4px" }}>
+                  <Label>Tipo de saldo que descuenta *</Label>
+                  <Select
+                    value={form.allowance_type_id}
+                    onValueChange={(v) => set("allowance_type_id", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar tipo de saldo…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allowanceTypes.map((at) => (
+                        <SelectItem key={at.id} value={at.id}>
+                          {at.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Toggle
                 checked={form.is_public}
                 onChange={(v) => set("is_public", v)}
@@ -488,9 +533,16 @@ function AbsenceTypesTab({
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={save} disabled={!form.name.trim() || saving}>
+            <Button
+              onClick={save}
+              disabled={
+                !form.name.trim() ||
+                (form.deducts_from_allowance && !form.allowance_type_id) ||
+                saving
+              }
+            >
               {saving && <Loader2 className="animate-spin" />}
-              Crear tipo
+              {editId ? "Guardar cambios" : "Crear tipo"}
             </Button>
           </DialogFooter>
         </DialogContent>
