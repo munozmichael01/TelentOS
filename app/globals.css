@@ -126,6 +126,16 @@
 .app-hamburger     { display: none; }
 .app-sidebar-close { display: none; }
 
+/* ── Sidebar collapsible ── */
+.app-sidebar { width: 234px; transition: width .18s ease; }
+.app-sidebar.collapsed { width: 64px; }
+.app-sidebar.collapsed .nav-item { font-size: 0; gap: 0; justify-content: center; padding-left: 0; padding-right: 0; }
+.app-sidebar.collapsed .nav-section { display: none; }
+.app-sidebar.collapsed .nav-label { display: none; }
+.app-sidebar.collapsed .sb-header { padding: 0 !important; justify-content: center; }
+.app-sidebar.collapsed .sb-footer { justify-content: center; }
+.app-sidebar.collapsed .nav-submenu { display: none; }
+
 /* ─────────────────────────────────────────────────────────────
    MOBILE  ≤ 767 px
    ───────────────────────────────────────────────────────────── */
@@ -216,6 +226,9 @@
   /* Show mobile-only controls */
   .app-sidebar-close { display: flex !important; }
   .app-hamburger     { display: flex !important; }
+
+  /* Never collapse on mobile — sidebar is always full-width drawer */
+  .app-sidebar.collapsed { width: 234px !important; }
 
   /* Hide search box in topbar on mobile */
   .app-topbar-search { display: none !important; }

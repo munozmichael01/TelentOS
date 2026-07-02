@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Globe } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
@@ -95,6 +95,12 @@ const IconHelp = () => (
     <path d="M9.5 9.5a2.5 2.5 0 114 2c-1 .7-1.5 1.2-1.5 2.5M12 17.5h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
   </svg>
 );
+const IconPanel = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
+    <path d="M9 4v16" stroke="currentColor" strokeWidth="2"/>
+  </svg>
+);
 const LogoMark = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
     <path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round"/>
@@ -139,9 +145,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(() =>
     typeof window !== "undefined" && window.location.pathname.startsWith("/settings")
   );
+
+  // Restore collapsed state from localStorage after mount
+  useEffect(() => {
+    const stored = localStorage.getItem("sidebar-collapsed");
+    if (stored === "true") setCollapsed(true);
+  }, []);
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
@@ -160,11 +173,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     router.refresh();
   }
 
+  function toggleCollapsed() {
+    setCollapsed((c) => {
+      const next = !c;
+      localStorage.setItem("sidebar-collapsed", String(next));
+      return next;
+    });
+  }
+
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
     if (pathname === href) return true;
     if (!pathname.startsWith(href + "/")) return false;
-    // Don't mark parent active when a more-specific sibling nav item matches
     const hasChildMatch = NAV.some((item) => {
       if (!("href" in item) || !item.href) return false;
       const h = item.href as string;
@@ -173,18 +193,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return !hasChildMatch;
   }
 
+  const sidebarClass = cn("app-sidebar", sidebarOpen && "open", collapsed && "collapsed");
+
   return (
-    /* outer page */
     <div className="app-outer" style={{ background: "#ECEAE4", minHeight: "100vh", padding: "26px", WebkitFontSmoothing: "antialiased" }}>
       <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
-        {/* Mobile overlay — close sidebar when tapping outside */}
         {sidebarOpen && (
           <div
             onClick={() => setSidebarOpen(false)}
             style={{ position: "fixed", inset: 0, background: "rgba(26,26,23,.45)", zIndex: 49 }}
           />
         )}
-        {/* app container */}
+        {/* app container — fixed height so only content area scrolls */}
         <div className="app-container" style={{
           display: "flex",
           border: "1px solid #E7E1D4",
@@ -192,18 +212,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           overflow: "hidden",
           background: "#F4F0E8",
           boxShadow: "0 24px 50px -28px rgba(26,26,23,.3)",
-          minHeight: "calc(100vh - 52px)",
+          height: "calc(100vh - 52px)",
         }}>
 
           {/* ── SIDEBAR ── */}
-          <aside className={`app-sidebar${sidebarOpen ? " open" : ""}`} style={{ width: "234px", flexShrink: 0, background: "#FCFAF6", borderRight: "1px solid #E7E1D4", display: "flex", flexDirection: "column" }}>
+          <aside className={sidebarClass} style={{ flexShrink: 0, background: "#FCFAF6", borderRight: "1px solid #E7E1D4", display: "flex", flexDirection: "column" }}>
             {/* logo row */}
-            <div style={{ height: "62px", display: "flex", alignItems: "center", gap: "10px", padding: "0 18px", borderBottom: "1px solid #E7E1D4" }}>
-              <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 #1A1A17" }}>
+            <div className="sb-header" style={{ height: "62px", display: "flex", alignItems: "center", gap: "10px", padding: "0 18px", borderBottom: "1px solid #E7E1D4" }}>
+              <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 #1A1A17", flexShrink: 0 }}>
                 <LogoMark />
               </div>
-              <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "18px", letterSpacing: "-.5px" }}>TalentOS</span>
-              {/* Close button — only shown on mobile via CSS */}
+              <span className="nav-label" style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "18px", letterSpacing: "-.5px" }}>TalentOS</span>
               <button
                 className="app-sidebar-close"
                 onClick={() => setSidebarOpen(false)}
@@ -218,7 +237,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {NAV.map((item, i) => {
                 if ("section" in item) {
                   return (
-                    <div key={i} style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase", color: "#79746B", padding: "14px 10px 6px" }}>
+                    <div key={i} className="nav-section" style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase", color: "#79746B", padding: "14px 10px 6px" }}>
                       {item.section}
                     </div>
                   );
@@ -233,6 +252,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <button
                         onClick={() => setSettingsOpen((o) => !o)}
                         className="nav-item"
+                        title={item.label}
                         style={{
                           width: "100%", background: "none", border: "none",
                           cursor: "pointer", justifyContent: "space-between",
@@ -240,9 +260,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       >
                         <span style={{ display: "flex", alignItems: "center", gap: "11px" }}>
                           <item.Icon />
-                          {item.label}
+                          <span className="nav-label">{item.label}</span>
                         </span>
                         <svg
+                          className="nav-label"
                           width="13" height="13" viewBox="0 0 24 24" fill="none"
                           style={{ flexShrink: 0, transition: "transform .2s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
                         >
@@ -250,7 +271,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         </svg>
                       </button>
                       {isOpen && (
-                        <div style={{ marginLeft: "14px", marginTop: "2px", borderLeft: "2px solid #E7E1D4", paddingLeft: "10px", marginBottom: "4px" }}>
+                        <div className="nav-submenu" style={{ marginLeft: "14px", marginTop: "2px", borderLeft: "2px solid #E7E1D4", paddingLeft: "10px", marginBottom: "4px" }}>
                           {item.children!.map((child) => {
                             const childActive = pathname === child.href;
                             return (
@@ -279,21 +300,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     key={item.href}
                     href={item.href}
                     className="nav-item"
+                    title={item.label}
                     style={active ? { background: "#0E5C4A", color: "#fff", boxShadow: "2px 2px 0 #1A1A17" } : undefined}
                   >
                     <item.Icon />
-                    {item.label}
+                    <span className="nav-label">{item.label}</span>
                   </Link>
                 );
               })}
             </nav>
 
+            {/* collapse toggle */}
+            <div style={{ padding: "8px 12px", borderTop: "1px solid #E7E1D4" }}>
+              <button
+                onClick={toggleCollapsed}
+                className="nav-item"
+                title={collapsed ? "Expandir menú" : "Contraer menú"}
+                style={{ width: "100%", background: "none", border: "none", cursor: "pointer" }}
+              >
+                <IconPanel />
+                <span className="nav-label">{collapsed ? "Expandir menú" : "Contraer menú"}</span>
+              </button>
+            </div>
+
             {/* user footer */}
-            <div style={{ padding: "12px", borderTop: "1px solid #E7E1D4", display: "flex", alignItems: "center", gap: "10px" }}>
+            <div className="sb-footer" style={{ padding: "12px", borderTop: "1px solid #E7E1D4", display: "flex", alignItems: "center", gap: "10px" }}>
               <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", color: "#063D31", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "12px", flexShrink: 0 }}>
                 {initials(userEmail)}
               </div>
-              <div style={{ minWidth: 0 }}>
+              <div className="nav-label" style={{ minWidth: 0 }}>
                 <div style={{ fontSize: "13px", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail || "…"}</div>
                 <button
                   onClick={signOut}
@@ -307,10 +342,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </aside>
 
           {/* ── MAIN ── */}
-          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {/* topbar */}
             <div style={{ height: "62px", flexShrink: 0, display: "flex", alignItems: "center", gap: "14px", padding: "0 22px", borderBottom: "1px solid #E7E1D4", background: "#FCFAF6" }}>
-              {/* Hamburger — only shown on mobile via CSS */}
               <button
                 className="app-hamburger"
                 onClick={() => setSidebarOpen(true)}
@@ -339,7 +373,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            {/* content */}
+            {/* content — only this area scrolls */}
             <div
               className="app-content"
               style={{
