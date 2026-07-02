@@ -23,7 +23,7 @@ export default async function OrgPage() {
   const supabase = createClient();
   const { data } = await supabase
     .from("employees")
-    .select("id, name, role_title, department, status")
+    .select("id, name, role_title, department, status, manager_id")
     .eq("status", "active")
     .order("name");
   const employees = (data ?? []) as Pick<Employee, "id" | "name" | "role_title" | "department" | "status">[];
