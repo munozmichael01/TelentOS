@@ -48,6 +48,8 @@ export async function POST(req: Request) {
     .ilike("email", email)
     .maybeSingle();
 
+  const phone = String(formData.get("phone") ?? "").trim() || null;
+
   let candidateId = existingCandidate?.id;
   if (!candidateId) {
     const { data: candidate, error: candErr } = await supabase
@@ -55,7 +57,7 @@ export async function POST(req: Request) {
       .insert({
         name,
         email,
-        phone: String(formData.get("phone") ?? "").trim() || null,
+        phone,
         location,
         skills: [],
         experience_years: 0,
@@ -67,8 +69,14 @@ export async function POST(req: Request) {
       .single();
     if (candErr) return jsonError(candErr.message, 500);
     candidateId = candidate.id;
-  } else if (cvUrl) {
-    await supabase.from("candidates").update({ cv_url: cvUrl }).eq("id", candidateId);
+  } else {
+    // Candidato existente: actualizar siempre los datos que acaba de proporcionar
+    // (nombre, teléfono y ubicación pueden haber cambiado desde su última candidatura)
+    const patch: Record<string, unknown> = { name };
+    if (phone) patch.phone = phone;
+    if (location) patch.location = location;
+    if (cvUrl) patch.cv_url = cvUrl;
+    await supabase.from("candidates").update(patch).eq("id", candidateId);
   }
 
   // Etapa inicial del pipeline de la oferta
