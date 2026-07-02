@@ -19,11 +19,7 @@ export interface CareerSiteContent {
   // Sobre nosotros
   aboutTitle?: string;
   aboutDescription?: string;
-
-  // Métricas
   aboutMetrics?: CSMetric[];
-
-  // Galería
   aboutGallery?: CSGalleryItem[];
 
   // Marcas / Partners
@@ -57,7 +53,42 @@ export interface CareerSiteContent {
 
   // Redes sociales
   socialLinks?: CSSocialLink[];
+
+  // SEO
+  seoTitle?: string;
+  seoDescription?: string;
+  seoOgImageUrl?: string;
 }
+
+/* ── Branding ─────────────────────────────────────────────────────────────── */
+
+export interface CareerSiteBranding {
+  primaryColor?: string;
+  accentColor?: string;
+  headingFont?: string;
+  bodyFont?: string;
+  customDomain?: string;
+}
+
+export const HEADING_FONTS = [
+  { label: "Archivo (predeterminado)", value: "",                css: "'Archivo', sans-serif"        },
+  { label: "Playfair Display",         value: "Playfair+Display",css: "'Playfair Display', serif"    },
+  { label: "Montserrat",               value: "Montserrat",      css: "'Montserrat', sans-serif"     },
+  { label: "Space Grotesk",            value: "Space+Grotesk",   css: "'Space Grotesk', sans-serif"  },
+  { label: "DM Serif Display",         value: "DM+Serif+Display",css: "'DM Serif Display', serif"   },
+  { label: "Raleway",                  value: "Raleway",         css: "'Raleway', sans-serif"        },
+] as const;
+
+export const BODY_FONTS = [
+  { label: "Hanken Grotesk (predeterminado)", value: "",              css: "'Hanken Grotesk', sans-serif" },
+  { label: "Inter",                           value: "Inter",         css: "'Inter', sans-serif"          },
+  { label: "Nunito",                          value: "Nunito",        css: "'Nunito', sans-serif"         },
+  { label: "Lato",                            value: "Lato",          css: "'Lato', sans-serif"           },
+  { label: "Open Sans",                       value: "Open+Sans",     css: "'Open Sans', sans-serif"      },
+  { label: "Source Sans 3",                   value: "Source+Sans+3", css: "'Source Sans 3', sans-serif"  },
+] as const;
+
+/* ── Page ─────────────────────────────────────────────────────────────────── */
 
 export interface CareerSitePage {
   id: string;
@@ -68,6 +99,17 @@ export interface CareerSitePage {
   draft_content: CareerSiteContent;
   published_content: CareerSiteContent | null;
   translations: Record<string, CareerSiteContent>;
+  branding: CareerSiteBranding;
   created_at: string;
   updated_at: string;
+}
+
+/* ── Metrics ──────────────────────────────────────────────────────────────── */
+
+export interface CareerSiteMetrics {
+  pageViews: number;
+  jobViews: number;
+  applications: number;
+  conversionRate: number;
+  topJobs: Array<{ id: string; title: string; views: number }>;
 }

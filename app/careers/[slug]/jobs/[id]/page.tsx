@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Markdown } from "@/components/markdown";
 import { ApplyForm } from "@/components/features/apply-form";
+import { TrackCareerEvent } from "@/components/features/career-site-track";
 import { createClient } from "@/lib/supabase/server";
 import { formatSalaryRange } from "@/lib/utils";
 
@@ -98,6 +99,8 @@ export default async function PublicJobPage({ params }: { params: { slug: string
           POWERED BY <span style={{ color: "#0E5C4A", fontWeight: 700 }}>TALENTOS</span>
         </div>
       </div>
+
+      <TrackCareerEvent companyId={company.id} eventType="job_view" jobId={job.id} />
     </div>
   );
 }

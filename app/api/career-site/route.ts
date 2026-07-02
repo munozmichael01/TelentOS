@@ -23,17 +23,17 @@ export async function PATCH(req: Request) {
   const body = await req.json();
   const supabase = createClient();
 
+  const patch: Record<string, unknown> = {
+    company_id: company.id,
+    slug: company.slug,
+    updated_at: new Date().toISOString(),
+  };
+  if ("draft_content" in body) patch.draft_content = body.draft_content ?? {};
+  if ("branding" in body) patch.branding = body.branding ?? {};
+
   const { data, error } = await supabase
     .from("career_site_pages")
-    .upsert(
-      {
-        company_id: company.id,
-        slug: company.slug,
-        draft_content: body.draft_content ?? {},
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "company_id" }
-    )
+    .upsert(patch, { onConflict: "company_id" })
     .select()
     .single();
 

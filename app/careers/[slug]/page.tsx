@@ -1,11 +1,50 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatSalaryRange } from "@/lib/utils";
 import type { Job } from "@/lib/types";
-import type { CareerSiteContent } from "@/lib/career-site-types";
+import type { CareerSiteContent, CareerSiteBranding } from "@/lib/career-site-types";
+import { HEADING_FONTS, BODY_FONTS } from "@/lib/career-site-types";
+import { TrackCareerEvent } from "@/components/features/career-site-track";
 
 export const dynamic = "force-dynamic";
+
+/* ─── generateMetadata ───────────────────────────────────────────────────── */
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const supabase = createClient();
+
+  const [{ data: company }, { data: cmsPage }] = await Promise.all([
+    supabase.from("companies").select("name, description, logo_url, slug").eq("slug", params.slug).maybeSingle(),
+    supabase.from("career_site_pages").select("*").eq("slug", params.slug).eq("is_published", true).maybeSingle(),
+  ]);
+
+  if (!company) return {};
+
+  const cms = (cmsPage?.published_content ?? {}) as CareerSiteContent;
+  const title   = cms.seoTitle       || `Trabaja en ${company.name}`;
+  const description = cms.seoDescription || company.description || `Únete al equipo de ${company.name}. Descubre nuestras posiciones abiertas.`;
+  const ogImage = cms.seoOgImageUrl   || company.logo_url;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+    },
+    twitter: {
+      card: ogImage ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
+  };
+}
+
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
 function getVideoEmbed(url: string): string | null {
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
@@ -19,13 +58,13 @@ const TYPE_LABEL: Record<string, string> = {
   full_time: "Jornada completa", part_time: "Parcial", contract: "Temporal", internship: "Prácticas",
 };
 
-const SOCIAL_URLS: Record<string, { label: string; icon: string }> = {
-  linkedin:  { label: "LinkedIn",  icon: "in" },
-  instagram: { label: "Instagram", icon: "ig" },
-  twitter:   { label: "Twitter",   icon: "tw" },
-  facebook:  { label: "Facebook",  icon: "fb" },
-  youtube:   { label: "YouTube",   icon: "yt" },
-  tiktok:    { label: "TikTok",    icon: "tk" },
+const SOCIAL_URLS: Record<string, { label: string }> = {
+  linkedin:  { label: "LinkedIn"  },
+  instagram: { label: "Instagram" },
+  twitter:   { label: "Twitter"   },
+  facebook:  { label: "Facebook"  },
+  youtube:   { label: "YouTube"   },
+  tiktok:    { label: "TikTok"    },
 };
 
 function has(v: unknown) {
@@ -35,6 +74,8 @@ function has(v: unknown) {
   return false;
 }
 
+/* ─── Page ────────────────────────────────────────────────────────────────── */
+
 export default async function CareersPage({ params }: { params: { slug: string } }) {
   const supabase = createClient();
 
@@ -43,19 +84,35 @@ export default async function CareersPage({ params }: { params: { slug: string }
 
   const [{ data: jobs }, { data: cmsPage }] = await Promise.all([
     supabase.from("jobs").select("*").eq("company_id", company.id).eq("status", "active").order("created_at", { ascending: false }),
-    supabase.from("career_site_pages").select("published_content").eq("company_id", company.id).eq("is_published", true).maybeSingle(),
+    supabase.from("career_site_pages").select("*").eq("company_id", company.id).eq("is_published", true).maybeSingle(),
   ]);
 
-  const cms = (cmsPage?.published_content ?? {}) as CareerSiteContent;
+  const cms        = (cmsPage?.published_content ?? {}) as CareerSiteContent;
+  const branding   = (cmsPage?.branding ?? {}) as CareerSiteBranding;
   const activeJobs = (jobs ?? []) as Job[];
-  const locSet = new Set(activeJobs.map((j) => j.location).filter(Boolean));
-  const locations = Array.from(locSet).slice(0, 3) as string[];
+  const locSet     = new Set(activeJobs.map((j) => j.location).filter(Boolean));
+  const locations  = Array.from(locSet).slice(0, 3) as string[];
 
-  /* ── shared styles ── */
-  const mono: React.CSSProperties = { fontFamily: "'Space Mono',monospace" };
-  const archivo: React.CSSProperties = { fontFamily: "'Archivo',sans-serif" };
-  const hanken: React.CSSProperties = { fontFamily: "'Hanken Grotesk',system-ui,sans-serif" };
-  const ink = "#1A1A17", soft = "#79746B", brand = "#0E5C4A", line = "#E7E1D4", surface = "#FCFAF6";
+  /* ── Branding-derived values ── */
+  const brandColor  = branding.primaryColor ?? "#0E5C4A";
+  const accentColor = branding.accentColor  ?? "#F1543F";
+  const hFont = HEADING_FONTS.find((f) => f.value === (branding.headingFont ?? "")) ?? HEADING_FONTS[0];
+  const bFont = BODY_FONTS.find((f)    => f.value === (branding.bodyFont    ?? "")) ?? BODY_FONTS[0];
+
+  // Build Google Fonts import string (only for non-default fonts)
+  const gFontParts = [
+    branding.headingFont ? `family=${branding.headingFont}:wght@400;700;900` : "",
+    branding.bodyFont    ? `family=${branding.bodyFont}:wght@400;600;700`    : "",
+  ].filter(Boolean);
+  const gFontsImport = gFontParts.length > 0
+    ? `@import url('https://fonts.googleapis.com/css2?${gFontParts.join("&")}&display=swap');`
+    : "";
+
+  /* ── Shared style shorthands ── */
+  const mono:    React.CSSProperties = { fontFamily: "'Space Mono',monospace" };
+  const heading: React.CSSProperties = { fontFamily: hFont.css };
+  const body:    React.CSSProperties = { fontFamily: bFont.css };
+  const ink = "#1A1A17", soft = "#79746B", line = "#E7E1D4", surface = "#FCFAF6";
 
   function SectionLabel({ text }: { text: string }) {
     return (
@@ -66,7 +123,12 @@ export default async function CareersPage({ params }: { params: { slug: string }
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#ECEAE4", ...hanken, WebkitFontSmoothing: "antialiased" }}>
+    <div style={{ minHeight: "100vh", background: "#ECEAE4", ...body, WebkitFontSmoothing: "antialiased" }}>
+
+      {/* ── Font import (custom branding) ── */}
+      {gFontsImport && (
+        <style dangerouslySetInnerHTML={{ __html: gFontsImport }} />
+      )}
 
       {/* ── Hero ── */}
       <div style={{
@@ -85,18 +147,18 @@ export default async function CareersPage({ params }: { params: { slug: string }
             // eslint-disable-next-line @next/next/no-img-element
             <img src={company.logo_url} alt={company.name} style={{ width: "74px", height: "74px", borderRadius: "18px", border: `1px solid ${line}`, objectFit: "contain", background: "#fff", flexShrink: 0 }} />
           ) : (
-            <div style={{ ...archivo, width: "74px", height: "74px", flexShrink: 0, borderRadius: "18px", background: brand, color: "#C6F24E", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "34px", boxShadow: `4px 4px 0 ${ink}` }}>
+            <div style={{ ...heading, width: "74px", height: "74px", flexShrink: 0, borderRadius: "18px", background: brandColor, color: "#C6F24E", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "34px", boxShadow: `4px 4px 0 ${ink}` }}>
               {company.name[0]}
             </div>
           )}
           <div>
-            <div style={{ ...mono, fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", color: has(cms.heroImageUrl) ? "rgba(255,255,255,.7)" : brand, marginBottom: "6px" }}>
+            <div style={{ ...mono, fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", color: has(cms.heroImageUrl) ? "rgba(255,255,255,.7)" : brandColor, marginBottom: "6px" }}>
               Estamos contratando
             </div>
-            <h1 style={{ ...archivo, fontWeight: 900, fontSize: "34px", letterSpacing: "-1.2px", lineHeight: 1, margin: 0, color: has(cms.heroImageUrl) ? "#fff" : ink }}>
+            <h1 style={{ ...heading, fontWeight: 900, fontSize: "34px", letterSpacing: "-1.2px", lineHeight: 1, margin: 0, color: has(cms.heroImageUrl) ? "#fff" : ink }}>
               {has(cms.headline)
                 ? cms.headline
-                : <>Trabaja en <span style={{ fontStyle: "italic", color: has(cms.heroImageUrl) ? "#C6F24E" : "#F1543F" }}>{company.name}</span></>
+                : <>Trabaja en <span style={{ fontStyle: "italic", color: has(cms.heroImageUrl) ? "#C6F24E" : accentColor }}>{company.name}</span></>
               }
             </h1>
             {company.description && !has(cms.headline) && (
@@ -125,7 +187,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
           <section style={{ padding: "32px 0 0", display: "flex", gap: "16px", flexWrap: "wrap" }}>
             {(cms.aboutMetrics ?? []).map((m, i) => (
               <div key={i} style={{ background: surface, border: `1px solid ${line}`, borderRadius: "14px", padding: "16px 20px", minWidth: "100px", textAlign: "center" }}>
-                <div style={{ ...archivo, fontWeight: 900, fontSize: "28px", letterSpacing: "-1px", color: brand }}>{m.value}</div>
+                <div style={{ ...heading, fontWeight: 900, fontSize: "28px", letterSpacing: "-1px", color: brandColor }}>{m.value}</div>
                 <div style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px", marginTop: "4px" }}>{m.label}</div>
               </div>
             ))}
@@ -241,7 +303,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.photoUrl} alt={p.name} style={{ width: "72px", height: "72px", borderRadius: "50%", objectFit: "cover", border: `2px solid ${line}` }} />
                     ) : (
-                      <div style={{ ...archivo, width: "72px", height: "72px", borderRadius: "50%", background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "24px", color: "#063D31", margin: "0 auto" }}>
+                      <div style={{ ...heading, width: "72px", height: "72px", borderRadius: "50%", background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "24px", color: "#063D31", margin: "0 auto" }}>
                         {p.name?.[0]?.toUpperCase() ?? "?"}
                       </div>
                     )}
@@ -274,7 +336,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={t.photoUrl} alt={t.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} />
                     ) : (
-                      <div style={{ ...archivo, width: "36px", height: "36px", borderRadius: "50%", background: "#DCEFE4", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "13px", color: brand }}>
+                      <div style={{ ...heading, width: "36px", height: "36px", borderRadius: "50%", background: "#DCEFE4", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "13px", color: brandColor }}>
                         {t.name?.[0]?.toUpperCase() ?? "?"}
                       </div>
                     )}
@@ -306,7 +368,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
                 <div className="career-job-card" style={{ background: surface, border: `1.5px solid ${line}`, borderRadius: "16px", padding: "21px 22px", cursor: "pointer", transition: "border-color .12s ease" }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ ...archivo, fontWeight: 800, fontSize: "19px", letterSpacing: "-.4px" }}>{job.title}</div>
+                      <div style={{ ...heading, fontWeight: 800, fontSize: "19px", letterSpacing: "-.4px" }}>{job.title}</div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", marginTop: "9px", fontSize: "13px", color: soft }}>
                         {job.location && (
                           <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
@@ -330,7 +392,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
                   {job.skills.length > 0 && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "7px", marginTop: "14px" }}>
                       {job.skills.slice(0, 4).map((s) => (
-                        <span key={s} style={{ fontSize: "12px", fontWeight: 600, padding: "4px 11px", borderRadius: "999px", background: "#DCEFE4", color: brand }}>{s}</span>
+                        <span key={s} style={{ fontSize: "12px", fontWeight: 600, padding: "4px 11px", borderRadius: "999px", background: "#DCEFE4", color: brandColor }}>{s}</span>
                       ))}
                     </div>
                   )}
@@ -376,11 +438,14 @@ export default async function CareersPage({ params }: { params: { slug: string }
             </div>
           )}
           <div style={{ ...mono, fontSize: "11px", letterSpacing: "1px", color: soft, marginLeft: "auto" }}>
-            POWERED BY <span style={{ color: brand, fontWeight: 700 }}>TALENTOS</span>
+            POWERED BY <span style={{ color: brandColor, fontWeight: 700 }}>TALENTOS</span>
           </div>
         </div>
 
       </div>
+
+      {/* ── Event tracking (fire-and-forget on mount) ── */}
+      <TrackCareerEvent companyId={company.id} eventType="page_view" />
     </div>
   );
 }
