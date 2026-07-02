@@ -47,9 +47,10 @@ export type JobStage = {
 export type Channel = {
   id: string;
   name: string;
-  kind: "job_board" | "aggregator" | "social";
+  kind: "job_board" | "aggregator" | "social" | "career_site";
   base_cpa: number;
   audience: string | null;
+  utm_source: string | null;
 };
 
 export type Campaign = {
