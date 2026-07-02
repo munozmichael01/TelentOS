@@ -88,10 +88,10 @@ export async function POST() {
     }))
     .sort((a, b) => b.count - a.count);
 
-  // ── Build insights (deterministic fallback; enhanced with LLM if available) ──
+  // ── Build insights (deterministic; enhanced with LLM if available) ─────────
   const insights: { text: string; scope: string; entities: { id: string; label: string }[]; action: { label: string; href: string } }[] = [];
 
-  // Insight 1: stalled candidates
+  // Insight 1: stalled candidates (≥1 stalled candidate)
   if (stalled.length > 0) {
     const byJob: Record<string, StalledEntry[]> = {};
     for (const s of stalled) {
@@ -104,7 +104,7 @@ export async function POST() {
       const names = entries.slice(0, 3).map((e) => e.name.split(" ")[0]).join(", ");
       const avgDays = Math.round(entries.reduce((s, e) => s + e.days, 0) / entries.length);
       insights.push({
-        text: `${entries.length} candidato${entries.length > 1 ? "s" : ""} en **${jobTitle}** ${entries.length > 1 ? "llevan" : "lleva"} +${avgDays} días sin movimiento en el pipeline: ${names}${entries.length > 3 ? ` y ${entries.length - 3} más` : ""}.`,
+        text: `${entries.length} candidato${entries.length > 1 ? "s" : ""} en **${jobTitle}** ${entries.length > 1 ? "llevan" : "lleva"} +${avgDays} días sin movimiento: ${names}${entries.length > 3 ? ` y ${entries.length - 3} más` : ""}.`,
         scope: jobTitle,
         entities: entries.slice(0, 3).map((e) => ({ id: e.jobId, label: e.name })),
         action: { label: "Ver candidaturas", href: `/jobs/${entries[0].jobId}` },
@@ -112,31 +112,39 @@ export async function POST() {
     }
   }
 
-  // Insight 2: top channel vs. fit
+  // Insight 2: channel performance (≥2 sources OR ≥1 source with ≥2 apps)
   if (channelRanking.length >= 2) {
     const top = channelRanking[0];
     const second = channelRanking[1];
-    if (top.avgFit && second.avgFit && Math.abs(top.avgFit - second.avgFit) >= 8) {
+    if (top.avgFit && second.avgFit && Math.abs(top.avgFit - second.avgFit) >= 5) {
       const better = top.avgFit >= second.avgFit ? top : second;
       const worse = top.avgFit >= second.avgFit ? second : top;
       insights.push({
-        text: `**${better.src}** convierte candidatos con fit medio ${better.avgFit} vs ${worse.avgFit} de **${worse.src}** (${better.count} vs ${worse.count} candidaturas). Considera redirigir presupuesto.`,
+        text: `**${better.src}** convierte con fit medio ${better.avgFit} vs ${worse.avgFit} de **${worse.src}** (${better.count} vs ${worse.count} candidaturas). Considera redirigir presupuesto.`,
         scope: better.jobs.join(", ") || "General",
         entities: [],
         action: { label: "Ver canales", href: "/canales" },
       });
-    } else if (top.count >= 3) {
+    } else if (top.count >= 1) {
       insights.push({
-        text: `**${top.src}** es el canal con más candidaturas (${top.count})${top.avgFit ? ` y fit medio ${top.avgFit}` : ""}. Le sigue **${second.src}** con ${second.count}.`,
+        text: `Canal líder: **${top.src}** con ${top.count} candidatura${top.count > 1 ? "s" : ""}${top.avgFit ? ` y fit medio ${top.avgFit}` : ""}. Le sigue **${second.src}** con ${second.count}.`,
         scope: top.jobs.join(", ") || "General",
         entities: [],
         action: { label: "Ver canales", href: "/canales" },
       });
     }
+  } else if (channelRanking.length === 1 && channelRanking[0].count >= 2) {
+    const top = channelRanking[0];
+    insights.push({
+      text: `Todo el tráfico llega por **${top.src}** (${top.count} candidaturas${top.avgFit ? `, fit medio ${top.avgFit}` : ""}). Diversificar canales puede reducir el riesgo de concentración.`,
+      scope: top.jobs.join(", ") || "General",
+      entities: [],
+      action: { label: "Ver canales", href: "/canales" },
+    });
   }
 
-  // Insight 3: compliance violations cluster
-  if ((complianceViolations.data?.length ?? 0) >= 3) {
+  // Insight 3: compliance violations (≥1 unacknowledged)
+  if ((complianceViolations.data?.length ?? 0) >= 1) {
     const byType: Record<string, string[]> = {};
     for (const v of complianceViolations.data ?? []) {
       if (!byType[v.violation_type]) byType[v.violation_type] = [];
@@ -147,8 +155,9 @@ export async function POST() {
     if (topType) {
       const LABELS: Record<string, string> = { max_hours_exceeded: "exceso de horas", early_start: "fichaje tardío", missing_break: "sin descanso", insufficient_break: "descanso insuficiente" };
       const label = LABELS[topType[0]] ?? topType[0];
+      const total = complianceViolations.data!.length;
       insights.push({
-        text: `${topType[1].length} infracción${topType[1].length > 1 ? "es" : ""} de **${label}** pendientes de revisión: ${topType[1].slice(0, 3).join(", ")}${topType[1].length > 3 ? "…" : ""}.`,
+        text: `${total} infracción${total > 1 ? "es" : ""} de compliance pendiente${total > 1 ? "s" : ""} — la más frecuente es **${label}**: ${topType[1].slice(0, 3).join(", ")}${topType[1].length > 3 ? "…" : ""}.`,
         scope: "Compliance",
         entities: [],
         action: { label: "Ver infracciones", href: "/settings/compliance" },
@@ -156,17 +165,34 @@ export async function POST() {
     }
   }
 
-  // Insight 4: overdue onboarding cluster
-  if ((onboardingOverdue.data?.length ?? 0) >= 2) {
+  // Insight 4: overdue onboarding (≥1 task)
+  if ((onboardingOverdue.data?.length ?? 0) >= 1) {
     const names = (onboardingOverdue.data ?? [])
       .slice(0, 3)
       .map((t) => (t.employees as unknown as { name: string } | null)?.name?.split(" ")[0] ?? "—")
       .join(", ");
+    const total = onboardingOverdue.data!.length;
     insights.push({
-      text: `${onboardingOverdue.data!.length} tarea${onboardingOverdue.data!.length > 1 ? "s" : ""} de onboarding vencida${onboardingOverdue.data!.length > 1 ? "s" : ""}: ${names}${onboardingOverdue.data!.length > 3 ? "…" : ""}. Revisa el plan de incorporación.`,
+      text: `${total} tarea${total > 1 ? "s" : ""} de onboarding vencida${total > 1 ? "s" : ""}: ${names}${total > 3 ? "…" : ""}. Revisa el plan de incorporación.`,
       scope: "Onboarding",
       entities: [],
       action: { label: "Ver empleados", href: "/employees" },
+    });
+  }
+
+  // Fallback: pipeline overview if nothing else triggered
+  if (insights.length === 0) {
+    const totalApps = channelData.data?.length ?? 0;
+    const avgFit = totalApps > 0
+      ? Math.round((channelData.data ?? []).reduce((s, a) => s + (a.fit_score ?? 0), 0) / totalApps)
+      : null;
+    insights.push({
+      text: totalApps > 0
+        ? `Pipeline activo con ${totalApps} candidatura${totalApps > 1 ? "s" : ""}${avgFit ? ` y fit medio ${avgFit}` : ""}. Sin alertas destacadas en este momento.`
+        : "Sin candidaturas activas todavía. Publica y distribuye ofertas para empezar a recibir datos.",
+      scope: "General",
+      entities: [],
+      action: { label: "Ver ofertas", href: "/jobs" },
     });
   }
 
@@ -198,15 +224,19 @@ export async function POST() {
   // ── Persist: mark old open insights as ignored, insert new ones ──────────
   const supabaseSvc = createClient();
 
-  // Close previous open insights before inserting new ones
-  await supabaseSvc
+  const { error: closeErr } = await supabaseSvc
     .from("agent_insights")
     .update({ status: "ignored" })
     .eq("company_id", company.id)
     .eq("status", "open");
 
+  if (closeErr) {
+    console.error("[dashboard-insights/refresh] close error:", closeErr.message);
+    return jsonError(`Error al limpiar insights anteriores: ${closeErr.message} — ¿La tabla agent_insights existe en Supabase?`, 500);
+  }
+
   if (insights.length > 0) {
-    await supabaseSvc.from("agent_insights").insert(
+    const { error: insertErr } = await supabaseSvc.from("agent_insights").insert(
       insights.slice(0, 5).map((ins) => ({
         company_id: company.id,
         text: ins.text,
@@ -217,7 +247,11 @@ export async function POST() {
         generated_at: new Date().toISOString(),
       }))
     );
+    if (insertErr) {
+      console.error("[dashboard-insights/refresh] insert error:", insertErr.message);
+      return jsonError(`Error al guardar insights: ${insertErr.message}`, 500);
+    }
   }
 
-  return NextResponse.json({ generated: insights.length, status: "ok" });
+  return NextResponse.json({ generated: insights.length, insights: insights.map((i) => i.text), status: "ok" });
 }
