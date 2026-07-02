@@ -243,7 +243,7 @@ export function InterviewPanel({
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              style={{ width: "100%", maxWidth: "480px", maxHeight: "88vh", overflowY: "auto", background: "#FCFAF6", border: "1.5px solid #1A1A17", borderRadius: "18px", boxShadow: "8px 8px 0 #1A1A17", padding: "26px" }}
+              style={{ width: "100%", maxWidth: "480px", maxHeight: "88vh", overflowY: "auto", background: "#FCFAF6", border: "1.5px solid #1A1A17", borderRadius: "18px", boxShadow: "6px 6px 0 #1A1A17", padding: "26px" }}
             >
               <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "20px", letterSpacing: "-.5px", marginBottom: "18px" }}>
                 Feedback de entrevista

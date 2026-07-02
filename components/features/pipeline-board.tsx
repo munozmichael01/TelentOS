@@ -224,7 +224,7 @@ export function PipelineBoard({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ width: "100%", maxWidth: "448px", maxHeight: "88vh", overflowY: "auto", background: "#FCFAF6", border: "1.5px solid #1A1A17", borderRadius: "18px", boxShadow: "8px 8px 0 #1A1A17" }}
+            style={{ width: "100%", maxWidth: "448px", maxHeight: "88vh", overflowY: "auto", background: "#FCFAF6", border: "1.5px solid #1A1A17", borderRadius: "18px", boxShadow: "6px 6px 0 #1A1A17" }}
           >
             {/* title */}
             <div style={{ padding: "22px 24px 0" }}>
