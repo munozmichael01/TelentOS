@@ -9,17 +9,45 @@ import { formatDate } from "@/lib/utils";
 
 export default async function CandidatesPage() {
   const supabase = createClient();
-  const { data: applications } = await supabase
-    .from("applications")
-    .select("id, fit_score, status, created_at, utm, source, candidates(name, email, location, experience_years), jobs(title), job_stages(name)")
+
+  const { data: candidates } = await supabase
+    .from("candidates")
+    .select(`
+      id, name, email, location, cv_url, created_at,
+      applications(id, fit_score, status, created_at, jobs(title), job_stages(name))
+    `)
     .order("created_at", { ascending: false });
+
+  type RawApp = {
+    id: string;
+    fit_score: number | null;
+    status: string;
+    created_at: string;
+    jobs: { title: string } | null;
+    job_stages: { name: string } | null;
+  };
+
+  type Candidate = {
+    id: string;
+    name: string;
+    email: string;
+    location: string | null;
+    cv_url: string | null;
+    created_at: string;
+    applications: RawApp[];
+  };
+
+  const rows = (candidates ?? []) as unknown as Candidate[];
 
   return (
     <div>
-      <PageHeader title="Candidatos" description="Reclutamiento" />
-      {(applications ?? []).length === 0 ? (
+      <PageHeader
+        title="Candidatos"
+        description={`${rows.length} persona${rows.length !== 1 ? "s" : ""} en la base de datos`}
+      />
+      {rows.length === 0 ? (
         <EmptyState
-          title="Sin candidaturas"
+          title="Sin candidatos"
           description="Las candidaturas llegan desde el career site o desde los canales de distribución."
         />
       ) : (
@@ -27,36 +55,52 @@ export default async function CandidatesPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Candidato</TableHead>
-              <TableHead>Oferta</TableHead>
+              <TableHead>Última oferta</TableHead>
               <TableHead>Etapa</TableHead>
-              <TableHead>Origen</TableHead>
-              <TableHead>Fecha</TableHead>
+              <TableHead>Inscripciones</TableHead>
+              <TableHead>Registrado</TableHead>
               <TableHead className="text-right">Fit</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(applications ?? []).map((app) => {
-              const candidate = app.candidates as unknown as { name: string; email: string; location: string | null } | null;
-              const utm = app.utm as Record<string, string>;
+            {rows.map((c) => {
+              const apps = [...(c.applications ?? [])].sort(
+                (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+              );
+              const latest = apps[0] ?? null;
               return (
-                <TableRow key={app.id}>
+                <TableRow key={c.id}>
                   <TableCell>
-                    <Link href={`/applications/${app.id}`} className="font-medium hover:underline">
-                      {candidate?.name}
+                    <Link href={`/candidates/${c.id}`} className="font-medium hover:underline">
+                      {c.name}
                     </Link>
-                    <p className="text-xs text-muted-foreground">{candidate?.email}</p>
+                    <p className="text-xs text-muted-foreground">{c.email}</p>
+                    {c.location && <p className="text-xs text-muted-foreground">{c.location}</p>}
                   </TableCell>
-                  <TableCell>{(app.jobs as unknown as { title: string } | null)?.title}</TableCell>
+                  <TableCell className="text-sm">
+                    {latest?.jobs?.title ?? <span className="text-muted-foreground">—</span>}
+                  </TableCell>
                   <TableCell>
-                    <Badge variant={app.status === "hired" ? "success" : app.status === "rejected" ? "destructive" : "secondary"}>
-                      {(app.job_stages as unknown as { name: string } | null)?.name ?? app.status}
-                    </Badge>
+                    {latest ? (
+                      <Badge variant={latest.status === "hired" ? "success" : latest.status === "rejected" ? "destructive" : "secondary"}>
+                        {latest.job_stages?.name ?? latest.status}
+                      </Badge>
+                    ) : "—"}
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm tabular-nums">
+                      {apps.length}
+                      {apps.length > 1 && (
+                        <span className="ml-1 text-xs text-muted-foreground">ofertas</span>
+                      )}
+                    </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {utm?.utm_source === "career_site" ? "Career site" : utm?.utm_source || app.source}
+                    {formatDate(c.created_at)}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{formatDate(app.created_at)}</TableCell>
-                  <TableCell className="text-right"><FitBadge score={app.fit_score} /></TableCell>
+                  <TableCell className="text-right">
+                    <FitBadge score={latest?.fit_score ?? null} />
+                  </TableCell>
                 </TableRow>
               );
             })}
