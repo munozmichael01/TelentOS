@@ -72,14 +72,14 @@ export async function GET(req: Request) {
       }));
     }
 
-    const pv = pageViews ?? 0;
+    const jv   = jobViews ?? 0;
     const apps = applications ?? 0;
 
     const metrics: CareerSiteMetrics = {
-      pageViews: pv,
-      jobViews: jobViews ?? 0,
+      pageViews: pageViews ?? 0,
+      jobViews: jv,
       applications: apps,
-      conversionRate: pv > 0 ? Math.round((apps / pv) * 1000) / 10 : 0,
+      conversionRate: jv > 0 ? Math.round((apps / jv) * 1000) / 10 : 0,
       topJobs,
     };
 

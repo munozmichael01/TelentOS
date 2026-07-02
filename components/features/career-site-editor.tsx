@@ -229,7 +229,7 @@ function MetricsPanel() {
         {kpi("👁", data?.pageViews ?? 0, "Visitas a la página")}
         {kpi("🔍", data?.jobViews ?? 0, "Visitas a ofertas")}
         {kpi("📨", data?.applications ?? 0, "Candidaturas recibidas")}
-        {kpi("📊", `${data?.conversionRate ?? 0}%`, "Ratio de conversión", "candidaturas / visitas")}
+        {kpi("📊", `${data?.conversionRate ?? 0}%`, "Ratio de conversión", "candidaturas / visitas a ofertas")}
       </div>
 
       {/* Top jobs */}

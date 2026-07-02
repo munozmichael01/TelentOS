@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, X } from "lucide-react";
+import { LocationAutocomplete } from "@/components/features/location-autocomplete";
 import type { Job } from "@/lib/types";
 import type { JobDraft } from "@/agents/agent-job-writer";
 
@@ -268,11 +269,11 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
             </div>
             <div>
               <div style={fieldLabel}>Ubicación</div>
-              <input
+              <LocationAutocomplete
                 value={form.location}
-                onChange={(e) => set("location", e.target.value)}
+                onChange={(v) => set("location", v)}
                 placeholder="Madrid (híbrido)"
-                style={fieldInput}
+                inputStyle={{ ...fieldInput, paddingRight: "34px" }}
               />
             </div>
             <div>

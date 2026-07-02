@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { LocationAutocomplete } from "@/components/features/location-autocomplete";
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils";
 import type { Company } from "@/lib/types";
@@ -20,6 +21,7 @@ export function CompanyForm({ company }: { company: Company | null }) {
     description: company?.description ?? "",
     website: company?.website ?? "",
     logo_url: company?.logo_url ?? "",
+    address: (company as (Company & { address?: string }) | null)?.address ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -52,7 +54,7 @@ export function CompanyForm({ company }: { company: Company | null }) {
       const res = await fetch("/api/company", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, address: form.address || null }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al guardar");
@@ -90,6 +92,24 @@ export function CompanyForm({ company }: { company: Company | null }) {
       <div className="space-y-1.5">
         <Label>Website</Label>
         <Input value={form.website} onChange={(e) => set("website", e.target.value)} placeholder="https://…" />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Dirección / Ciudad</Label>
+        <LocationAutocomplete
+          value={form.address}
+          onChange={(v) => set("address", v)}
+          placeholder="Madrid, Community of Madrid, Spain"
+          inputStyle={{
+            width: "100%", boxSizing: "border-box" as const,
+            fontFamily: "inherit", fontSize: "14px",
+            padding: "8px 10px", borderRadius: "6px",
+            border: "1px solid hsl(var(--border))",
+            background: "hsl(var(--background))",
+            color: "hsl(var(--foreground))",
+            outline: "none",
+          }}
+        />
+        <p className="text-xs text-muted-foreground">Se mostrará en la página pública del career site.</p>
       </div>
       <div className="space-y-1.5">
         <Label>Logo</Label>

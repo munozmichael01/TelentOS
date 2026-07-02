@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     description: body.description ?? null,
     website: body.website ?? null,
     logo_url: body.logo_url ?? null,
+    address: body.address ?? null,
   };
 
   const { data: existing } = await supabase.from("companies").select("id").limit(1).maybeSingle();

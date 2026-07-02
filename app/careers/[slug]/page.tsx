@@ -166,6 +166,12 @@ export default async function CareersPage({ params }: { params: { slug: string }
                 {company.description}
               </p>
             )}
+            {(company as typeof company & { address?: string }).address && (
+              <div style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "8px", fontSize: "13px", color: has(cms.heroImageUrl) ? "rgba(255,255,255,.65)" : soft }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.6 7-11a7 7 0 10-14 0c0 5.4 7 11 7 11Z" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="10" r="2" stroke="currentColor" strokeWidth="2"/></svg>
+                {(company as typeof company & { address?: string }).address}
+              </div>
+            )}
           </div>
         </div>
       </div>
