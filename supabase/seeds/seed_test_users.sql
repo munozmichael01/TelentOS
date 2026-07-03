@@ -40,17 +40,20 @@ begin
     raise exception 'No se encontró el usuario owner: munozmichael01@gmail.com';
   end if;
 
-  -- ── 3. Crear auth users (check-before-insert, sin ON CONFLICT) ────────────
+  -- ── 3. Crear auth users + identities (email provider) ────────────────────
+  -- Supabase requiere fila en auth.identities además de auth.users
+  -- para que el login por email funcione correctamente.
 
   -- Elena Vidal · hr_admin
   select id into uid_e from auth.users where email = 'elena.vidal@talentos.dev';
   if uid_e is null then
+    uid_e := gen_random_uuid();
     insert into auth.users (
       id, instance_id, aud, role, email, encrypted_password,
       email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
       is_super_admin, created_at, updated_at
     ) values (
-      gen_random_uuid(),
+      uid_e,
       '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'elena.vidal@talentos.dev',
@@ -59,18 +62,23 @@ begin
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"Elena Vidal"}',
       false, now() - interval '18 months', now()
-    ) returning id into uid_e;
+    );
+    insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+    values (gen_random_uuid(), uid_e, 'elena.vidal@talentos.dev',
+      jsonb_build_object('sub', uid_e::text, 'email', 'elena.vidal@talentos.dev'),
+      'email', now(), now(), now());
   end if;
 
   -- Rubén Ortega · recruiter
   select id into uid_r from auth.users where email = 'ruben.ortega@talentos.dev';
   if uid_r is null then
+    uid_r := gen_random_uuid();
     insert into auth.users (
       id, instance_id, aud, role, email, encrypted_password,
       email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
       is_super_admin, created_at, updated_at
     ) values (
-      gen_random_uuid(),
+      uid_r,
       '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'ruben.ortega@talentos.dev',
@@ -79,18 +87,23 @@ begin
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"Rubén Ortega"}',
       false, now() - interval '15 months', now()
-    ) returning id into uid_r;
+    );
+    insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+    values (gen_random_uuid(), uid_r, 'ruben.ortega@talentos.dev',
+      jsonb_build_object('sub', uid_r::text, 'email', 'ruben.ortega@talentos.dev'),
+      'email', now(), now(), now());
   end if;
 
   -- Carlos Méndez · manager
   select id into uid_c from auth.users where email = 'carlos.mendez@talentos.dev';
   if uid_c is null then
+    uid_c := gen_random_uuid();
     insert into auth.users (
       id, instance_id, aud, role, email, encrypted_password,
       email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
       is_super_admin, created_at, updated_at
     ) values (
-      gen_random_uuid(),
+      uid_c,
       '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'carlos.mendez@talentos.dev',
@@ -99,7 +112,11 @@ begin
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"Carlos Méndez"}',
       false, now() - interval '3 years', now()
-    ) returning id into uid_c;
+    );
+    insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+    values (gen_random_uuid(), uid_c, 'carlos.mendez@talentos.dev',
+      jsonb_build_object('sub', uid_c::text, 'email', 'carlos.mendez@talentos.dev'),
+      'email', now(), now(), now());
   end if;
 
   -- ── 4. Employees (roles de la app) ─────────────────────────────────────────
