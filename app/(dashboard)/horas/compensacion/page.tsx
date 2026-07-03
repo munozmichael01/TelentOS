@@ -1,11 +1,13 @@
 import { PageHeader } from "@/components/page-header";
 import { CompensationPanel } from "@/components/features/compensation-panel";
 import { createClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth-guard";
 import type { Employee } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function CompensacionPage() {
+  await requireRole(["owner", "hr_admin"]);
   const supabase = createClient();
 
   const { data: company } = await supabase
