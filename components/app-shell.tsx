@@ -107,7 +107,26 @@ const LogoMark = () => (
   </svg>
 );
 
-const NAV = [
+type Role = "owner" | "hr_admin" | "recruiter" | "manager" | "employee";
+
+// roles that can see each nav item; omit key = visible to all roles
+const NAV_ROLES: Record<string, Role[]> = {
+  // reclutamiento — manager no tiene acceso al pipeline de selección
+  "/jobs":               ["owner", "hr_admin", "recruiter"],
+  "/candidates":         ["owner", "hr_admin", "recruiter"],
+  "/career-site":        ["owner", "hr_admin", "recruiter"],
+  "/canales":            ["owner", "hr_admin", "recruiter"],
+  // personas — manager solo ve su equipo (scoping via RLS en backend)
+  "/timeoff":            ["owner", "hr_admin", "manager"],
+  "/timeoff/calendar":   ["owner", "hr_admin", "manager"],
+  "/horas":              ["owner", "hr_admin", "manager"],
+  // sensibles — solo admin
+  "/horas/compensacion": ["owner", "hr_admin"],
+  "/settings":           ["owner", "hr_admin"],
+  "/settings/compliance": ["owner", "hr_admin"],
+};
+
+const ALL_NAV = [
   { href: "/dashboard",          label: "Dashboard",    Icon: IconDashboard },
   { section: "Reclutamiento" },
   { href: "/jobs",               label: "Ofertas",      Icon: IconBriefcase },
@@ -135,12 +154,41 @@ const NAV = [
   },
 ];
 
+function buildNav(role: Role | null) {
+  // null role (no membership row yet) = hr_admin access during transition
+  const effectiveRole = role ?? "hr_admin";
+  return ALL_NAV.flatMap((item) => {
+    if ("section" in item) return [item];
+    const allowed = NAV_ROLES[item.href];
+    if (allowed && !allowed.includes(effectiveRole)) return [];
+    if ("children" in item && item.children) {
+      const visibleChildren = item.children.filter((c) => {
+        const childAllowed = NAV_ROLES[c.href];
+        return !childAllowed || childAllowed.includes(effectiveRole);
+      });
+      return [{ ...item, children: visibleChildren }];
+    }
+    return [item];
+  }).filter((item, i, arr) => {
+    // drop orphan section headers (section with no items after it before next section)
+    if (!("section" in item)) return true;
+    const next = arr[i + 1];
+    return next && !("section" in next);
+  });
+}
+
 function initials(email: string) {
   const parts = email.split("@")[0].split(/[._-]/);
   return parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("") || email[0]?.toUpperCase() || "?";
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  userRole,
+}: {
+  children: React.ReactNode;
+  userRole?: Role | null;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [userEmail, setUserEmail] = useState("");
@@ -149,6 +197,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(() =>
     typeof window !== "undefined" && window.location.pathname.startsWith("/settings")
   );
+
+  const NAV = buildNav(userRole ?? null);
 
   // Restore collapsed state from localStorage after mount
   useEffect(() => {
@@ -185,7 +235,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (href === "/") return pathname === "/";
     if (pathname === href) return true;
     if (!pathname.startsWith(href + "/")) return false;
-    const hasChildMatch = NAV.some((item) => {
+    const hasChildMatch = ALL_NAV.some((item) => {
       if (!("href" in item) || !item.href) return false;
       const h = item.href as string;
       return h !== href && h.startsWith(href + "/") && (pathname === h || pathname.startsWith(h + "/"));
