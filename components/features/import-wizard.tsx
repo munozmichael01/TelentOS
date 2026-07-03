@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { HairlineTable, HairlineRow } from "@/components/hairline-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type PreviewRow = {
@@ -185,32 +185,27 @@ export function ImportWizard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Ubicación</TableHead>
-                  <TableHead>Salario</TableHead>
-                  <TableHead>Skills</TableHead>
-                  <TableHead>Estado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {preview.rows.slice(0, 50).map((r, i) => (
-                  <TableRow key={i} className={r.duplicate ? "opacity-50" : ""}>
-                    <TableCell className="font-medium">{r.title}</TableCell>
-                    <TableCell>{r.location ?? "—"}</TableCell>
-                    <TableCell>
-                      {r.salary_min || r.salary_max ? `${r.salary_min ?? "?"}–${r.salary_max ?? "?"} €` : "—"}
-                    </TableCell>
-                    <TableCell className="max-w-48 truncate text-xs">{r.skills.join(", ") || "—"}</TableCell>
-                    <TableCell>
-                      {r.duplicate ? <Badge variant="warning">duplicado</Badge> : <Badge variant="success">nuevo</Badge>}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <HairlineTable
+              cols="2fr 1fr 1fr 2fr 0.8fr"
+              headers={["Título", "Ubicación", "Salario", "Skills", "Estado"]}
+              align={["left", "left", "right", "left", "left"]}
+            >
+              {preview.rows.slice(0, 50).map((r, i) => (
+                <HairlineRow key={i} align={["left", "left", "right", "left", "left"]} style={{ opacity: r.duplicate ? 0.5 : undefined }}>
+                  <span style={{ fontWeight: 600 }}>{r.title}</span>
+                  <span style={{ fontSize: "13px" }}>{r.location ?? "—"}</span>
+                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px" }}>
+                    {r.salary_min || r.salary_max ? `${r.salary_min ?? "?"}–${r.salary_max ?? "?"} €` : "—"}
+                  </span>
+                  <span style={{ fontSize: "11px", color: "#79746B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                    {r.skills.join(", ") || "—"}
+                  </span>
+                  <span>
+                    {r.duplicate ? <Badge variant="warning">duplicado</Badge> : <Badge variant="success">nuevo</Badge>}
+                  </span>
+                </HairlineRow>
+              ))}
+            </HairlineTable>
             <div className="flex gap-2">
               <Button onClick={commit} disabled={loading || preview.rows.every((r) => r.duplicate)}>
                 {loading ? <Loader2 className="animate-spin" /> : null}

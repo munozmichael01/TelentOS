@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, initials } from "@/lib/utils";
 import type { Employee, OnboardingTask, AbsenceRequest, TimeEntry, CompensationRecord } from "@/lib/types";
+import { HairlineTable, HairlineRow } from "@/components/hairline-table";
 
 const AVATAR_PALETTES = [
   { bg: "#DCEFE4", color: "#0E5C4A" },
@@ -453,36 +454,32 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                         </div>
                       </div>
 
-                      <div style={{ border: "1px solid #E7E1D4", borderRadius: "14px", overflow: "hidden", marginBottom: "12px" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
-                          <thead>
-                            <tr style={{ borderBottom: "1px solid #E7E1D4" }}>
-                              <th style={{ padding: "7px 12px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Origen</th>
-                              <th style={{ padding: "7px 12px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>Cantidad</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {breakdownRows.map((row, i) => {
-                              const isNeg = row.sign === "-" && row.value > 0;
-                              const isPos = row.sign === "+" && row.value > 0;
-                              const valColor = isNeg ? "#BD4332" : isPos ? "#1B6B4F" : "#79746B";
-                              return (
-                                <tr key={row.label} style={{ borderBottom: i < breakdownRows.length - 1 ? "1px solid #E7E1D4" : undefined }}>
-                                  <td style={{ padding: "8px 12px", fontFamily: "'Hanken Grotesk',sans-serif", color: row.value === 0 ? "#B0AB9F" : "#1A1A17" }}>{row.label}</td>
-                                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: row.value === 0 ? "#B0AB9F" : valColor }}>
-                                    {row.value === 0 ? "0" : `${row.sign}${row.value}`}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                            <tr style={{ background: "#F4F0E8", borderTop: "1px solid #E7E1D4" }}>
-                              <td style={{ padding: "9px 12px", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "13px" }}>Disponible</td>
-                              <td style={{ padding: "9px 12px", textAlign: "right", fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "14px", color: bal.available > 0 ? "#1B6B4F" : "#79746B" }}>
-                                {bal.available} {bal.typeUnit}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
+                      <div style={{ marginBottom: "12px" }}>
+                        <HairlineTable
+                          cols="2fr 1fr"
+                          headers={["Origen", "Cantidad"]}
+                          align={["left", "right"]}
+                        >
+                          {breakdownRows.map((row) => {
+                            const isNeg = row.sign === "-" && row.value > 0;
+                            const isPos = row.sign === "+" && row.value > 0;
+                            const valColor = isNeg ? "#BD4332" : isPos ? "#1B6B4F" : "#79746B";
+                            return (
+                              <HairlineRow key={row.label} align={["left", "right"]}>
+                                <span style={{ color: row.value === 0 ? "#B0AB9F" : "#1A1A17" }}>{row.label}</span>
+                                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: row.value === 0 ? "#B0AB9F" : valColor }}>
+                                  {row.value === 0 ? "0" : `${row.sign}${row.value}`}
+                                </span>
+                              </HairlineRow>
+                            );
+                          })}
+                          <HairlineRow align={["left", "right"]} style={{ background: "#F4F0E8", borderBottom: "none" }}>
+                            <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "13px" }}>Disponible</span>
+                            <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "14px", color: bal.available > 0 ? "#1B6B4F" : "#79746B" }}>
+                              {bal.available} {bal.typeUnit}
+                            </span>
+                          </HairlineRow>
+                        </HairlineTable>
                       </div>
 
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
@@ -533,41 +530,30 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                         <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".6px", color: "#79746B", marginBottom: "10px", paddingLeft: "2px" }}>
                           {yr}
                         </div>
-                        <div style={{ border: "1px solid #E7E1D4", borderRadius: "14px", overflow: "hidden" }}>
-                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                            <thead>
-                              <tr style={{ borderBottom: "1px solid #E7E1D4" }}>
-                                {["Tipo", "Desde", "Hasta", "Días", "Estado"].map(h => (
-                                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>{h}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {rows.map((r: any, i: number) => {
-                                const atype = r.absence_types;
-                                const sc = STATUS_CLR[r.status] ?? STATUS_CLR.pending;
-                                return (
-                                  <tr key={r.id} style={{ borderBottom: i < rows.length - 1 ? "1px solid #E7E1D4" : undefined }}>
-                                    <td style={{ padding: "12px 14px" }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                                        {atype?.icon && <span style={{ fontSize: "16px" }}>{atype.icon}</span>}
-                                        <span style={{ fontWeight: 600 }}>{atype?.name ?? "—"}</span>
-                                      </div>
-                                    </td>
-                                    <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.start_date)}</td>
-                                    <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.end_date)}</td>
-                                    <td style={{ padding: "12px 14px", fontFamily: "'Archivo',sans-serif", fontWeight: 800 }}>{r.working_days_count}</td>
-                                    <td style={{ padding: "12px 14px" }}>
-                                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: sc.color, background: sc.bg, borderRadius: "6px", padding: "3px 8px" }}>
-                                        {STATUS_LABEL[r.status] ?? r.status}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
+                        <HairlineTable
+                          cols="2fr 1fr 1fr 0.5fr 1fr"
+                          headers={["Tipo", "Desde", "Hasta", "Días", "Estado"]}
+                          align={["left", "left", "left", "right", "left"]}
+                        >
+                          {rows.map((r: any) => {
+                            const atype = r.absence_types;
+                            const sc = STATUS_CLR[r.status] ?? STATUS_CLR.pending;
+                            return (
+                              <HairlineRow key={r.id} align={["left", "left", "left", "right", "left"]}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                                  {atype?.icon && <span style={{ fontSize: "16px" }}>{atype.icon}</span>}
+                                  <span style={{ fontWeight: 600 }}>{atype?.name ?? "—"}</span>
+                                </div>
+                                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.start_date)}</span>
+                                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.end_date)}</span>
+                                <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800 }}>{r.working_days_count}</span>
+                                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: sc.color, background: sc.bg, borderRadius: "6px", padding: "3px 8px" }}>
+                                  {STATUS_LABEL[r.status] ?? r.status}
+                                </span>
+                              </HairlineRow>
+                            );
+                          })}
+                        </HairlineTable>
                       </div>
                     );
                   })}
@@ -606,33 +592,26 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                 <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Sin horas registradas</div>
               </div>
             ) : (
-              <div style={{ border: "1px solid #E7E1D4", borderRadius: "14px", overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #E7E1D4" }}>
-                      {["Fecha", "Entrada", "Salida", "Duración", "Notas"].map(h => (
-                        <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(entries ?? []).map((e: any, i: number) => {
-                      const fmtTime = (iso: string) => iso?.includes("T")
-                        ? new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
-                        : iso?.slice(0, 5) ?? "—";
-                      return (
-                        <tr key={e.id} style={{ borderBottom: i < (entries ?? []).length - 1 ? "1px solid #E7E1D4" : undefined }}>
-                          <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(e.date)}</td>
-                          <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{fmtTime(e.start_time)}</td>
-                          <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{e.end_time ? fmtTime(e.end_time) : <span style={{ color: "#79746B" }}>Activo</span>}</td>
-                          <td style={{ padding: "12px 14px", fontFamily: "'Archivo',sans-serif", fontWeight: 800 }}>{e.duration_minutes != null ? fmt(e.duration_minutes) : "—"}</td>
-                          <td style={{ padding: "12px 14px", color: "#79746B" }}>{e.comment ?? "—"}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <HairlineTable
+                cols="1fr 0.8fr 0.8fr 0.8fr 2fr"
+                headers={["Fecha", "Entrada", "Salida", "Duración", "Notas"]}
+                align={["left", "left", "left", "right", "left"]}
+              >
+                {(entries ?? []).map((e: any) => {
+                  const fmtTime = (iso: string) => iso?.includes("T")
+                    ? new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
+                    : iso?.slice(0, 5) ?? "—";
+                  return (
+                    <HairlineRow key={e.id} align={["left", "left", "left", "right", "left"]}>
+                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(e.date)}</span>
+                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{fmtTime(e.start_time)}</span>
+                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{e.end_time ? fmtTime(e.end_time) : <span style={{ color: "#79746B" }}>Activo</span>}</span>
+                      <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800 }}>{e.duration_minutes != null ? fmt(e.duration_minutes) : "—"}</span>
+                      <span style={{ color: "#79746B" }}>{e.comment ?? "—"}</span>
+                    </HairlineRow>
+                  );
+                })}
+              </HairlineTable>
             )}
           </div>
         </TabsContent>
@@ -672,42 +651,33 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                 <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Sin registros de compensación</div>
               </div>
             ) : (
-              <div style={{ border: "1px solid #E7E1D4", borderRadius: "14px", overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #E7E1D4" }}>
-                      {["Período", "Programadas", "Trabajadas", "Balance", "Tipo"].map(h => (
-                        <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", fontWeight: 500 }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(compRecords ?? []).map((r: any, i: number) => {
-                      const bal = Number(r.balance_minutes ?? 0);
-                      const balColor = bal > 0 ? "#1B6B4F" : bal < 0 ? "#BD4332" : "#79746B";
-                      const balBg = bal > 0 ? "#DCEFE3" : bal < 0 ? "#F6D9D2" : "#F4F0E8";
-                      return (
-                        <tr key={r.id} style={{ borderBottom: i < (compRecords ?? []).length - 1 ? "1px solid #E7E1D4" : undefined }}>
-                          <td style={{ padding: "12px 14px" }}>
-                            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.period_start)}</div>
-                            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#79746B" }}>→ {formatDate(r.period_end)}</div>
-                          </td>
-                          <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{fmt(r.scheduled_minutes)}</td>
-                          <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{fmt(r.worked_minutes)}</td>
-                          <td style={{ padding: "12px 14px" }}>
-                            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: balColor, background: balBg, borderRadius: "6px", padding: "3px 8px" }}>
-                              {bal > 0 ? "+" : ""}{fmt(bal)}
-                            </span>
-                          </td>
-                          <td style={{ padding: "12px 14px", fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", color: "#79746B" }}>
-                            {r.compensation_type === "time_off" ? "Tiempo libre" : "Pago"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <HairlineTable
+                cols="1.5fr 1fr 1fr 1fr 1fr"
+                headers={["Período", "Programadas", "Trabajadas", "Balance", "Tipo"]}
+                align={["left", "right", "right", "right", "left"]}
+              >
+                {(compRecords ?? []).map((r: any) => {
+                  const bal = Number(r.balance_minutes ?? 0);
+                  const balColor = bal > 0 ? "#1B6B4F" : bal < 0 ? "#BD4332" : "#79746B";
+                  const balBg = bal > 0 ? "#DCEFE3" : bal < 0 ? "#F6D9D2" : "#F4F0E8";
+                  return (
+                    <HairlineRow key={r.id} align={["left", "right", "right", "right", "left"]}>
+                      <div>
+                        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{formatDate(r.period_start)}</div>
+                        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#79746B" }}>→ {formatDate(r.period_end)}</div>
+                      </div>
+                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{fmt(r.scheduled_minutes)}</span>
+                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>{fmt(r.worked_minutes)}</span>
+                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: balColor, background: balBg, borderRadius: "6px", padding: "3px 8px" }}>
+                        {bal > 0 ? "+" : ""}{fmt(bal)}
+                      </span>
+                      <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", color: "#79746B" }}>
+                        {r.compensation_type === "time_off" ? "Tiempo libre" : "Pago"}
+                      </span>
+                    </HairlineRow>
+                  );
+                })}
+              </HairlineTable>
             )}
           </div>
         </TabsContent>

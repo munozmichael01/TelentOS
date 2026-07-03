@@ -11,6 +11,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { DateField } from "@/components/ui/date-field";
 import { DateRangeField } from "@/components/ui/date-range-field";
 import { TimeField } from "@/components/ui/time-field";
+import { HairlineTable, HairlineRow } from "@/components/hairline-table";
 
 // ── Design tokens ─────────────────────────────────────────────────
 const T = {
@@ -370,81 +371,55 @@ function EntriesTable({ initialEntries, employees }: {
         {loading && <Loader2 size={14} className="animate-spin" style={{ color: T.soft, alignSelf: "center" }} />}
       </div>
 
-      <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.body }}>
-          <thead>
-            <tr style={{ borderBottom: `1px solid ${T.line}` }}>
-              {["Empleado", "Fecha", "Tipo", "Inicio", "Fin", "Duración", "Fuente", ""].map((h) => (
-                <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, fontWeight: 500, whiteSpace: "nowrap" }}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {entries.length === 0 ? (
-              <tr>
-                <td colSpan={8} style={{ padding: "40px", textAlign: "center", color: T.soft, background: T.surface }}>
-                  <Clock size={28} style={{ margin: "0 auto 10px", display: "block", opacity: 0.4 }} />
-                  <div style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>
-                    Sin entradas
-                  </div>
-                </td>
-              </tr>
-            ) : entries.map((e, i) => (
-              <tr
-                key={e.id}
+      {entries.length === 0 ? (
+        <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", padding: "40px", textAlign: "center", color: T.soft, background: T.surface }}>
+          <Clock size={28} style={{ margin: "0 auto 10px", display: "block", opacity: 0.4 }} />
+          <div style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>Sin entradas</div>
+        </div>
+      ) : (
+        <HairlineTable
+          cols="1.8fr 0.8fr 0.9fr 0.7fr 0.7fr 0.7fr 0.9fr 40px"
+          headers={["Empleado", "Fecha", "Tipo", "Inicio", "Fin", "Duración", "Fuente", ""]}
+          align={["left", "left", "left", "left", "left", "right", "left", "right"]}
+        >
+          {entries.map((e) => (
+            <HairlineRow key={e.id} align={["left", "left", "left", "left", "left", "right", "left", "right"]}>
+              <div>
+                <div style={{ fontWeight: 600 }}>{e.employees?.name ?? "—"}</div>
+                {e.employees?.role_title && (
+                  <div style={{ fontSize: "11px", color: T.soft, fontWeight: 400 }}>{e.employees.role_title}</div>
+                )}
+              </div>
+              <span style={{ fontFamily: T.mono, fontSize: "12px", whiteSpace: "nowrap" }}>
+                {fmtShortDate(e.date)}
+              </span>
+              <Pill color={typeText[e.entry_type] ?? T.soft} bg={typeBg[e.entry_type] ?? T.bg}>
+                {typeLabel[e.entry_type] ?? e.entry_type}
+              </Pill>
+              <span style={{ fontFamily: T.mono, fontSize: "12px" }}>{fmtTime(e.start_time)}</span>
+              <span style={{ fontFamily: T.mono, fontSize: "12px" }}>
+                {e.end_time ? fmtTime(e.end_time) : <span style={{ color: T.soft }}>Activo</span>}
+              </span>
+              <span style={{ fontFamily: T.mono, fontSize: "12px", fontWeight: 700 }}>{calcDuration(e)}</span>
+              <Pill color={T.soft} bg={T.bg}>{sourceLabel[e.source] ?? e.source}</Pill>
+              <button
+                onClick={() => del(e.id)}
+                disabled={deleting === e.id}
                 style={{
-                  borderBottom: i < entries.length - 1 ? `1px solid ${T.line}` : undefined,
+                  width: "30px", height: "30px", borderRadius: "7px",
+                  border: `1.5px solid ${T.line}`, background: T.bg,
+                  color: T.accent, cursor: "pointer",
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  opacity: deleting === e.id ? 0.5 : 1,
                 }}
+                title="Eliminar entrada"
               >
-                <td style={{ padding: "12px 14px", fontWeight: 600 }}>
-                  <div>{e.employees?.name ?? "—"}</div>
-                  {e.employees?.role_title && (
-                    <div style={{ fontSize: "11px", color: T.soft, fontWeight: 400 }}>{e.employees.role_title}</div>
-                  )}
-                </td>
-                <td style={{ padding: "12px 14px", fontFamily: T.mono, fontSize: "12px", whiteSpace: "nowrap" }}>
-                  {fmtShortDate(e.date)}
-                </td>
-                <td style={{ padding: "12px 14px" }}>
-                  <Pill color={typeText[e.entry_type] ?? T.soft} bg={typeBg[e.entry_type] ?? T.bg}>
-                    {typeLabel[e.entry_type] ?? e.entry_type}
-                  </Pill>
-                </td>
-                <td style={{ padding: "12px 14px", fontFamily: T.mono, fontSize: "12px" }}>
-                  {fmtTime(e.start_time)}
-                </td>
-                <td style={{ padding: "12px 14px", fontFamily: T.mono, fontSize: "12px" }}>
-                  {e.end_time ? fmtTime(e.end_time) : <span style={{ color: T.soft }}>Activo</span>}
-                </td>
-                <td style={{ padding: "12px 14px", fontFamily: T.mono, fontSize: "12px", fontWeight: 700 }}>
-                  {calcDuration(e)}
-                </td>
-                <td style={{ padding: "12px 14px" }}>
-                  <Pill color={T.soft} bg={T.bg}>{sourceLabel[e.source] ?? e.source}</Pill>
-                </td>
-                <td style={{ padding: "12px 14px", textAlign: "right" }}>
-                  <button
-                    onClick={() => del(e.id)}
-                    disabled={deleting === e.id}
-                    style={{
-                      width: "30px", height: "30px", borderRadius: "7px",
-                      border: `1.5px solid ${T.line}`, background: T.bg,
-                      color: T.accent, cursor: "pointer",
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      opacity: deleting === e.id ? 0.5 : 1,
-                    }}
-                    title="Eliminar entrada"
-                  >
-                    {deleting === e.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                {deleting === e.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+              </button>
+            </HairlineRow>
+          ))}
+        </HairlineTable>
+      )}
     </div>
   );
 }
@@ -482,47 +457,44 @@ function WeeklySummary({ entries, employees }: {
 
   const empById = Object.fromEntries(employees.map((e) => [e.id, e]));
 
+  const todayStr = today.toISOString().split("T")[0];
+
   return (
     <div>
       <SectionLabel>Resumen semanal</SectionLabel>
-      <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.body }}>
-          <thead>
-            <tr style={{ borderBottom: `1px solid ${T.line}` }}>
-              <th style={{ padding: "10px 14px", textAlign: "left", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, fontWeight: 500 }}>Empleado</th>
-              {dayLabels.map((d, i) => (
-                <th key={d} style={{ padding: "10px 10px", textAlign: "center", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: days[i] === today.toISOString().split("T")[0] ? T.brand : T.soft, fontWeight: days[i] === today.toISOString().split("T")[0] ? 700 : 500 }}>
-                  {d}
-                </th>
-              ))}
-              <th style={{ padding: "10px 14px", textAlign: "right", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.ink, fontWeight: 700 }}>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {empIds.map((empId, i) => {
-              const dayMins = empMap[empId];
-              const total = Object.values(dayMins).reduce((a, b) => a + b, 0);
-              return (
-                <tr key={empId} style={{ borderBottom: i < empIds.length - 1 ? `1px solid ${T.line}` : undefined }}>
-                  <td style={{ padding: "11px 14px", fontWeight: 600 }}>{empById[empId]?.name ?? empId}</td>
-                  {days.map((day) => {
-                    const min = dayMins[day] ?? 0;
-                    const isToday = day === today.toISOString().split("T")[0];
-                    return (
-                      <td key={day} style={{ padding: "11px 10px", textAlign: "center", fontFamily: T.mono, fontSize: "11px", color: min > 0 ? T.ink : T.line, background: isToday && min > 0 ? T.limeSoft : undefined }}>
-                        {min > 0 ? fmt(min) : "·"}
-                      </td>
-                    );
-                  })}
-                  <td style={{ padding: "11px 14px", textAlign: "right", fontFamily: T.mono, fontSize: "12px", fontWeight: 700, color: T.brand }}>
-                    {fmt(total)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <HairlineTable
+        cols={`2fr repeat(7, 0.6fr) 0.8fr`}
+        headers={[
+          "Empleado",
+          ...dayLabels.map((d, i) => (
+            <span key={d} style={{ color: days[i] === todayStr ? T.brand : undefined, fontWeight: days[i] === todayStr ? 700 : undefined }}>
+              {d}
+            </span>
+          )),
+          "Total",
+        ]}
+        align={["left", "center", "center", "center", "center", "center", "center", "center", "right"]}
+      >
+        {empIds.map((empId) => {
+          const dayMins = empMap[empId];
+          const total = Object.values(dayMins).reduce((a, b) => a + b, 0);
+          return (
+            <HairlineRow key={empId} align={["left", "center", "center", "center", "center", "center", "center", "center", "right"]}>
+              <span style={{ fontWeight: 600 }}>{empById[empId]?.name ?? empId}</span>
+              {days.map((day) => {
+                const min = dayMins[day] ?? 0;
+                const isToday = day === todayStr;
+                return (
+                  <span key={day} style={{ fontFamily: T.mono, fontSize: "11px", color: min > 0 ? T.ink : T.line, background: isToday && min > 0 ? T.limeSoft : undefined, borderRadius: isToday && min > 0 ? "4px" : undefined, padding: isToday && min > 0 ? "2px 4px" : undefined }}>
+                    {min > 0 ? fmt(min) : "·"}
+                  </span>
+                );
+              })}
+              <span style={{ fontFamily: T.mono, fontSize: "12px", fontWeight: 700, color: T.brand }}>{fmt(total)}</span>
+            </HairlineRow>
+          );
+        })}
+      </HairlineTable>
     </div>
   );
 }

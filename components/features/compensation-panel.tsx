@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
 import { DateRangeField } from "@/components/ui/date-range-field";
+import { HairlineTable, HairlineRow } from "@/components/hairline-table";
 
 // ── Design tokens ──────────────────────────────────────────────────
 const T = {
@@ -277,50 +278,37 @@ function RecordsTable({ records }: { records: (CompensationRecord & { employees?
   return (
     <div>
       <SL>Registros confirmados</SL>
-      <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.body }}>
-          <thead>
-            <tr style={{ borderBottom: `1px solid ${T.line}` }}>
-              {["Empleado", "Período", "Programadas", "Trabajadas", "Balance", "Tipo"].map((h) => (
-                <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, fontWeight: 500, whiteSpace: "nowrap" }}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {records.map((r, i) => {
-              const bal = r.balance_minutes;
-              const balClr = bal > 0 ? T.successText : bal < 0 ? T.dangerText : T.soft;
-              const balBg  = bal > 0 ? T.successBg   : bal < 0 ? T.dangerBg   : T.bg;
-              return (
-                <tr key={r.id} style={{ borderBottom: i < records.length - 1 ? `1px solid ${T.line}` : undefined }}>
-                  <td style={{ padding: "12px 14px" }}>
-                    <div style={{ fontWeight: 600 }}>{r.employees?.name ?? "—"}</div>
-                    {r.employees?.role_title && <div style={{ fontSize: "11px", color: T.soft }}>{r.employees.role_title}</div>}
-                  </td>
-                  <td style={{ padding: "12px 14px" }}>
-                    <div style={{ fontFamily: T.mono, fontSize: "11px" }}>{fmtDate(r.period_start)}</div>
-                    <div style={{ fontFamily: T.mono, fontSize: "11px", color: T.soft }}>→ {fmtDate(r.period_end)}</div>
-                  </td>
-                  <td style={{ padding: "12px 14px", fontFamily: T.mono, fontSize: "12px" }}>{fmt(r.scheduled_minutes)}</td>
-                  <td style={{ padding: "12px 14px", fontFamily: T.mono, fontSize: "12px" }}>{fmt(r.worked_minutes)}</td>
-                  <td style={{ padding: "12px 14px" }}>
-                    <span style={{ fontFamily: T.mono, fontSize: "12px", fontWeight: 700, color: balClr, background: balBg, borderRadius: "6px", padding: "3px 8px" }}>
-                      {bal > 0 ? "+" : ""}{fmt(bal)}
-                    </span>
-                  </td>
-                  <td style={{ padding: "12px 14px" }}>
-                    <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: typeClr[r.compensation_type] ?? T.soft, background: typeBg[r.compensation_type] ?? T.bg, borderRadius: "6px", padding: "2px 8px" }}>
-                      {typeLabel[r.compensation_type] ?? r.compensation_type}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <HairlineTable
+        cols="1.8fr 1.4fr 1fr 1fr 1fr 0.9fr"
+        headers={["Empleado", "Período", "Programadas", "Trabajadas", "Balance", "Tipo"]}
+        align={["left", "left", "right", "right", "right", "left"]}
+      >
+        {records.map((r) => {
+          const bal = r.balance_minutes;
+          const balClr = bal > 0 ? T.successText : bal < 0 ? T.dangerText : T.soft;
+          const balBg  = bal > 0 ? T.successBg   : bal < 0 ? T.dangerBg   : T.bg;
+          return (
+            <HairlineRow key={r.id} align={["left", "left", "right", "right", "right", "left"]}>
+              <div>
+                <div style={{ fontWeight: 600 }}>{r.employees?.name ?? "—"}</div>
+                {r.employees?.role_title && <div style={{ fontSize: "11px", color: T.soft }}>{r.employees.role_title}</div>}
+              </div>
+              <div>
+                <div style={{ fontFamily: T.mono, fontSize: "11px" }}>{fmtDate(r.period_start)}</div>
+                <div style={{ fontFamily: T.mono, fontSize: "11px", color: T.soft }}>→ {fmtDate(r.period_end)}</div>
+              </div>
+              <span style={{ fontFamily: T.mono, fontSize: "12px" }}>{fmt(r.scheduled_minutes)}</span>
+              <span style={{ fontFamily: T.mono, fontSize: "12px" }}>{fmt(r.worked_minutes)}</span>
+              <span style={{ fontFamily: T.mono, fontSize: "12px", fontWeight: 700, color: balClr, background: balBg, borderRadius: "6px", padding: "3px 8px" }}>
+                {bal > 0 ? "+" : ""}{fmt(bal)}
+              </span>
+              <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: typeClr[r.compensation_type] ?? T.soft, background: typeBg[r.compensation_type] ?? T.bg, borderRadius: "6px", padding: "2px 8px" }}>
+                {typeLabel[r.compensation_type] ?? r.compensation_type}
+              </span>
+            </HairlineRow>
+          );
+        })}
+      </HairlineTable>
     </div>
   );
 }
@@ -467,75 +455,62 @@ export function CompensationPanel({
               <SL>Horas del período</SL>
               <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} label="Filtrar empleados" />
             </div>
-            <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.body }}>
-                <thead>
-                  <tr style={{ borderBottom: `1px solid ${T.line}` }}>
-                    {["Empleado", "Horas trabajadas", "Estado", ""].map((h) => (
-                      <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, fontWeight: 500, whiteSpace: "nowrap" }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleSummaries.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} style={{ padding: "40px", textAlign: "center", color: T.soft, background: T.surface }}>
-                        <div style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>Sin empleados activos</div>
-                      </td>
-                    </tr>
-                  ) : visibleSummaries.map((s, i) => (
-                    <tr key={s.id} style={{ borderBottom: i < visibleSummaries.length - 1 ? `1px solid ${T.line}` : undefined }}>
-                      <td style={{ padding: "12px 14px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.head, fontWeight: 900, fontSize: "12px", color: "#063D31", flexShrink: 0 }}>
-                            {s.name.charAt(0).toUpperCase()}
-                          </div>
-                          <span style={{ fontWeight: 600 }}>{s.name}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px 14px" }}>
-                        <span style={{ fontFamily: T.mono, fontSize: "13px", fontWeight: 700, color: s.worked > 0 ? T.ink : T.soft }}>
-                          {s.worked > 0 ? fmt(s.worked) : "—"}
+            {visibleSummaries.length === 0 ? (
+              <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", padding: "40px", textAlign: "center", color: T.soft, background: T.surface }}>
+                <div style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>Sin empleados activos</div>
+              </div>
+            ) : (
+              <HairlineTable
+                cols="2fr 1.2fr 1.2fr 1fr"
+                headers={["Empleado", "Horas trabajadas", "Estado", ""]}
+                align={["left", "right", "left", "right"]}
+              >
+                {visibleSummaries.map((s) => (
+                  <HairlineRow key={s.id} align={["left", "right", "left", "right"]}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.head, fontWeight: 900, fontSize: "12px", color: "#063D31", flexShrink: 0 }}>
+                        {s.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span style={{ fontWeight: 600 }}>{s.name}</span>
+                    </div>
+                    <span style={{ fontFamily: T.mono, fontSize: "13px", fontWeight: 700, color: s.worked > 0 ? T.ink : T.soft }}>
+                      {s.worked > 0 ? fmt(s.worked) : "—"}
+                    </span>
+                    <span>
+                      {s.confirmed ? (
+                        <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.successText, background: T.successBg, borderRadius: "6px", padding: "3px 9px" }}>
+                          Confirmado
                         </span>
-                      </td>
-                      <td style={{ padding: "12px 14px" }}>
-                        {s.confirmed ? (
-                          <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.successText, background: T.successBg, borderRadius: "6px", padding: "3px 9px" }}>
-                            Confirmado
-                          </span>
-                        ) : s.worked > 0 ? (
-                          <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.warnText, background: T.warnBg, borderRadius: "6px", padding: "3px 9px" }}>
-                            Pendiente
-                          </span>
-                        ) : (
-                          <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, background: T.bg, borderRadius: "6px", padding: "3px 9px" }}>
-                            Sin horas
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: "12px 14px", textAlign: "right" }}>
-                        {!s.confirmed && s.worked > 0 && (
-                          <button
-                            onClick={() => setConfirmEmp({ id: s.id, name: s.name })}
-                            style={{
-                              padding: "7px 14px", borderRadius: "8px",
-                              border: "2px solid #1A1A17", boxShadow: "2px 2px 0 #1A1A17",
-                              background: T.brand, color: "#fff",
-                              fontFamily: T.mono, fontSize: "11px", letterSpacing: "0.5px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            Confirmar
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      ) : s.worked > 0 ? (
+                        <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.warnText, background: T.warnBg, borderRadius: "6px", padding: "3px 9px" }}>
+                          Pendiente
+                        </span>
+                      ) : (
+                        <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, background: T.bg, borderRadius: "6px", padding: "3px 9px" }}>
+                          Sin horas
+                        </span>
+                      )}
+                    </span>
+                    <span>
+                      {!s.confirmed && s.worked > 0 && (
+                        <button
+                          onClick={() => setConfirmEmp({ id: s.id, name: s.name })}
+                          style={{
+                            padding: "7px 14px", borderRadius: "8px",
+                            border: "2px solid #1A1A17", boxShadow: "2px 2px 0 #1A1A17",
+                            background: T.brand, color: "#fff",
+                            fontFamily: T.mono, fontSize: "11px", letterSpacing: "0.5px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Confirmar
+                        </button>
+                      )}
+                    </span>
+                  </HairlineRow>
+                ))}
+              </HairlineTable>
+            )}
           </div>
 
           {/* Saved records */}

@@ -5,6 +5,7 @@ import { TimeField } from "@/components/ui/time-field";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertTriangle, CheckCircle, Settings } from "lucide-react";
 import type { ComplianceConfig, ComplianceViolation } from "@/lib/types";
+import { HairlineTable, HairlineRow } from "@/components/hairline-table";
 
 const T = {
   bg: "#F4F0E8", surface: "#FCFAF6", ink: "#1A1A17", soft: "#79746B",
@@ -262,50 +263,37 @@ export function ComplianceSettingsPanel({
             <div style={{ fontSize: "13px" }}>Todos los registros están dentro de las reglas configuradas</div>
           </div>
         ) : (
-          <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${T.line}` }}>
-                  {["Empleado", "Fecha", "Tipo", "Descripción", ""].map((h) => (
-                    <th key={h} style={{ textAlign: "left", padding: "10px 12px", fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: T.soft }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {violations.map((v) => (
-                  <tr key={v.id} style={{ borderBottom: `1px solid ${T.line}` }}>
-                    <td style={{ padding: "12px" }}>
-                      <span style={{ fontWeight: 600 }}>{(v.employees as unknown as { name: string })?.name ?? "—"}</span>
-                    </td>
-                    <td style={{ padding: "12px", fontFamily: "'Space Mono',monospace", fontSize: "12px", color: T.soft }}>
-                      {new Date(v.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
-                    </td>
-                    <td style={{ padding: "12px" }}>
-                      <span style={{ background: T.dangerBg, color: T.danger, fontSize: "11px", padding: "3px 8px", borderRadius: "999px", fontWeight: 600 }}>
-                        {VIOLATION_LABELS[v.violation_type] ?? v.violation_type}
-                      </span>
-                    </td>
-                    <td style={{ padding: "12px", color: T.soft, maxWidth: "280px" }}>{v.description}</td>
-                    <td style={{ padding: "12px" }}>
-                      <button
-                        onClick={() => acknowledge(v.id)}
-                        disabled={ackId === v.id}
-                        style={{
-                          fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12px",
-                          background: T.successBg, color: T.success, border: `1px solid ${T.success}`,
-                          borderRadius: "8px", padding: "6px 12px", cursor: "pointer",
-                          display: "inline-flex", alignItems: "center", gap: "5px",
-                        }}
-                      >
-                        {ackId === v.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={12} />}
-                        Reconocer
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <HairlineTable
+            cols="1.5fr 0.8fr 1.2fr 2.5fr 1fr"
+            headers={["Empleado", "Fecha", "Tipo", "Descripción", ""]}
+            align={["left", "left", "left", "left", "right"]}
+          >
+            {violations.map((v) => (
+              <HairlineRow key={v.id} align={["left", "left", "left", "left", "right"]}>
+                <span style={{ fontWeight: 600 }}>{(v.employees as unknown as { name: string })?.name ?? "—"}</span>
+                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px", color: T.soft }}>
+                  {new Date(v.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
+                </span>
+                <span style={{ background: T.dangerBg, color: T.danger, fontSize: "11px", padding: "3px 8px", borderRadius: "999px", fontWeight: 600 }}>
+                  {VIOLATION_LABELS[v.violation_type] ?? v.violation_type}
+                </span>
+                <span style={{ color: T.soft }}>{v.description}</span>
+                <button
+                  onClick={() => acknowledge(v.id)}
+                  disabled={ackId === v.id}
+                  style={{
+                    fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12px",
+                    background: T.successBg, color: T.success, border: `1px solid ${T.success}`,
+                    borderRadius: "8px", padding: "6px 12px", cursor: "pointer",
+                    display: "inline-flex", alignItems: "center", gap: "5px",
+                  }}
+                >
+                  {ackId === v.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={12} />}
+                  Reconocer
+                </button>
+              </HairlineRow>
+            ))}
+          </HairlineTable>
         )}
       </div>
     </div>

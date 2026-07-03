@@ -1,12 +1,16 @@
-import { type CSSProperties, type ReactNode } from "react";
+import { Children, type CSSProperties, type ReactNode } from "react";
+
+type Align = "left" | "center" | "right";
 
 interface HairlineTableProps {
   cols: string;
   headers: ReactNode[];
+  /** Per-column alignment — "right" for numbers, dates, amounts. Defaults to "left". */
+  align?: Align[];
   children: ReactNode;
 }
 
-export function HairlineTable({ cols, headers, children }: HairlineTableProps) {
+export function HairlineTable({ cols, headers, align, children }: HairlineTableProps) {
   return (
     <div
       style={
@@ -34,7 +38,12 @@ export function HairlineTable({ cols, headers, children }: HairlineTableProps) {
         }}
       >
         {headers.map((h, i) => (
-          <span key={i}>{h}</span>
+          <span
+            key={i}
+            style={align?.[i] && align[i] !== "left" ? { textAlign: align[i], display: "block" } : undefined}
+          >
+            {h}
+          </span>
         ))}
       </div>
       {children}
@@ -43,11 +52,13 @@ export function HairlineTable({ cols, headers, children }: HairlineTableProps) {
 }
 
 interface HairlineRowProps {
-  children: ReactNode;
+  /** Per-column alignment — when provided, wraps each cell in a column div. */
+  align?: Align[];
   style?: CSSProperties;
+  children: ReactNode;
 }
 
-export function HairlineRow({ children, style }: HairlineRowProps) {
+export function HairlineRow({ children, align, style }: HairlineRowProps) {
   return (
     <div
       className="row-hover"
@@ -61,7 +72,13 @@ export function HairlineRow({ children, style }: HairlineRowProps) {
         ...style,
       }}
     >
-      {children}
+      {align
+        ? Children.toArray(children).map((cell, i) => (
+            <div key={i} style={align[i] && align[i] !== "left" ? { textAlign: align[i] } : undefined}>
+              {cell}
+            </div>
+          ))
+        : children}
     </div>
   );
 }

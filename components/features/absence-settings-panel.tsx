@@ -23,14 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { HairlineTable, HairlineRow } from "@/components/hairline-table";
 
 // ─── types ───────────────────────────────────────────────────────────────────
 
@@ -702,36 +695,24 @@ function AllowancePoliciesTab({
             Sin tipos de saldo configurados
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Unidad</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acción</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allowanceTypes.map((t) => (
-                <TableRow key={t.id}>
-                  <TableCell className="font-medium">{t.name}</TableCell>
-                  <TableCell>
-                    {t.unit === "days" ? "Días" : "Horas"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={t.is_active ? "success" : "outline"}>
-                      {t.is_active ? "Activo" : "Inactivo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button size="icon" variant="ghost">
-                      <Pencil />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <HairlineTable
+            cols="2fr 1fr 1fr 0.5fr"
+            headers={["Nombre", "Unidad", "Estado", "Acción"]}
+            align={["left", "left", "left", "right"]}
+          >
+            {allowanceTypes.map((t) => (
+              <HairlineRow key={t.id} align={["left", "left", "left", "right"]}>
+                <span style={{ fontWeight: 600, fontSize: "14px" }}>{t.name}</span>
+                <span style={{ fontSize: "13px" }}>{t.unit === "days" ? "Días" : "Horas"}</span>
+                <Badge variant={t.is_active ? "success" : "outline"}>
+                  {t.is_active ? "Activo" : "Inactivo"}
+                </Badge>
+                <Button size="icon" variant="ghost">
+                  <Pencil />
+                </Button>
+              </HairlineRow>
+            ))}
+          </HairlineTable>
         )}
       </div>
 
@@ -773,50 +754,35 @@ function AllowancePoliciesTab({
             Sin políticas configuradas
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Cantidad</TableHead>
-                <TableHead>Ciclo</TableHead>
-                <TableHead>Arrastre</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acción</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allowancePolicies.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.name}</TableCell>
-                  <TableCell>{p.allowance_types?.name ?? "—"}</TableCell>
-                  <TableCell>{p.amount}</TableCell>
-                  <TableCell>{CYCLE_LABELS[p.cycle] ?? p.cycle}</TableCell>
-                  <TableCell>{p.carryover}</TableCell>
-                  <TableCell>
-                    {p.is_default && (
-                      <Badge variant="lime">Por defecto</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button size="icon" variant="ghost">
-                        <Pencil />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => setDeleteId(p.id)}
-                        style={{ color: "#BD4332" }}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <HairlineTable
+            cols="2fr 1.2fr 0.6fr 1fr 0.7fr 1fr 0.7fr"
+            headers={["Nombre", "Tipo", "Cant.", "Ciclo", "Arrastre", "Estado", "Acción"]}
+            align={["left", "left", "right", "left", "right", "left", "right"]}
+          >
+            {allowancePolicies.map((p) => (
+              <HairlineRow key={p.id} align={["left", "left", "right", "left", "right", "left", "right"]}>
+                <span style={{ fontWeight: 600, fontSize: "14px" }}>{p.name}</span>
+                <span style={{ fontSize: "13px" }}>{p.allowance_types?.name ?? "—"}</span>
+                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px" }}>{p.amount}</span>
+                <span style={{ fontSize: "13px" }}>{CYCLE_LABELS[p.cycle] ?? p.cycle}</span>
+                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px" }}>{p.carryover}</span>
+                <span>{p.is_default && <Badge variant="lime">Por defecto</Badge>}</span>
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "4px" }}>
+                  <Button size="icon" variant="ghost">
+                    <Pencil />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setDeleteId(p.id)}
+                    style={{ color: "#BD4332" }}
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              </HairlineRow>
+            ))}
+          </HairlineTable>
         )}
       </div>
 
