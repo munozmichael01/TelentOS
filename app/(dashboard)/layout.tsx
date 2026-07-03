@@ -18,17 +18,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Ensure HRIS defaults exist for this company (no-op if already seeded)
   if (company) await seedHrisDefaults(supabase, company.id);
 
-  // Fetch user role; null = no membership row yet (treated as hr_admin in AppShell)
-  let userRole: string | null = null;
-  if (company) {
-    const { data: member } = await supabase
-      .from("company_members")
-      .select("role")
-      .eq("company_id", company.id)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    userRole = member?.role ?? null;
-  }
+  // Fetch user role via security-definer function (bypasses RLS, no recursion risk)
+  // null = no membership row yet (treated as hr_admin in AppShell)
+  const { data: userRole } = await supabase.rpc("current_role_name");
 
   return <AppShell userRole={userRole as never}>{children}</AppShell>;
 }

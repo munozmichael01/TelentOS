@@ -51,7 +51,8 @@ begin
     insert into auth.users (
       id, instance_id, aud, role, email, encrypted_password,
       email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-      is_super_admin, created_at, updated_at
+      is_super_admin, created_at, updated_at,
+      confirmation_token, recovery_token, email_change_token_new, email_change, reauthentication_token
     ) values (
       uid_e,
       '00000000-0000-0000-0000-000000000000',
@@ -61,11 +62,12 @@ begin
       now(),
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"Elena Vidal"}',
-      false, now() - interval '18 months', now()
+      false, now() - interval '18 months', now(),
+      '', '', '', '', ''
     );
     insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
-    values (gen_random_uuid(), uid_e, 'elena.vidal@talentos.dev',
-      jsonb_build_object('sub', uid_e::text, 'email', 'elena.vidal@talentos.dev'),
+    values (gen_random_uuid(), uid_e, uid_e::text,
+      jsonb_build_object('sub', uid_e::text, 'email', 'elena.vidal@talentos.dev', 'email_verified', true, 'phone_verified', false),
       'email', now(), now(), now());
   end if;
 
@@ -76,7 +78,8 @@ begin
     insert into auth.users (
       id, instance_id, aud, role, email, encrypted_password,
       email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-      is_super_admin, created_at, updated_at
+      is_super_admin, created_at, updated_at,
+      confirmation_token, recovery_token, email_change_token_new, email_change, reauthentication_token
     ) values (
       uid_r,
       '00000000-0000-0000-0000-000000000000',
@@ -86,11 +89,12 @@ begin
       now(),
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"Rubén Ortega"}',
-      false, now() - interval '15 months', now()
+      false, now() - interval '15 months', now(),
+      '', '', '', '', ''
     );
     insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
-    values (gen_random_uuid(), uid_r, 'ruben.ortega@talentos.dev',
-      jsonb_build_object('sub', uid_r::text, 'email', 'ruben.ortega@talentos.dev'),
+    values (gen_random_uuid(), uid_r, uid_r::text,
+      jsonb_build_object('sub', uid_r::text, 'email', 'ruben.ortega@talentos.dev', 'email_verified', true, 'phone_verified', false),
       'email', now(), now(), now());
   end if;
 
@@ -101,7 +105,8 @@ begin
     insert into auth.users (
       id, instance_id, aud, role, email, encrypted_password,
       email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-      is_super_admin, created_at, updated_at
+      is_super_admin, created_at, updated_at,
+      confirmation_token, recovery_token, email_change_token_new, email_change, reauthentication_token
     ) values (
       uid_c,
       '00000000-0000-0000-0000-000000000000',
@@ -111,11 +116,12 @@ begin
       now(),
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"Carlos Méndez"}',
-      false, now() - interval '3 years', now()
+      false, now() - interval '3 years', now(),
+      '', '', '', '', ''
     );
     insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
-    values (gen_random_uuid(), uid_c, 'carlos.mendez@talentos.dev',
-      jsonb_build_object('sub', uid_c::text, 'email', 'carlos.mendez@talentos.dev'),
+    values (gen_random_uuid(), uid_c, uid_c::text,
+      jsonb_build_object('sub', uid_c::text, 'email', 'carlos.mendez@talentos.dev', 'email_verified', true, 'phone_verified', false),
       'email', now(), now(), now());
   end if;
 
