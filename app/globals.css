@@ -93,6 +93,20 @@
 .btn-secondary:hover  { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #1A1A17; }
 .btn-secondary:active { transform: translate(2px,2px);   box-shadow: 1px 1px 0 #1A1A17; }
 
+/* ── Botón di-hard (sombra dura pequeña, DC spec) ── */
+.di-hard { transition: transform .1s ease, box-shadow .1s ease; }
+.di-hard:hover  { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 #1A1A17; }
+.di-hard:active { transform: translate(1px,1px);   box-shadow: 1px 1px 0 #1A1A17; }
+
+/* ── Row hover (tabla hairline) ── */
+.row-hover { transition: background .12s ease; }
+.row-hover:hover { background: #F8F4EB; }
+
+/* ── Kebab menu ── */
+.kebab-wrap { position: relative; }
+.kebab-menu { display: none; }
+.kebab-wrap.open .kebab-menu { display: block; }
+
 /* ── Tarjeta con hover ── */
 .card-hover {
   transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;

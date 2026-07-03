@@ -123,6 +123,8 @@ const NAV_ROLES: Record<string, Role[]> = {
   // sensibles — solo admin
   "/horas/compensacion": ["owner", "hr_admin"],
   "/settings":           ["owner", "hr_admin"],
+  "/settings/team":      ["owner"],
+  "/settings/billing":   ["owner"],
   "/settings/compliance": ["owner", "hr_admin"],
 };
 
@@ -147,6 +149,8 @@ const ALL_NAV = [
     Icon: IconSettings,
     children: [
       { href: "/settings",            label: "Empresa" },
+      { href: "/settings/team",       label: "Equipo" },
+      { href: "/settings/billing",    label: "Billing" },
       { href: "/settings/absences",   label: "Ausencias" },
       { href: "/settings/schedules",  label: "Horarios" },
       { href: "/settings/compliance", label: "Compliance" },
@@ -194,9 +198,7 @@ export function AppShell({
   const [userEmail, setUserEmail] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(() =>
-    typeof window !== "undefined" && window.location.pathname.startsWith("/settings")
-  );
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const NAV = buildNav(userRole ?? null);
 
