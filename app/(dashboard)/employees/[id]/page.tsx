@@ -381,7 +381,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                   <div style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</div>
                   <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", marginTop: "2px" }}>{formatDate(d.created_at)}</div>
                 </div>
-                <FileLink bucket="documents" path={d.file_url} label="Descargar" />
+                <FileLink bucket="documents" resourceId={d.id} label="Descargar" />
               </div>
             ))}
             {!(docs ?? []).length && <p style={{ fontSize: "13px", color: "#79746B" }}>Sin documentos adjuntos.</p>}

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { lookup } from "dns/promises";
 import { requireUser, jsonError } from "@/lib/api";
 import {
   normalizeRow, parseCsv, parseXml, parseXlsx, parseJson, parseHtmlJob,
@@ -6,18 +7,35 @@ import {
 } from "@/lib/import";
 import { DEFAULT_STAGES } from "@/lib/types";
 
-/** Bloquea URLs de redes privadas, loopback y metadata cloud para evitar SSRF. */
-function isSafeExternalUrl(raw: string): boolean {
+function isPrivateAddress(addr: string): boolean {
+  if (addr === "localhost" || addr === "127.0.0.1" || addr === "::1") return true;
+  if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/.test(addr)) return true;
+  if (addr === "169.254.169.254" || addr.endsWith(".internal") || addr === "metadata.google.internal") return true;
+  return false;
+}
+
+/**
+ * Valida que la URL sea segura para fetch del servidor:
+ * - solo http/https
+ * - hostname no es IP privada literal
+ * - DNS resuelto a dirección pública (protege contra DNS rebinding)
+ */
+async function isSafeExternalUrl(raw: string): Promise<boolean> {
   let url: URL;
   try { url = new URL(raw); } catch { return false; }
   if (!["http:", "https:"].includes(url.protocol)) return false;
-  const h = url.hostname.toLowerCase();
-  // loopback / localhost
-  if (h === "localhost" || h === "127.0.0.1" || h === "::1") return false;
-  // RFC-1918 private ranges + link-local
-  if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/.test(h)) return false;
-  // cloud metadata
-  if (h === "169.254.169.254" || h === "metadata.google.internal" || h.endsWith(".internal")) return false;
+  const hostname = url.hostname.toLowerCase();
+  if (isPrivateAddress(hostname)) return false;
+  try {
+    const { address } = await lookup(hostname, { family: 4 });
+    if (isPrivateAddress(address)) return false;
+  } catch {
+    // IPv6 fallback or unresolvable → block
+    try {
+      const { address } = await lookup(hostname);
+      if (isPrivateAddress(address)) return false;
+    } catch { return false; }
+  }
   return true;
 }
 
@@ -70,11 +88,24 @@ export async function POST(req: Request) {
     let source = "import_json";
     if (body?.url) {
       source = "import_url";
-      if (!isSafeExternalUrl(body.url)) return jsonError("URL no permitida");
+      if (!await isSafeExternalUrl(body.url)) return jsonError("URL no permitida");
       try {
-        const res = await fetch(body.url, {
+        // redirect:'manual' + explicit validation prevents SSRF via open redirects
+        const headRes = await fetch(body.url, {
           headers: { "user-agent": "TalentOS/0.1 (+job import)" },
           signal: AbortSignal.timeout(10000),
+          redirect: "manual",
+        });
+        let finalUrl = body.url;
+        if (headRes.status >= 300 && headRes.status < 400) {
+          const location = headRes.headers.get("location") ?? "";
+          if (!await isSafeExternalUrl(location)) return jsonError("Redirección a URL no permitida");
+          finalUrl = location;
+        }
+        const res = await fetch(finalUrl, {
+          headers: { "user-agent": "TalentOS/0.1 (+job import)" },
+          signal: AbortSignal.timeout(10000),
+          redirect: "error",
         });
         const text = await res.text();
         const ct = res.headers.get("content-type") ?? "";

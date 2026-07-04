@@ -119,7 +119,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
                 <CardTitle className="text-base">Currículum</CardTitle>
               </CardHeader>
               <CardContent>
-                <FileLink bucket="cvs" path={candidate.cv_url} label="Ver CV adjunto" />
+                <FileLink bucket="cvs" resourceId={candidate.id} label="Ver CV adjunto" />
               </CardContent>
             </Card>
           )}

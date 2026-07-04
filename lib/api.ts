@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { getCompany } from "@/lib/workspace";
 
 type ApiRole = "owner" | "hr_admin" | "recruiter" | "manager" | "employee";
 
-/** Guard mínimo para rutas privadas: solo exige sesión válida. */
+/** Guard mínimo: solo exige sesión válida. */
 export async function requireUser() {
   const supabase = createClient();
   const {
@@ -21,8 +20,9 @@ export async function requireUser() {
 }
 
 /**
- * Guard de rol para rutas sensibles: exige sesión válida + membership activo con rol permitido.
- * Usar en todas las mutaciones sobre datos privilegiados (empleados, compensación, compliance…).
+ * Guard de rol para rutas sensibles.
+ * Resuelve el workspace desde el membership explícito del usuario, no de limit(1) en companies.
+ * Devuelve companyId en el resultado para evitar una segunda consulta en el handler.
  */
 export async function requireApiRole(allowedRoles: ApiRole[]) {
   const supabase = createClient();
@@ -35,25 +35,15 @@ export async function requireApiRole(allowedRoles: ApiRole[]) {
       user: null as null,
       supabase,
       role: null as ApiRole | null,
+      companyId: null as string | null,
       error: NextResponse.json({ error: "No autenticado" }, { status: 401 }),
-    };
-  }
-
-  const company = await getCompany();
-  if (!company) {
-    return {
-      user,
-      supabase,
-      role: null as ApiRole | null,
-      error: NextResponse.json({ error: "Sin empresa configurada" }, { status: 403 }),
     };
   }
 
   const admin = createAdminClient();
   const { data: member } = await admin
     .from("company_members")
-    .select("role")
-    .eq("company_id", company.id)
+    .select("role, company_id")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -62,6 +52,7 @@ export async function requireApiRole(allowedRoles: ApiRole[]) {
       user,
       supabase,
       role: null as ApiRole | null,
+      companyId: null as string | null,
       error: NextResponse.json({ error: "Sin permisos" }, { status: 403 }),
     };
   }
@@ -72,11 +63,18 @@ export async function requireApiRole(allowedRoles: ApiRole[]) {
       user,
       supabase,
       role,
+      companyId: member.company_id as string,
       error: NextResponse.json({ error: "Sin permisos" }, { status: 403 }),
     };
   }
 
-  return { user, supabase, role, error: null };
+  return {
+    user,
+    supabase,
+    role,
+    companyId: member.company_id as string,
+    error: null,
+  };
 }
 
 export function jsonError(message: string, status = 400) {

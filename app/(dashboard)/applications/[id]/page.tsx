@@ -37,7 +37,7 @@ export default async function ApplicationPage({ params }: { params: { id: string
     ]);
 
   const candidate = app.candidates as unknown as {
-    name: string; email: string; phone: string | null; location: string | null;
+    id: string; name: string; email: string; phone: string | null; location: string | null;
     skills: string[]; experience_years: number; summary: string | null; cv_url: string | null;
   };
   const job = app.jobs as unknown as { title: string };
@@ -79,7 +79,7 @@ export default async function ApplicationPage({ params }: { params: { id: string
                 {candidate.phone ? ` · ${candidate.phone}` : ""}
               </p>
               {candidate.summary && <p>{candidate.summary}</p>}
-              {candidate.cv_url && <FileLink bucket="cvs" path={candidate.cv_url} label="Ver CV adjunto" />}
+              {candidate.cv_url && <FileLink bucket="cvs" resourceId={candidate.id} label="Ver CV adjunto" />}
               <Separator />
               <p className="text-xs text-muted-foreground">
                 Origen: {app.utm?.utm_source === "career_site" ? "Career site" : app.utm?.utm_source || app.source}
