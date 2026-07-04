@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireUser, jsonError } from "@/lib/api";
+import { requireApiRole, jsonError } from "@/lib/api";
 
 export async function POST(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { supabase, error } = await requireUser();
+  const { supabase, error } = await requireApiRole(["owner", "hr_admin", "manager"]);
   if (error) return error;
 
   const { data: company } = await supabase

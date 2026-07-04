@@ -6,6 +6,21 @@ import {
 } from "@/lib/import";
 import { DEFAULT_STAGES } from "@/lib/types";
 
+/** Bloquea URLs de redes privadas, loopback y metadata cloud para evitar SSRF. */
+function isSafeExternalUrl(raw: string): boolean {
+  let url: URL;
+  try { url = new URL(raw); } catch { return false; }
+  if (!["http:", "https:"].includes(url.protocol)) return false;
+  const h = url.hostname.toLowerCase();
+  // loopback / localhost
+  if (h === "localhost" || h === "127.0.0.1" || h === "::1") return false;
+  // RFC-1918 private ranges + link-local
+  if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/.test(h)) return false;
+  // cloud metadata
+  if (h === "169.254.169.254" || h === "metadata.google.internal" || h.endsWith(".internal")) return false;
+  return true;
+}
+
 /**
  * Importación en dos pasos:
  *  - mode=preview: parsea la fuente, normaliza y marca duplicados sin escribir.
@@ -55,6 +70,7 @@ export async function POST(req: Request) {
     let source = "import_json";
     if (body?.url) {
       source = "import_url";
+      if (!isSafeExternalUrl(body.url)) return jsonError("URL no permitida");
       try {
         const res = await fetch(body.url, {
           headers: { "user-agent": "TalentOS/0.1 (+job import)" },

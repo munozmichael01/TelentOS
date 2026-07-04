@@ -159,8 +159,7 @@ const ALL_NAV = [
 ];
 
 function buildNav(role: Role | null) {
-  // null role (no membership row yet) = hr_admin access during transition
-  const effectiveRole = role ?? "hr_admin";
+  const effectiveRole = role ?? "employee";
   return ALL_NAV.flatMap((item) => {
     if ("section" in item) return [item];
     const allowed = NAV_ROLES[item.href];

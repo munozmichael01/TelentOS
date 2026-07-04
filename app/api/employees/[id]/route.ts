@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser, jsonError } from "@/lib/api";
+import { requireApiRole, jsonError } from "@/lib/api";
 
 const EDITABLE = [
   "name", "email", "role_title", "department", "start_date",
@@ -7,7 +7,7 @@ const EDITABLE = [
 ] as const;
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const { supabase, error } = await requireUser();
+  const { supabase, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
 
   const body = await req.json().catch(() => ({}));

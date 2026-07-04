@@ -6,8 +6,7 @@ type Role = "owner" | "hr_admin" | "recruiter" | "manager" | "employee";
 
 /**
  * Server-side role guard. Call at the top of a page or layout.
- * Redirects to /dashboard if the current user's role is not in allowedRoles.
- * Users without a company_members row are treated as hr_admin (transition period).
+ * Redirects to /dashboard if the current user has no membership row or an insufficient role.
  */
 export async function requireRole(allowedRoles: Role[]): Promise<Role> {
   const supabase = createClient();
@@ -27,7 +26,9 @@ export async function requireRole(allowedRoles: Role[]): Promise<Role> {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const role = ((member?.role ?? "hr_admin") as Role);
+  if (!member?.role) redirect("/dashboard");
+
+  const role = member.role as Role;
   if (!allowedRoles.includes(role)) redirect("/dashboard");
 
   return role;

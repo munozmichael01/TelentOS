@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser, jsonError } from "@/lib/api";
+import { requireUser, requireApiRole, jsonError } from "@/lib/api";
 
 export async function GET(_req: Request) {
   const { supabase, error } = await requireUser();
@@ -38,7 +38,7 @@ export async function GET(_req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const { supabase, error, user } = await requireUser();
+  const { supabase, error, user } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
 
   const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();

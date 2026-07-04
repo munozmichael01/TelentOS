@@ -19,8 +19,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (company) await seedHrisDefaults(supabase, company.id);
 
   // Use service-role client to read company_members without RLS interference.
-  // This is safe: runs server-side only, user is already verified above.
-  // null = no membership row yet → AppShell falls back to hr_admin.
+  // Runs server-side only; user is already verified above.
+  // null = no membership row → AppShell shows employee-level nav (least privilege).
   let userRole: string | null = null;
   if (company) {
     const admin = createAdminClient();

@@ -7,6 +7,12 @@ import { formatMoney } from "@/lib/utils";
 import type { Channel } from "@/lib/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
+/** Convierte **negrita** en <strong> sin dangerouslySetInnerHTML. */
+function renderBold(text: string) {
+  const parts = text.split(/\*\*(.+?)\*\*/g);
+  return parts.map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : part));
+}
+
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 
 type ReportRow = {
@@ -271,9 +277,9 @@ function KPIsTab() {
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
                     <AgentAvatar />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "13.5px", lineHeight: "1.6", color: ink }}
-                        dangerouslySetInnerHTML={{ __html: turn.response.answer.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>") }}
-                      />
+                      <div style={{ fontSize: "13.5px", lineHeight: "1.6", color: ink }}>
+                        {renderBold(turn.response.answer)}
+                      </div>
                       {turn.response.redirect && (
                         <a href={turn.response.redirect.url}
                           style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginTop: "8px", fontSize: "13px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "9px", padding: "6px 12px" }}>
