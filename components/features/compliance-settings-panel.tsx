@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TimeField } from "@/components/ui/time-field";
 import { useRouter } from "next/navigation";
+import { apiFetch, notifyError } from "@/lib/api-client";
 import { Loader2, AlertTriangle, CheckCircle, Settings } from "lucide-react";
 import type { ComplianceConfig, ComplianceViolation } from "@/lib/types";
 import { HairlineTable, HairlineRow } from "@/components/hairline-table";
@@ -104,8 +105,10 @@ export function ComplianceSettingsPanel({
   async function acknowledge(id: string) {
     setAckId(id);
     try {
-      await fetch(`/api/compliance/violations/${id}/acknowledge`, { method: "POST" });
+      await apiFetch(`/api/compliance/violations/${id}/acknowledge`, { method: "POST" });
       router.refresh();
+    } catch (e) {
+      notifyError("No se pudo reconocer la infracción", e);
     } finally {
       setAckId(null);
     }

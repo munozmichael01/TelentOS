@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch, notifyError } from "@/lib/api-client";
 import type { AbsenceRequest, AbsenceType, Employee, AbsenceStatus } from "@/lib/types";
 import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
 import { Input } from "@/components/ui/input";
@@ -403,14 +404,18 @@ function RejectModal({ requestId, onClose }: { requestId: string; onClose: () =>
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await fetch(`/api/absence-requests/${requestId}/reject`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rejection_reason: reason }),
-    });
-    setSaving(false);
-    router.refresh();
-    onClose();
+    try {
+      await apiFetch(`/api/absence-requests/${requestId}/reject`, {
+        method: "POST",
+        json: { rejection_reason: reason },
+      });
+      router.refresh();
+      onClose();
+    } catch (err) {
+      notifyError("No se pudo rechazar la solicitud", err);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -627,16 +632,26 @@ export function AbsencePanel({
 
   async function handleApprove(id: string) {
     setLoadingId(id);
-    await fetch(`/api/absence-requests/${id}/approve`, { method: "POST" });
-    setLoadingId(null);
-    router.refresh();
+    try {
+      await apiFetch(`/api/absence-requests/${id}/approve`, { method: "POST" });
+      router.refresh();
+    } catch (e) {
+      notifyError("No se pudo aprobar la solicitud", e);
+    } finally {
+      setLoadingId(null);
+    }
   }
 
   async function handleCancel(id: string) {
     setLoadingId(id);
-    await fetch(`/api/absence-requests/${id}/cancel`, { method: "POST" });
-    setLoadingId(null);
-    router.refresh();
+    try {
+      await apiFetch(`/api/absence-requests/${id}/cancel`, { method: "POST" });
+      router.refresh();
+    } catch (e) {
+      notifyError("No se pudo cancelar la solicitud", e);
+    } finally {
+      setLoadingId(null);
+    }
   }
 
   return (

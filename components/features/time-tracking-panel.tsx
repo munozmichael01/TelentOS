@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch, notifyError } from "@/lib/api-client";
 import { Loader2, Plus, Square, Trash2, Play, Clock, ChevronDown, X } from "lucide-react";
 import type { TimeEntry, TimerState, Employee } from "@/lib/types";
 import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
@@ -330,9 +331,11 @@ function EntriesTable({ initialEntries, employees }: {
   async function del(id: string) {
     setDeleting(id);
     try {
-      await fetch(`/api/time-entries/${id}`, { method: "DELETE" });
+      await apiFetch(`/api/time-entries/${id}`, { method: "DELETE" });
       router.refresh();
       if (hasFilter) setFetched((prev) => prev ? prev.filter((e) => e.id !== id) : null);
+    } catch (e) {
+      notifyError("No se pudo eliminar el registro", e);
     } finally {
       setDeleting(null);
     }

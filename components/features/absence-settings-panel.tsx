@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch, notifyError } from "@/lib/api-client";
 import { Loader2, Plus, Pencil, Trash2, Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -323,9 +324,11 @@ function AbsenceTypesTab({
     if (!deleteId) return;
     setDeleting(true);
     try {
-      await fetch(`/api/absence-types/${deleteId}`, { method: "DELETE" });
+      await apiFetch(`/api/absence-types/${deleteId}`, { method: "DELETE" });
       setDeleteId(null);
       router.refresh();
+    } catch (e) {
+      notifyError("No se pudo eliminar el tipo de ausencia", e);
     } finally {
       setDeleting(false);
     }
@@ -646,9 +649,11 @@ function AllowancePoliciesTab({
     if (!deleteId) return;
     setDeleting(true);
     try {
-      await fetch(`/api/allowance-policies/${deleteId}`, { method: "DELETE" });
+      await apiFetch(`/api/allowance-policies/${deleteId}`, { method: "DELETE" });
       setDeleteId(null);
       router.refresh();
+    } catch (e) {
+      notifyError("No se pudo eliminar la política", e);
     } finally {
       setDeleting(false);
     }
@@ -990,13 +995,7 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/company-holidays", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error");
+      await apiFetch("/api/company/holidays", { method: "POST", json: form });
       setOpen(false);
       setForm({ name: "", date: "", repeats_annually: true, is_half_day: false });
       router.refresh();
@@ -1011,9 +1010,11 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      await fetch(`/api/company-holidays/${deleteId}`, { method: "DELETE" });
+      await apiFetch(`/api/company/holidays/${deleteId}`, { method: "DELETE" });
       setDeleteId(null);
       router.refresh();
+    } catch (e) {
+      notifyError("No se pudo eliminar el festivo", e);
     } finally {
       setDeleting(false);
     }
