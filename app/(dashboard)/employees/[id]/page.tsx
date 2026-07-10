@@ -8,7 +8,7 @@ import { EmployeeForm } from "@/components/features/employee-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, initials } from "@/lib/utils";
-import type { Employee, OnboardingTask, AbsenceRequest, TimeEntry, CompensationRecord } from "@/lib/types";
+import type { Employee, OnboardingTask, AbsenceRequest, TimeEntry, CompensationRecord, AllowancePolicy, AllowanceType, EmployeeAllowance, AllowanceAdjustmentLog } from "@/lib/types";
 import { HairlineTable, HairlineRow } from "@/components/hairline-table";
 
 const AVATAR_PALETTES = [
@@ -175,14 +175,38 @@ export default async function EmployeePage({ params }: { params: { id: string } 
       .limit(12),
   ]);
 
+  // ── Tipos-fila de los selects de arriba (cast único en la frontera de Supabase) ──
+  type PolicyJoin = Pick<
+    AllowancePolicy,
+    "id" | "name" | "amount" | "cycle_type" | "cycle_start_month" | "expiry_rule" | "expiry_period_months" | "carryover_limit" | "allowance_type_id"
+  > & { allowance_types: Pick<AllowanceType, "id" | "name" | "unit"> | null };
+  type AllowanceRow = Pick<EmployeeAllowance, "id" | "valid_from" | "valid_until"> & {
+    allowance_policies: PolicyJoin | null;
+  };
+  type AbsenceRow = AbsenceRequest & {
+    absence_types: { name: string; color: string | null; icon: string | null; deducts_from_allowance: boolean; allowance_type_id: string | null } | null;
+  };
+  type ScheduleDay = { day_of_week: number; is_working_day: boolean; total_minutes: number | null };
+  type ScheduleWeek = { week_label: string | null; week_index: number; days: ScheduleDay[] | null };
+  type ScheduleRow = {
+    id: string; valid_from: string | null; valid_until: string | null;
+    work_schedule_templates: { name: string; week_type: string; weeks: ScheduleWeek[] | null } | null;
+  };
+  const scheduleRows = (schedules ?? []) as unknown as ScheduleRow[];
+  const timeEntries = (entries ?? []) as TimeEntry[];
+  const compensationRows = (compRecords ?? []) as CompensationRecord[];
+
+  const allowanceRows = (allowances ?? []) as unknown as AllowanceRow[];
+  const absenceRows = (absences ?? []) as unknown as AbsenceRow[];
+
   // ── Adjustment logs (sequential — needs allowance IDs) ──
-  const allowanceIds = (allowances ?? []).map((a: any) => a.id);
+  const allowanceIds = allowanceRows.map((a) => a.id);
   const { data: rawAdjLogs } = await (
     allowanceIds.length > 0
       ? supabase.from("allowance_adjustment_log").select("*").in("employee_allowance_id", allowanceIds)
-      : Promise.resolve({ data: [] as any[] })
+      : Promise.resolve({ data: [] as AllowanceAdjustmentLog[] })
   );
-  const adjustmentLogs: any[] = rawAdjLogs ?? [];
+  const adjustmentLogs = (rawAdjLogs ?? []) as AllowanceAdjustmentLog[];
 
   // ── Per-policy balance calculation ──
   const today = new Date().toISOString().slice(0, 10);
@@ -197,7 +221,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
     return { start: new Date(year, m, 1), end: new Date(year + 1, m, 0) };
   }
 
-  function expiryDate(policy: any, cycleEnd: Date): string | null {
+  function expiryDate(policy: PolicyJoin | null, cycleEnd: Date): string | null {
     if (!policy || policy.expiry_rule === "never") return null;
     if (policy.expiry_rule === "immediate") return cycleEnd.toISOString().slice(0, 10);
     if (policy.expiry_rule === "after_period" && policy.expiry_period_months) {
@@ -217,9 +241,9 @@ export default async function EmployeePage({ params }: { params: { id: string } 
     validFrom: string; validUntil: string | null;
   };
 
-  const policyBalances: PolicyBalance[] = (allowances ?? []).map((a: any) => {
-    const policy = a.allowance_policies as any;
-    const atype = policy?.allowance_types as any;
+  const policyBalances: PolicyBalance[] = allowanceRows.map((a) => {
+    const policy = a.allowance_policies;
+    const atype = policy?.allowance_types ?? null;
     const { start: cycleStart, end: cycleEnd } = cycleFor(policy?.cycle_start_month ?? 1);
 
     // Pro-rata: use max of cycle start and allowance valid_from
@@ -231,21 +255,23 @@ export default async function EmployeePage({ params }: { params: { id: string } 
     const granted = isProrated ? Math.ceil(amount * remainMs / totalMs) : amount;
 
     // Adjustment logs for this allowance
-    const logs = adjustmentLogs.filter((l: any) => l.employee_allowance_id === a.id);
-    const carryover = logs.filter((l: any) => l.type === "carryover").reduce((s: number, l: any) => s + Number(l.amount), 0);
-    const manual = logs.filter((l: any) => l.type === "manual_hr").reduce((s: number, l: any) => s + Number(l.amount), 0);
-    const holidayDeductions = logs.filter((l: any) => l.type === "company_holiday").reduce((s: number, l: any) => s + Number(l.amount), 0);
-    const expired = logs.filter((l: any) => l.type === "expiry").reduce((s: number, l: any) => s + Number(l.amount), 0);
+    const logs = adjustmentLogs.filter((l) => l.employee_allowance_id === a.id);
+    const sumByType = (type: AllowanceAdjustmentLog["type"]) =>
+      logs.filter((l) => l.type === type).reduce((s, l) => s + Number(l.amount), 0);
+    const carryover = sumByType("carryover");
+    const manual = sumByType("manual_hr");
+    const holidayDeductions = sumByType("company_holiday");
+    const expired = sumByType("expiry");
 
     // Absences matching this policy's allowance_type_id
     const policyTypeId: string | null = policy?.allowance_type_id ?? null;
-    const relevant = (absences ?? []).filter((r: any) => {
-      const rt = r.absence_types as any;
+    const relevant = absenceRows.filter((r) => {
+      const rt = r.absence_types;
       return rt?.deducts_from_allowance === true &&
         (policyTypeId === null || rt?.allowance_type_id === policyTypeId);
     });
-    const usedApproved = relevant.filter((r: any) => r.status === "approved").reduce((s: number, r: any) => s + Number(r.working_days_count ?? 0), 0);
-    const usedPending  = relevant.filter((r: any) => r.status === "pending").reduce((s: number, r: any) => s + Number(r.working_days_count ?? 0), 0);
+    const usedApproved = relevant.filter((r) => r.status === "approved").reduce((s, r) => s + Number(r.working_days_count ?? 0), 0);
+    const usedPending  = relevant.filter((r) => r.status === "pending").reduce((s, r) => s + Number(r.working_days_count ?? 0), 0);
 
     const available = Math.max(0, granted + carryover + manual + holidayDeductions + expired - usedApproved - usedPending);
 
@@ -268,7 +294,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
   const totalWorkedMin = (entries ?? []).reduce((sum, e) => sum + (e.duration_minutes ?? 0), 0);
 
   const av = avatarPalette(emp.name);
-  const reports = (all ?? []).filter((e: any) => e.manager_id === emp.id);
+  const reports = ((all ?? []) as OrgNode[]).filter((e) => e.manager_id === emp.id);
   const mgr = manager as (typeof manager & { role_title?: string | null }) | null;
 
   return (
@@ -535,7 +561,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                           headers={["Tipo", "Desde", "Hasta", "Días", "Estado"]}
                           align={["left", "left", "left", "right", "left"]}
                         >
-                          {rows.map((r: any) => {
+                          {rows.map((r) => {
                             const atype = r.absence_types;
                             const sc = STATUS_CLR[r.status] ?? STATUS_CLR.pending;
                             return (
@@ -597,7 +623,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                 headers={["Fecha", "Entrada", "Salida", "Duración", "Notas"]}
                 align={["left", "left", "left", "right", "left"]}
               >
-                {(entries ?? []).map((e: any) => {
+                {timeEntries.map((e) => {
                   const fmtTime = (iso: string) => iso?.includes("T")
                     ? new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
                     : iso?.slice(0, 5) ?? "—";
@@ -620,8 +646,8 @@ export default async function EmployeePage({ params }: { params: { id: string } 
         <TabsContent value="compensacion">
           <div style={{ maxWidth: "760px" }}>
             {(() => {
-              const totalBal = (compRecords ?? []).reduce((sum: number, r: any) => sum + Number(r.balance_minutes ?? 0), 0);
-              const totalComp = (compRecords ?? []).reduce((sum: number, r: any) => sum + Number(r.compensated_minutes ?? 0), 0);
+              const totalBal = compensationRows.reduce((sum, r) => sum + Number(r.balance_minutes ?? 0), 0);
+              const totalComp = compensationRows.reduce((sum, r) => sum + Number(r.compensated_minutes ?? 0), 0);
               const pending = totalBal - totalComp;
               return (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "14px", marginBottom: "20px" }}>
@@ -656,7 +682,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                 headers={["Período", "Programadas", "Trabajadas", "Balance", "Tipo"]}
                 align={["left", "right", "right", "right", "left"]}
               >
-                {(compRecords ?? []).map((r: any) => {
+                {compensationRows.map((r) => {
                   const bal = Number(r.balance_minutes ?? 0);
                   const balColor = bal > 0 ? "#1B6B4F" : bal < 0 ? "#BD4332" : "#79746B";
                   const balBg = bal > 0 ? "#DCEFE3" : bal < 0 ? "#F6D9D2" : "#F4F0E8";
@@ -703,11 +729,11 @@ export default async function EmployeePage({ params }: { params: { id: string } 
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {(schedules ?? []).map((s: any) => {
-                  const tpl = s.work_schedule_templates as any;
+                {scheduleRows.map((s) => {
+                  const tpl = s.work_schedule_templates;
                   const DAY_LABELS = ["L", "M", "X", "J", "V", "S", "D"];
-                  const weeks: any[] = tpl?.weeks
-                    ? [...tpl.weeks].sort((a: any, b: any) => a.week_index - b.week_index)
+                  const weeks: ScheduleWeek[] = tpl?.weeks
+                    ? [...tpl.weeks].sort((a, b) => a.week_index - b.week_index)
                     : [];
                   const weekTypeLabel = tpl?.week_type === "single" ? "Semana fija" : tpl?.week_type === "rotating" ? "Semanas rotativas" : tpl?.week_type ?? "—";
                   return (
@@ -726,9 +752,9 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                           </span>
                         </div>
                       </div>
-                      {weeks.map((week: any) => {
-                        const sortedDays = [...(week.days ?? [])].sort((a: any, b: any) => a.day_of_week - b.day_of_week);
-                        const weekTotalMin = sortedDays.reduce((sum: number, d: any) => sum + (d.is_working_day ? Number(d.total_minutes ?? 0) : 0), 0);
+                      {weeks.map((week) => {
+                        const sortedDays = [...(week.days ?? [])].sort((a, b) => a.day_of_week - b.day_of_week);
+                        const weekTotalMin = sortedDays.reduce((sum, d) => sum + (d.is_working_day ? Number(d.total_minutes ?? 0) : 0), 0);
                         return (
                           <div key={week.week_index} style={{ marginBottom: "14px" }}>
                             {weeks.length > 1 && (
@@ -738,7 +764,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                             )}
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "6px" }}>
                               {DAY_LABELS.map((label, idx) => {
-                                const day = sortedDays.find((d: any) => d.day_of_week === idx);
+                                const day = sortedDays.find((d) => d.day_of_week === idx);
                                 const isWorking = day?.is_working_day ?? false;
                                 const h = isWorking && day?.total_minutes ? `${(Number(day.total_minutes) / 60).toFixed(1).replace(/\.0$/, "")}h` : "—";
                                 return (
