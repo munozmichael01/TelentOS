@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { CompensationRecord } from "@/lib/types";
+import { apiFetch, ApiError } from "@/lib/api-client";
 import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -147,10 +148,9 @@ function ConfirmModal({
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/compensation/records", {
+      await apiFetch("/api/compensation/records", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        json: {
           employee_id: employee.id,
           period_start: periodFrom,
           period_end: periodTo,
@@ -158,14 +158,16 @@ function ConfirmModal({
           worked_minutes: workedMinutes,
           compensation_type: compType,
           comment: comment || null,
-        }),
+        },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error al guardar");
       onSaved();
       onClose();
     } catch (e) {
-      setError(String(e instanceof Error ? e.message : e));
+      if (e instanceof ApiError && e.status === 409) {
+        setError("Ya existe un registro para este empleado en este período");
+      } else {
+        setError(e instanceof Error ? e.message : "Error al guardar");
+      }
     } finally {
       setSaving(false);
     }
@@ -268,6 +270,10 @@ function ConfirmModal({
 }
 
 // ── Saved Records Table ────────────────────────────────────────────
+const NOVEDAD_LABEL: Record<string, string> = { pending: "Pendiente", included: "En corrida", paid: "Pagado" };
+const NOVEDAD_BG:    Record<string, string> = { pending: T.warnBg,    included: T.successBg,  paid: T.successBg };
+const NOVEDAD_CLR:   Record<string, string> = { pending: T.warnText,  included: T.successText, paid: T.successText };
+
 function RecordsTable({ records }: { records: (CompensationRecord & { employees?: { name: string; role_title: string | null } | null })[] }) {
   const typeLabel: Record<string, string> = { time_off: "Tiempo libre", payment: "Pago" };
   const typeBg: Record<string, string>   = { time_off: T.limeSoft, payment: T.warnBg };
@@ -279,16 +285,16 @@ function RecordsTable({ records }: { records: (CompensationRecord & { employees?
     <div>
       <SL>Registros confirmados</SL>
       <HairlineTable
-        cols="1.8fr 1.4fr 1fr 1fr 1fr 0.9fr"
-        headers={["Empleado", "Período", "Programadas", "Trabajadas", "Balance", "Tipo"]}
-        align={["left", "left", "right", "right", "right", "left"]}
+        cols="1.8fr 1.4fr 1fr 1fr 1fr 0.9fr 0.9fr"
+        headers={["Empleado", "Período", "Programadas", "Trabajadas", "Balance", "Tipo", "Novedad"]}
+        align={["left", "left", "right", "right", "right", "left", "left"]}
       >
         {records.map((r) => {
           const bal = r.balance_minutes;
           const balClr = bal > 0 ? T.successText : bal < 0 ? T.dangerText : T.soft;
           const balBg  = bal > 0 ? T.successBg   : bal < 0 ? T.dangerBg   : T.bg;
           return (
-            <HairlineRow key={r.id} align={["left", "left", "right", "right", "right", "left"]}>
+            <HairlineRow key={r.id} align={["left", "left", "right", "right", "right", "left", "left"]}>
               <div>
                 <div style={{ fontWeight: 600 }}>{r.employees?.name ?? "—"}</div>
                 {r.employees?.role_title && <div style={{ fontSize: "11px", color: T.soft }}>{r.employees.role_title}</div>}
@@ -305,6 +311,13 @@ function RecordsTable({ records }: { records: (CompensationRecord & { employees?
               <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: typeClr[r.compensation_type] ?? T.soft, background: typeBg[r.compensation_type] ?? T.bg, borderRadius: "6px", padding: "2px 8px" }}>
                 {typeLabel[r.compensation_type] ?? r.compensation_type}
               </span>
+              {r.novedad_status ? (
+                <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: NOVEDAD_CLR[r.novedad_status] ?? T.soft, background: NOVEDAD_BG[r.novedad_status] ?? T.bg, borderRadius: "6px", padding: "2px 8px" }}>
+                  {NOVEDAD_LABEL[r.novedad_status] ?? r.novedad_status}
+                </span>
+              ) : (
+                <span style={{ color: T.soft, fontSize: "12px" }}>—</span>
+              )}
             </HairlineRow>
           );
         })}

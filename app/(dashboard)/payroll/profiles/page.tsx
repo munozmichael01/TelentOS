@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { HairlineTable, HairlineRow } from "@/components/hairline-table";
@@ -22,6 +22,14 @@ function initials(name: string) {
 
 export default async function PayProfilesPage() {
   const supabase = createClient();
+  const admin = createAdminClient();
+
+  // Resolve company from user session
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .maybeSingle();
+  const companyId = membership?.company_id ?? null;
 
   const [{ data: employees }, { data: profiles }] = await Promise.all([
     supabase
@@ -29,9 +37,13 @@ export default async function PayProfilesPage() {
       .select("id, name, role_title, department")
       .eq("status", "active")
       .order("name"),
-    supabase
-      .from("pay_profiles")
-      .select("employee_id, base_salary, currency, country_pack, updated_at"),
+    companyId
+      ? admin
+          .from("pay_profiles")
+          .select("employee_id, base_salary, currency, country_pack, updated_at")
+          .eq("company_id", companyId)
+          .is("effective_to", null)
+      : Promise.resolve({ data: [] as Pick<PayProfile, "employee_id" | "base_salary" | "currency" | "country_pack" | "updated_at">[] }),
   ]);
 
   const list = (employees ?? []) as Employee[];
@@ -41,12 +53,14 @@ export default async function PayProfilesPage() {
   );
 
   const PACK_LABEL: Record<string, string> = {
-    ve: "Venezuela · activo",
+    generic: "Genérico · activo",
+    ve: "Venezuela · vista previa",
     br: "Brasil · próximamente",
     es: "España · próximamente",
     co: "Colombia · próximamente",
     mx: "México · próximamente",
   };
+  const PACK_ACTIVE = new Set(["generic"]);
 
   const withoutProfile = list.filter((e) => !profileMap.has(e.id));
 
@@ -94,13 +108,13 @@ export default async function PayProfilesPage() {
                 <span style={{ color: "#54504A", fontSize: "13px" }}>{e.role_title ?? "—"}</span>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>
                   {profile
-                    ? `$${profile.base_salary.toLocaleString("en-US")} ${profile.currency}`
+                    ? `${profile.base_salary.toLocaleString("en-US")} ${profile.currency}`
                     : <span style={{ color: "#79746B", fontWeight: 400 }}>Sin configurar</span>
                   }
                 </span>
                 <span>
                   {profile ? (
-                    <span style={{ fontSize: "11px", fontWeight: 700, borderRadius: "999px", padding: "3px 10px", background: profile.country_pack === "ve" ? "#DCEFE4" : "#EEE9DD", color: profile.country_pack === "ve" ? "#0E5C4A" : "#79746B" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, borderRadius: "999px", padding: "3px 10px", background: PACK_ACTIVE.has(profile.country_pack) ? "#DCEFE4" : "#EEE9DD", color: PACK_ACTIVE.has(profile.country_pack) ? "#0E5C4A" : "#79746B" }}>
                       {PACK_LABEL[profile.country_pack] ?? profile.country_pack}
                     </span>
                   ) : "—"}

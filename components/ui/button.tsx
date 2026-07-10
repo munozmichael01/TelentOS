@@ -17,7 +17,11 @@ const buttonVariants = cva(
         /* brand teal — used for confirmations */
         brand:
           "text-white bg-[#0E5C4A] border-2 border-[#1A1A17] rounded-[11px] shadow-hard hover:-translate-x-px hover:-translate-y-px hover:shadow-[5px_5px_0_#1A1A17] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0_#1A1A17]",
-        secondary: "bg-secondary text-secondary-foreground rounded-[11px] border border-border hover:bg-secondary/80",
+        /* surface with hard shadow — secondary action (alias of outline with canonical name) */
+        secondary:
+          "text-[#1A1A17] bg-[#FCFAF6] border-2 border-[#1A1A17] rounded-[11px] shadow-hard hover:-translate-x-px hover:-translate-y-px hover:shadow-[5px_5px_0_#1A1A17] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0_#1A1A17]",
+        /* brand-soft background — gentle confirmations, no hard shadow */
+        soft: "text-[#0E5C4A] bg-[#DCEFE4] rounded-[11px] hover:bg-[#c8e4d8]",
         destructive: "bg-[#BD4332] text-white border-2 border-[#1A1A17] rounded-[11px] shadow-hard hover:-translate-x-px hover:-translate-y-px hover:shadow-[5px_5px_0_#1A1A17]",
         ghost: "hover:bg-[#EFEBE1] hover:text-[#1A1A17] rounded-[10px]",
         link: "text-[#0E5C4A] underline-offset-4 hover:underline",
