@@ -26,6 +26,15 @@
 
 **No bloqueante:** el "modo sin país" es el pack `generic` — gestión pura (bruto = base + componentes + novedades, neto = bruto, sin retenciones). Elegir país activa el pack legal cuando exista; mientras, muestra el mock.
 
+### 1.1 Regla de moneda (resuelve la tensión EUR/USD)
+
+Principio: **la moneda es una propiedad de cada registro, nunca un global que se sobrescribe**. El esquema ya lo cumple (`jobs.salary_currency`, `pay_profiles.currency`, `pay_runs.currency`); lo que falta es la regla de uso:
+
+1. **El país de la empresa fija *defaults por dominio*, y los dominios pueden diferir legítimamente.** Ofertas = moneda del mercado de talento; nómina = moneda de pago. Venezuela es la prueba de que "unificar" sería la regla equivocada: su mercado laboral cotiza en USD y su nómina es dual VES/USD. España: EUR en ambos.
+2. **El dinero nunca fluye automáticamente del ATS a nómina.** La banda salarial de la oferta es informativa; al contratar, el perfil salarial se crea en un paso explícito donde RR.HH. introduce el importe en la moneda de nómina (puede diferir de la moneda de la oferta). TalentOS **no convierte divisas** — sin motor FX en el alcance.
+3. **Elegir país no migra datos existentes.** Cambia solo los defaults de registros *nuevos*. Ofertas EUR bajo una empresa VE siguen siendo válidas: son registros históricos con su propia moneda, y se muestran tal cual.
+4. **Migración concreta:** (a) `pay_profiles.currency` y `jobs.salary_currency` pasan a defaultear desde `companies.country` en la creación (hoy hardcodean 'USD' y 'EUR' respectivamente); (b) el bug real es de UI, no de datos — `fmtUSD` está hardcodeado en 3 componentes de payroll y debe leer la moneda del registro (`formatMoney(amount, currency)` en el `lib/format.ts` de la auditoría).
+
 ## 2. Decisión: packs legales modulares (VE / BR / ES como preview)
 
 Contrato `CountryPack` con `status: 'active' | 'preview' | 'coming_soon'`. El enum ya existe (`'ve','br','es','co','mx'` en 0016) y se convierte en el catálogo.
@@ -82,15 +91,42 @@ Separación de funciones: **quien prepara no aprueba**.
 
 ## 7. Alcance de "funcional hasta la gestión de payroll"
 
-Se cablea todo lo siguiente (criterio: se mantiene lo que tiene sentido de producto, y todo esto lo tiene):
+Se cablea todo lo siguiente (criterio: se mantiene lo que tiene sentido de producto, y todo esto lo tiene). **Cada bloque lleva sus criterios de aceptación (AC)** — son la definición de "hecho" y la base de los tests.
 
 1. **Perfiles salariales**: creación en alta/contratación + desde roster; "Editar compensación", "Configurar compensación" y "Editar" (banco) conectados; historial effective-dated.
+   - **AC-1a:** dar de alta un empleado ofrece configurar compensación; al guardar existe fila en `pay_profiles` con `effective_from` = hoy y `effective_to` = null, en la moneda default del país de la empresa.
+   - **AC-1b:** editar el salario con vigencia futura produce 2 filas (la anterior cerrada con `effective_to`, la nueva vigente); la ficha del empleado muestra el historial con ambas.
+   - **AC-1c:** "Configurar compensación" desde el empty state crea el perfil sin tocar la DB a mano; el empleado sin perfil aparece en el roster como "sin configurar".
+
 2. **Crear corrida desde la UI** (período + entidad) → **generación de líneas**: perfil vigente + novedades (pagos de banco de horas pendientes, ajustes puntuales, marca de ausencias no retribuidas). Aritmética de gestión; sin retenciones (eso es el pack).
+   - **AC-2a (el caso canónico):** empresa con 3 empleados con perfil + 1 sin perfil + 1 pago de banco de horas pendiente → crear la corrida de junio genera **3 líneas**; el empleado sin perfil aparece como **incidencia**, no como línea; el pago del banco aparece como line item en la línea de su empleado; el registro del banco pasa a `included`.
+   - **AC-2b:** gross de cada línea = base vigente + componentes activos + line items; gross de la corrida = suma de líneas (cuadra en UI y en DB).
+   - **AC-2c:** crear una segunda corrida del mismo período+entidad se bloquea con mensaje explícito.
+   - **AC-2d:** la línea usa el perfil **vigente en el período de la corrida**, no el actual (verifica el historial effective-dated).
+
 3. **Revisión**: "Aprobar empleado", "Solicitar cambios", "Añadir ajuste" funcionales con la matriz RBAC.
+   - **AC-3a:** "Añadir ajuste" de −100 recalcula la línea y el total de la corrida al instante y crea un line item visible.
+   - **AC-3b:** "Solicitar cambios" deja la línea en un estado que **impide aprobar la corrida** hasta resolverse.
+   - **AC-3c:** cada acción escribe en `pay_run_audit_log` con actor y timestamp.
+
 4. **Ciclo de estados**: draft → in_review → approved → exported → paid desde la UI, con audit log.
+   - **AC-4a:** como `hr_admin`, draft→in_review funciona; in_review→approved devuelve 403 **y** el botón está deshabilitado en la UI (permiso aplicado en las dos capas).
+   - **AC-4b:** como `owner`, aprobar solo es posible con todas las líneas aprobadas.
+   - **AC-4c:** ninguna transición se salta pasos (draft→paid directo = rechazado).
+
 5. **Exports**: Payroll Summary CSV y Accounting CSV reales. Bank file y Local Compliance quedan detrás del pack de país (mock con badge).
+   - **AC-5a:** en corrida `approved`, "Exportar CSV" descarga un archivo con una fila por línea cuyos totales cuadran con la UI, y registra la exportación en `payroll_exports`.
+   - **AC-5b:** Bank file y Compliance muestran el badge del pack en preview y **no** descargan nada; en corrida no aprobada, los exports están deshabilitados.
+
 6. **Payslips**: registros generados al aprobar la corrida; "Ver recibo" del perfil muestra el último; modal de recibo de la corrida lee de `payslips`.
+   - **AC-6a:** aprobar la corrida crea 1 fila en `payslips` por línea.
+   - **AC-6b:** "Ver recibo" en el perfil del empleado abre el del último período; sin corridas aprobadas, muestra estado vacío (nunca botón muerto).
+
 7. **Banco de horas**: renombrado + loop cerrado (§5).
+   - **AC-7a:** la nav dice "Banco de horas"; "Pay Runs" se mantiene.
+   - **AC-7b:** confirmar 6h como "pago" crea una novedad `pending` visible; tras generarse la corrida, el registro muestra "Incluido en <corrida>" y tras pagarse, `paid`.
+   - **AC-7c:** confirmar tipo "tiempo libre" **no** genera novedad de nómina.
+   - **AC-7d:** confirmar dos veces el mismo empleado+período se bloquea.
 
 ### Fuera de alcance (por ahora)
 - Cálculo legal de retenciones (packs en preview).
