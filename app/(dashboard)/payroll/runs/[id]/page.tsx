@@ -1,18 +1,15 @@
 export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase/server";
+import { getCompany } from "@/lib/workspace";
 import { PayRunDetail } from "@/components/features/pay-run-detail";
 import { notFound } from "next/navigation";
 
 export default async function PayRunDetailPage({ params }: { params: { id: string } }) {
-  const supabase = createClient();
-  const { data: company } = await supabase
-    .from("companies")
-    .select("name")
-    .limit(1)
-    .maybeSingle();
+  const company = await getCompany();
 
-  // Verify run exists before rendering client component
+  // Verify run exists before rendering client component (RLS-scoped)
+  const supabase = createClient();
   const { data: run } = await supabase
     .from("pay_runs")
     .select("id")

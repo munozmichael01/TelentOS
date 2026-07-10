@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { requireApiRole } from "@/lib/api";
+import { requireApiRole, jsonError } from "@/lib/api";
 import { createAdminClient } from "@/lib/supabase/server";
+import { generatePayRunLines } from "@/lib/payroll/generate-lines";
 
 export async function GET() {
   const { companyId, error } = await requireApiRole(["owner", "hr_admin"]);
@@ -17,15 +18,29 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { companyId, error } = await requireApiRole(["owner", "hr_admin"]);
+  const { companyId, user, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
 
   const body = await req.json().catch(() => null);
   if (!body?.period_label || !body?.period_month || !body?.entity_name) {
-    return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 });
+    return jsonError("Faltan campos obligatorios", 400);
   }
 
   const db = createAdminClient();
+
+  // AC-2c: block duplicate period + entity
+  const { data: existing } = await db
+    .from("pay_runs")
+    .select("id")
+    .eq("company_id", companyId!)
+    .eq("period_month", body.period_month)
+    .eq("entity_name", body.entity_name)
+    .maybeSingle();
+
+  if (existing) {
+    return jsonError("Ya existe una corrida para este período y entidad", 409);
+  }
+
   const { data: run, error: dbErr } = await db
     .from("pay_runs")
     .insert({
@@ -39,6 +54,12 @@ export async function POST(req: Request) {
     .select()
     .single();
 
-  if (dbErr) return NextResponse.json({ error: dbErr.message }, { status: 500 });
-  return NextResponse.json({ run });
+  if (dbErr) return jsonError(dbErr.message, 500);
+
+  const generatedBy = user?.email ?? "Sistema";
+  const motorResult = await generatePayRunLines(run.id, companyId!, generatedBy).catch(
+    (e) => ({ lineCount: 0, incidents: [], gross: 0, motorError: e instanceof Error ? e.message : "Error inesperado" }),
+  );
+
+  return NextResponse.json({ run, ...motorResult }, { status: 201 });
 }

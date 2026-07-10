@@ -57,12 +57,26 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     itemsByLine[item.line_id].push(item);
   }
 
+  // Employees active during the period but with no line (AC-2f)
+  const [periodYear, periodMonth] = run.period_month.split("-").map(Number);
+  const period_end = new Date(periodYear, periodMonth, 0).toISOString().split("T")[0];
+  const { data: allEmployees } = await db
+    .from("employees")
+    .select("id, name")
+    .eq("company_id", companyId!)
+    .eq("status", "active")
+    .or(`start_date.is.null,start_date.lte.${period_end}`);
+
+  const lineEmpIds = new Set((lines ?? []).map((l: { employee_id: string }) => l.employee_id));
+  const withoutLine = (allEmployees ?? []).filter((e: { id: string }) => !lineEmpIds.has(e.id));
+
   return NextResponse.json({
     run,
     lines: lines ?? [],
     itemsByLine,
     audit: audit ?? [],
     exportLog: exportLog ?? [],
+    withoutLine,
   });
 }
 
