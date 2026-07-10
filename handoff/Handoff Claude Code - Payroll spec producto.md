@@ -70,6 +70,7 @@ El mock de un pack `preview` es: la card en el catálogo, los chips de conceptos
 - La ficha del empleado gana la sección real de **Compensación** (salario, componentes, historial), con permisos owner/hr_admin.
 - `/payroll/profiles` se mantiene como **vista de roster** (misma fuente de datos, vista operativa para nómina: quién tiene perfil configurado, quién no).
 - **Momento de creación:** al dar de alta un empleado (formulario de alta y flujo de contratación desde el ATS) se ofrece configurar compensación; también desde el roster. El `PUT` actual pasa a upsert o se añade `POST`.
+- **Pre-relleno desde la oferta (no auto-create):** si la candidatura tiene campos `offer_*` (`offer_salary`, `offer_currency`, `offer_frequency`, `offer_start_date` — ya existen en `applications`), el formulario de compensación del flujo de contratación llega pre-rellenado con ellos y RR.HH. confirma o corrige. **Nunca se inserta el `pay_profile` automáticamente al contratar** (§1.1 regla 2) — el insert automático que existió en `hire/route.ts` se revierte antes de arrancar esta pista.
 
 ## 5. Decisión: cerrar el loop del banco de horas
 
