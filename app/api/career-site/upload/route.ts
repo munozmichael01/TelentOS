@@ -10,6 +10,17 @@ export async function POST(req: Request) {
   const file = formData.get("file") as File | null;
   if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
 
+  // Bucket público: solo imágenes y con límite de tamaño (auditoría M1).
+  // Sin esto, cualquier usuario autenticado obtiene hosting público de
+  // archivos arbitrarios bajo el dominio de Supabase.
+  const IMAGE_MIME_ALLOWED = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+  if (!IMAGE_MIME_ALLOWED.includes(file.type)) {
+    return NextResponse.json({ error: "Formato no admitido (PNG, JPG, WebP o GIF)" }, { status: 400 });
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    return NextResponse.json({ error: "La imagen no puede superar 2 MB" }, { status: 400 });
+  }
+
   const admin = createAdminClient();
 
   // Ensure bucket exists (no-op if already created)

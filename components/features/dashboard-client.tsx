@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { apiFetch, notifyError } from "@/lib/api-client";
 import { StatCard } from "@/components/stat-card";
 import { AgentPanel } from "@/components/agent-hint";
 import { InboxItem } from "@/components/features/inbox-item";
@@ -119,9 +120,11 @@ export function DashboardClient({
     const actionKey = `${item.id}-${action.label}`;
     setLoadingAction(actionKey);
     try {
-      await fetch(action.apiPath, { method: action.method ?? "POST" });
+      await apiFetch(action.apiPath, { method: action.method ?? "POST" });
       // Optimistically remove from inbox after approval/rejection
       // The page will refresh on next navigation; for now remove from view
+    } catch (e) {
+      notifyError("No se pudo completar la acción", e);
     } finally {
       setLoadingAction(null);
     }

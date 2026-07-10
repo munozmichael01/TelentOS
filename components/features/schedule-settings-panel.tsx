@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch, notifyError } from "@/lib/api-client";
 import { Loader2, Plus, Pencil, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -423,10 +424,12 @@ export function ScheduleSettingsPanel({
     if (!deleteId) return;
     setDeleting(true);
     try {
-      await fetch(`/api/schedule-templates/${deleteId}`, { method: "DELETE" });
+      await apiFetch(`/api/schedule-templates/${deleteId}`, { method: "DELETE" });
       setDeleteId(null);
       setConfirmDelete(false);
       router.refresh();
+    } catch (e) {
+      notifyError("No se pudo eliminar el horario", e);
     } finally {
       setDeleting(false);
     }

@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { computeFitScore } from "@/lib/fit-score";
 import { jsonError } from "@/lib/api";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
+
+const CV_MIME_ALLOWED = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Endpoint PÚBLICO del career site. Usa service_role en lugar de abrir INSERT
@@ -10,6 +18,11 @@ import { jsonError } from "@/lib/api";
  * job boards.
  */
 export async function POST(req: Request) {
+  // Público y sin auth: límite por IP contra spam/scripts (auditoría H3)
+  if (!rateLimit(`careers-apply:${clientIp(req)}`, 5, 10 * 60_000)) {
+    return jsonError("Demasiadas solicitudes. Inténtalo de nuevo en unos minutos.", 429);
+  }
+
   const supabase = createAdminClient();
   const formData = await req.formData().catch(() => null);
   if (!formData) return jsonError("Formulario inválido");
@@ -18,6 +31,7 @@ export async function POST(req: Request) {
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!jobId || !name || !email) return jsonError("Nombre, email y oferta son obligatorios");
+  if (!EMAIL_RE.test(email)) return jsonError("El email no es válido");
 
   const { data: job } = await supabase
     .from("jobs")
@@ -32,6 +46,7 @@ export async function POST(req: Request) {
   const cv = formData.get("cv") as File | null;
   if (cv && cv.size > 0) {
     if (cv.size > 8 * 1024 * 1024) return jsonError("El CV no puede superar 8 MB");
+    if (!CV_MIME_ALLOWED.includes(cv.type)) return jsonError("Formato de CV no admitido (PDF o Word)");
     const path = `${jobId}/${Date.now()}-${cv.name.replace(/[^\w.\-]/g, "_")}`;
     const { error: upErr } = await supabase.storage
       .from("cvs")
@@ -44,7 +59,7 @@ export async function POST(req: Request) {
   // Dedupe de candidato por email
   const { data: existingCandidate } = await supabase
     .from("candidates")
-    .select("id")
+    .select("id, phone, location, cv_url")
     .ilike("email", email)
     .maybeSingle();
 
@@ -70,13 +85,18 @@ export async function POST(req: Request) {
     if (candErr) return jsonError(candErr.message, 500);
     candidateId = candidate.id;
   } else {
-    // Candidato existente: actualizar siempre los datos que acaba de proporcionar
-    // (nombre, teléfono y ubicación pueden haber cambiado desde su última candidatura)
-    const patch: Record<string, unknown> = { name };
-    if (phone) patch.phone = phone;
-    if (location) patch.location = location;
-    if (cvUrl) patch.cv_url = cvUrl;
-    await supabase.from("candidates").update(patch).eq("id", candidateId);
+    // Candidato existente: SOLO completar campos vacíos, nunca sobrescribir.
+    // Este endpoint es público y sin verificación de identidad: cualquiera que
+    // conozca el email podría reemplazar el CV/teléfono de otra persona
+    // (data poisoning, auditoría H3). Actualizar datos verificados requiere
+    // un flujo con confirmación por email (fuera de alcance por ahora).
+    const patch: Record<string, unknown> = {};
+    if (phone && !existingCandidate?.phone) patch.phone = phone;
+    if (location && !existingCandidate?.location) patch.location = location;
+    if (cvUrl && !existingCandidate?.cv_url) patch.cv_url = cvUrl;
+    if (Object.keys(patch).length > 0) {
+      await supabase.from("candidates").update(patch).eq("id", candidateId);
+    }
   }
 
   // Etapa inicial del pipeline de la oferta

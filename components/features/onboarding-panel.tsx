@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { apiFetch, notifyError } from "@/lib/api-client";
 import { formatDate } from "@/lib/utils";
 import type { OnboardingTask } from "@/lib/types";
 
@@ -35,28 +36,38 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
   }
 
   async function toggle(task: OnboardingTask) {
-    await fetch(`/api/onboarding/${task.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: task.status === "done" ? "pending" : "done" }),
-    });
-    router.refresh();
+    try {
+      await apiFetch(`/api/onboarding/${task.id}`, {
+        method: "PATCH",
+        json: { status: task.status === "done" ? "pending" : "done" },
+      });
+      router.refresh();
+    } catch (e) {
+      notifyError("No se pudo actualizar la tarea", e);
+    }
   }
 
   async function remove(taskId: string) {
-    await fetch(`/api/onboarding/${taskId}`, { method: "DELETE" });
-    router.refresh();
+    try {
+      await apiFetch(`/api/onboarding/${taskId}`, { method: "DELETE" });
+      router.refresh();
+    } catch (e) {
+      notifyError("No se pudo eliminar la tarea", e);
+    }
   }
 
   async function addTask() {
     if (!newTitle.trim()) return;
-    await fetch("/api/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ employee_id: employeeId, title: newTitle }),
-    });
-    setNewTitle("");
-    router.refresh();
+    try {
+      await apiFetch("/api/onboarding", {
+        method: "POST",
+        json: { employee_id: employeeId, title: newTitle },
+      });
+      setNewTitle("");
+      router.refresh();
+    } catch (e) {
+      notifyError("No se pudo crear la tarea", e);
+    }
   }
 
   return (
