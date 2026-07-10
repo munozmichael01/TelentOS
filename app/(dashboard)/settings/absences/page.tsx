@@ -43,7 +43,7 @@ export default async function AbsencesSettingsPage() {
     <div>
       <PageHeader
         title="Ausencias"
-        eyebrow="Ajustes / Ausencias"
+        eyebrow="Ajustes"
         description="Tipos, políticas y festivos de empresa."
       />
       <AbsenceSettingsPanel

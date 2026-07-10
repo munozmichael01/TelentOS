@@ -8,7 +8,8 @@ export default async function SettingsPage() {
   return (
     <div>
       <PageHeader
-        title="Ajustes"
+        eyebrow="Ajustes"
+        title="Empresa"
         description="Configura tu empresa y el career site público."
       />
       <CompanyForm company={company} />

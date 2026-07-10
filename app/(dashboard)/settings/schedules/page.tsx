@@ -24,7 +24,7 @@ export default async function SchedulesSettingsPage() {
     <div>
       <PageHeader
         title="Horarios"
-        eyebrow="Ajustes / Horarios"
+        eyebrow="Ajustes"
         description="Plantillas de horario laboral para tus empleados."
       />
       <ScheduleSettingsPanel

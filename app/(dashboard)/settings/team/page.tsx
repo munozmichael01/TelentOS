@@ -66,7 +66,7 @@ export default async function TeamPage() {
   if (!company || !currentUser) {
     return (
       <div>
-        <PageHeader title="Equipo" eyebrow="Ajustes / Equipo" />
+        <PageHeader title="Equipo" eyebrow="Ajustes" />
         <p style={{ color: "#79746B", fontSize: "14px" }}>No se pudo cargar el equipo.</p>
       </div>
     );
@@ -147,7 +147,7 @@ export default async function TeamPage() {
     <div>
       <PageHeader
         title="Equipo"
-        eyebrow="Ajustes / Equipo"
+        eyebrow="Ajustes"
       />
       <p style={{ fontSize: "13.5px", color: "#79746B", margin: "0 0 22px" }}>
         Gestiona quién tiene acceso al workspace y con qué rol.

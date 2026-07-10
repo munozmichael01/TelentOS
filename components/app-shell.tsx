@@ -170,7 +170,7 @@ const ALL_NAV = [
   { href: "/payroll",          label: "Payroll",             Icon: IconPayroll },
   { href: "/payroll/runs",     label: "Pay Runs",            Icon: IconPayRuns },
   { href: "/payroll/profiles", label: "Perfiles salariales", Icon: IconPayProfiles },
-  { section: "Workspace" },
+  { section: "Ajustes" },
   {
     href: "/settings",
     label: "Ajustes",
