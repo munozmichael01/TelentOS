@@ -109,7 +109,7 @@
 
 /* ── Tarjeta con hover ── */
 .card-hover {
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  transition: border-color .12s, box-shadow .12s;
 }
 .card-hover:hover {
   border-color: #D4CCBA;

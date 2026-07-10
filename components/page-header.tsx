@@ -1,3 +1,9 @@
+/**
+ * eyebrow  — section name or breadcrumb only ("Reclutamiento", "Ajustes / Billing").
+ *            Never a count, never a phrase. Space Mono uppercase, renders above title.
+ * title    — page name, Archivo 900, uniform 28 px.
+ * description — explanatory sentence, sentence-case, dot at end. Hanken Grotesk, below title.
+ */
 export function PageHeader({
   eyebrow,
   title,

@@ -1,9 +1,25 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("rounded-[14px] border border-line bg-surface text-foreground shadow-card card-hover", className)} {...props} />
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Adds hover border + shadow. Use for clickable tiles, job cards, nav items. */
+  interactive?: boolean;
+  /** Uses 16px radius. Use for section containers / large panels. Default: 14px. */
+  panel?: boolean;
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, interactive, panel, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        panel ? "rounded-[16px]" : "rounded-[14px]",
+        "border border-line bg-surface",
+        interactive && "card-hover cursor-pointer",
+        className
+      )}
+      {...props}
+    />
   )
 );
 Card.displayName = "Card";
@@ -30,7 +46,9 @@ const CardDescription = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HT
 CardDescription.displayName = "CardDescription";
 
 const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  )
 );
 CardContent.displayName = "CardContent";
 

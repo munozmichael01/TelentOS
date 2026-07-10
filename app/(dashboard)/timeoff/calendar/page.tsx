@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/page-header";
+import { StatCard } from "@/components/stat-card";
 import { createClient } from "@/lib/supabase/server";
 import type { AbsenceRequest, CompanyHoliday, Employee } from "@/lib/types";
 import Link from "next/link";
@@ -361,16 +362,6 @@ function Legend({ items }: { items: { name: string; color: string; icon: string 
   );
 }
 
-/* ─── Summary cards ─────────────────────────────────────────────────── */
-
-function SummaryCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "14px", padding: "16px 18px" }}>
-      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "10.5px", color: "#79746B", textTransform: "uppercase", letterSpacing: ".5px" }}>{label}</div>
-      <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "30px", letterSpacing: "-1px", lineHeight: 1, marginTop: "6px" }}>{value}</div>
-    </div>
-  );
-}
 
 /* ─── Page ───────────────────────────────────────────────────────────── */
 
@@ -397,7 +388,7 @@ export default async function TimeOffCalendarPage({
   if (!company) {
     return (
       <div>
-        <PageHeader title="Calendario de ausencias" eyebrow="Vista del equipo" />
+        <PageHeader title="Calendario de ausencias" eyebrow="Ausencias" />
         <p style={{ color: "#79746B", fontSize: "14px" }}>No se encontró una empresa configurada.</p>
       </div>
     );
@@ -449,7 +440,7 @@ export default async function TimeOffCalendarPage({
 
   return (
     <div>
-      <PageHeader title="Calendario de ausencias" eyebrow="Vista mensual del equipo">
+      <PageHeader title="Calendario de ausencias" eyebrow="Ausencias">
         <Link
           href="/timeoff"
           style={{
@@ -475,9 +466,9 @@ export default async function TimeOffCalendarPage({
 
       {/* Summary stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px", marginBottom: "24px" }}>
-        <SummaryCard label="Total este mes" value={totalAbsences} />
-        <SummaryCard label="Aprobadas" value={approvedAbsences} />
-        <SummaryCard label="Pendientes" value={pendingAbsences} />
+        <StatCard label="Total este mes" value={totalAbsences} />
+        <StatCard label="Aprobadas" value={approvedAbsences} />
+        <StatCard label="Pendientes" value={pendingAbsences} />
       </div>
 
       {/* Month navigation */}

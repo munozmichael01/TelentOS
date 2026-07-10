@@ -2,15 +2,17 @@ export function StatCard({
   label,
   value,
   hint,
+  hintColor,
+  valueColor,
 }: {
   label: string;
   value: string | number;
-  icon?: unknown;
   hint?: string;
+  hintColor?: string;
+  valueColor?: string;
 }) {
   return (
     <div
-      className="card-hover"
       style={{
         background: "#FCFAF6",
         border: "1px solid #E7E1D4",
@@ -18,19 +20,17 @@ export function StatCard({
         padding: "16px 18px",
       }}
     >
-      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "10.5px", color: "#79746B" }}>
-        {label.toUpperCase()}
+      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: "#79746B", lineHeight: 1.4 }}>
+        {label}
       </div>
-      <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", marginTop: "6px" }}>
-        <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "32px", letterSpacing: "-1px", lineHeight: 1 }}>
-          {value}
-        </span>
-        {hint && (
-          <span style={{ fontSize: "12px", fontWeight: 700, paddingBottom: "4px", color: "#1B6B4F" }}>
-            {hint}
-          </span>
-        )}
+      <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "25px", letterSpacing: "-.8px", lineHeight: 1, marginTop: "10px", color: valueColor ?? "#1A1A17", fontVariantNumeric: "tabular-nums" }}>
+        {value}
       </div>
+      {hint && (
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "10.5px", marginTop: "8px", color: hintColor ?? "#79746B" }}>
+          {hint}
+        </div>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { StatCard } from "@/components/stat-card";
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -137,20 +138,7 @@ export function PayrollDashboard() {
       {/* ── KPI row ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: "12px", marginBottom: "16px" }}>
         {kpiCards.map((k) => (
-          <div key={k.label} style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "15px", padding: "16px 17px", transition: "transform .14s,border-color .14s" }}
-            onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = "#C9BFA8"; }}
-            onMouseOut={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = T.line; }}
-          >
-            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft, lineHeight: 1.4, minHeight: "26px" }}>
-              {k.label}
-            </div>
-            <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "25px", letterSpacing: "-.8px", lineHeight: 1, marginTop: "10px", color: k.valueColor, fontVariantNumeric: "tabular-nums" }}>
-              {k.value}
-            </div>
-            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", marginTop: "8px", color: k.hintColor }}>
-              {k.hint}
-            </div>
-          </div>
+          <StatCard key={k.label} label={k.label} value={k.value} hint={k.hint} hintColor={k.hintColor} valueColor={k.valueColor} />
         ))}
       </div>
 
