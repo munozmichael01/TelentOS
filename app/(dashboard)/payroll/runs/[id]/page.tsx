@@ -19,5 +19,5 @@ export default async function PayRunDetailPage({ params }: { params: { id: strin
 
   if (!run) notFound();
 
-  return <PayRunDetail id={params.id} companyName={company?.name ?? "Empresa"} role={role} />;
+  return <PayRunDetail id={params.id} companyName={company?.name ?? "Empresa"} role={role as "owner" | "hr_admin"} />;
 }

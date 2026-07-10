@@ -601,7 +601,7 @@ export function PayRunDetail({ id, companyName, role }: { id: string; companyNam
               {run.entity_name} · {run.run_type === "monthly" ? "corrida mensual" : run.run_type} · <span style={{ fontFamily: "'Space Mono',monospace" }}>{run.employee_count} empleados</span>
             </div>
           </div>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexDirection: "column", alignItems: "flex-end" as const }}>
+          <div style={{ display: "flex", gap: "10px", flexDirection: "column", alignItems: "flex-end" }}>
             <div style={{ display: "flex", gap: "10px" }}>
               {run.status === "draft" && (
                 <button
