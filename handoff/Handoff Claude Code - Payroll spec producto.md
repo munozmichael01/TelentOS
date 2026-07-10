@@ -35,9 +35,17 @@ Principio: **la moneda es una propiedad de cada registro, nunca un global que se
 3. **Elegir país no migra datos existentes.** Cambia solo los defaults de registros *nuevos*. Ofertas EUR bajo una empresa VE siguen siendo válidas: son registros históricos con su propia moneda, y se muestran tal cual.
 4. **Migración concreta:** (a) `pay_profiles.currency` y `jobs.salary_currency` pasan a defaultear desde `companies.country` en la creación (hoy hardcodean 'USD' y 'EUR' respectivamente); (b) el bug real es de UI, no de datos — `fmtUSD` está hardcodeado en 3 componentes de payroll y debe leer la moneda del registro (`formatMoney(amount, currency)` en el `lib/format.ts` de la auditoría).
 
-## 2. Decisión: packs legales modulares (VE / BR / ES como preview)
+## 2. Decisión: packs de cálculo — `generic` es el único activo y el camino de la demo
 
-Contrato `CountryPack` con `status: 'active' | 'preview' | 'coming_soon'`. El enum ya existe (`'ve','br','es','co','mx'` en 0016) y se convierte en el catálogo.
+> ⭐ **Lo más importante de esta spec para que la demo funcione HOY:** el pack **`generic`** (gestión pura: `bruto = base + componentes + novedades`, `neto = bruto`, sin retenciones) es el **único pack `active`** y el **camino por defecto** de toda la implementación. Todo el §7 y todos sus criterios de aceptación se cumplen sobre `generic`.
+>
+> **Regla para la implementación:** los packs de país (VE/BR/ES) son **solo cards con badge — cero lógica de cálculo**. Cualquier esfuerzo invertido en implementar retenciones de un pack `preview` es esfuerzo mal dirigido; el core es `generic` + el contrato de líneas del §7.2.
+
+Contrato `CountryPack` con `status: 'active' | 'preview' | 'coming_soon'`. El enum ya existe (`'ve','br','es','co','mx'` en 0016) y se convierte en el catálogo, con `generic` como valor adicional y default.
+
+| Pack | Estado |
+|---|---|
+| ⚙️ **Generic (gestión)** | **`active` — default de toda empresa hasta que elija país con pack activo** |
 
 | Pack | Estado | Contenido mostrado en el mock |
 |---|---|---|
@@ -45,6 +53,8 @@ Contrato `CountryPack` con `status: 'active' | 'preview' | 'coming_soon'`. El en
 | 🇧🇷 Brasil | `preview` | INSS, FGTS, IRRF, 13º salário, férias + 1/3, vale-refeição/transporte |
 | 🇪🇸 España | `preview` | IRPF con tramos, cotizaciones SS (cuota empresa/trabajador), pagas extraordinarias (12/14), SMI, finiquito |
 | 🇨🇴 🇲🇽 | `coming_soon` | Solo card |
+
+El mock de un pack `preview` es: la card en el catálogo, los chips de conceptos que cubrirá (como los `VE_PACK_CHIPS` que ya existen en `pay-profile.tsx`), y el badge. Nada más.
 
 **Regla de honestidad para la demo:** los packs en `preview` llevan badge visible "Vista previa — cálculos no operativos", acciones de cálculo deshabilitadas con tooltip, y la corrida muestra nota "sin retenciones legales aplicadas" mientras el pack no esté `active`. Todo lo demás de la corrida es funcional de verdad.
 
@@ -98,11 +108,44 @@ Se cablea todo lo siguiente (criterio: se mantiene lo que tiene sentido de produ
    - **AC-1b:** editar el salario con vigencia futura produce 2 filas (la anterior cerrada con `effective_to`, la nueva vigente); la ficha del empleado muestra el historial con ambas.
    - **AC-1c:** "Configurar compensación" desde el empty state crea el perfil sin tocar la DB a mano; el empleado sin perfil aparece en el roster como "sin configurar".
 
-2. **Crear corrida desde la UI** (período + entidad) → **generación de líneas**: perfil vigente + novedades (pagos de banco de horas pendientes, ajustes puntuales, marca de ausencias no retribuidas). Aritmética de gestión; sin retenciones (eso es el pack).
+2. **Crear corrida desde la UI** (período + entidad) → **generación de líneas** según el contrato del §7.2.1.
+
+   ### 7.2.1 Contrato de generación de líneas (el motor, pack `generic`)
+
+   **Qué es una línea.** Una fila de `pay_run_lines` = un empleado en una corrida. La línea **no tiene importes propios**: `gross`, `net` y `employer_cost` son siempre la suma de sus `pay_run_line_items`. En `generic`: `net = gross` (sin deducciones legales) y `employer_cost = gross` (sin cargas patronales; el campo queda para los packs).
+
+   **Inputs → line items** (el enum `line_item_category` ya existe: `earning | deduction | employer`):
+
+   | Input | Line item generado | `category` |
+   |---|---|---|
+   | Salario base del perfil vigente (prorrateado si aplica) | "Salario base" (+ `quantity_label` "18/31 días" si prorratea) | `earning` |
+   | Componentes `fixed` activos | uno por componente, con su `label` | `earning` |
+   | Componentes `variable` activos con `amount` definido | uno por componente | `earning` |
+   | Componentes `conditional` | **no se generan automáticamente** — se añaden en revisión como ajuste | `earning` |
+   | Pagos de banco de horas en `pending` (del período **o anteriores** — los pendientes se arrastran) | "Horas compensadas (Xh)" con `quantity_label` | `earning` |
+   | Ajustes manuales de revisión | libre | `earning` o `deduction` |
+   | Retenciones/cargas legales | — (dominio exclusivo de los packs de país) | — |
+
+   **Reglas:**
+
+   1. **Elegibilidad.** Empleado `active` con perfil salarial cuya vigencia intersecta el período → línea. Activo **sin perfil vigente** → incidencia de corrida, no línea. Baja anterior al inicio del período o alta posterior al fin → no aparece.
+   2. **Perfil vigente.** El que cubre el **último día del período**. Si hubo cambio salarial *dentro* del período, se usa ese y se marca `has_salary_change = true` (flag que ya existe en el esquema) para que revisión lo ajuste manualmente. **V1 no prorratea tramos salariales automáticamente** — el humano ajusta con un line item; es coherente con el espíritu "gestión".
+   3. **Prorrateo de alta/baja a mitad de período.** `base × (días naturales activos / días naturales del período)`, redondeo a 2 decimales. Días naturales reales del mes (no base 30) en `generic`; los packs podrán redefinir la convención (ES/VE usan base 30). El line item lo hace visible vía `quantity_label`.
+   4. **Snapshot.** Los line items copian `label` y `amount` en el momento de la generación. Cambios posteriores al perfil o a los componentes **no alteran líneas ya generadas** (auditabilidad). Para reflejarlos: regenerar.
+   5. **Regeneración.** Solo con la corrida en `draft`, y descarta los ajustes manuales previa confirmación explícita. De `in_review` en adelante, prohibida — los cambios entran como ajustes.
+   6. **Moneda (invariante).** Todos los perfiles de una corrida deben tener la moneda de la corrida. Perfil con moneda distinta → incidencia, no línea. Sin conversión (§1.1).
+   7. **Ausencias no retribuidas.** V1 = marca informativa en la línea (`has_unconfirmed_input` + nota con los días); el descuento se aplica como ajuste manual con importe sugerido (`base/días × días ausentes`). Automatizarlo requiere un flag retribuida/no-retribuida en `absence_types` que hoy no existe — fuera de V1.
+   8. **Frecuencias.** V1 genera solo corridas `monthly` sobre perfiles `monthly`. Perfil `biweekly`/`weekly` → incidencia "frecuencia no soportada" (evita el pantano de períodos partidos sin recortar el caso mayoritario).
+
+   **Criterios de aceptación:**
    - **AC-2a (el caso canónico):** empresa con 3 empleados con perfil + 1 sin perfil + 1 pago de banco de horas pendiente → crear la corrida de junio genera **3 líneas**; el empleado sin perfil aparece como **incidencia**, no como línea; el pago del banco aparece como line item en la línea de su empleado; el registro del banco pasa a `included`.
-   - **AC-2b:** gross de cada línea = base vigente + componentes activos + line items; gross de la corrida = suma de líneas (cuadra en UI y en DB).
+   - **AC-2b:** `gross` de cada línea = suma de sus line items; totales de la corrida = suma de líneas (cuadra en UI y en DB).
    - **AC-2c:** crear una segunda corrida del mismo período+entidad se bloquea con mensaje explícito.
    - **AC-2d:** la línea usa el perfil **vigente en el período de la corrida**, no el actual (verifica el historial effective-dated).
+   - **AC-2e (prorrateo):** empleado con alta el día 15 de un mes de 31 días y base 3.100 → line item "Salario base" de 1.700 con `quantity_label` "17/31 días".
+   - **AC-2f (snapshot):** subir el salario de un empleado *después* de generar la corrida no cambia su línea; regenerar en `draft` sí la actualiza (previa confirmación de descartar ajustes).
+   - **AC-2g (cambio intra-período):** cambio salarial con vigencia el día 15 → la línea usa el perfil nuevo y queda marcada `has_salary_change` visible en revisión.
+   - **AC-2h (moneda mixta):** un perfil en VES en una corrida USD → incidencia "moneda distinta", sin línea y sin conversión.
 
 3. **Revisión**: "Aprobar empleado", "Solicitar cambios", "Añadir ajuste" funcionales con la matriz RBAC.
    - **AC-3a:** "Añadir ajuste" de −100 recalcula la línea y el total de la corrida al instante y crea un line item visible.
