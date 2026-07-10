@@ -1,15 +1,15 @@
 # TalentOS — CLAUDE.md
 
 Plataforma de operaciones de talento (ATS + HRIS + Payroll) con agentes de IA integrados en cada flujo.
-Stack: **Next.js 14 App Router · Supabase/Postgres · Prisma (espejo) · OpenAI GPT-4o**.
+Stack: **Next.js 14 App Router · Supabase/Postgres · OpenAI GPT-4o**.
 
 ---
 
 ## Reglas de proyecto
 
-- **Nunca commitear archivos de handoff** (diseño, notas, documentos de traspaso). Si los creas como scratch, bórralos antes del commit.
+- **Los documentos de `handoff/` SÍ se commitean** — son la fuente de verdad de specs, auditorías y decisiones de producto. Lo que no se commitea son archivos scratch temporales fuera de `handoff/`.
 - **Siempre commit + push juntos** en esta fase de desarrollo. No dejes commits sin pushear.
-- Las migraciones SQL van en `supabase/migrations/` con formato `NNNN_nombre.sql`. La fuente de verdad del schema es el SQL, no Prisma (Prisma es solo espejo tipado).
+- Las migraciones SQL van en `supabase/migrations/` con formato `NNNN_nombre.sql`. La fuente de verdad del schema es el SQL de `supabase/migrations/`; el espejo tipado es `lib/types.ts` (Prisma fue eliminado del repo — auditoría H4).
 
 ---
 
@@ -63,11 +63,11 @@ Guards:
 | **Horas** | ✅ Completo | `/horas`, `/horas/compensacion` |
 | **Compliance** | ✅ Completo | `/settings/compliance` |
 | **Horarios** | ✅ Completo | `/settings/schedules` |
-| **Payroll** | ✅ Completo | `/payroll`, `/payroll/runs`, `/payroll/profiles` |
+| **Payroll** | 🚧 En implementación — spec y protocolo en `handoff/Handoff Claude Code - Payroll spec producto.md` (§8 con puertas de AC) | `/payroll`, `/payroll/runs`, `/payroll/profiles` |
 | **Onboarding** | ✅ Completo | vía `application_events` + tareas |
 | **Performance Management** | ❌ No iniciado | — roadmap pendiente |
 
-**Payroll** tiene migraciones 0016–0019 aplicadas en producción. Incluye: perfiles salariales, corridas, líneas, items, recibos, auditoría. Pack Venezuela activo. Pipeline ATS→Nómina: al contratar un candidato que tenga `offer_salary` en su candidatura, `hire/route.ts` auto-crea el `pay_profile` sin reintroducir datos.
+**Payroll**: el esquema (migraciones 0016–0019) existe; el ciclo funcional se está implementando según la spec de `handoff/`. Reglas clave: el pack `generic` es el único activo (VE/BR/ES son mocks en preview); **el dinero nunca fluye automáticamente del ATS a nómina** — los campos `offer_*` de la candidatura solo pre-rellenan el formulario de compensación que RR.HH. confirma al contratar (el auto-create de `pay_profiles` en `hire/route.ts` fue revertido a propósito: no reintroducirlo).
 
 **Performance Management** (no confundir con rendimiento de la app) = módulo de evaluaciones de desempeño, review cycles, goals — no existe en el código aún. Tablas `review_cycles`, `performance_reviews`, `goals` no están en ninguna migración.
 
@@ -106,7 +106,7 @@ onboarding_tasks   → employees
 agent_runs         (auditoría de ejecuciones de agentes)
 ```
 
-**Campos nuevos en `applications`**: `offer_salary`, `offer_currency`, `offer_frequency`, `offer_start_date` — capturan los términos de la oferta aceptada para auto-crear `pay_profile` al contratar.
+**Campos nuevos en `applications`**: `offer_salary`, `offer_currency`, `offer_frequency`, `offer_start_date` — capturan los términos de la oferta aceptada; se usan como **pre-relleno** del formulario de compensación al contratar (nunca auto-create).
 
 **Campos en `employees`**: `national_id` (cédula V-..., requerida para recibo VE), `birth_date`, `address`.
 
