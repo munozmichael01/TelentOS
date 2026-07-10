@@ -473,7 +473,7 @@ export type PayRunStatus     = "draft" | "in_review" | "approved" | "exported" |
 export type PayRunLineStatus = "draft" | "reviewed" | "approved";
 export type PayComponentType = "fixed" | "variable" | "conditional";
 export type LineItemCategory = "earning" | "deduction" | "employer";
-export type CountryPackCode  = "ve" | "br" | "es" | "co" | "mx";
+export type CountryPackCode  = "generic" | "ve" | "br" | "es" | "co" | "mx";
 export type PaymentFrequency = "monthly" | "biweekly" | "weekly";
 export type PayrollExportType = "payslips_pdf" | "payroll_csv" | "accounting_csv" | "bank_file" | "compliance";
 
@@ -485,6 +485,7 @@ export type PayProfile = {
   currency: string;
   frequency: PaymentFrequency;
   effective_from: string;
+  effective_to: string | null;
   payment_method: string;
   bank_name: string | null;
   bank_account_last4: string | null;

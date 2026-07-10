@@ -31,7 +31,8 @@ export default async function PayProfilesPage() {
       .order("name"),
     supabase
       .from("pay_profiles")
-      .select("employee_id, base_salary, currency, country_pack, updated_at"),
+      .select("employee_id, base_salary, currency, country_pack, updated_at")
+      .is("effective_to", null),
   ]);
 
   const list = (employees ?? []) as Employee[];
@@ -41,12 +42,14 @@ export default async function PayProfilesPage() {
   );
 
   const PACK_LABEL: Record<string, string> = {
-    ve: "Venezuela · activo",
+    generic: "Genérico · activo",
+    ve: "Venezuela · vista previa",
     br: "Brasil · próximamente",
     es: "España · próximamente",
     co: "Colombia · próximamente",
     mx: "México · próximamente",
   };
+  const PACK_ACTIVE = new Set(["generic"]);
 
   const withoutProfile = list.filter((e) => !profileMap.has(e.id));
 
@@ -94,13 +97,13 @@ export default async function PayProfilesPage() {
                 <span style={{ color: "#54504A", fontSize: "13px" }}>{e.role_title ?? "—"}</span>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>
                   {profile
-                    ? `$${profile.base_salary.toLocaleString("en-US")} ${profile.currency}`
+                    ? `${profile.base_salary.toLocaleString("en-US")} ${profile.currency}`
                     : <span style={{ color: "#79746B", fontWeight: 400 }}>Sin configurar</span>
                   }
                 </span>
                 <span>
                   {profile ? (
-                    <span style={{ fontSize: "11px", fontWeight: 700, borderRadius: "999px", padding: "3px 10px", background: profile.country_pack === "ve" ? "#DCEFE4" : "#EEE9DD", color: profile.country_pack === "ve" ? "#0E5C4A" : "#79746B" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, borderRadius: "999px", padding: "3px 10px", background: PACK_ACTIVE.has(profile.country_pack) ? "#DCEFE4" : "#EEE9DD", color: PACK_ACTIVE.has(profile.country_pack) ? "#0E5C4A" : "#79746B" }}>
                       {PACK_LABEL[profile.country_pack] ?? profile.country_pack}
                     </span>
                   ) : "—"}
