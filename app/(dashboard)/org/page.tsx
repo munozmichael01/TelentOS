@@ -16,7 +16,7 @@ export default async function OrgPage() {
 
   return (
     <div>
-      <PageHeader title="Organigrama" description="Personas" />
+      <PageHeader title="Organigrama" eyebrow="Personas" />
       {employees.length === 0 ? (
         <EmptyState
           title="Sin empleados"

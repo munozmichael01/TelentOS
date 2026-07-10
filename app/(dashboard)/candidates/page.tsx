@@ -55,7 +55,7 @@ export default async function CandidatesPage() {
     <div>
       <PageHeader
         title="Candidatos"
-        description={`${rows.length} persona${rows.length !== 1 ? "s" : ""} en la base de datos`}
+        eyebrow={`${rows.length} persona${rows.length !== 1 ? "s" : ""} en la base de datos`}
       />
       {rows.length === 0 ? (
         <EmptyState

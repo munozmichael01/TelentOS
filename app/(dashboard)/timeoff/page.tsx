@@ -17,7 +17,7 @@ export default async function TimeOffPage() {
   if (!company) {
     return (
       <div>
-        <PageHeader title="Ausencias" description="Solicitudes de ausencia del equipo" />
+        <PageHeader title="Ausencias" eyebrow="Solicitudes de ausencia del equipo" />
         <p style={{ color: "#79746B", fontSize: "14px" }}>No se encontró una empresa configurada.</p>
       </div>
     );
@@ -66,7 +66,7 @@ export default async function TimeOffPage() {
 
   return (
     <div>
-      <PageHeader title="Ausencias" description="Solicitudes de ausencia del equipo">
+      <PageHeader title="Ausencias" eyebrow="Solicitudes de ausencia del equipo">
         <Link
           href="/timeoff/calendar"
           style={{

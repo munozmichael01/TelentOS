@@ -31,7 +31,7 @@ export default async function CompliancePage() {
     <div>
       <PageHeader
         title="Compliance"
-        description="Reglas de tiempo de trabajo y alertas de incumplimiento"
+        eyebrow="Reglas de tiempo de trabajo y alertas de incumplimiento"
       />
       <ComplianceSettingsPanel
         config={(config ?? null) as ComplianceConfig | null}

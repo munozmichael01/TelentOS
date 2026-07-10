@@ -26,7 +26,7 @@ export default async function PayRunsPage() {
 
   return (
     <div>
-      <PageHeader title="Pay Runs" description="Payroll">
+      <PageHeader title="Pay Runs" eyebrow="Payroll">
         {null}
       </PageHeader>
 

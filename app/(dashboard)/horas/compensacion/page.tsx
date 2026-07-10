@@ -27,7 +27,7 @@ export default async function CompensacionPage() {
     <div>
       <PageHeader
         title="Banco de horas"
-        description="Gestión de horas extra y compensaciones"
+        eyebrow="Gestión de horas extra y compensaciones"
       />
       <CompensationPanel
         employees={(employees ?? []) as Pick<Employee, "id" | "name">[]}

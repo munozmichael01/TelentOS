@@ -50,7 +50,7 @@ export default async function PayProfilesPage() {
 
   return (
     <div>
-      <PageHeader title="Perfiles salariales" description="Payroll">
+      <PageHeader title="Perfiles salariales" eyebrow="Payroll">
         {null}
       </PageHeader>
 

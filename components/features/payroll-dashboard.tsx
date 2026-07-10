@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -106,42 +107,32 @@ export function PayrollDashboard() {
 
   return (
     <div>
-      {/* ── Header ── */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", marginBottom: "22px" }}>
-        <div>
-          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", color: T.soft, marginBottom: "6px" }}>
-            Payroll
-          </div>
-          <h2 style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "29px", letterSpacing: "-1px", margin: 0 }}>
-            Periodo activo · {currentPeriod ?? "—"}
-          </h2>
-          <div style={{ fontSize: "13.5px", color: T.soft, marginTop: "5px" }}>
-            {currentRunType === "monthly" ? "Corrida mensual" : currentRunType} · {currentRunEntity} · <span style={{ fontFamily: "'Space Mono',monospace" }}>montos en USD</span>
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          {currentRunId && (
-            <button
-              onClick={() => router.push(`/payroll/runs/${currentRunId}`)}
-              style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "13px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px 15px", cursor: "pointer" }}
-            >
-              Revisar incidencias
-            </button>
-          )}
-          {currentRunId && (
-            <button
-              onClick={() => router.push(`/payroll/runs/${currentRunId}`)}
-              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: T.brand, border: `2px solid ${T.ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: `3px 3px 0 ${T.ink}`, cursor: "pointer", transition: "transform .1s,box-shadow .1s" }}
-              onMouseOver={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = `4px 4px 0 ${T.ink}`; }}
-              onMouseOut={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = `3px 3px 0 ${T.ink}`; }}
-              onMouseDown={(e) => { e.currentTarget.style.transform = "translate(1px,1px)"; e.currentTarget.style.boxShadow = `1px 1px 0 ${T.ink}`; }}
-              onMouseUp={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = `4px 4px 0 ${T.ink}`; }}
-            >
-              Procesar nómina
-            </button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Payroll"
+        title={`Periodo activo · ${currentPeriod ?? "—"}`}
+        description={`${currentRunType === "monthly" ? "Corrida mensual" : currentRunType} · ${currentRunEntity} · montos en USD`}
+      >
+        {currentRunId && (
+          <button
+            onClick={() => router.push(`/payroll/runs/${currentRunId}`)}
+            style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "13px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px 15px", cursor: "pointer" }}
+          >
+            Revisar incidencias
+          </button>
+        )}
+        {currentRunId && (
+          <button
+            onClick={() => router.push(`/payroll/runs/${currentRunId}`)}
+            style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: T.brand, border: `2px solid ${T.ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: `3px 3px 0 ${T.ink}`, cursor: "pointer", transition: "transform .1s,box-shadow .1s" }}
+            onMouseOver={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = `4px 4px 0 ${T.ink}`; }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = `3px 3px 0 ${T.ink}`; }}
+            onMouseDown={(e) => { e.currentTarget.style.transform = "translate(1px,1px)"; e.currentTarget.style.boxShadow = `1px 1px 0 ${T.ink}`; }}
+            onMouseUp={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = `4px 4px 0 ${T.ink}`; }}
+          >
+            Procesar nómina
+          </button>
+        )}
+      </PageHeader>
 
       {/* ── KPI row ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: "12px", marginBottom: "16px" }}>

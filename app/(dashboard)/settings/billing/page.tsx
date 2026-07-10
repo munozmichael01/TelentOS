@@ -31,7 +31,7 @@ export default async function BillingPage() {
 
   return (
     <div>
-      <PageHeader title="Billing" description="Ajustes / Billing" />
+      <PageHeader title="Billing" eyebrow="Ajustes / Billing" />
       <p style={{ fontSize: "13.5px", color: S.soft, margin: "0 0 22px" }}>
         Plan, consumo y facturación de tu cuenta.
       </p>

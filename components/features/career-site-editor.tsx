@@ -14,6 +14,7 @@ import type {
 import { HEADING_FONTS, BODY_FONTS } from "@/lib/career-site-types";
 import { CareerSitePreview } from "@/components/features/career-site-preview";
 import { EmojiPicker } from "@/components/features/emoji-picker";
+import { PageHeader } from "@/components/page-header";
 
 /* ─── Design tokens ─────────────────────────────────────────────────────── */
 const T = {
@@ -475,12 +476,7 @@ export function CareerSiteEditor({
 
   return (
     <div>
-      {/* ── Page header ── */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", marginBottom: "24px", flexWrap: "wrap" }}>
-        <div>
-          <h1 style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "28px", letterSpacing: "-.8px", lineHeight: 1, margin: 0 }}>Career Site</h1>
-          <p style={{ ...FL, marginTop: "8px" }}>Personaliza la página pública de empleo de tu empresa.</p>
-        </div>
+      <PageHeader title="Career Site" description="Personaliza la página pública de empleo de tu empresa.">
         {company?.slug && (
           <a href={`/careers/${company.slug}`} target="_blank" rel="noreferrer"
             style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: T.brand, textDecoration: "none", display: "flex", alignItems: "center", gap: "5px", padding: "8px 14px", border: `1.5px solid ${T.line}`, borderRadius: "10px", background: T.surface }}>
@@ -488,7 +484,7 @@ export function CareerSiteEditor({
             Ver página pública ↗
           </a>
         )}
-      </div>
+      </PageHeader>
 
       <Tabs defaultValue="config">
       <TabsList className="mb-5">
