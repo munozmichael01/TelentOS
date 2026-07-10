@@ -180,6 +180,22 @@ function ArrayItemCard({ children, onRemove }: { children: React.ReactNode; onRe
 
 /* ─── Metrics panel ──────────────────────────────────────────────────────── */
 
+const MT = {
+  bg: "#F4F0E8", surface: "#FCFAF6", surface2: "#F8F4EB",
+  ink: "#1A1A17", soft: "#79746B", line: "#E7E1D4",
+  brand: "#0E5C4A", brandSoft: "#DCEFE4", lime: "#C6F24E", limeSoft: "#EAF7C4",
+};
+
+function MIcon({ paths, extra }: { paths: Array<{ d: string; extra?: Record<string, string> }>; extra?: Record<string, string> }) {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+      {paths.map((p, i) => (
+        <path key={i} d={p.d} stroke={MT.brand} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...(p.extra ?? {})} />
+      ))}
+    </svg>
+  );
+}
+
 function MetricsPanel() {
   const [days, setDays] = useState(30);
   const [data, setData] = useState<CareerSiteMetrics | null>(null);
@@ -193,66 +209,158 @@ function MetricsPanel() {
       .catch(() => setLoading(false));
   }, [days]);
 
-  const pill = (active: boolean) => ({
-    fontFamily: "'Space Mono',monospace" as const, fontSize: "11px", padding: "5px 12px",
-    borderRadius: "999px", border: `1.5px solid ${active ? T.ink : T.line}`,
-    background: active ? T.ink : "transparent", color: active ? "#fff" : T.soft,
-    cursor: "pointer", letterSpacing: ".5px",
-  });
+  const fmt = (n: number) => n.toLocaleString("es-ES");
+  const pv   = data?.pageViews    ?? 0;
+  const jv   = data?.jobViews     ?? 0;
+  const apps = data?.applications ?? 0;
+  const conv = data?.conversionRate ?? 0;
+  const j2p  = pv > 0 ? Math.round((jv / pv) * 1000) / 10 : 0;
+  const topJobs = data?.topJobs ?? [];
+  const maxViews = topJobs[0]?.views ?? 1;
+  const rangeLabel = days === 7 ? "últimos 7 días" : days === 30 ? "últimos 30 días" : "últimos 90 días";
+  const isEmpty = !loading && pv === 0 && apps === 0;
 
-  const kpi = (icon: string, value: string | number, label: string, sub?: string) => (
-    <div style={{ background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "14px", padding: "18px 20px" }}>
-      <div style={{ fontSize: "22px", marginBottom: "6px" }}>{icon}</div>
-      <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "28px", letterSpacing: "-1px", color: T.ink, lineHeight: 1 }}>
-        {loading ? "—" : value}
+  const eyePaths    = [{ d: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" }, { d: "M12 14.6a2.6 2.6 0 100-5.2 2.6 2.6 0 000 5.2Z" }];
+  const searchPaths = [{ d: "M11 19a8 8 0 100-16 8 8 0 000 16Z" }, { d: "M21 21l-4.3-4.3" }];
+  const mailPaths   = [{ d: "M3 6.5h18v11H3z" }, { d: "M3.5 7l8.5 6 8.5-6" }];
+  const boltPaths   = [{ d: "M13 2L4 14h7l-1 8 9-12h-7l1-8Z" }];
+  const barPaths    = [{ d: "M4 20V10M9 20V4M14 20v-7M19 20v-11" }];
+
+  const kpis = [
+    { icon: eyePaths,    iconBg: MT.brandSoft, value: fmt(pv),    label: "Visitas a la página"      },
+    { icon: searchPaths, iconBg: MT.brandSoft, value: fmt(jv),    label: "Visitas a ofertas"        },
+    { icon: mailPaths,   iconBg: MT.brandSoft, value: fmt(apps),  label: "Candidaturas recibidas"   },
+    { icon: boltPaths,   iconBg: MT.limeSoft,  value: `${conv}%`, label: "Ratio de conversión"      },
+  ];
+
+  const funnel = [
+    { label: "Visitas a la página", value: fmt(pv),   width: "100%",                     color: MT.brand,    note: "100% · entrada al sitio" },
+    { label: "Visitas a ofertas",   value: fmt(jv),   width: `${Math.max(j2p, 2)}%`,     color: "#2E7D63",   note: `${j2p}% de las visitas abren una oferta` },
+    { label: "Candidaturas",        value: fmt(apps), width: `${Math.max(conv, 2)}%`,     color: MT.lime,     note: `${conv}% de las visitas a ofertas aplican` },
+  ];
+
+  const pillActive: React.CSSProperties = {
+    fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, letterSpacing: ".5px",
+    padding: "6px 13px", borderRadius: "9px", border: "none", cursor: "pointer",
+    background: MT.ink, color: "#fff",
+  };
+  const pillInactive: React.CSSProperties = {
+    ...pillActive, background: "transparent", color: MT.soft,
+  };
+
+  if (isEmpty) {
+    return (
+      <div style={{ border: `1.5px dashed ${MT.line}`, borderRadius: "18px", background: MT.surface, padding: "56px 32px", textAlign: "center", maxWidth: "520px", margin: "8px auto 0" }}>
+        <div style={{ width: "60px", height: "60px", borderRadius: "16px", background: MT.brandSoft, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+            <path d="M4 20V10M9 20V4M14 20v-7M19 20v-11" stroke={MT.brand} strokeWidth="2.2" strokeLinecap="round" />
+          </svg>
+        </div>
+        <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "19px", letterSpacing: "-.5px" }}>Aún no hay métricas</div>
+        <p style={{ fontSize: "14px", lineHeight: 1.6, color: MT.soft, margin: "10px auto 0", maxWidth: "360px" }}>
+          Las métricas aparecerán aquí en cuanto publiques el career site y empiece a recibir visitas.
+        </p>
       </div>
-      <div style={{ ...FL, marginTop: "5px", fontSize: "10px" }}>{label}</div>
-      {sub && <div style={{ fontSize: "11px", color: T.soft, marginTop: "3px" }}>{sub}</div>}
-    </div>
-  );
+    );
+  }
 
   return (
-    <div style={{ maxWidth: "760px" }}>
-      {/* Date filter */}
-      <div style={{ display: "flex", gap: "6px", marginBottom: "24px" }}>
-        {[7, 30, 90].map((d) => (
-          <button key={d} style={pill(days === d)} onClick={() => setDays(d)}>
-            {d === 7 ? "7 días" : d === 30 ? "30 días" : "90 días"}
-          </button>
-        ))}
+    <div>
+      {/* Header row: title + range selector */}
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", marginBottom: "20px" }}>
+        <div>
+          <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "23px", letterSpacing: "-.7px" }}>Rendimiento del sitio</div>
+          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "11.5px", color: MT.soft, marginTop: "4px" }}>Actividad pública · {rangeLabel}</div>
+        </div>
+        <div style={{ display: "flex", gap: "6px", background: MT.surface, border: `1px solid ${MT.line}`, borderRadius: "12px", padding: "4px" }}>
+          {([7, 30, 90] as const).map((d) => (
+            <button key={d} style={days === d ? pillActive : pillInactive} onClick={() => setDays(d)}>
+              {d === 7 ? "7 días" : d === 30 ? "30 días" : "90 días"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* KPI grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "28px" }}>
-        {kpi("👁", data?.pageViews ?? 0, "Visitas a la página")}
-        {kpi("🔍", data?.jobViews ?? 0, "Visitas a ofertas")}
-        {kpi("📨", data?.applications ?? 0, "Candidaturas recibidas")}
-        {kpi("📊", `${data?.conversionRate ?? 0}%`, "Ratio de conversión", "candidaturas / visitas a ofertas")}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "12px", marginBottom: "16px" }}>
+        {kpis.map((k, i) => (
+          <div key={i} style={{ background: MT.surface, border: `1px solid ${MT.line}`, borderRadius: "15px", padding: "17px 18px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+              <span style={{ width: "34px", height: "34px", borderRadius: "10px", background: k.iconBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <MIcon paths={k.icon} />
+              </span>
+            </div>
+            <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "30px", letterSpacing: "-1.2px", lineHeight: 1, color: MT.ink }}>
+              {loading ? "—" : k.value}
+            </div>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: MT.soft, marginTop: "8px", lineHeight: 1.4 }}>
+              {k.label}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Top jobs */}
-      {(data?.topJobs ?? []).length > 0 && (
-        <div>
-          <div style={{ ...FL, marginBottom: "12px", fontSize: "10px" }}>Visitas por oferta</div>
-          <div style={{ background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "14px", overflow: "hidden" }}>
-            {data!.topJobs.map((j, i) => (
-              <div key={j.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 18px", borderBottom: i < data!.topJobs.length - 1 ? `1px solid ${T.line}` : "none" }}>
-                <span style={{ fontWeight: 600, fontSize: "13.5px" }}>{j.title}</span>
-                <span style={{ ...FL, fontSize: "10px", background: T.limeSoft, padding: "3px 9px", borderRadius: "999px" }}>{j.views} views</span>
+      {/* Funnel + Top Jobs */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "start" }}>
+        {/* Funnel */}
+        <div style={{ background: MT.surface, border: `1px solid ${MT.line}`, borderRadius: "16px", padding: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "18px" }}>
+            <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Embudo de conversión</span>
+            <span style={{ marginLeft: "auto", fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: MT.brand, background: MT.brandSoft, borderRadius: "999px", padding: "3px 10px" }}>{conv}% global</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            {funnel.map((f, i) => (
+              <div key={i}>
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: MT.ink }}>{f.label}</span>
+                  <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>{loading ? "—" : f.value}</span>
+                </div>
+                <div style={{ height: "12px", borderRadius: "99px", background: MT.bg, overflow: "hidden" }}>
+                  <div style={{ width: loading ? "0%" : f.width, height: "100%", background: f.color, borderRadius: "99px", transition: "width .4s ease" }} />
+                </div>
+                <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: MT.soft, marginTop: "5px" }}>{f.note}</div>
               </div>
             ))}
           </div>
         </div>
-      )}
 
-      {!loading && data?.pageViews === 0 && (
-        <div style={{ textAlign: "center", padding: "48px 24px", border: `1.5px dashed ${T.line}`, borderRadius: "14px", color: T.soft, fontSize: "13px", lineHeight: 1.6 }}>
-          <div style={{ fontSize: "32px", marginBottom: "12px" }}>📊</div>
-          Las métricas aparecerán aquí una vez que publiques el career site y empieces a recibir visitas.
-          <br />
-          <span style={{ ...FL, fontSize: "10px" }}>Asegúrate de haber ejecutado la migración 0006.</span>
+        {/* Top Jobs */}
+        <div style={{ background: MT.surface, border: `1px solid ${MT.line}`, borderRadius: "16px", padding: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+            <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Visitas por oferta</span>
+            <span style={{ marginLeft: "auto", fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: MT.soft }}>Top {topJobs.length}</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {topJobs.length === 0 ? (
+              <div style={{ fontSize: "13px", color: MT.soft, padding: "12px 0" }}>Sin datos en este periodo.</div>
+            ) : topJobs.map((j, i) => (
+              <div key={j.id} style={{ padding: "11px 10px", margin: "0 -10px", borderRadius: "10px", transition: "background .12s ease" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#F8F4EB")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "7px" }}>
+                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: MT.soft, width: "16px" }}>{i + 1}</span>
+                  <span style={{ flex: 1, fontSize: "13px", fontWeight: 600, color: MT.ink }}>{j.title}</span>
+                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", fontWeight: 700, color: "#46540F", background: MT.limeSoft, border: "1px solid #D6E89A", borderRadius: "999px", padding: "2px 9px" }}>{j.views} views</span>
+                </div>
+                <div style={{ height: "7px", borderRadius: "99px", background: MT.bg, overflow: "hidden", marginLeft: "26px" }}>
+                  <div style={{ width: `${Math.round((j.views / maxViews) * 100)}%`, height: "100%", background: MT.brand, borderRadius: "99px" }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      )}
+      </div>
+
+      {/* Info note */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", background: MT.surface2, border: `1px solid ${MT.line}`, borderRadius: "13px", padding: "13px 16px", marginTop: "16px" }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}>
+          <circle cx="12" cy="12" r="9" stroke={MT.brand} strokeWidth="2" />
+          <path d="M12 8v5M12 16h.01" stroke={MT.brand} strokeWidth="2" strokeLinecap="round" />
+        </svg>
+        <span style={{ fontSize: "12.5px", lineHeight: 1.5, color: "#54504A" }}>
+          Cada candidatura registra su <b>origen (UTM)</b>. El ratio de conversión compara candidaturas contra visitas a ofertas, no contra visitas totales a la página.
+        </span>
+      </div>
     </div>
   );
 }
