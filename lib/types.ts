@@ -464,6 +464,120 @@ export type ComplianceViolation = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Payroll
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type PayRunStatus     = "draft" | "in_review" | "approved" | "exported" | "paid";
+export type PayRunLineStatus = "draft" | "reviewed" | "approved";
+export type PayComponentType = "fixed" | "variable" | "conditional";
+export type LineItemCategory = "earning" | "deduction" | "employer";
+export type CountryPackCode  = "ve" | "br" | "es" | "co" | "mx";
+export type PaymentFrequency = "monthly" | "biweekly" | "weekly";
+export type PayrollExportType = "payslips_pdf" | "payroll_csv" | "accounting_csv" | "bank_file" | "compliance";
+
+export type PayProfile = {
+  id: string;
+  company_id: string;
+  employee_id: string;
+  base_salary: number;
+  currency: string;
+  frequency: PaymentFrequency;
+  effective_from: string;
+  payment_method: string;
+  bank_name: string | null;
+  bank_account_last4: string | null;
+  country_pack: CountryPackCode;
+  tax_profile: string | null;
+  legal_entity: string | null;
+  employer_cost: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PayComponent = {
+  id: string;
+  pay_profile_id: string;
+  name: string;
+  component_type: PayComponentType;
+  amount: number | null;
+  formula: string | null;
+  active: boolean;
+  order_index: number;
+  created_at: string;
+};
+
+export type PayRun = {
+  id: string;
+  company_id: string;
+  period_label: string;
+  period_month: string;
+  entity_name: string;
+  run_type: string;
+  status: PayRunStatus;
+  gross: number;
+  net: number;
+  employer_cost: number;
+  employee_count: number;
+  currency: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PayRunLine = {
+  id: string;
+  pay_run_id: string;
+  employee_id: string;
+  gross: number;
+  net: number;
+  employer_cost: number;
+  status: PayRunLineStatus;
+  has_bank_issue: boolean;
+  has_adjustment_issue: boolean;
+  has_salary_change: boolean;
+  has_unconfirmed_input: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  employees?: Employee;
+};
+
+export type PayRunLineItem = {
+  id: string;
+  line_id: string;
+  category: LineItemCategory;
+  label: string;
+  amount: number;
+  quantity_label: string | null;
+  order_index: number;
+};
+
+export type PayRunAuditLog = {
+  id: string;
+  pay_run_id: string;
+  text: string;
+  who: string;
+  created_at: string;
+};
+
+export type Payslip = {
+  id: string;
+  pay_run_line_id: string;
+  slip_number: string;
+  file_path: string | null;
+  generated_at: string;
+  sent_at: string | null;
+};
+
+export type PayrollExport = {
+  id: string;
+  pay_run_id: string;
+  export_type: PayrollExportType;
+  generated_by: string;
+  file_path: string | null;
+  created_at: string;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Pipeline por defecto al crear una oferta (configurable después por oferta)
 // ─────────────────────────────────────────────────────────────────────────────
 

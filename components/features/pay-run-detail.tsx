@@ -1,0 +1,730 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { PayRun, PayRunLine, PayRunLineItem, PayRunAuditLog, PayrollExport } from "@/lib/types";
+
+// ── Design tokens ────────────────────────────────────────────────────────────
+const T = {
+  surface: "#FCFAF6", bg: "#F4F0E8", surface2: "#F8F4EB",
+  ink: "#1A1A17", soft: "#79746B", line: "#E7E1D4",
+  brand: "#0E5C4A", brandSoft: "#DCEFE4",
+  accent: "#F1543F", accentSoft: "#FAE3DE",
+  amber: "#946312", amberSoft: "#F8E7C4",
+};
+
+const STATUS: Record<string, { label: string; bg: string; color: string }> = {
+  draft:     { label: "Borrador",    bg: "#EEE9DD",   color: "#79746B" },
+  in_review: { label: "En revisión", bg: T.amberSoft, color: T.amber },
+  approved:  { label: "Aprobado",    bg: T.brandSoft, color: T.brand },
+  exported:  { label: "Exportado",   bg: "#E4E1DA",   color: "#54504A" },
+  paid:      { label: "Pagado",      bg: T.brand,     color: "#fff" },
+};
+
+const LINE_STATUS: Record<string, { label: string; bg: string; color: string }> = {
+  draft:    { label: "Borrador",  bg: "#EEE9DD",   color: "#79746B" },
+  reviewed: { label: "Revisado",  bg: "#DCE9F5",   color: "#2A5A8E" },
+  approved: { label: "Aprobado",  bg: T.brandSoft, color: T.brand },
+};
+
+const AVATAR_PALETTES = [
+  { bg: "#DCE9F5", color: "#2A5A8E" }, { bg: "#E3D3F5", color: "#5B2D8E" },
+  { bg: T.brandSoft, color: T.brand }, { bg: T.accentSoft, color: "#BD4332" },
+  { bg: "#F6E9C8", color: "#8A6410" }, { bg: "#D8ECEA", color: "#1F6E62" },
+  { bg: "#F1E0D0", color: "#8A5A2B" }, { bg: "#E7EAD0", color: "#5A6B24" },
+];
+function avatarPal(idx: number) { return AVATAR_PALETTES[idx % AVATAR_PALETTES.length]; }
+function initials(name: string) { return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase(); }
+function fmtUSD(n: number) { return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+
+type RunData = {
+  run: PayRun;
+  lines: (PayRunLine & { employees: { id: string; name: string; role_title: string | null; department: string | null } })[];
+  itemsByLine: Record<string, PayRunLineItem[]>;
+  audit: PayRunAuditLog[];
+  exportLog: PayrollExport[];
+};
+
+// ── Alert icons ───────────────────────────────────────────────────────────────
+function AlertIcon({ type }: { type: string }) {
+  const isAmber = type === "salary";
+  const bg = isAmber ? T.amberSoft : T.accentSoft;
+  const stroke = isAmber ? T.amber : T.accent;
+  const title: Record<string, string> = {
+    bank: "Sin cuenta bancaria", adjust: "Ajuste manual pendiente",
+    salary: "Cambio de salario en el periodo", input: "Input sin confirmar",
+  };
+  return (
+    <span title={title[type]} style={{ display: "inline-flex", width: "20px", height: "20px", borderRadius: "6px", background: bg, alignItems: "center", justifyContent: "center" }}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3l9 16H3l9-16Z" stroke={stroke} strokeWidth="2.2" strokeLinejoin="round"/>
+        <path d="M12 10v3.5M12 16.5h.01" stroke={stroke} strokeWidth="2.2" strokeLinecap="round"/>
+      </svg>
+    </span>
+  );
+}
+
+// ── Employee Breakdown Sheet ──────────────────────────────────────────────────
+function EmployeeSheet({
+  line, employee, items, avIdx, onClose, onOpenPayslip,
+}: {
+  line: RunData["lines"][0];
+  employee: RunData["lines"][0]["employees"];
+  items: PayRunLineItem[];
+  avIdx: number;
+  onClose: () => void;
+  onOpenPayslip: () => void;
+}) {
+  const av = avatarPal(avIdx);
+  const badge = LINE_STATUS[line.status] ?? LINE_STATUS.draft;
+  const earnings = items.filter((i) => i.category === "earning").sort((a, b) => a.order_index - b.order_index);
+  const deductions = items.filter((i) => i.category === "deduction").sort((a, b) => a.order_index - b.order_index);
+  const employer = items.filter((i) => i.category === "employer").sort((a, b) => a.order_index - b.order_index);
+
+  const totalEarnings = earnings.reduce((s, i) => s + i.amount, 0);
+  const totalDeductions = deductions.reduce((s, i) => s + i.amount, 0);
+  const totalEmployer = employer.reduce((s, i) => s + i.amount, 0);
+
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, zIndex: 70, background: "rgba(26,26,23,.42)", display: "flex", justifyContent: "flex-end" }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: "460px", maxWidth: "94vw", height: "100%", overflowY: "auto", background: T.surface, borderLeft: `1.5px solid ${T.ink}`, boxShadow: "-12px 0 40px -20px rgba(26,26,23,.5)", animation: "prSlide .22s cubic-bezier(.2,.7,.3,1)" }}
+      >
+        <style>{`@keyframes prSlide { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
+        {/* Sticky header */}
+        <div style={{ position: "sticky", top: 0, background: T.surface, borderBottom: `1px solid ${T.line}`, padding: "20px 22px", zIndex: 2 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "13px" }}>
+            <span style={{ width: "44px", height: "44px", flexShrink: 0, borderRadius: "50%", background: av.bg, color: av.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "15px" }}>
+              {initials(employee.name)}
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "18px", letterSpacing: "-.4px" }}>{employee.name}</div>
+              <div style={{ fontSize: "12.5px", color: T.soft, marginTop: "2px" }}>{employee.role_title} · {employee.department} · Venezuela</div>
+            </div>
+            <span onClick={onClose} style={{ width: "30px", height: "30px", flexShrink: 0, borderRadius: "8px", border: `1px solid ${T.line}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke={T.soft} strokeWidth="2" strokeLinecap="round"/></svg>
+            </span>
+          </div>
+          <div style={{ marginTop: "12px" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, borderRadius: "999px", padding: "4px 11px", background: badge.bg, color: badge.color }}>{badge.label}</span>
+          </div>
+        </div>
+
+        <div style={{ padding: "20px 22px" }}>
+          {/* Earnings */}
+          <SheetSection label="Asignaciones">
+            {earnings.length === 0 ? (
+              <div style={{ padding: "11px 15px", fontSize: "13px", color: T.soft }}>Sin asignaciones configuradas</div>
+            ) : (
+              earnings.map((e) => (
+                <div key={e.id} style={{ display: "flex", alignItems: "center", padding: "11px 15px", borderBottom: `1px solid ${T.line}` }}>
+                  <span style={{ flex: 1, fontSize: "13px" }}>{e.label}</span>
+                  {e.quantity_label && <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: T.soft, marginRight: "10px" }}>{e.quantity_label}</span>}
+                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "13px", fontWeight: 700 }}>{fmtUSD(e.amount)}</span>
+                </div>
+              ))
+            )}
+            <div style={{ display: "flex", alignItems: "center", padding: "12px 15px", background: T.surface2 }}>
+              <span style={{ flex: 1, fontSize: "13px", fontWeight: 700 }}>Total asignaciones</span>
+              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "14px", fontWeight: 800 }}>{fmtUSD(totalEarnings || line.gross)}</span>
+            </div>
+          </SheetSection>
+
+          {/* Deductions */}
+          <SheetSection label="Deducciones">
+            {deductions.length === 0 ? (
+              <div style={{ padding: "11px 15px", fontSize: "13px", color: T.soft }}>Sin deducciones</div>
+            ) : (
+              deductions.map((d) => (
+                <div key={d.id} style={{ display: "flex", alignItems: "center", padding: "11px 15px", borderBottom: `1px solid ${T.line}` }}>
+                  <span style={{ flex: 1, fontSize: "13px" }}>{d.label}</span>
+                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "13px", fontWeight: 700, color: T.accent }}>−{fmtUSD(Math.abs(d.amount))}</span>
+                </div>
+              ))
+            )}
+            <div style={{ display: "flex", alignItems: "center", padding: "12px 15px", background: T.surface2 }}>
+              <span style={{ flex: 1, fontSize: "13px", fontWeight: 700 }}>Total deducciones</span>
+              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "14px", fontWeight: 800, color: T.accent }}>−{fmtUSD(Math.abs(totalDeductions))}</span>
+            </div>
+          </SheetSection>
+
+          {/* Net */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: T.brand, color: "#fff", borderRadius: "13px", padding: "16px 18px", marginBottom: "18px" }}>
+            <div>
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", opacity: .8 }}>Neto a pagar</div>
+              <div style={{ fontSize: "11px", opacity: .75, marginTop: "3px" }}>
+                Transferencia{line.employees && ""}
+              </div>
+            </div>
+            <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "26px", letterSpacing: "-1px", fontVariantNumeric: "tabular-nums" }}>
+              {fmtUSD(line.net)}
+            </span>
+          </div>
+
+          {/* Employer cost */}
+          {employer.length > 0 && (
+            <SheetSection label="Coste empresa (cargas patronales)">
+              {employer.map((c) => (
+                <div key={c.id} style={{ display: "flex", alignItems: "center", padding: "11px 15px", borderBottom: `1px solid ${T.line}` }}>
+                  <span style={{ flex: 1, fontSize: "13px" }}>{c.label}</span>
+                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "13px", fontWeight: 700 }}>{fmtUSD(c.amount)}</span>
+                </div>
+              ))}
+              <div style={{ display: "flex", alignItems: "center", padding: "12px 15px", background: T.surface2 }}>
+                <span style={{ flex: 1, fontSize: "13px", fontWeight: 700 }}>Coste total empresa</span>
+                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "14px", fontWeight: 800 }}>{fmtUSD(totalEmployer || line.employer_cost)}</span>
+              </div>
+            </SheetSection>
+          )}
+
+          {/* CTAs */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "9px", marginTop: "4px" }}>
+            <button
+              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: T.brand, border: `2px solid ${T.ink}`, borderRadius: "11px", padding: "11px", boxShadow: `3px 3px 0 ${T.ink}`, cursor: "pointer" }}
+            >
+              Aprobar empleado
+            </button>
+            <div style={{ display: "flex", gap: "9px" }}>
+              <button style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px", cursor: "pointer" }}>
+                Solicitar cambios
+              </button>
+              <button style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px", cursor: "pointer" }}>
+                Añadir ajuste
+              </button>
+            </div>
+            <button
+              onClick={onOpenPayslip}
+              style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "12.5px", color: T.brand, background: "transparent", border: "none", padding: "6px", cursor: "pointer" }}
+            >
+              Ver recibo de pago →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SheetSection({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <>
+      <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft, marginBottom: "9px" }}>{label}</div>
+      <div style={{ background: T.bg, border: `1px solid ${T.line}`, borderRadius: "12px", overflow: "hidden", marginBottom: "18px" }}>
+        {children}
+      </div>
+    </>
+  );
+}
+
+// ── Payslip Modal ─────────────────────────────────────────────────────────────
+function PayslipModal({
+  line, employee, items, company, onClose,
+}: {
+  line: RunData["lines"][0];
+  employee: RunData["lines"][0]["employees"];
+  items: PayRunLineItem[];
+  company: { name: string };
+  onClose: () => void;
+}) {
+  const earnings = items.filter((i) => i.category === "earning").sort((a, b) => a.order_index - b.order_index);
+  const deductions = items.filter((i) => i.category === "deduction").sort((a, b) => a.order_index - b.order_index);
+
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, zIndex: 80, background: "rgba(26,26,23,.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "26px" }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", background: "#fff", border: `1.5px solid ${T.ink}`, borderRadius: "16px", boxShadow: "10px 10px 0 rgba(26,26,23,.25)" }}
+      >
+        {/* Doc header */}
+        <div style={{ padding: "26px 30px", borderBottom: `2px solid ${T.ink}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "11px" }}>
+            <span style={{ width: "34px", height: "34px", borderRadius: "9px", background: T.brand, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                <path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            <div>
+              <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "16px" }}>{company.name}</div>
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: T.soft }}>Venezuela</div>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>Recibo de pago</div>
+          </div>
+        </div>
+
+        {/* Employee block */}
+        <div style={{ padding: "18px 30px", borderBottom: `1px solid ${T.line}`, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 20px" }}>
+          {[
+            ["Empleado", employee.name],
+            ["Cargo", employee.role_title ?? "—"],
+            ["Departamento", employee.department ?? "—"],
+          ].map(([label, val]) => (
+            <div key={label}>
+              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "9.5px", textTransform: "uppercase", color: T.soft }}>{label}</span>
+              <div style={{ fontSize: "13.5px", fontWeight: 600, marginTop: "2px" }}>{val}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Earnings / Deductions */}
+        <div style={{ padding: "20px 30px" }}>
+          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.brand, marginBottom: "8px" }}>
+            Asignaciones
+          </div>
+          {earnings.length === 0 ? (
+            <div style={{ padding: "7px 0", fontSize: "13px", color: T.soft }}>Sin asignaciones</div>
+          ) : (
+            earnings.map((e) => (
+              <div key={e.id} style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #F0ECE2" }}>
+                <span style={{ flex: 1, fontSize: "13px" }}>{e.label}</span>
+                {e.quantity_label && <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft, width: "90px" }}>{e.quantity_label}</span>}
+                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "13px", fontWeight: 700, width: "80px", textAlign: "right" }}>{fmtUSD(e.amount)}</span>
+              </div>
+            ))
+          )}
+
+          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.accent, margin: "18px 0 8px" }}>
+            Deducciones
+          </div>
+          {deductions.length === 0 ? (
+            <div style={{ padding: "7px 0", fontSize: "13px", color: T.soft }}>Sin deducciones</div>
+          ) : (
+            deductions.map((d) => (
+              <div key={d.id} style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #F0ECE2" }}>
+                <span style={{ flex: 1, fontSize: "13px" }}>{d.label}</span>
+                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "13px", fontWeight: 700, color: T.accent, width: "80px", textAlign: "right" }}>−{fmtUSD(Math.abs(d.amount))}</span>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Net */}
+        <div style={{ margin: "0 30px", display: "flex", alignItems: "center", justifyContent: "space-between", background: T.brand, color: "#fff", borderRadius: "12px", padding: "16px 20px" }}>
+          <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Neto a pagar</span>
+          <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "26px", letterSpacing: "-1px", fontVariantNumeric: "tabular-nums" }}>{fmtUSD(line.net)}</span>
+        </div>
+
+        {/* Signature area */}
+        <div style={{ padding: "16px 30px 24px", borderTop: `1px solid ${T.line}`, marginTop: "18px", display: "flex", alignItems: "center", gap: "20px" }}>
+          {["Firma digital · empleador", "Recibí conforme · empleado"].map((l) => (
+            <div key={l} style={{ flex: 1 }}>
+              <div style={{ height: "1px", background: T.ink, marginBottom: "5px" }}/>
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "9.5px", color: T.soft }}>{l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Actions bar */}
+        <div style={{ position: "sticky", bottom: 0, background: T.surface, borderTop: `1px solid ${T.line}`, padding: "14px 30px", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "13px", color: T.soft, background: "transparent", border: "none", padding: "10px 14px", cursor: "pointer" }}>
+            Cerrar
+          </button>
+          <button style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "13px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px 15px", cursor: "pointer" }}>
+            Enviar al empleado
+          </button>
+          <button style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: T.brand, border: `2px solid ${T.ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: `3px 3px 0 ${T.ink}`, cursor: "pointer" }}>
+            Descargar PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Component ─────────────────────────────────────────────────────────────
+export function PayRunDetail({ id, companyName }: { id: string; companyName: string }) {
+  const router = useRouter();
+  const [data, setData] = useState<RunData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"empleados" | "aprobacion" | "exportar">("empleados");
+  const [sheetLineId, setSheetLineId] = useState<string | null>(null);
+  const [payslipLineId, setPayslipLineId] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
+
+  useEffect(() => {
+    fetch(`/api/payroll/runs/${id}`)
+      .then((r) => r.json())
+      .then((d) => { if (mountedRef.current) setData(d); })
+      .finally(() => { if (mountedRef.current) setLoading(false); });
+  }, [id]);
+
+  if (loading) {
+    return <div style={{ padding: "40px", textAlign: "center", color: T.soft, fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>Cargando corrida…</div>;
+  }
+  if (!data?.run) {
+    return <div style={{ padding: "40px", textAlign: "center", color: T.soft }}>Corrida no encontrada</div>;
+  }
+
+  const { run, lines, itemsByLine, audit, exportLog } = data;
+  const runBadge = STATUS[run.status] ?? STATUS.draft;
+
+  const sheetLine = sheetLineId ? lines.find((l) => l.id === sheetLineId) ?? null : null;
+  const payslipLine = payslipLineId ? lines.find((l) => l.id === payslipLineId) ?? null : null;
+
+  const summaryStrip = [
+    { label: "Gross",          value: "$" + run.gross.toLocaleString("en-US"),         color: T.ink },
+    { label: "Net",            value: "$" + run.net.toLocaleString("en-US"),           color: T.ink },
+    { label: "Coste empresa",  value: "$" + run.employer_cost.toLocaleString("en-US"), color: T.ink },
+    { label: "Empleados",      value: String(run.employee_count),                       color: T.ink },
+    { label: "Incidencias",    value: String(lines.filter((l) => l.has_bank_issue || l.has_adjustment_issue || l.has_salary_change).length), color: T.accent },
+    { label: "Status",         value: runBadge.label,                                   color: runBadge.color },
+  ];
+
+  const issueLines = lines.filter((l) => l.has_bank_issue || l.has_adjustment_issue || l.has_salary_change);
+
+  const EXPORT_TYPES = [
+    { type: "payslips_pdf",    title: "Payslips PDF",          desc: "Un PDF por empleado, descarga en ZIP.", cta: "Descargar recibos", available: true },
+    { type: "payroll_csv",     title: "Payroll Summary CSV",   desc: "Resumen tabular de toda la corrida.", cta: "Exportar CSV", available: true },
+    { type: "accounting_csv",  title: "Accounting Export",     desc: "CSV estructurado para contabilidad externa.", cta: "Exportar", available: true },
+    { type: "bank_file",       title: "Bank Payment File",     desc: "Archivo para cargar en el banco (formato local).", cta: "Generar", available: false },
+    { type: "compliance",      title: "Local Compliance (VE)", desc: "Declaraciones y planillas por país.", cta: "Generar", available: false },
+  ];
+
+  return (
+    <>
+      <div>
+        {/* Back */}
+        <button
+          onClick={() => router.push("/payroll")}
+          style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft, background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "12px" }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Pay Runs
+        </button>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", marginBottom: "20px" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <h2 style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "26px", letterSpacing: "-.9px", margin: 0 }}>{run.period_label}</h2>
+              <span style={{ fontSize: "11.5px", fontWeight: 700, borderRadius: "999px", padding: "4px 12px", background: runBadge.bg, color: runBadge.color }}>
+                {runBadge.label}
+              </span>
+            </div>
+            <div style={{ fontSize: "13.5px", color: T.soft, marginTop: "5px" }}>
+              {run.entity_name} · Venezuela · {run.run_type === "monthly" ? "corrida mensual" : run.run_type} · <span style={{ fontFamily: "'Space Mono',monospace" }}>{run.employee_count} empleados</span>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <button style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "13px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px 15px", cursor: "pointer" }}>
+              Recalcular
+            </button>
+            <button
+              onClick={() => setTab("aprobacion")}
+              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: T.brand, border: `2px solid ${T.ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: `3px 3px 0 ${T.ink}`, cursor: "pointer" }}
+            >
+              Aprobar revisados
+            </button>
+          </div>
+        </div>
+
+        {/* Summary strip */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: "10px", marginBottom: "20px" }}>
+          {summaryStrip.map((s) => (
+            <div key={s.label} style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "13px", padding: "13px 14px" }}>
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "9.5px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>{s.label}</div>
+              <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "18px", letterSpacing: "-.5px", marginTop: "7px", color: s.color, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: "4px", borderBottom: `1.5px solid ${T.line}`, marginBottom: "20px" }}>
+          {(["empleados", "aprobacion", "exportar"] as const).map((t) => {
+            const labels = { empleados: "Empleados", aprobacion: "Aprobación", exportar: "Exportar" };
+            const active = tab === t;
+            return (
+              <span
+                key={t}
+                onClick={() => setTab(t)}
+                style={active
+                  ? { fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px", color: T.ink, padding: "11px 15px", borderBottom: `2.5px solid ${T.brand}`, marginBottom: "-1.5px", cursor: "pointer" }
+                  : { fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "13.5px", color: T.soft, padding: "11px 15px", cursor: "pointer" }
+                }
+              >
+                {labels[t]}
+              </span>
+            );
+          })}
+        </div>
+
+        {/* ── TAB: EMPLEADOS ── */}
+        {tab === "empleados" && (
+          <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", overflow: "hidden" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1.7fr 1.1fr 1fr 0.9fr 0.8fr", padding: "12px 20px", borderBottom: `1px solid ${T.line}`, fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>
+              <span>Empleado</span><span>Departamento</span>
+              <span style={{ textAlign: "right" }}>Neto</span>
+              <span>Status</span>
+              <span style={{ textAlign: "right" }}>Alertas</span>
+            </div>
+            {lines.length === 0 ? (
+              <div style={{ padding: "32px 20px", textAlign: "center", color: T.soft, fontSize: "13px" }}>
+                Sin empleados en esta corrida
+              </div>
+            ) : (
+              lines.map((line, idx) => {
+                const av = avatarPal(idx);
+                const badge = LINE_STATUS[line.status] ?? LINE_STATUS.draft;
+                const alerts: string[] = [];
+                if (line.has_bank_issue) alerts.push("bank");
+                if (line.has_adjustment_issue) alerts.push("adjust");
+                if (line.has_salary_change) alerts.push("salary");
+                if (line.has_unconfirmed_input) alerts.push("input");
+                return (
+                  <div
+                    key={line.id}
+                    onClick={() => setSheetLineId(line.id)}
+                    style={{ display: "grid", gridTemplateColumns: "1.7fr 1.1fr 1fr 0.9fr 0.8fr", alignItems: "center", padding: "13px 20px", borderBottom: `1px solid ${T.line}`, cursor: "pointer", transition: "background .1s" }}
+                    onMouseOver={(e) => { e.currentTarget.style.background = "#F8F4EB"; }}
+                    onMouseOut={(e) => { e.currentTarget.style.background = ""; }}
+                  >
+                    <span style={{ display: "flex", alignItems: "center", gap: "11px", minWidth: 0 }}>
+                      <span style={{ width: "32px", height: "32px", flexShrink: 0, borderRadius: "50%", background: av.bg, color: av.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "12px" }}>
+                        {initials(line.employees.name)}
+                      </span>
+                      <span style={{ minWidth: 0 }}>
+                        <span style={{ display: "block", fontSize: "13.5px", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{line.employees.name}</span>
+                        <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: T.soft }}>{line.employees.role_title}</span>
+                      </span>
+                    </span>
+                    <span style={{ fontSize: "13px", color: "#54504A" }}>{line.employees.department}</span>
+                    <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "14px", fontWeight: 700, textAlign: "right" }}>{fmtUSD(line.net)}</span>
+                    <span>
+                      <span style={{ fontSize: "11px", fontWeight: 700, borderRadius: "999px", padding: "3px 10px", background: badge.bg, color: badge.color }}>{badge.label}</span>
+                    </span>
+                    <span style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "5px" }}>
+                      {alerts.length > 0 ? alerts.map((a) => <AlertIcon key={a} type={a}/>) : <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#B7C0AE" }}>—</span>}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "16px 20px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              Clic en un empleado para ver el desglose completo.
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB: APROBACIÓN ── */}
+        {tab === "aprobacion" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr", gap: "16px", alignItems: "start" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Checklist */}
+              <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", padding: "20px" }}>
+                <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "16px" }}>Checklist de cierre</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "11px" }}>
+                  {[
+                    { ok: lines.filter((l) => l.has_bank_issue).length === 0, label: `${lines.filter((l) => l.has_bank_issue).length === 0 ? "Todos los" : `${lines.filter((l) => l.has_bank_issue).length}`} empleado${lines.filter((l) => l.has_bank_issue).length !== 1 ? "s" : ""} con cuenta bancaria configurada` },
+                    { ok: lines.filter((l) => l.has_adjustment_issue).length === 0, label: `${lines.filter((l) => l.has_adjustment_issue).length === 0 ? "Sin" : lines.filter((l) => l.has_adjustment_issue).length} ajuste${lines.filter((l) => l.has_adjustment_issue).length !== 1 ? "s" : ""} manual${lines.filter((l) => l.has_adjustment_issue).length !== 1 ? "es" : ""} pendiente${lines.filter((l) => l.has_adjustment_issue).length !== 1 ? "s" : ""} de revisión` },
+                    { ok: lines.filter((l) => l.has_salary_change).length === 0, label: "Sin cambios de salario sin propagar" },
+                    { ok: lines.filter((l) => l.has_unconfirmed_input).length === 0, label: "Todos los inputs del periodo confirmados" },
+                    { ok: lines.filter((l) => l.status === "draft").length === 0, label: `${lines.filter((l) => l.status !== "draft").length} de ${lines.length} empleados revisados` },
+                  ].map((c, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "11px" }}>
+                      <span style={{ width: "20px", height: "20px", flexShrink: 0, borderRadius: "6px", background: c.ok ? T.brandSoft : T.amberSoft, display: "flex", alignItems: "center", justifyContent: "center", marginTop: "1px" }}>
+                        {c.ok
+                          ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke={T.brand} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          : <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 8v5M12 16.5h.01" stroke={T.amber} strokeWidth="2.6" strokeLinecap="round"/></svg>
+                        }
+                      </span>
+                      <span style={{ fontSize: "13.5px", lineHeight: 1.4, color: c.ok ? "#3A3833" : "#7A5310" }}>{c.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Issues */}
+              {issueLines.length > 0 && (
+                <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", overflow: "hidden" }}>
+                  <div style={{ padding: "15px 20px 12px", fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Empleados con incidencia</div>
+                  {issueLines.map((l, idx) => {
+                    const av = avatarPal(lines.indexOf(l));
+                    const issues: string[] = [];
+                    if (l.has_bank_issue) issues.push("Sin cuenta bancaria registrada");
+                    if (l.has_adjustment_issue) issues.push("Ajuste manual pendiente");
+                    if (l.has_salary_change) issues.push("Cambio de salario en el periodo");
+                    return (
+                      <div key={l.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "13px 20px", borderTop: `1px solid ${T.line}` }}>
+                        <span style={{ width: "30px", height: "30px", flexShrink: 0, borderRadius: "50%", background: av.bg, color: av.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "11px" }}>
+                          {initials(l.employees.name)}
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "13px", fontWeight: 700 }}>{l.employees.name}</div>
+                          <div style={{ fontSize: "12px", color: T.accent, marginTop: "1px" }}>{issues[0]}</div>
+                        </div>
+                        <button
+                          onClick={() => setSheetLineId(l.id)}
+                          style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12px", color: T.ink, background: T.surface, border: `1.5px solid ${T.ink}`, borderRadius: "9px", padding: "7px 14px", cursor: "pointer" }}
+                        >
+                          Resolver
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Audit log */}
+              <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", padding: "20px" }}>
+                <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft, marginBottom: "14px" }}>Historial de la corrida</div>
+                {audit.length === 0 ? (
+                  <div style={{ fontSize: "13px", color: T.soft }}>Sin historial aún</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                    {audit.map((a) => (
+                      <div key={a.id} style={{ display: "flex", gap: "12px", paddingBottom: "16px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                          <span style={{ width: "9px", height: "9px", borderRadius: "50%", background: T.brand, marginTop: "3px" }}/>
+                          <span style={{ flex: 1, width: "1.5px", background: T.line, marginTop: "3px" }}/>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: "13px", lineHeight: 1.4 }}>{a.text}</div>
+                          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: T.soft, marginTop: "3px" }}>
+                            {a.who} · {new Date(a.created_at).toLocaleDateString("es-VE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Approve panel */}
+              <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", padding: "20px" }}>
+                {issueLines.length > 0 && (
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", background: T.amberSoft, border: "1px solid #EBD9A8", borderRadius: "12px", padding: "12px 14px", marginBottom: "16px" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}>
+                      <path d="M12 3l9 16H3l9-16Z" stroke={T.amber} strokeWidth="2" strokeLinejoin="round"/>
+                      <path d="M12 10v4M12 17h.01" stroke={T.amber} strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    <span style={{ fontSize: "12.5px", lineHeight: 1.45, color: "#7A5310" }}>
+                      No se puede aprobar mientras haya <b>{issueLines.length} incidencia{issueLines.length !== 1 ? "s" : ""}</b> sin resolver.
+                    </span>
+                  </div>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <button
+                    disabled={issueLines.length > 0}
+                    style={{
+                      fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px",
+                      color: "#fff", background: issueLines.length > 0 ? "#B7C9A8" : T.brand,
+                      border: `2px solid ${issueLines.length > 0 ? "#A9BD97" : T.ink}`,
+                      borderRadius: "11px", padding: "12px", cursor: issueLines.length > 0 ? "not-allowed" : "pointer", width: "100%",
+                    }}
+                  >
+                    Aprobar nómina
+                  </button>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.accent, background: T.surface, border: `1.5px solid ${T.accentSoft}`, borderRadius: "11px", padding: "10px", cursor: "pointer" }}>
+                      Rechazar con notas
+                    </button>
+                    <button style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.soft, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px", cursor: "not-allowed" }}>
+                      Bloquear corrida
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB: EXPORTAR ── */}
+        {tab === "exportar" && (
+          <div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "14px" }}>
+              {EXPORT_TYPES.map((x) => (
+                <div key={x.type} style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "15px", padding: "18px 20px", opacity: x.available ? 1 : 0.62 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "11px", marginBottom: "10px" }}>
+                    <span style={{ width: "36px", height: "36px", flexShrink: 0, borderRadius: "10px", background: x.available ? T.brandSoft : T.surface2, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path d="M6 2h9l4 4v16H6zM14 2v5h5" stroke={x.available ? T.brand : T.soft} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+                      </svg>
+                    </span>
+                    <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14.5px" }}>{x.title}</span>
+                    {!x.available && (
+                      <span style={{ marginLeft: "auto", fontSize: "10px", fontWeight: 700, borderRadius: "999px", padding: "3px 9px", background: T.surface2, color: T.soft, border: `1px dashed #CFC7B5` }}>
+                        Próximamente
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: "12.5px", lineHeight: 1.5, color: T.soft, margin: "0 0 14px" }}>{x.desc}</p>
+                  <button
+                    disabled={!x.available}
+                    style={{
+                      fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "12.5px",
+                      color: x.available ? T.ink : T.soft,
+                      background: x.available ? T.surface : T.surface2,
+                      border: x.available ? `1.5px solid ${T.ink}` : "1.5px dashed #CFC7B5",
+                      borderRadius: "10px", padding: "9px 15px",
+                      cursor: x.available ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    {x.cta}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Export log */}
+            <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", overflow: "hidden", marginTop: "16px" }}>
+              <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.line}`, fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14.5px" }}>Exports anteriores</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 1.2fr 0.8fr", padding: "11px 20px", borderBottom: `1px solid ${T.line}`, fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>
+                <span>Fecha</span><span>Tipo</span><span>Generado por</span><span style={{ textAlign: "right" }}>Archivo</span>
+              </div>
+              {exportLog.length === 0 ? (
+                <div style={{ padding: "20px", fontSize: "13px", color: T.soft }}>Sin exportaciones previas</div>
+              ) : (
+                exportLog.map((l) => (
+                  <div key={l.id} style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 1.2fr 0.8fr", alignItems: "center", padding: "12px 20px", borderBottom: `1px solid ${T.line}` }}>
+                    <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px", color: "#54504A" }}>{new Date(l.created_at).toLocaleDateString("es-VE")}</span>
+                    <span style={{ fontSize: "13px", fontWeight: 600 }}>{l.export_type.replace(/_/g, " ")}</span>
+                    <span style={{ fontSize: "12.5px", color: "#54504A" }}>{l.generated_by}</span>
+                    <span style={{ textAlign: "right" }}>
+                      {l.file_path && <a href={l.file_path} style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: T.brand }}>Descargar</a>}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Employee Sheet ── */}
+      {sheetLine && (
+        <EmployeeSheet
+          line={sheetLine}
+          employee={sheetLine.employees}
+          items={itemsByLine[sheetLine.id] ?? []}
+          avIdx={lines.indexOf(sheetLine)}
+          onClose={() => setSheetLineId(null)}
+          onOpenPayslip={() => { setPayslipLineId(sheetLine.id); }}
+        />
+      )}
+
+      {/* ── Payslip Modal ── */}
+      {payslipLine && (
+        <PayslipModal
+          line={payslipLine}
+          employee={payslipLine.employees}
+          items={itemsByLine[payslipLine.id] ?? []}
+          company={{ name: run.entity_name }}
+          onClose={() => setPayslipLineId(null)}
+        />
+      )}
+    </>
+  );
+}

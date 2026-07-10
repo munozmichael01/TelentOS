@@ -66,6 +66,25 @@ const IconCompensacion = () => (
     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
   </svg>
 );
+const IconPayroll = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+    <rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="12" cy="12" r="2.6" stroke="currentColor" strokeWidth="2"/>
+    <path d="M6 9v6M18 9v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+const IconPayRuns = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+    <path d="M5 3h14v18l-2.3-1.5L14.3 21 12 19.5 9.7 21 7.3 19.5 5 21V3Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    <path d="M9 8h6M9 12h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+const IconPayProfiles = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="8" r="3.4" stroke="currentColor" strokeWidth="2"/>
+    <path d="M5.5 20a6.5 6.5 0 0113 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
 const IconSettings = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
     <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" strokeWidth="2"/>
@@ -108,6 +127,7 @@ const LogoMark = () => (
 );
 
 type Role = "owner" | "hr_admin" | "recruiter" | "manager" | "employee";
+type NavSection = { section: string; brand?: boolean };
 
 // roles that can see each nav item; omit key = visible to all roles
 const NAV_ROLES: Record<string, Role[]> = {
@@ -122,6 +142,10 @@ const NAV_ROLES: Record<string, Role[]> = {
   "/horas":              ["owner", "hr_admin", "manager"],
   // sensibles — solo admin
   "/horas/compensacion": ["owner", "hr_admin"],
+  // payroll — solo owner/hr_admin (datos financieros sensibles)
+  "/payroll":            ["owner", "hr_admin"],
+  "/payroll/runs":       ["owner", "hr_admin"],
+  "/payroll/profiles":   ["owner", "hr_admin"],
   "/settings":           ["owner", "hr_admin"],
   "/settings/team":      ["owner"],
   "/settings/billing":   ["owner"],
@@ -142,6 +166,10 @@ const ALL_NAV = [
   { href: "/timeoff/calendar",   label: "Calendario",   Icon: IconCalendar },
   { href: "/horas",              label: "Horas",        Icon: IconHoras },
   { href: "/horas/compensacion", label: "Compensación", Icon: IconCompensacion },
+  { section: "Payroll", brand: true },
+  { href: "/payroll",          label: "Payroll",             Icon: IconPayroll },
+  { href: "/payroll/runs",     label: "Pay Runs",            Icon: IconPayRuns },
+  { href: "/payroll/profiles", label: "Perfiles salariales", Icon: IconPayProfiles },
   { section: "Workspace" },
   {
     href: "/settings",
@@ -287,9 +315,11 @@ export function AppShell({
             <nav style={{ flex: 1, overflowY: "auto", padding: "12px 12px 8px" }}>
               {NAV.map((item, i) => {
                 if ("section" in item) {
+                  const isBrand = (item as NavSection).brand;
                   return (
-                    <div key={i} className="nav-section" style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase", color: "#79746B", padding: "14px 10px 6px" }}>
+                    <div key={i} className="nav-section" style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase", color: isBrand ? "#0E5C4A" : "#79746B", padding: "14px 10px 6px", display: "flex", alignItems: "center", gap: "6px" }}>
                       {item.section}
+                      {isBrand && <span className="nav-label" style={{ flex: 1, height: "1px", background: "#DCEFE4" }}/>}
                     </div>
                   );
                 }
