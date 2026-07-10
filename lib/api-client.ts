@@ -26,6 +26,15 @@ type ApiFetchOptions = Omit<RequestInit, "body"> & {
   body?: BodyInit;
 };
 
+/**
+ * Aviso de error al usuario para acciones fire-and-forget (aprobar, borrar…).
+ * Punto único: hoy usa alert(); cuando exista un sistema de toasts se cambia aquí.
+ */
+export function notifyError(action: string, e: unknown): void {
+  const detail = e instanceof ApiError ? e.message : "Error inesperado";
+  if (typeof window !== "undefined") window.alert(`${action}: ${detail}`);
+}
+
 export async function apiFetch<T = unknown>(url: string, options: ApiFetchOptions = {}): Promise<T> {
   const { json, headers, body, ...rest } = options;
 
