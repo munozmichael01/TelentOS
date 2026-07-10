@@ -3,7 +3,7 @@ import type {
   ChatCompletionMessageParam,
   ChatCompletionTool,
 } from "openai/resources/chat/completions";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 
 /**
  * Infraestructura común de los agentes en-flujo.
@@ -36,9 +36,16 @@ export function hasOpenAI() {
 
 async function logRun(agent: string, input: unknown, output: unknown, status: string) {
   try {
-    const supabase = createClient();
+    // service_role: 0015 dejó agent_runs sin políticas de INSERT para
+    // authenticated y el log fallaba en silencio (catch de abajo).
+    const supabase = createAdminClient();
+    const companyId =
+      input && typeof input === "object" && "companyId" in input
+        ? (input as { companyId?: string }).companyId ?? null
+        : null;
     await supabase.from("agent_runs").insert({
       agent,
+      company_id: companyId,
       input: input ?? {},
       output: output ?? {},
       status,
