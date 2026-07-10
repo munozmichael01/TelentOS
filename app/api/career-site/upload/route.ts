@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
+import { requireApiRole } from "@/lib/api";
 
 export async function POST(req: Request) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Subir assets del career site: solo roles de recruiting (M2)
+  const { user, error: authError } = await requireApiRole(["owner", "hr_admin", "recruiter"]);
+  if (authError) return authError;
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;

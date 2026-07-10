@@ -23,7 +23,9 @@ function resolvePeriod(period?: string, days_ago?: number): { days: number; labe
   return { days: 30, label: "30d" };
 }
 
-export async function queryChannelData(args: QueryArgs) {
+export async function queryChannelData(companyId: string, args: QueryArgs) {
+  // Admin client (bypassa RLS) → el scoping por empresa es responsabilidad
+  // de esta función: companyId viene del guard del endpoint, nunca del modelo.
   const supabase = createAdminClient();
   const { sector = "", location = "", source = "", job_title = "" } = args;
 
@@ -32,7 +34,8 @@ export async function queryChannelData(args: QueryArgs) {
 
   let appQuery = supabase
     .from("applications")
-    .select("utm, fit_score, status, created_at, jobs!inner(id, title, sector, location)")
+    .select("utm, fit_score, status, created_at, jobs!inner(id, title, sector, location, company_id)")
+    .eq("jobs.company_id", companyId)
     .not("utm", "is", null);
   if (since) appQuery = appQuery.gte("created_at", since);
   if (sector) appQuery = appQuery.eq("jobs.sector", sector);
@@ -41,7 +44,8 @@ export async function queryChannelData(args: QueryArgs) {
 
   let campQuery = supabase
     .from("campaigns")
-    .select("budget, spend, views, status, started_at, channels(name, utm_source)")
+    .select("budget, spend, views, status, started_at, channels(name, utm_source), jobs!inner(company_id)")
+    .eq("jobs.company_id", companyId)
     .neq("status", "finished");
   if (since) campQuery = campQuery.gte("started_at", since);
 
@@ -193,7 +197,8 @@ export async function queryChannelData(args: QueryArgs) {
   return { rows, by_job, total_applications: total, period: periodLabel, filters: { sector, location, source, job_title } };
 }
 
-export const tools: AgentTool[] = [
+export function buildTools(companyId: string): AgentTool[] {
+  return [
   {
     definition: {
       type: "function",
@@ -233,6 +238,7 @@ export const tools: AgentTool[] = [
         },
       },
     },
-    execute: (args) => queryChannelData(args as QueryArgs),
+    execute: (args) => queryChannelData(companyId, args as QueryArgs),
   },
-];
+  ];
+}

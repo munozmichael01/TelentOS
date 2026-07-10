@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { requireUser, jsonError } from "@/lib/api";
+import { requireApiRole, jsonError } from "@/lib/api";
 import { runChannelOptimizer } from "@/agents/agent-channel-optimizer";
 
 export async function POST(req: Request) {
-  const { supabase, error } = await requireUser();
+  const { supabase, companyId, error } = await requireApiRole(["owner", "hr_admin", "recruiter"]);
   if (error) return error;
 
   const body = await req.json().catch(() => null);
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   const objective = ["volume", "quality", "cpa"].includes(body.objective) ? body.objective : "volume";
   const budget = Number(body.budget) || 500;
 
-  const result = await runChannelOptimizer({ job, objective, budget });
+  const result = await runChannelOptimizer({ companyId: companyId!, job, objective, budget });
 
   // Mark any previous pending plan as superseded, then persist the new one
   await supabase

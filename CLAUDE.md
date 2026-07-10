@@ -7,7 +7,7 @@ Stack: **Next.js 14 App Router · Supabase/Postgres · OpenAI GPT-4o**.
 
 ## Reglas de proyecto
 
-- **Los documentos de `handoff/` SÍ se commitean** — son la fuente de verdad de specs, auditorías y decisiones de producto. Lo que no se commitea son archivos scratch temporales fuera de `handoff/`.
+- **`handoff/` NO se commitea** (está en `.gitignore`): specs, mockups, auditorías y documentos de traspaso viven solo en local, en el checkout principal (`~/Documents/Dev/TalentOS/handoff/`). En worktrees no existen — leerlos desde esa ruta absoluta.
 - **Siempre commit + push juntos** en esta fase de desarrollo. No dejes commits sin pushear.
 - Las migraciones SQL van en `supabase/migrations/` con formato `NNNN_nombre.sql`. La fuente de verdad del schema es el SQL de `supabase/migrations/`; el espejo tipado es `lib/types.ts` (Prisma fue eliminado del repo — auditoría H4).
 
