@@ -209,10 +209,9 @@ Se cablea todo lo siguiente (criterio: se mantiene lo que tiene sentido de produ
 
 Esta spec se ejecuta **en paralelo** con la remediación de la auditoría técnica (`Handoff Claude Code - Auditoría técnica.md`), que lleva otro agente. Reglas para no chocar:
 
-1. **Prerequisito: el Lote 1 de la auditoría debe estar mergeado antes del paso 1.** Aporta dos cimientos que este código consume desde el primer día:
-   - **`apiFetch`** (helper de mutaciones con manejo de errores): **toda llamada de mutación nueva de este módulo lo usa** — cero `fetch` fire-and-forget nuevos. Si al arrancar no existe en `lib/`, detenerse y avisar.
-   - **`lib/format.ts` con `formatMoney(amount, currency)`**: obligatorio en toda la UI de payroll; prohibido añadir usos de `fmtUSD` (§1.1 punto 4).
-   - El Lote 1 también elimina Prisma — la migración destructiva del paso 2 se hace ya sin `db:prisma` en el repo.
+1. **Prerequisitos escalonados** (para maximizar el paralelo):
+   - **Antes del paso 1** solo hacen falta dos cimientos que la pista de auditoría crea primero (~1h): **`apiFetch`** (helper de mutaciones con manejo de errores — toda mutación nueva de este módulo lo usa, cero `fetch` fire-and-forget nuevos) y **`lib/format.ts` con `formatMoney(amount, currency)`** (obligatorio en toda la UI de payroll; prohibido añadir usos de `fmtUSD`, §1.1 punto 4). Si al arrancar no existen en `lib/`, detenerse y avisar.
+   - **Antes del paso 2** (la migración destructiva del historial): Prisma debe estar eliminado del repo (lo hace la pista de auditoría en su Lote 1; verificar que `prisma/` y el script `db:prisma` ya no existen antes de escribir la migración).
 2. **Ítems de la auditoría cedidos a esta pista** (los resuelve este trabajo, la pista de auditoría no los toca): M5 y M7 en rutas de payroll y los 404 payroll→run (= paso 5), y L4 (orden de queries en `runs/[id]`, absorbido por el paso 4-5).
 3. **Zona vetada para la pista de auditoría hasta que esta pista pase el paso 6:** `pay-run-detail.tsx`, `pay-profile.tsx`, `payroll-dashboard.tsx` y `app/(dashboard)/payroll/**` + `app/api/payroll/**`. La migración de design system de esas pantallas la hace la pista de auditoría *después*, sobre el código ya cableado.
 4. **Git:** esta pista trabaja en **worktree con rama propia** (`payroll-v1` o similar) y merge a `main` al cerrar cada puerta del §8 — no commits directos a `main` mientras las dos pistas estén activas.
