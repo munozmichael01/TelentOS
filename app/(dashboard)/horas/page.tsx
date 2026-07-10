@@ -63,7 +63,8 @@ export default async function HorasPage() {
     <div>
       <PageHeader
         title="Registro de horas"
-        eyebrow="Fichajes del día y entradas manuales"
+        eyebrow="Horas"
+        description="Fichajes del día y entradas manuales."
       />
       <TimeTrackingPanel
         activeTimers={(activeTimers ?? []) as unknown as (TimerState & { employees?: { id: string; name: string; role_title: string | null } | null })[]}

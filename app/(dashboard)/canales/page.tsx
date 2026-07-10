@@ -15,6 +15,7 @@ export default async function CanalesPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Reclutamiento"
         title="Canales"
         description="Configura los canales de distribución y analiza su rendimiento global."
       />

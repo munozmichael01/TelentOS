@@ -476,7 +476,7 @@ export function CareerSiteEditor({
 
   return (
     <div>
-      <PageHeader title="Career Site" description="Personaliza la página pública de empleo de tu empresa.">
+      <PageHeader eyebrow="Reclutamiento" title="Career Site" description="Personaliza la página pública de empleo de tu empresa.">
         {company?.slug && (
           <a href={`/careers/${company.slug}`} target="_blank" rel="noreferrer"
             style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: T.brand, textDecoration: "none", display: "flex", alignItems: "center", gap: "5px", padding: "8px 14px", border: `1.5px solid ${T.line}`, borderRadius: "10px", background: T.surface }}>
