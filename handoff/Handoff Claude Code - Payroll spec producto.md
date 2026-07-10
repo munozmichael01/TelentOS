@@ -137,6 +137,15 @@ Se cablea todo lo siguiente (criterio: se mantiene lo que tiene sentido de produ
    7. **Ausencias no retribuidas.** V1 = marca informativa en la línea (`has_unconfirmed_input` + nota con los días); el descuento se aplica como ajuste manual con importe sugerido (`base/días × días ausentes`). Automatizarlo requiere un flag retribuida/no-retribuida en `absence_types` que hoy no existe — fuera de V1.
    8. **Frecuencias.** V1 genera solo corridas `monthly` sobre perfiles `monthly`. Perfil `biweekly`/`weekly` → incidencia "frecuencia no soportada" (evita el pantano de períodos partidos sin recortar el caso mayoritario).
 
+   **Semántica de los flags de incidencia** (verificado: hoy solo los escriben los seeds; ningún código de la app los puebla. La semántica de lectura ya existe en el checklist de aprobación de `pay-run-detail.tsx:526-532` — estas definiciones de escritura la respetan):
+
+   | Flag | Se escribe `true` cuando… | Lo resuelve |
+   |---|---|---|
+   | `has_bank_issue` | el perfil tiene `payment_method = transfer` sin datos bancarios completos | completar banco en el perfil + regenerar o marcar resuelto |
+   | `has_adjustment_issue` | la línea tiene ajustes manuales añadidos y aún no revisados | revisar la línea (pasa a `reviewed`) |
+   | `has_salary_change` | hubo cambio salarial con vigencia dentro del período (regla 2) | ajuste manual en revisión |
+   | `has_unconfirmed_input` | hay novedades del período sin resolver: ausencias no retribuidas sin ajuste aplicado (regla 7) u horas del banco sin confirmar | aplicar el ajuste o confirmar las horas |
+
    **Criterios de aceptación:**
    - **AC-2a (el caso canónico):** empresa con 3 empleados con perfil + 1 sin perfil + 1 pago de banco de horas pendiente → crear la corrida de junio genera **3 líneas**; el empleado sin perfil aparece como **incidencia**, no como línea; el pago del banco aparece como line item en la línea de su empleado; el registro del banco pasa a `included`.
    - **AC-2b:** `gross` de cada línea = suma de sus line items; totales de la corrida = suma de líneas (cuadra en UI y en DB).
@@ -179,13 +188,17 @@ Se cablea todo lo siguiente (criterio: se mantiene lo que tiene sentido de produ
 
 ---
 
-## 8. Orden de implementación sugerido
+## 8. Orden de implementación (con puertas de verificación)
 
-1. `companies.country` + herencia en `pay_profiles` + selector en Ajustes (desbloquea moneda/formato en todo el módulo).
-2. Historial salarial (migración: drop unique, add `effective_to`) + creación/edición de perfiles (UI + upsert).
-3. Novedades de nómina + loop del banco de horas.
-4. Crear corrida + generación de líneas.
-5. Revisión/aprobación con RBAC unificado (arregla también los 404).
-6. Payslips + exports CSV.
-7. Cards de country packs con estados y mocks VE/BR/ES.
-8. Renaming de nav.
+> **Regla de ejecución:** la implementación **se detiene al final de cada paso y verifica sus AC antes de continuar**. No se hacen los 8 pasos de corrido. La dependencia crítica: **el paso 4 (motor de líneas) no se toca hasta que el paso 2 esté verificado** — el motor depende de que "perfil vigente en el período" funcione, y AC-2d es el primer AC a comprobar del paso 4 precisamente porque valida esa integración.
+
+| Paso | Alcance | Puerta (AC a verificar antes de seguir) |
+|---|---|---|
+| 1 | `companies.country` + herencia en `pay_profiles` + selector en Ajustes | perfil nuevo hereda moneda del país; sin país configurado → pack `generic` y default actual |
+| 2 | Historial salarial (drop unique, add `effective_to`) + creación/edición de perfiles (UI + upsert) | **AC-1a, AC-1b, AC-1c** |
+| 3 | Novedades de nómina + loop del banco de horas (lado creación) | **AC-7b** (parte `pending`), **AC-7c, AC-7d** |
+| 4 | Crear corrida + motor de líneas (§7.2.1) — *bloqueado hasta verificar paso 2* | **AC-2d primero**, luego AC-2a…2h y AC-7b completo (`included`) |
+| 5 | Revisión/aprobación con RBAC unificado (elimina los 404) | **AC-3a…3c, AC-4a…4c** + detalle de corrida accesible sin 404 con rol permitido |
+| 6 | Payslips + exports CSV | **AC-5a, AC-5b, AC-6a, AC-6b** |
+| 7 | Cards de country packs (estados + mocks VE/BR/ES) | badge "no operativo" visible; cero lógica de cálculo en packs |
+| 8 | Renaming de nav | **AC-7a** |
