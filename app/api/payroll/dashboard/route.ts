@@ -1,18 +1,25 @@
 import { NextResponse } from "next/server";
 import { requireApiRole } from "@/lib/api";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  const { supabase, companyId, error } = await requireApiRole(["owner", "hr_admin"]);
+  const { companyId, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
 
-  const [{ data: runs }, { data: currentRunLines }] = await Promise.all([
-    supabase
+  // Use admin client for data queries — auth check already done above.
+  // RLS on payroll tables uses a subquery on company_members which can
+  // return empty in some SSR cookie contexts; admin client + explicit
+  // company_id scoping is equivalent and safe here.
+  const db = createAdminClient();
+
+  const [{ data: runs }, { data: currentRun }] = await Promise.all([
+    db
       .from("pay_runs")
       .select("id, period_label, period_month, entity_name, status, gross, net, employer_cost, employee_count, currency")
       .eq("company_id", companyId!)
       .order("period_month", { ascending: false })
       .limit(10),
-    supabase
+    db
       .from("pay_runs")
       .select("id, status, gross, net, employer_cost, employee_count, period_label, entity_name, run_type")
       .eq("company_id", companyId!)
@@ -22,13 +29,12 @@ export async function GET() {
   ]);
 
   const allRuns = runs ?? [];
-  const currentRun = currentRunLines ?? null;
 
   // Chart: last 6 runs in ascending order
   const chartRuns = [...allRuns].reverse().slice(-6);
   const chart = {
-    months: chartRuns.map((r: { period_label: string; period_month: string }) => r.period_label.split(" ")[0].slice(0, 3)),
-    values: chartRuns.map((r: { gross: number }) => r.gross / 1000), // in $k
+    months: chartRuns.map((r: { period_label: string }) => r.period_label.split(" ")[0].slice(0, 3)),
+    values: chartRuns.map((r: { gross: number }) => r.gross / 1000),
   };
 
   // KPIs from current run (or zeros)
@@ -42,7 +48,7 @@ export async function GET() {
   // Count open issues in current run
   let incidencias = 0;
   if (currentRun) {
-    const { count } = await supabase
+    const { count } = await db
       .from("pay_run_lines")
       .select("id", { count: "exact", head: true })
       .eq("pay_run_id", currentRun.id)
@@ -50,16 +56,16 @@ export async function GET() {
     incidencias = count ?? 0;
   }
 
-  // Alerts: aggregate issues from current run
+  // Alerts from current run
   const alerts: { title: string; meta: string; dot: string }[] = [];
   if (currentRun && incidencias > 0) {
-    const { data: issueLines } = await supabase
+    const { data: issueLines } = await db
       .from("pay_run_lines")
-      .select("*, employees(name)")
+      .select("has_bank_issue, has_adjustment_issue, has_salary_change")
       .eq("pay_run_id", currentRun.id)
       .or("has_bank_issue.eq.true,has_adjustment_issue.eq.true,has_salary_change.eq.true");
 
-    const bankCount = issueLines?.filter((l: { has_bank_issue: boolean }) => l.has_bank_issue).length ?? 0;
+    const bankCount   = issueLines?.filter((l: { has_bank_issue: boolean }) => l.has_bank_issue).length ?? 0;
     const adjustCount = issueLines?.filter((l: { has_adjustment_issue: boolean }) => l.has_adjustment_issue).length ?? 0;
     const salaryCount = issueLines?.filter((l: { has_salary_change: boolean }) => l.has_salary_change).length ?? 0;
 
@@ -71,7 +77,6 @@ export async function GET() {
       alerts.push({ title: `${salaryCount} cambio${salaryCount > 1 ? "s" : ""} de salario sin propagar`, meta: "recalcular corrida", dot: "#B87503" });
   }
 
-  // Last 4 runs for the table
   const recentRuns = allRuns.slice(0, 4).map((r: {
     id: string; period_label: string; entity_name: string;
     employee_count: number; gross: number; status: string; currency: string

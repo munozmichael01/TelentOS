@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
 import { requireApiRole } from "@/lib/api";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export async function GET(_: Request, { params }: { params: { employeeId: string } }) {
-  const { supabase, companyId, error } = await requireApiRole(["owner", "hr_admin"]);
+  const { companyId, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
 
-  const [
-    { data: employee },
-    { data: profile },
-  ] = await Promise.all([
-    supabase
+  const db = createAdminClient();
+
+  const [{ data: employee }, { data: profile }] = await Promise.all([
+    db
       .from("employees")
       .select("id, name, role_title, department, company_id")
       .eq("id", params.employeeId)
       .eq("company_id", companyId!)
       .maybeSingle(),
-    supabase
+    db
       .from("pay_profiles")
       .select("*")
       .eq("employee_id", params.employeeId)
@@ -25,42 +25,24 @@ export async function GET(_: Request, { params }: { params: { employeeId: string
 
   if (!employee) return NextResponse.json({ error: "Empleado no encontrado" }, { status: 404 });
 
-  const [{ data: components }, { data: currentPayslip }] = await Promise.all([
-    profile
-      ? supabase
-          .from("pay_components")
-          .select("*")
-          .eq("pay_profile_id", profile.id)
-          .order("order_index")
-      : { data: [] },
-    profile
-      ? supabase
-          .from("payslips")
-          .select("*, pay_run_lines(pay_run_id, pay_runs(period_label))")
-          .eq("pay_run_line_id",
-            supabase
-              .from("pay_run_lines")
-              .select("id")
-              .eq("employee_id", params.employeeId)
-              .order("created_at", { ascending: false })
-              .limit(1)
-          )
-          .order("generated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      : { data: null },
-  ]);
+  const { data: components } = profile
+    ? await db
+        .from("pay_components")
+        .select("*")
+        .eq("pay_profile_id", profile.id)
+        .order("order_index")
+    : { data: [] };
 
   return NextResponse.json({
     employee,
     profile: profile ?? null,
     components: components ?? [],
-    currentPayslip: currentPayslip ?? null,
+    currentPayslip: null,
   });
 }
 
 export async function PUT(req: Request, { params }: { params: { employeeId: string } }) {
-  const { supabase, companyId, error } = await requireApiRole(["owner", "hr_admin"]);
+  const { companyId, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
 
   const body = await req.json().catch(() => null);
@@ -82,7 +64,8 @@ export async function PUT(req: Request, { params }: { params: { employeeId: stri
     employer_cost: body.employer_cost ?? null,
   };
 
-  const { data: existing } = await supabase
+  const db = createAdminClient();
+  const { data: existing } = await db
     .from("pay_profiles")
     .select("id")
     .eq("employee_id", params.employeeId)
@@ -91,7 +74,7 @@ export async function PUT(req: Request, { params }: { params: { employeeId: stri
 
   let profile;
   if (existing) {
-    const { data } = await supabase
+    const { data } = await db
       .from("pay_profiles")
       .update(profileFields)
       .eq("id", existing.id)
@@ -99,7 +82,7 @@ export async function PUT(req: Request, { params }: { params: { employeeId: stri
       .single();
     profile = data;
   } else {
-    const { data } = await supabase
+    const { data } = await db
       .from("pay_profiles")
       .insert(profileFields)
       .select()

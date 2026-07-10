@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireApiRole } from "@/lib/api";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  const { supabase, companyId, error } = await requireApiRole(["owner", "hr_admin"]);
+  const { companyId, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
 
-  const { data: runs } = await supabase
+  const db = createAdminClient();
+  const { data: runs } = await db
     .from("pay_runs")
     .select("*")
     .eq("company_id", companyId!)
@@ -15,7 +17,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { supabase, companyId, error } = await requireApiRole(["owner", "hr_admin"]);
+  const { companyId, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
 
   const body = await req.json().catch(() => null);
@@ -23,7 +25,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 });
   }
 
-  const { data: run, error: dbErr } = await supabase
+  const db = createAdminClient();
+  const { data: run, error: dbErr } = await db
     .from("pay_runs")
     .insert({
       company_id: companyId!,

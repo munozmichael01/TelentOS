@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
 
@@ -63,17 +63,15 @@ export function PayrollDashboard() {
   const router = useRouter();
   const [data, setData] = useState<DashData | null>(null);
   const [loading, setLoading] = useState(true);
-  const mountedRef = useRef(true);
 
   useEffect(() => {
-    return () => { mountedRef.current = false; };
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/payroll/dashboard")
+    const ctrl = new AbortController();
+    fetch("/api/payroll/dashboard", { signal: ctrl.signal })
       .then((r) => r.json())
-      .then((d) => { if (mountedRef.current) setData(d); })
-      .finally(() => { if (mountedRef.current) setLoading(false); });
+      .then((d) => setData(d))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+    return () => ctrl.abort();
   }, []);
 
   if (loading) {

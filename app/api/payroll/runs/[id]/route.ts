@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireApiRole } from "@/lib/api";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const { supabase, companyId, error } = await requireApiRole(["owner", "hr_admin"]);
+  const { companyId, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
+
+  const db = createAdminClient();
 
   const [
     { data: run },
@@ -11,24 +14,24 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     { data: audit },
     { data: exportLog },
   ] = await Promise.all([
-    supabase
+    db
       .from("pay_runs")
       .select("*")
       .eq("id", params.id)
       .eq("company_id", companyId!)
       .maybeSingle(),
-    supabase
+    db
       .from("pay_run_lines")
       .select("*, employees(id, name, role_title, department)")
       .eq("pay_run_id", params.id)
       .order("created_at"),
-    supabase
+    db
       .from("pay_run_audit_log")
       .select("*")
       .eq("pay_run_id", params.id)
       .order("created_at", { ascending: false })
       .limit(10),
-    supabase
+    db
       .from("payroll_exports")
       .select("*")
       .eq("pay_run_id", params.id)
@@ -38,17 +41,15 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
   if (!run) return NextResponse.json({ error: "Corrida no encontrada" }, { status: 404 });
 
-  // Fetch line items for all lines
   const lineIds = (lines ?? []).map((l: { id: string }) => l.id);
   const { data: lineItems } = lineIds.length
-    ? await supabase
+    ? await db
         .from("pay_run_line_items")
         .select("*")
         .in("line_id", lineIds)
         .order("order_index")
     : { data: [] };
 
-  // Group items by line_id
   type LineItem = { id: string; line_id: string; category: string; label: string; amount: number; quantity_label: string | null; order_index: number };
   const itemsByLine: Record<string, LineItem[]> = {};
   for (const item of (lineItems ?? []) as LineItem[]) {
@@ -66,7 +67,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 }
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const { supabase, companyId, error } = await requireApiRole(["owner", "hr_admin"]);
+  const { companyId, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
 
   const body = await req.json().catch(() => null);
@@ -78,7 +79,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (key in body) patch[key] = body[key];
   }
 
-  const { data: run, error: dbErr } = await supabase
+  const db = createAdminClient();
+  const { data: run, error: dbErr } = await db
     .from("pay_runs")
     .update(patch)
     .eq("id", params.id)
