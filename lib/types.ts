@@ -411,6 +411,8 @@ export type CompensationRecord = {
   conversion_factor: number;
   comment: string | null;
   created_at: string;
+  novedad_status: "pending" | "included" | "paid" | null;
+  pay_run_id: string | null;
   employees?: Employee;
 };
 

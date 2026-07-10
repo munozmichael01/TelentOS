@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import { requireUser, requireApiRole, jsonError } from "@/lib/api";
+import { requireApiRole, jsonError } from "@/lib/api";
 
 export async function GET(req: Request) {
-  const { supabase, error } = await requireUser();
+  const { supabase, companyId, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
-
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
-  if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
   const url = new URL(req.url);
   const employee_id = url.searchParams.get("employee_id");
@@ -15,8 +12,8 @@ export async function GET(req: Request) {
 
   let query = supabase
     .from("compensation_records")
-    .select("*, employees(name, role_title)")
-    .eq("company_id", company.id)
+    .select("*, employees!employee_id(name, role_title)")
+    .eq("company_id", companyId!)
     .order("period_start", { ascending: false });
 
   if (employee_id) query = query.eq("employee_id", employee_id);
@@ -29,11 +26,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const { supabase, error, user } = await requireApiRole(["owner", "hr_admin"]);
+  const { supabase, companyId, user, error } = await requireApiRole(["owner", "hr_admin"]);
   if (error) return error;
-
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
-  if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
   const body = await req.json().catch(() => null);
   if (!body?.employee_id) return jsonError("Se requiere employee_id");
@@ -44,20 +38,35 @@ export async function POST(req: Request) {
   if (body.worked_minutes === undefined || body.worked_minutes === null)
     return jsonError("Se requiere worked_minutes");
 
+  // AC-7d: block duplicate confirmation for same employee + period
+  const { data: existing } = await supabase
+    .from("compensation_records")
+    .select("id")
+    .eq("company_id", companyId!)
+    .eq("employee_id", body.employee_id)
+    .eq("period_start", body.period_start)
+    .eq("period_end", body.period_end)
+    .maybeSingle();
+
+  if (existing) {
+    return jsonError("Ya existe un registro para este empleado en este período", 409);
+  }
+
   const balance_minutes = body.worked_minutes - body.scheduled_minutes;
+  const compensation_type = body.compensation_type ?? "time_off";
 
   // Resolve processed_by employee record for the current auth user
   const { data: processorEmployee } = await supabase
     .from("employees")
     .select("id")
-    .eq("company_id", company.id)
+    .eq("company_id", companyId!)
     .eq("auth_user_id", user!.id)
     .maybeSingle();
 
   const { data, error: dbError } = await supabase
     .from("compensation_records")
     .insert({
-      company_id: company.id,
+      company_id: companyId!,
       employee_id: body.employee_id,
       processed_by_employee_id: processorEmployee?.id ?? null,
       period_start: body.period_start,
@@ -66,9 +75,11 @@ export async function POST(req: Request) {
       worked_minutes: body.worked_minutes,
       balance_minutes,
       compensated_minutes: 0,
-      compensation_type: body.compensation_type ?? "time_off",
+      compensation_type,
       conversion_factor: body.conversion_factor ?? 1.0,
       comment: body.comment ?? null,
+      // AC-7b: payment type gets pending status; time_off has no novedad
+      novedad_status: compensation_type === "payment" ? "pending" : null,
     })
     .select()
     .single();
