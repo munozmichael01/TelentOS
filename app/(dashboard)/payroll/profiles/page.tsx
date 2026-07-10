@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { HairlineTable, HairlineRow } from "@/components/hairline-table";
@@ -22,6 +22,14 @@ function initials(name: string) {
 
 export default async function PayProfilesPage() {
   const supabase = createClient();
+  const admin = createAdminClient();
+
+  // Resolve company from user session
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .maybeSingle();
+  const companyId = membership?.company_id ?? null;
 
   const [{ data: employees }, { data: profiles }] = await Promise.all([
     supabase
@@ -29,10 +37,13 @@ export default async function PayProfilesPage() {
       .select("id, name, role_title, department")
       .eq("status", "active")
       .order("name"),
-    supabase
-      .from("pay_profiles")
-      .select("employee_id, base_salary, currency, country_pack, updated_at")
-      .is("effective_to", null),
+    companyId
+      ? admin
+          .from("pay_profiles")
+          .select("employee_id, base_salary, currency, country_pack, updated_at")
+          .eq("company_id", companyId)
+          .is("effective_to", null)
+      : Promise.resolve({ data: [] as Pick<PayProfile, "employee_id" | "base_salary" | "currency" | "country_pack" | "updated_at">[] }),
   ]);
 
   const list = (employees ?? []) as Employee[];

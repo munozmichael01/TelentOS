@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -227,16 +227,14 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const mountedRef = useRef(true);
-
-  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
   const loadData = useCallback(() => {
     setLoading(true);
     fetch(`/api/payroll/profiles/${employeeId}`)
       .then((r) => r.json())
-      .then((d) => { if (mountedRef.current) setData(d); })
-      .finally(() => { if (mountedRef.current) setLoading(false); });
+      .then((d) => setData(d))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [employeeId]);
 
   useEffect(() => { loadData(); }, [loadData]);
