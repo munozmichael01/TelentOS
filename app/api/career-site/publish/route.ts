@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireApiRole } from "@/lib/api";
 import { getCompany } from "@/lib/workspace";
 
 export async function POST(req: Request) {
+  // Publicar la web pública de empleo: solo roles de recruiting (M2)
+  const { error: authError } = await requireApiRole(["owner", "hr_admin", "recruiter"]);
+  if (authError) return authError;
+
   const company = await getCompany();
   if (!company) return NextResponse.json({ error: "No company" }, { status: 401 });
 

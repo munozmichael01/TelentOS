@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { requireUser, jsonError } from "@/lib/api";
+import { requireApiRole, jsonError } from "@/lib/api";
 import { runChannelAnalyst } from "@/agents/agent-channel-analyst";
 
 export async function POST(req: Request) {
-  const { error } = await requireUser();
+  // Analytics de reclutamiento: roles de recruiting; companyId scopea las tools (H2)
+  const { companyId, error } = await requireApiRole(["owner", "hr_admin", "recruiter"]);
   if (error) return error;
 
   let body: { query?: string; history?: { role: string; content: string }[] };
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
     .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
     .slice(-10); // cap history to last 10 turns
 
-  const result = await runChannelAnalyst({ query: query.trim(), history: validHistory });
+  const result = await runChannelAnalyst({ companyId: companyId!, query: query.trim(), history: validHistory });
 
   return NextResponse.json({ ...result.output, _status: result.status });
 }

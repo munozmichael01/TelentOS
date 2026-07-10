@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireApiRole } from "@/lib/api";
 import { getCompany } from "@/lib/workspace";
 
+// El career site público lo editan roles de recruiting (M2) — un employee no.
+const EDITOR_ROLES = ["owner", "hr_admin", "recruiter"] as const;
+
 export async function GET() {
+  const { error: authError } = await requireApiRole([...EDITOR_ROLES]);
+  if (authError) return authError;
+
   const company = await getCompany();
   if (!company) return NextResponse.json({ data: null });
 
@@ -17,6 +24,9 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
+  const { error: authError } = await requireApiRole([...EDITOR_ROLES]);
+  if (authError) return authError;
+
   const company = await getCompany();
   if (!company) return NextResponse.json({ error: "No company" }, { status: 401 });
 

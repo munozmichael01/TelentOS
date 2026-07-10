@@ -2,7 +2,8 @@ import type { AgentTool } from "@/agents/core";
 import { getChannelPerformance } from "@/lib/data/channel-performance";
 import { createAdminClient } from "@/lib/supabase/server";
 
-export const tools: AgentTool[] = [
+export function buildTools(companyId: string): AgentTool[] {
+  return [
   {
     definition: {
       type: "function",
@@ -54,6 +55,16 @@ export const tools: AgentTool[] = [
     execute: async (args) => {
       const supabase = createAdminClient();
       const jobId = String(args.job_id);
+
+      // El job_id lo elige el modelo: verificar pertenencia a la empresa del
+      // usuario antes de tocar datos (admin client bypassa RLS).
+      const { data: job } = await supabase
+        .from("jobs")
+        .select("id")
+        .eq("id", jobId)
+        .eq("company_id", companyId)
+        .maybeSingle();
+      if (!job) return { error: "Oferta no encontrada en esta empresa" };
 
       const [{ data: applications }, { data: campaigns }] = await Promise.all([
         supabase.from("applications").select("utm, created_at").eq("job_id", jobId),
@@ -114,4 +125,5 @@ export const tools: AgentTool[] = [
       };
     },
   },
-];
+  ];
+}

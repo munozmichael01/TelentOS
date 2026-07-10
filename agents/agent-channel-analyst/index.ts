@@ -1,6 +1,6 @@
 import { runAgent, type AgentResult } from "@/agents/core";
 import { SYSTEM_PROMPT } from "./prompt";
-import { tools, queryChannelData } from "./tools";
+import { buildTools, queryChannelData } from "./tools";
 
 export type AnalystResponse = {
   answer: string;
@@ -10,12 +10,14 @@ export type AnalystResponse = {
 };
 
 export type ChannelAnalystInput = {
+  /** Empresa del usuario autenticado (del guard del endpoint, nunca del cliente). */
+  companyId: string;
   query: string;
   history: { role: "user" | "assistant"; content: string }[];
 };
 
 async function fallbackAnalysis(input: ChannelAnalystInput): Promise<AnalystResponse> {
-  const data = await queryChannelData({ period: "30d" });
+  const data = await queryChannelData(input.companyId, { period: "30d" });
   const top = data.rows[0];
   const q = input.query.toLowerCase();
 
@@ -73,7 +75,7 @@ export async function runChannelAnalyst(
     system: SYSTEM_PROMPT,
     user: input.query,
     priorMessages,
-    tools,
+    tools: buildTools(input.companyId),
     input,
     fallback: () => fallbackAnalysis(input),
   });

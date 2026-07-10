@@ -3,7 +3,7 @@ import { getChannelPerformance } from "@/lib/data/channel-performance";
 import { createClient } from "@/lib/supabase/server";
 import type { Job } from "@/lib/types";
 import { SYSTEM_PROMPT } from "./prompt";
-import { tools } from "./tools";
+import { buildTools } from "./tools";
 
 export type ChannelRecommendation = {
   channel_id: string;
@@ -22,6 +22,8 @@ export type ChannelPlan = {
 };
 
 export type ChannelOptimizerInput = {
+  /** Empresa del usuario autenticado (del guard del endpoint, nunca del cliente). */
+  companyId: string;
   job: Pick<Job, "id" | "title" | "sector" | "location" | "employment_type" | "salary_min" | "salary_max">;
   objective: "volume" | "quality" | "cpa";
   budget: number;
@@ -89,7 +91,7 @@ export async function runChannelOptimizer(
     agent: "channel-optimizer",
     system: SYSTEM_PROMPT,
     user,
-    tools,
+    tools: buildTools(input.companyId),
     input,
     fallback: () => fallbackPlan(input),
   });
