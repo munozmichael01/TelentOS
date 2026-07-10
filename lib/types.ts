@@ -8,6 +8,8 @@ export type Company = {
   logo_url: string | null;
   description: string | null;
   website: string | null;
+  country: string | null;
+  rif: string | null;
 };
 
 export type JobStatus = "draft" | "active" | "closed" | "archived";

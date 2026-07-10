@@ -9,8 +9,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LocationAutocomplete } from "@/components/features/location-autocomplete";
 import { createClient } from "@/lib/supabase/client";
+import { apiFetch } from "@/lib/api-client";
 import { slugify } from "@/lib/utils";
 import type { Company } from "@/lib/types";
+
+const COUNTRIES = [
+  { code: "ES", label: "🇪🇸 España", currency: "EUR" },
+  { code: "VE", label: "🇻🇪 Venezuela", currency: "USD" },
+  { code: "BR", label: "🇧🇷 Brasil", currency: "BRL" },
+  { code: "CO", label: "🇨🇴 Colombia", currency: "COP" },
+  { code: "MX", label: "🇲🇽 México", currency: "MXN" },
+] as const;
 
 /** Configuración del workspace y del career site público. */
 export function CompanyForm({ company }: { company: Company | null }) {
@@ -22,6 +31,8 @@ export function CompanyForm({ company }: { company: Company | null }) {
     website: company?.website ?? "",
     logo_url: company?.logo_url ?? "",
     address: (company as (Company & { address?: string }) | null)?.address ?? "",
+    country: company?.country ?? "",
+    rif: company?.rif ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -51,17 +62,19 @@ export function CompanyForm({ company }: { company: Company | null }) {
     setError("");
     setSaved(false);
     try {
-      const res = await fetch("/api/company", {
+      await apiFetch("/api/company", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, address: form.address || null }),
+        json: {
+          ...form,
+          address: form.address || null,
+          country: form.country || null,
+          rif: form.rif || null,
+        },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error al guardar");
       setSaved(true);
       router.refresh();
     } catch (e) {
-      setError(String(e instanceof Error ? e.message : e));
+      setError(e instanceof Error ? e.message : "Error al guardar");
     } finally {
       setSaving(false);
     }
@@ -103,6 +116,37 @@ export function CompanyForm({ company }: { company: Company | null }) {
         />
         <p className="text-xs text-muted-foreground">Se mostrará en la página pública del career site.</p>
       </div>
+
+      {/* ── Nómina ──────────────────────────────────────────────────── */}
+      <div className="border-t border-line pt-4">
+        <p className="mb-3 text-xs font-mono uppercase tracking-wide text-soft">Nómina</p>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>País de operación</Label>
+            <select
+              value={form.country}
+              onChange={(e) => set("country", e.target.value)}
+              className="h-9 w-full rounded-[11px] border border-line bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30"
+            >
+              <option value="">Sin especificar (pack genérico)</option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              Define el pack de cálculo y la moneda por defecto de nuevos perfiles salariales.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label>RIF / NIF fiscal</Label>
+            <Input value={form.rif} onChange={(e) => set("rif", e.target.value)} placeholder="J-XXXXXXXX-X" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Logo ─────────────────────────────────────────────────────── */}
       <div className="space-y-1.5">
         <Label>Logo</Label>
         <div className="flex items-center gap-3">
@@ -113,6 +157,7 @@ export function CompanyForm({ company }: { company: Company | null }) {
           <Input type="file" accept="image/*" className="max-w-xs" disabled={uploading} onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])} />
         </div>
       </div>
+
       {error && <p className="text-sm text-destructive">{error}</p>}
       {saved && <p className="text-sm text-emerald-600">Guardado ✓</p>}
       <Button onClick={save} disabled={!form.name.trim() || saving}>
