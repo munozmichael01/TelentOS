@@ -68,16 +68,26 @@ function AlertIcon({ type }: { type: string }) {
 
 // ── Employee Breakdown Sheet ──────────────────────────────────────────────────
 function EmployeeSheet({
-  line, employee, items, avIdx, currency, onClose, onOpenPayslip,
+  line, employee, items, avIdx, currency, runId, userRole, onClose, onOpenPayslip, onRefresh,
 }: {
   line: RunData["lines"][0];
   employee: RunData["lines"][0]["employees"];
   items: PayRunLineItem[];
   avIdx: number;
   currency: string;
+  runId: string;
+  userRole: "owner" | "hr_admin";
   onClose: () => void;
   onOpenPayslip: () => void;
+  onRefresh: () => void;
 }) {
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [showAdjust, setShowAdjust] = useState(false);
+  const [adjLabel, setAdjLabel] = useState("");
+  const [adjAmount, setAdjAmount] = useState("");
+  const [adjCategory, setAdjCategory] = useState<"earning" | "deduction">("earning");
+
   const av = avatarPal(avIdx);
   const badge = LINE_STATUS[line.status] ?? LINE_STATUS.draft;
   const earnings = items.filter((i) => i.category === "earning").sort((a, b) => a.order_index - b.order_index);
@@ -87,6 +97,65 @@ function EmployeeSheet({
   const totalEarnings = earnings.reduce((s, i) => s + i.amount, 0);
   const totalDeductions = deductions.reduce((s, i) => s + i.amount, 0);
   const totalEmployer = employer.reduce((s, i) => s + i.amount, 0);
+
+  async function handleApprove() {
+    setActionLoading("approve");
+    setActionError(null);
+    try {
+      await apiFetch(`/api/payroll/runs/${runId}/lines/${line.id}`, {
+        method: "PATCH",
+        json: { action: "approve" },
+      });
+      onRefresh();
+      onClose();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Error al aprobar");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleRequestChanges() {
+    setActionLoading("request_changes");
+    setActionError(null);
+    try {
+      await apiFetch(`/api/payroll/runs/${runId}/lines/${line.id}`, {
+        method: "PATCH",
+        json: { action: "request_changes" },
+      });
+      onRefresh();
+      onClose();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Error al solicitar cambios");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleAddAdjust(e: React.FormEvent) {
+    e.preventDefault();
+    const amt = parseFloat(adjAmount);
+    if (!adjLabel.trim() || isNaN(amt) || amt <= 0) return;
+    setActionLoading("adjust");
+    setActionError(null);
+    try {
+      await apiFetch(`/api/payroll/runs/${runId}/lines/${line.id}/items`, {
+        method: "POST",
+        json: { label: adjLabel.trim(), amount: amt, category: adjCategory },
+      });
+      setShowAdjust(false);
+      setAdjLabel("");
+      setAdjAmount("");
+      setAdjCategory("earning");
+      onRefresh();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Error al añadir ajuste");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  const busy = actionLoading !== null;
 
   return (
     <div
@@ -182,18 +251,101 @@ function EmployeeSheet({
             </SheetSection>
           )}
 
+          {/* Adjustment form (inline) */}
+          {showAdjust && (
+            <form
+              onSubmit={handleAddAdjust}
+              style={{ background: T.bg, border: `1.5px solid ${T.line}`, borderRadius: "13px", padding: "16px 18px", marginBottom: "14px", display: "flex", flexDirection: "column", gap: "12px" }}
+            >
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>Nuevo ajuste manual</div>
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <span style={{ fontSize: "12px", color: T.soft }}>Concepto</span>
+                <input
+                  type="text"
+                  value={adjLabel}
+                  onChange={(e) => setAdjLabel(e.target.value)}
+                  placeholder="Ej. Bono de desempeño"
+                  required
+                  disabled={busy}
+                  style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "9px", padding: "9px 12px", outline: "none", width: "100%", boxSizing: "border-box" }}
+                />
+              </label>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <label style={{ flex: 1, display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <span style={{ fontSize: "12px", color: T.soft }}>Monto</span>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={adjAmount}
+                    onChange={(e) => setAdjAmount(e.target.value)}
+                    placeholder="0.00"
+                    required
+                    disabled={busy}
+                    style={{ fontFamily: "'Space Mono',monospace", fontSize: "13px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "9px", padding: "9px 12px", outline: "none", width: "100%", boxSizing: "border-box" }}
+                  />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <span style={{ fontSize: "12px", color: T.soft }}>Tipo</span>
+                  <select
+                    value={adjCategory}
+                    onChange={(e) => setAdjCategory(e.target.value as "earning" | "deduction")}
+                    disabled={busy}
+                    style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "9px", padding: "9px 12px", outline: "none", boxSizing: "border-box" }}
+                  >
+                    <option value="earning">Asignación (+)</option>
+                    <option value="deduction">Deducción (−)</option>
+                  </select>
+                </label>
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => { setShowAdjust(false); setAdjLabel(""); setAdjAmount(""); setAdjCategory("earning"); }}
+                  disabled={busy}
+                  style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "12.5px", color: T.soft, background: "transparent", border: `1.5px solid ${T.line}`, borderRadius: "9px", padding: "9px", cursor: "pointer" }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={busy || !adjLabel.trim() || !adjAmount}
+                  style={{ flex: 2, fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "12.5px", color: "#fff", background: busy ? "#B7C9A8" : T.brand, border: `2px solid ${busy ? "#A9BD97" : T.ink}`, borderRadius: "9px", padding: "9px", boxShadow: busy ? "none" : `2px 2px 0 ${T.ink}`, cursor: busy ? "not-allowed" : "pointer" }}
+                >
+                  {actionLoading === "adjust" ? "Guardando…" : "Guardar ajuste"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {actionError && (
+            <div style={{ background: T.amberSoft, border: "1px solid #EBD9A8", borderRadius: "10px", padding: "10px 13px", fontSize: "12.5px", color: T.amber, marginBottom: "12px" }}>
+              {actionError}
+            </div>
+          )}
+
           {/* CTAs */}
           <div style={{ display: "flex", flexDirection: "column", gap: "9px", marginTop: "4px" }}>
             <button
-              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: T.brand, border: `2px solid ${T.ink}`, borderRadius: "11px", padding: "11px", boxShadow: `3px 3px 0 ${T.ink}`, cursor: "pointer" }}
+              onClick={handleApprove}
+              disabled={busy}
+              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: busy ? "#B7C9A8" : T.brand, border: `2px solid ${busy ? "#A9BD97" : T.ink}`, borderRadius: "11px", padding: "11px", boxShadow: busy ? "none" : `3px 3px 0 ${T.ink}`, cursor: busy ? "not-allowed" : "pointer" }}
             >
-              Aprobar empleado
+              {actionLoading === "approve" ? "Aprobando…" : "Aprobar empleado"}
             </button>
             <div style={{ display: "flex", gap: "9px" }}>
-              <button style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px", cursor: "pointer" }}>
-                Solicitar cambios
+              <button
+                onClick={handleRequestChanges}
+                disabled={busy}
+                style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: busy ? T.soft : T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px", cursor: busy ? "not-allowed" : "pointer" }}
+              >
+                {actionLoading === "request_changes" ? "Enviando…" : "Solicitar cambios"}
               </button>
-              <button style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px", cursor: "pointer" }}>
+              <button
+                onClick={() => setShowAdjust((v) => !v)}
+                disabled={busy}
+                style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: busy ? T.soft : T.ink, background: showAdjust ? T.bg : T.surface, border: `1.5px solid ${showAdjust ? T.ink : T.line}`, borderRadius: "11px", padding: "10px", cursor: busy ? "not-allowed" : "pointer" }}
+              >
                 Añadir ajuste
               </button>
             </div>
@@ -342,11 +494,13 @@ function PayslipModal({
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
-export function PayRunDetail({ id, companyName }: { id: string; companyName: string }) {
+export function PayRunDetail({ id, companyName, role }: { id: string; companyName: string; role: "owner" | "hr_admin" }) {
   const router = useRouter();
   const [data, setData] = useState<RunData | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
+  const [transitionError, setTransitionError] = useState<string | null>(null);
   const [tab, setTab] = useState<"empleados" | "aprobacion" | "exportar">("empleados");
   const [sheetLineId, setSheetLineId] = useState<string | null>(null);
   const [payslipLineId, setPayslipLineId] = useState<string | null>(null);
@@ -372,6 +526,20 @@ export function PayRunDetail({ id, companyName }: { id: string; companyName: str
       loadData();
     } finally {
       if (mountedRef.current) setGenerating(false);
+    }
+  }
+
+  async function handleTransitionStatus(newStatus: string) {
+    if (transitioning) return;
+    setTransitioning(true);
+    setTransitionError(null);
+    try {
+      await apiFetch(`/api/payroll/runs/${id}`, { method: "PATCH", json: { status: newStatus } });
+      loadData();
+    } catch (e) {
+      if (mountedRef.current) setTransitionError(e instanceof Error ? e.message : "Error al cambiar estado");
+    } finally {
+      if (mountedRef.current) setTransitioning(false);
     }
   }
 
@@ -433,20 +601,42 @@ export function PayRunDetail({ id, companyName }: { id: string; companyName: str
               {run.entity_name} · {run.run_type === "monthly" ? "corrida mensual" : run.run_type} · <span style={{ fontFamily: "'Space Mono',monospace" }}>{run.employee_count} empleados</span>
             </div>
           </div>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-            <button
-              onClick={handleRegenerate}
-              disabled={generating}
-              style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "13px", color: generating ? T.soft : T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px 15px", cursor: generating ? "not-allowed" : "pointer" }}
-            >
-              {generating ? "Recalculando…" : "Recalcular"}
-            </button>
-            <button
-              onClick={() => setTab("aprobacion")}
-              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: T.brand, border: `2px solid ${T.ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: `3px 3px 0 ${T.ink}`, cursor: "pointer" }}
-            >
-              Aprobar revisados
-            </button>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexDirection: "column", alignItems: "flex-end" as const }}>
+            <div style={{ display: "flex", gap: "10px" }}>
+              {run.status === "draft" && (
+                <button
+                  onClick={handleRegenerate}
+                  disabled={generating}
+                  style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "13px", color: generating ? T.soft : T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px 15px", cursor: generating ? "not-allowed" : "pointer" }}
+                >
+                  {generating ? "Recalculando…" : "Recalcular"}
+                </button>
+              )}
+              {run.status === "draft" && (
+                <button
+                  onClick={() => handleTransitionStatus("in_review")}
+                  disabled={transitioning}
+                  style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: transitioning ? "#B7C9A8" : T.brand, border: `2px solid ${transitioning ? "#A9BD97" : T.ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: transitioning ? "none" : `3px 3px 0 ${T.ink}`, cursor: transitioning ? "not-allowed" : "pointer" }}
+                >
+                  {transitioning ? "Enviando…" : "Enviar a revisión"}
+                </button>
+              )}
+              {run.status === "in_review" && (
+                <span style={{ fontSize: "12.5px", color: T.amber, fontWeight: 700, padding: "10px 14px", background: T.amberSoft, borderRadius: "11px" }}>
+                  Pendiente de aprobación
+                </span>
+              )}
+              {(run.status === "approved" || run.status === "exported" || run.status === "paid") && (
+                <span style={{ fontSize: "12.5px", color: T.brand, fontWeight: 700, padding: "10px 14px", background: T.brandSoft, borderRadius: "11px" }}>
+                  ✓ {STATUS[run.status]?.label ?? run.status}
+                </span>
+              )}
+            </div>
+            {transitionError && (
+              <div style={{ fontSize: "12px", color: T.accent, background: T.accentSoft, borderRadius: "8px", padding: "6px 12px" }}>
+                {transitionError}
+              </div>
+            )}
           </div>
         </div>
 
@@ -656,27 +846,51 @@ export function PayRunDetail({ id, companyName }: { id: string; companyName: str
                     </span>
                   </div>
                 )}
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <button
-                    disabled={issueLines.length > 0}
-                    style={{
-                      fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px",
-                      color: "#fff", background: issueLines.length > 0 ? "#B7C9A8" : T.brand,
-                      border: `2px solid ${issueLines.length > 0 ? "#A9BD97" : T.ink}`,
-                      borderRadius: "11px", padding: "12px", cursor: issueLines.length > 0 ? "not-allowed" : "pointer", width: "100%",
-                    }}
-                  >
-                    Aprobar nómina
-                  </button>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <button style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.accent, background: T.surface, border: `1.5px solid ${T.accentSoft}`, borderRadius: "11px", padding: "10px", cursor: "pointer" }}>
-                      Rechazar con notas
-                    </button>
-                    <button style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.soft, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px", cursor: "not-allowed" }}>
-                      Bloquear corrida
-                    </button>
-                  </div>
-                </div>
+                {(() => {
+                  const allLinesApproved = lines.filter((l) => l.status !== "approved").length === 0;
+                  const canApproveNomina = role === "owner" && run.status === "in_review" && issueLines.length === 0 && allLinesApproved;
+                  const approveDisabled = !canApproveNomina || transitioning;
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <button
+                        onClick={canApproveNomina ? () => handleTransitionStatus("approved") : undefined}
+                        disabled={approveDisabled}
+                        style={{
+                          fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px",
+                          color: "#fff", background: approveDisabled ? "#B7C9A8" : T.brand,
+                          border: `2px solid ${approveDisabled ? "#A9BD97" : T.ink}`,
+                          borderRadius: "11px", padding: "12px",
+                          cursor: approveDisabled ? "not-allowed" : "pointer", width: "100%",
+                        }}
+                      >
+                        {transitioning ? "Aprobando…" : "Aprobar nómina"}
+                      </button>
+                      {role !== "owner" && run.status === "in_review" && (
+                        <div style={{ fontSize: "12px", color: T.amber, textAlign: "center" }}>
+                          Solo el propietario puede aprobar la nómina.
+                        </div>
+                      )}
+                      {role === "owner" && run.status === "in_review" && !allLinesApproved && issueLines.length === 0 && (
+                        <div style={{ fontSize: "12px", color: T.soft, textAlign: "center" }}>
+                          {lines.filter((l) => l.status !== "approved").length} línea(s) aún sin aprobar.
+                        </div>
+                      )}
+                      {run.status !== "in_review" && run.status !== "approved" && run.status !== "exported" && run.status !== "paid" && (
+                        <div style={{ fontSize: "12px", color: T.soft, textAlign: "center" }}>
+                          Envía la corrida a revisión primero.
+                        </div>
+                      )}
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <button style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.accent, background: T.surface, border: `1.5px solid ${T.accentSoft}`, borderRadius: "11px", padding: "10px", cursor: "not-allowed", opacity: 0.5 }}>
+                          Rechazar con notas
+                        </button>
+                        <button style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "12.5px", color: T.soft, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px", cursor: "not-allowed" }}>
+                          Bloquear corrida
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -752,8 +966,11 @@ export function PayRunDetail({ id, companyName }: { id: string; companyName: str
           items={itemsByLine[sheetLine.id] ?? []}
           avIdx={lines.indexOf(sheetLine)}
           currency={run.currency}
+          runId={id}
+          userRole={role}
           onClose={() => setSheetLineId(null)}
           onOpenPayslip={() => { setPayslipLineId(sheetLine.id); }}
+          onRefresh={loadData}
         />
       )}
 

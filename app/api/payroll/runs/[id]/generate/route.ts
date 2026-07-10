@@ -10,12 +10,13 @@ export async function POST(_: Request, { params }: { params: { id: string } }) {
   const db = createAdminClient();
   const { data: run } = await db
     .from("pay_runs")
-    .select("id")
+    .select("id, status")
     .eq("id", params.id)
     .eq("company_id", companyId!)
     .maybeSingle();
 
   if (!run) return NextResponse.json({ error: "Corrida no encontrada" }, { status: 404 });
+  if (run.status !== "draft") return NextResponse.json({ error: "Solo se puede regenerar en estado borrador" }, { status: 409 });
 
   try {
     const result = await generatePayRunLines(
