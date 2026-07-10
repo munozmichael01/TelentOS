@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { HairlineTable, HairlineRow } from "@/components/hairline-table";
+import { NewRunDialog } from "@/components/features/new-run-dialog";
+import { formatMoney } from "@/lib/format";
 import Link from "next/link";
 import type { PayRun } from "@/lib/types";
 
@@ -27,7 +29,7 @@ export default async function PayRunsPage() {
   return (
     <div>
       <PageHeader title="Pay Runs" eyebrow="Payroll">
-        {null}
+        <NewRunDialog />
       </PageHeader>
 
       {list.length === 0 ? (
@@ -49,7 +51,7 @@ export default async function PayRunsPage() {
                 <span style={{ color: "#54504A" }}>{r.entity_name}</span>
                 <span style={{ fontFamily: "'Space Mono',monospace" }}>{r.employee_count}</span>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>
-                  ${r.gross.toLocaleString("en-US")}
+                  {formatMoney(r.gross, r.currency)}
                 </span>
                 <span>
                   <span style={{ fontSize: "11px", fontWeight: 700, borderRadius: "999px", padding: "3px 10px", background: badge.bg, color: badge.color }}>
