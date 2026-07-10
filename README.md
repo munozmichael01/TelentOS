@@ -10,7 +10,7 @@ Next.js 14 (App Router) sirve UI y API en un único deployable de Vercel; Supaba
 
 ```bash
 npm install
-npx supabase db push && psql "$DATABASE_URL" -f supabase/seed.sql   # o pega migración+seed en el SQL Editor de Supabase
+npx supabase db push   # o pega migración+seed en el SQL Editor de Supabase
 npm run dev
 ```
 
@@ -23,7 +23,6 @@ npm run dev
 | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase (Settings → API) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave pública `anon` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Clave `service_role` (solo servidor; flujo público del career site) |
-| `DATABASE_URL` | Connection string Postgres (solo para Prisma/psql) |
 | `OPENAI_API_KEY` | Clave de OpenAI para los agentes (GPT-4o). Opcional: sin ella, los agentes funcionan en modo heurístico determinista |
 | `NEXT_PUBLIC_APP_URL` | URL pública de la app (`http://localhost:3000` en local) |
 
@@ -42,7 +41,6 @@ npm run dev
 /components   shadcn/ui (/ui) + componentes de feature (/features)
 /lib          Clientes Supabase/OpenAI, schema interno, fit score, importadores, datos mock
 /supabase     Migración SQL (tablas + RLS + buckets) y seed de demo
-/prisma       Schema Prisma espejo del modelo
 ```
 
 ## Flujos end-to-end
