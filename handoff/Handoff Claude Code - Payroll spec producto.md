@@ -202,3 +202,18 @@ Se cablea todo lo siguiente (criterio: se mantiene lo que tiene sentido de produ
 | 6 | Payslips + exports CSV | **AC-5a, AC-5b, AC-6a, AC-6b** |
 | 7 | Cards de country packs (estados + mocks VE/BR/ES) | badge "no operativo" visible; cero lógica de cálculo en packs |
 | 8 | Renaming de nav | **AC-7a** |
+
+---
+
+## 9. Coordinación con la pista de auditoría (leer antes de arrancar el paso 1)
+
+Esta spec se ejecuta **en paralelo** con la remediación de la auditoría técnica (`Handoff Claude Code - Auditoría técnica.md`), que lleva otro agente. Reglas para no chocar:
+
+1. **Prerequisito: el Lote 1 de la auditoría debe estar mergeado antes del paso 1.** Aporta dos cimientos que este código consume desde el primer día:
+   - **`apiFetch`** (helper de mutaciones con manejo de errores): **toda llamada de mutación nueva de este módulo lo usa** — cero `fetch` fire-and-forget nuevos. Si al arrancar no existe en `lib/`, detenerse y avisar.
+   - **`lib/format.ts` con `formatMoney(amount, currency)`**: obligatorio en toda la UI de payroll; prohibido añadir usos de `fmtUSD` (§1.1 punto 4).
+   - El Lote 1 también elimina Prisma — la migración destructiva del paso 2 se hace ya sin `db:prisma` en el repo.
+2. **Ítems de la auditoría cedidos a esta pista** (los resuelve este trabajo, la pista de auditoría no los toca): M5 y M7 en rutas de payroll y los 404 payroll→run (= paso 5), y L4 (orden de queries en `runs/[id]`, absorbido por el paso 4-5).
+3. **Zona vetada para la pista de auditoría hasta que esta pista pase el paso 6:** `pay-run-detail.tsx`, `pay-profile.tsx`, `payroll-dashboard.tsx` y `app/(dashboard)/payroll/**` + `app/api/payroll/**`. La migración de design system de esas pantallas la hace la pista de auditoría *después*, sobre el código ya cableado.
+4. **Git:** esta pista trabaja en **worktree con rama propia** (`payroll-v1` o similar) y merge a `main` al cerrar cada puerta del §8 — no commits directos a `main` mientras las dos pistas estén activas.
+5. **Disciplina de ejecución:** la regla del §8 no es decorativa — parar en cada puerta, verificar los AC, reportar, y solo entonces continuar. El bloqueo paso 4 ← paso 2 es duro.
