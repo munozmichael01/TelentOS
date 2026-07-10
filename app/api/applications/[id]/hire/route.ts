@@ -14,7 +14,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
   const { data: app } = await supabase
     .from("applications")
-    .select("*, candidates(*), jobs(title, department), job_stages(name)")
+    .select("*, candidates(*), jobs(title, department), job_stages(name), offer_salary, offer_currency, offer_frequency, offer_start_date")
     .eq("id", params.id)
     .maybeSingle();
   if (!app) return jsonError("Candidatura no encontrada", 404);
@@ -72,6 +72,22 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     actor_id: user.id,
     actor_email: user.email,
   });
+
+  // Auto-crea perfil salarial si la candidatura tenía términos de oferta acordados
+  const offerSalary = (app as unknown as Record<string, unknown>).offer_salary as number | null;
+  if (offerSalary && offerSalary > 0) {
+    const offerCurrency  = (app as unknown as Record<string, unknown>).offer_currency  as string | null;
+    const offerFrequency = (app as unknown as Record<string, unknown>).offer_frequency as string | null;
+    const offerStartDate = (app as unknown as Record<string, unknown>).offer_start_date as string | null;
+    await supabase.from("pay_profiles").insert({
+      company_id:     company.id,
+      employee_id:    employee.id,
+      base_salary:    offerSalary,
+      currency:       offerCurrency  ?? "USD",
+      frequency:      offerFrequency ?? "monthly",
+      effective_from: offerStartDate ?? body.start_date ?? new Date().toISOString().slice(0, 10),
+    });
+  }
 
   return NextResponse.json({ employee_id: employee.id });
 }

@@ -48,11 +48,26 @@ export default async function PayProfilesPage() {
     mx: "México · próximamente",
   };
 
+  const withoutProfile = list.filter((e) => !profileMap.has(e.id));
+
   return (
     <div>
-      <PageHeader title="Perfiles salariales" eyebrow="Payroll">
-        {null}
-      </PageHeader>
+      <PageHeader title="Perfiles salariales" eyebrow="Payroll" />
+
+      {withoutProfile.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "#F8E7C4", border: "1px solid #E5C97A", borderRadius: "12px", padding: "13px 16px", marginBottom: "18px" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+            <path d="M12 3l9 16H3l9-16Z" stroke="#946312" strokeWidth="2" strokeLinejoin="round"/>
+            <path d="M12 10v4M12 17h.01" stroke="#946312" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13.5px", color: "#1A1A17" }}>
+            {withoutProfile.length} empleado{withoutProfile.length !== 1 ? "s" : ""} sin perfil salarial
+          </span>
+          <span style={{ fontSize: "13px", color: "#79746B" }}>
+            — no aparecerán en la próxima corrida de nómina hasta que configures su salario.
+          </span>
+        </div>
+      )}
 
       {list.length === 0 ? (
         <EmptyState

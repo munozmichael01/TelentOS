@@ -12,7 +12,7 @@ export async function GET() {
   // company_id scoping is equivalent and safe here.
   const db = createAdminClient();
 
-  const [{ data: runs }, { data: currentRun }] = await Promise.all([
+  const [{ data: runs }, { data: currentRun }, { count: activeEmpCount }, { count: profiledCount }] = await Promise.all([
     db
       .from("pay_runs")
       .select("id, period_label, period_month, entity_name, status, gross, net, employer_cost, employee_count, currency")
@@ -26,6 +26,8 @@ export async function GET() {
       .order("period_month", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    db.from("employees").select("id", { count: "exact", head: true }).eq("company_id", companyId!).eq("status", "active"),
+    db.from("pay_profiles").select("id", { count: "exact", head: true }).eq("company_id", companyId!),
   ]);
 
   const allRuns = runs ?? [];
@@ -56,8 +58,19 @@ export async function GET() {
     incidencias = count ?? 0;
   }
 
+  const missingProfileCount = Math.max(0, (activeEmpCount ?? 0) - (profiledCount ?? 0));
+
   // Alerts from current run
   const alerts: { title: string; meta: string; dot: string }[] = [];
+
+  if (missingProfileCount > 0) {
+    alerts.push({
+      title: `${missingProfileCount} empleado${missingProfileCount !== 1 ? "s" : ""} sin perfil salarial`,
+      meta: "no aparecerán en la próxima corrida",
+      dot: "#946312",
+    });
+  }
+
   if (currentRun && incidencias > 0) {
     const { data: issueLines } = await db
       .from("pay_run_lines")
