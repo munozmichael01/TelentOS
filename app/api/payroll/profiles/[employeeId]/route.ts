@@ -41,12 +41,19 @@ export async function GET(_: Request, { params }: { params: { employeeId: string
         .order("order_index")
     : { data: [] };
 
-  // Fetch latest payslip for this employee
-  const { data: latestPayslip } = activeProfile
+  // Fetch latest payslip — join through pay_run_lines by employee_id (not profile id)
+  const { data: empLines } = await db
+    .from("pay_run_lines")
+    .select("id")
+    .eq("employee_id", params.employeeId);
+
+  const lineIds = (empLines ?? []).map((l: { id: string }) => l.id);
+
+  const { data: latestPayslip } = lineIds.length > 0
     ? await db
         .from("payslips")
         .select("id, slip_number, generated_at, pay_run_line_id")
-        .eq("pay_run_line_id", activeProfile.id) // join via line
+        .in("pay_run_line_id", lineIds)
         .order("generated_at", { ascending: false })
         .limit(1)
         .maybeSingle()
