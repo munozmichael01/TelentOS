@@ -1,9 +1,10 @@
 import { PageHeader } from "@/components/page-header";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { getCompany } from "@/lib/workspace";
 
 const T = {
-  surface: "#FCFAF6", bg: "#F4F0E8", surface2: "#F8F4EB",
-  ink: "#1A1A17", soft: "#79746B", line: "#E7E1D4",
+  soft: "#79746B", line: "#E7E1D4", bg: "#F4F0E8", surface2: "#F8F4EB",
   brand: "#0E5C4A", brandSoft: "#DCEFE4",
   amber: "#946312", amberSoft: "#F8E7C4",
 };
@@ -68,15 +69,18 @@ const PACKS: PackDef[] = [
   },
 ];
 
-function Chip({ label, muted }: { label: string; muted?: boolean }) {
+function StatusBadge({ status }: { status: PackDef["status"] }) {
+  if (status === "active") return null;
+  const preview = status === "preview";
   return (
     <span style={{
-      fontSize: "11px", fontWeight: 600, borderRadius: "999px", padding: "3px 10px",
-      background: muted ? T.surface2 : T.bg,
-      border: `1px solid ${T.line}`,
-      color: muted ? T.soft : "#54504A",
+      fontSize: "10.5px", fontWeight: 700, borderRadius: "999px", padding: "4px 11px",
+      background: preview ? T.amberSoft : T.surface2,
+      color: preview ? T.amber : T.soft,
+      border: preview ? "none" : `1px dashed #CFC7B5`,
+      flexShrink: 0,
     }}>
-      {label}
+      {preview ? "Vista previa — cálculos no operativos" : "Próximamente"}
     </span>
   );
 }
@@ -93,75 +97,55 @@ export default async function PayrollSettingsPage() {
         description="Selecciona el motor de cálculo que aplica a tu empresa. Solo el pack Genérico está activo; los demás son vista previa sin cálculos operativos."
       />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "16px" }}>
+      <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>
         {PACKS.map((pack) => {
           const isActive = pack.code === activePackCode;
-          const isPreview = pack.status === "preview";
           const isComingSoon = pack.status === "coming_soon";
 
           return (
-            <div
+            <Card
               key={pack.code}
+              panel
+              className="flex flex-col gap-4 p-5"
               style={{
-                background: T.surface,
-                border: `1.5px solid ${isActive ? T.brand : T.line}`,
-                borderRadius: "16px",
-                padding: "20px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "14px",
+                borderColor: isActive ? T.brand : undefined,
+                borderWidth: isActive ? "1.5px" : undefined,
                 opacity: isComingSoon ? 0.7 : 1,
               }}
             >
               {/* Header */}
-              <div style={{ display: "flex", alignItems: "center", gap: "11px" }}>
+              <div className="flex items-center gap-3">
                 <span style={{ fontSize: "22px" }}>{pack.flag}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "16px" }}>{pack.label}</div>
-                </div>
+                <span className="font-display font-black text-[16px] flex-1">{pack.label}</span>
                 {isActive && (
-                  <span style={{ fontSize: "10.5px", fontWeight: 700, borderRadius: "999px", padding: "4px 11px", background: T.brandSoft, color: T.brand }}>
+                  <span style={{ fontSize: "10.5px", fontWeight: 700, borderRadius: "999px", padding: "4px 11px", background: T.brandSoft, color: T.brand, flexShrink: 0 }}>
                     Aplicándose ahora
                   </span>
                 )}
-                {isPreview && (
-                  <span style={{ fontSize: "10.5px", fontWeight: 700, borderRadius: "999px", padding: "4px 11px", background: T.amberSoft, color: T.amber }}>
-                    Vista previa — cálculos no operativos
-                  </span>
-                )}
-                {isComingSoon && (
-                  <span style={{ fontSize: "10.5px", fontWeight: 700, borderRadius: "999px", padding: "4px 11px", background: T.surface2, color: T.soft, border: `1px dashed #CFC7B5` }}>
-                    Próximamente
-                  </span>
-                )}
+                <StatusBadge status={pack.status} />
               </div>
 
               {/* Chips */}
               {pack.chips.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                  {pack.chips.map((c) => <Chip key={c} label={c} />)}
+                <div className="flex flex-wrap gap-1.5">
+                  {pack.chips.map((c) => (
+                    <span key={c} style={{ fontSize: "11px", fontWeight: 600, borderRadius: "999px", padding: "3px 10px", background: T.bg, border: `1px solid ${T.line}`, color: "#54504A" }}>
+                      {c}
+                    </span>
+                  ))}
                 </div>
               )}
 
               {/* Note */}
-              <p style={{ fontSize: "12px", color: T.soft, lineHeight: 1.5, margin: 0 }}>{pack.note}</p>
+              <p className="text-[12px] leading-relaxed text-muted-foreground m-0">{pack.note}</p>
 
               {/* CTA */}
               {!isActive && (
-                <button
-                  disabled
-                  style={{
-                    fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "12.5px",
-                    color: T.soft, background: T.surface2,
-                    border: "1.5px dashed #CFC7B5",
-                    borderRadius: "10px", padding: "9px 15px",
-                    cursor: "not-allowed", alignSelf: "flex-start",
-                  }}
-                >
+                <Button variant="outline" size="sm" disabled className="self-start">
                   Seleccionar pack — Próximamente
-                </button>
+                </Button>
               )}
-            </div>
+            </Card>
           );
         })}
       </div>
