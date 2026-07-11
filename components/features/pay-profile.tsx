@@ -27,8 +27,8 @@ const COUNTRY_CURRENCY: Record<string, string> = {
 const PACK_INFO: Record<string, { label: string; status: "active" | "preview" | "coming_soon" }> = {
   generic: { label: "Genérico · activo", status: "active" },
   ve: { label: "Venezuela · vista previa", status: "preview" },
-  br: { label: "Brasil · próximamente", status: "coming_soon" },
-  es: { label: "España · próximamente", status: "coming_soon" },
+  br: { label: "Brasil · vista previa", status: "preview" },
+  es: { label: "España · vista previa", status: "preview" },
   co: { label: "Colombia · próximamente", status: "coming_soon" },
   mx: { label: "México · próximamente", status: "coming_soon" },
 };
@@ -603,7 +603,7 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
                     <span style={{ fontSize: "16px" }}>{c.flag}</span>
                     <span style={{ fontSize: "13px", fontWeight: 600, flex: 1 }}>{c.label}</span>
                     <span style={{ fontSize: "10px", fontWeight: 700, borderRadius: "999px", padding: "3px 9px", background: c.status === "preview" ? T.amberSoft : T.surface2, color: c.status === "preview" ? T.amber : T.soft, border: c.status === "coming_soon" ? `1px dashed #CFC7B5` : "none" }}>
-                      {c.status === "preview" ? "Vista previa" : "Próximamente"}
+                      {c.status === "preview" ? "Vista previa — no operativo" : "Próximamente"}
                     </span>
                   </div>
                 ))}
