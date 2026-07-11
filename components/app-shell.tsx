@@ -165,7 +165,7 @@ const ALL_NAV = [
   { href: "/timeoff",            label: "Ausencias",    Icon: IconVacaciones },
   { href: "/timeoff/calendar",   label: "Calendario",   Icon: IconCalendar },
   { href: "/horas",              label: "Horas",        Icon: IconHoras },
-  { href: "/horas/compensacion", label: "Compensación", Icon: IconCompensacion },
+  { href: "/horas/compensacion", label: "Banco de horas", Icon: IconCompensacion },
   { section: "Payroll", brand: true },
   { href: "/payroll",          label: "Payroll",             Icon: IconPayroll },
   { href: "/payroll/runs",     label: "Pay Runs",            Icon: IconPayRuns },
