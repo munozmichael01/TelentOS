@@ -168,6 +168,8 @@ Tipografía: Archivo 900 (headings/eyebrow) · Space Mono (labels/números/monos
 
 ## Deuda técnica conocida — no agraves
 
+**Registro completo y vivo en [`docs/deuda-tecnica.md`](docs/deuda-tecnica.md)** — todo hallazgo que se decida no arreglar en el momento se anota ahí en el mismo commit que lo descubre (con severidad y puerta PR/ER). Al resolver un ítem, moverlo a "Resuelto" con el commit. Lo de abajo es solo el resumen de los patrones que no hay que propagar:
+
 1. **`LIMIT 1` en companies** (~57 ocurrencias): muchas pages y API routes hacen `supabase.from("companies").select().limit(1)` en vez de resolverlo desde el membership. Corrígelo cuando toques el archivo; no propagarlo a código nuevo.
 2. **`company_members` asume un membership por usuario**: el código asume que un usuario pertenece a una sola empresa (`.maybeSingle()`). La dirección es multi-tenant real; en código nuevo, siempre filtra por `company_id` explícito.
 3. **Tipos Supabase desactualizados**: después de las migraciones 0017–0019, los tipos auto-generados de Supabase no están regenerados. Usa `as unknown as Record<string, unknown>` para campos nuevos hasta regenerar con `supabase gen types`.
