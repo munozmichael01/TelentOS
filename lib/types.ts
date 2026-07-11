@@ -9,6 +9,8 @@ export type Company = {
   description: string | null;
   website: string | null;
   country: string | null;
+  /** Pack de cálculo seleccionado por la empresa (fuente de verdad; el del perfil es snapshot). */
+  country_pack: CountryPackCode;
   rif: string | null;
 };
 
