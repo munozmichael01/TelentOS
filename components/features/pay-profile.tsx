@@ -18,19 +18,13 @@ const T = {
 const COMP_TYPE: Record<string, string> = { fixed: "Fijo", variable: "Variable", conditional: "Condicional" };
 const FREQ_LABEL: Record<string, string> = { monthly: "Mensual", biweekly: "Quincenal", weekly: "Semanal" };
 const PAYMENT_METHOD: Record<string, string> = { transfer: "Transferencia", cash: "Efectivo", check: "Cheque" };
-const VE_PACK_CHIPS = ["Salario base", "Bono alimentación", "Utilidades", "Vacaciones + bono", "Prestaciones sociales", "Anticipos", "ISLR", "SSO / RPE / FAOV"];
 
 const COUNTRY_CURRENCY: Record<string, string> = {
   ES: "EUR", VE: "USD", BR: "BRL", CO: "COP", MX: "MXN",
 };
 
-const PACK_INFO: Record<string, { label: string; status: "active" | "preview" | "coming_soon" }> = {
-  generic: { label: "Genérico · activo", status: "active" },
-  ve: { label: "Venezuela · vista previa", status: "preview" },
-  br: { label: "Brasil · vista previa", status: "preview" },
-  es: { label: "España · vista previa", status: "preview" },
-  co: { label: "Colombia · próximamente", status: "coming_soon" },
-  mx: { label: "México · próximamente", status: "coming_soon" },
+const PACK_LABEL: Record<string, string> = {
+  generic: "Genérico", ve: "Venezuela", br: "Brasil", es: "España", co: "Colombia", mx: "México",
 };
 
 function Toggle({ active }: { active: boolean }) {
@@ -41,20 +35,7 @@ function Toggle({ active }: { active: boolean }) {
   );
 }
 
-function PackBadge({ pack }: { pack: string }) {
-  const info = PACK_INFO[pack] ?? { label: pack, status: "coming_soon" as const };
-  const active = info.status === "active";
-  const preview = info.status === "preview";
-  const bg = active ? T.brandSoft : preview ? T.amberSoft : T.surface2;
-  const color = active ? T.brand : preview ? T.amber : T.soft;
-  return (
-    <span style={{ fontSize: "11.5px", fontWeight: 700, borderRadius: "999px", padding: "4px 11px", background: bg, color }}>
-      {info.label}
-    </span>
-  );
-}
-
-type CompanyData = { id: string; country: string | null } | null;
+type CompanyData = { id: string; country: string | null; country_pack: string | null } | null;
 
 type CurrentPayslip = {
   id: string;
@@ -101,7 +82,6 @@ function CompensationDialog({ employeeId, profile, company, onSaved, onClose }: 
     payment_method: profile?.payment_method ?? "transfer",
     bank_name: profile?.bank_name ?? "",
     bank_account_last4: profile?.bank_account_last4 ?? "",
-    country_pack: profile?.country_pack ?? "generic",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -503,15 +483,13 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
                 <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "16px" }}>Configuración local</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 24px" }}>
                   <div>
-                    <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>Country pack</div>
-                    <div style={{ marginTop: "7px" }}>
-                      <PackBadge pack={profile.country_pack}/>
-                      {profile.country_pack !== "generic" && (
-                        <p style={{ fontSize: "11px", color: T.soft, marginTop: "6px", lineHeight: 1.4 }}>
-                          Vista previa — cálculos no operativos. Solo el pack genérico está activo.
-                        </p>
-                      )}
+                    <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>Cálculo</div>
+                    <div style={{ fontSize: "13.5px", fontWeight: 600, marginTop: "8px", lineHeight: 1.4 }}>
+                      Pack {PACK_LABEL[data.company?.country_pack ?? "generic"] ?? "Genérico"} — gestión, sin retenciones legales
                     </div>
+                    <a href="/settings/payroll" style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: T.brand, textDecoration: "none", marginTop: "5px", display: "inline-block" }}>
+                      Cambiar pack en Ajustes →
+                    </a>
                   </div>
                   <div>
                     <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>Entidad empleadora</div>
@@ -557,57 +535,12 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
                   {formatMoney(employerCost, profile.currency)}
                 </div>
                 <div style={{ fontSize: "12px", color: "#B9B4A9", marginTop: "6px", lineHeight: 1.5 }}>
-                  {profile.country_pack === "generic"
+                  {(data.company?.country_pack ?? "generic") === "generic"
                     ? "Pack genérico: coste empresa = salario bruto (sin cargas patronales)."
                     : "Incluye salario, componentes y cargas patronales + provisión de prestaciones."}
                 </div>
               </div>
 
-              {/* Pack preview chips — VE only */}
-              {profile.country_pack === "ve" && (
-                <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", padding: "20px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                    <span style={{ width: "20px", height: "14px", borderRadius: "2px", background: "linear-gradient(#FFCC00 33%,#003893 33% 66%,#CF142B 66%)" }}/>
-                    <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>Pack Venezuela · vista previa</span>
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                    {VE_PACK_CHIPS.map((p) => (
-                      <span key={p} style={{ fontSize: "11px", fontWeight: 600, borderRadius: "999px", padding: "4px 10px", background: T.surface2, border: `1px solid ${T.line}`, color: "#54504A" }}>
-                        {p}
-                      </span>
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginTop: "14px", paddingTop: "14px", borderTop: `1px solid ${T.line}` }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}>
-                      <circle cx="12" cy="12" r="9" stroke={T.brand} strokeWidth="2"/>
-                      <path d="M12 8v5M12 16h.01" stroke={T.brand} strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                    <span style={{ fontSize: "11.5px", lineHeight: 1.45, color: "#54504A" }}>
-                      <b>Vista previa — cálculos no operativos.</b> El pack VE aplicará SSO/RPE/FAOV/INCES y doble moneda (VES/USD) cuando esté activo.
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Other packs */}
-              <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", padding: "20px" }}>
-                <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft, marginBottom: "12px" }}>Country packs disponibles</div>
-                {[
-                  { code: "ve", label: "Venezuela", flag: "🇻🇪", status: "preview" },
-                  { code: "es", label: "España", flag: "🇪🇸", status: "preview" },
-                  { code: "br", label: "Brasil", flag: "🇧🇷", status: "preview" },
-                  { code: "co", label: "Colombia", flag: "🇨🇴", status: "coming_soon" },
-                  { code: "mx", label: "México", flag: "🇲🇽", status: "coming_soon" },
-                ].map((c) => (
-                  <div key={c.code} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 0", borderBottom: `1px solid ${T.line}` }}>
-                    <span style={{ fontSize: "16px" }}>{c.flag}</span>
-                    <span style={{ fontSize: "13px", fontWeight: 600, flex: 1 }}>{c.label}</span>
-                    <span style={{ fontSize: "10px", fontWeight: 700, borderRadius: "999px", padding: "3px 9px", background: c.status === "preview" ? T.amberSoft : T.surface2, color: c.status === "preview" ? T.amber : T.soft, border: c.status === "coming_soon" ? `1px dashed #CFC7B5` : "none" }}>
-                      {c.status === "preview" ? "Vista previa — no operativo" : "Próximamente"}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         )}

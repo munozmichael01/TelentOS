@@ -23,7 +23,7 @@ export async function GET(_: Request, { params }: { params: { employeeId: string
       .order("effective_from", { ascending: false }),
     db
       .from("companies")
-      .select("id, country")
+      .select("id, country, country_pack")
       .eq("id", companyId!)
       .maybeSingle(),
   ]);
@@ -91,13 +91,20 @@ export async function PUT(req: Request, { params }: { params: { employeeId: stri
 
   const db = createAdminClient();
 
-  const { data: active } = await db
-    .from("pay_profiles")
-    .select("id, effective_from")
-    .eq("employee_id", params.employeeId)
-    .eq("company_id", companyId!)
-    .is("effective_to", null)
-    .maybeSingle();
+  const [{ data: active }, { data: co }] = await Promise.all([
+    db
+      .from("pay_profiles")
+      .select("id, effective_from")
+      .eq("employee_id", params.employeeId)
+      .eq("company_id", companyId!)
+      .is("effective_to", null)
+      .maybeSingle(),
+    db
+      .from("companies")
+      .select("country_pack")
+      .eq("id", companyId!)
+      .maybeSingle(),
+  ]);
 
   const profileFields = {
     company_id: companyId!,
@@ -110,7 +117,7 @@ export async function PUT(req: Request, { params }: { params: { employeeId: stri
     payment_method: body.payment_method ?? "transfer",
     bank_name: body.bank_name ?? null,
     bank_account_last4: body.bank_account_last4 ?? null,
-    country_pack: body.country_pack ?? "generic",
+    country_pack: (co as unknown as { country_pack?: string })?.country_pack ?? "generic",
     tax_profile: body.tax_profile ?? null,
     legal_entity: body.legal_entity ?? null,
     employer_cost: body.employer_cost ?? null,

@@ -494,7 +494,7 @@ function PayslipModal({
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
-export function PayRunDetail({ id, companyName, role }: { id: string; companyName: string; role: "owner" | "hr_admin" }) {
+export function PayRunDetail({ id, companyName, companyPack, role }: { id: string; companyName: string; companyPack: string; role: "owner" | "hr_admin" }) {
   const router = useRouter();
   const [data, setData] = useState<RunData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -629,6 +629,11 @@ export function PayRunDetail({ id, companyName, role }: { id: string; companyNam
             <div style={{ fontSize: "13.5px", color: T.soft, marginTop: "5px" }}>
               {run.entity_name} · {run.run_type === "monthly" ? "corrida mensual" : run.run_type} · <span style={{ fontFamily: "'Space Mono',monospace" }}>{run.employee_count} empleados</span>
             </div>
+            {companyPack === "generic" && (
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: T.soft, marginTop: "5px" }}>
+                Pack genérico · sin retenciones legales aplicadas
+              </div>
+            )}
           </div>
           <div style={{ display: "flex", gap: "10px", flexDirection: "column", alignItems: "flex-end" }}>
             <div style={{ display: "flex", gap: "10px" }}>

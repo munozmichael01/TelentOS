@@ -150,6 +150,7 @@ const NAV_ROLES: Record<string, Role[]> = {
   "/settings/team":      ["owner"],
   "/settings/billing":   ["owner"],
   "/settings/compliance": ["owner", "hr_admin"],
+  "/settings/payroll":    ["owner", "hr_admin"],
 };
 
 const ALL_NAV = [
@@ -182,6 +183,7 @@ const ALL_NAV = [
       { href: "/settings/absences",   label: "Ausencias" },
       { href: "/settings/schedules",  label: "Horarios" },
       { href: "/settings/compliance", label: "Compliance" },
+      { href: "/settings/payroll",    label: "Payroll" },
     ],
   },
 ];
