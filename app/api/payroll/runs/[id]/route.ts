@@ -155,6 +155,34 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       text: `Estado: ${STATUS_LABELS[prevStatus!] ?? prevStatus} → ${STATUS_LABELS[body.status] ?? body.status}`,
       who: user?.email ?? "Sistema",
     });
+
+    // AC-6a: crear payslips al aprobar (idempotente: solo si no existen aún)
+    if (body.status === "approved") {
+      const { data: runLines } = await db
+        .from("pay_run_lines")
+        .select("id")
+        .eq("pay_run_id", params.id);
+
+      const lineList = (runLines ?? []) as { id: string }[];
+      if (lineList.length > 0) {
+        const lineIds = lineList.map((l) => l.id);
+        const { data: existing } = await db
+          .from("payslips")
+          .select("id")
+          .in("pay_run_line_id", lineIds)
+          .limit(1);
+
+        if (!existing || existing.length === 0) {
+          const periodMonth = (run as unknown as { period_month: string }).period_month;
+          await db.from("payslips").insert(
+            lineList.map((line, idx) => ({
+              pay_run_line_id: line.id,
+              slip_number: `${periodMonth}-${String(idx + 1).padStart(4, "0")}`,
+            })),
+          );
+        }
+      }
+    }
   }
 
   return NextResponse.json({ run });

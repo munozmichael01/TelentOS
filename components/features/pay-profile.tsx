@@ -56,12 +56,26 @@ function PackBadge({ pack }: { pack: string }) {
 
 type CompanyData = { id: string; country: string | null } | null;
 
+type CurrentPayslip = {
+  id: string;
+  slip_number: string;
+  generated_at: string;
+  pay_run_line_id: string;
+};
+
+type PayslipDetail = {
+  payslip: { id: string; slip_number: string; generated_at: string };
+  line: { gross: number; net: number; employer_cost: number };
+  run: { period_label: string; period_month: string; currency: string; entity_name: string | null };
+  items: { id: string; category: string; label: string; amount: number; order_index: number }[];
+};
+
 type ProfileData = {
   employee: Employee;
   profile: PayProfile | null;
   profiles: PayProfile[];
   components: PayComponent[];
-  currentPayslip: null;
+  currentPayslip: CurrentPayslip | null;
   company: CompanyData;
 };
 
@@ -227,6 +241,9 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [payslipOpen, setPayslipOpen] = useState(false);
+  const [payslipDetail, setPayslipDetail] = useState<PayslipDetail | null>(null);
+  const [payslipLoading, setPayslipLoading] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -242,6 +259,19 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
   function onSaved() {
     setDialogOpen(false);
     loadData();
+  }
+
+  async function openPayslip() {
+    if (!data?.currentPayslip?.id) return;
+    setPayslipOpen(true);
+    setPayslipLoading(true);
+    setPayslipDetail(null);
+    try {
+      const detail = await apiFetch<PayslipDetail>(`/api/payroll/payslips/${data.currentPayslip.id}`);
+      setPayslipDetail(detail);
+    } catch { /* detail queda null, el modal muestra error */ } finally {
+      setPayslipLoading(false);
+    }
   }
 
   if (loading) {
@@ -274,6 +304,79 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
         />
       )}
 
+      {/* Modal de recibo de nómina (AC-6b) */}
+      {payslipOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(26,26,23,.45)" }} onClick={() => setPayslipOpen(false)}/>
+          <div style={{ position: "relative", background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "18px", padding: "24px", width: "100%", maxWidth: "460px", boxShadow: "0 24px 60px -20px rgba(26,26,23,.4)", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "20px" }}>
+              <div>
+                <h3 style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "18px", margin: "0 0 3px" }}>Recibo de nómina</h3>
+                {payslipDetail && (
+                  <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft }}>
+                    {payslipDetail.payslip.slip_number} · {payslipDetail.run.period_label ?? payslipDetail.run.period_month}
+                  </div>
+                )}
+              </div>
+              <button onClick={() => setPayslipOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: T.soft, padding: "4px", marginLeft: "12px" }}>
+                <X size={18}/>
+              </button>
+            </div>
+
+            {payslipLoading ? (
+              <div style={{ padding: "32px", textAlign: "center", color: T.soft, fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>Cargando recibo…</div>
+            ) : !payslipDetail ? (
+              <div style={{ padding: "32px", textAlign: "center", color: T.accent, fontSize: "13px" }}>Error al cargar el recibo</div>
+            ) : (
+              <>
+                <div style={{ background: T.bg, borderRadius: "12px", padding: "12px 16px", marginBottom: "18px" }}>
+                  <div style={{ fontWeight: 700, fontSize: "14px" }}>{employee.name}</div>
+                  <div style={{ fontSize: "12.5px", color: T.soft, marginTop: "2px" }}>{employee.role_title}{employee.department ? ` · ${employee.department}` : ""}</div>
+                  {payslipDetail.run.entity_name && (
+                    <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft, marginTop: "4px" }}>{payslipDetail.run.entity_name}</div>
+                  )}
+                </div>
+
+                {payslipDetail.items.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
+                    {payslipDetail.items.map((item) => (
+                      <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13.5px" }}>
+                        <span style={{ color: item.category === "deduction" ? T.accent : T.ink }}>{item.label}</span>
+                        <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, color: item.category === "deduction" ? T.accent : T.brand }}>
+                          {item.category === "deduction" ? "−" : "+"}{formatMoney(item.amount, payslipDetail.run.currency)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px", padding: "10px 14px", background: T.bg, borderRadius: "10px" }}>
+                    <span style={{ fontSize: "13.5px" }}>Salario bruto</span>
+                    <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, color: T.brand }}>
+                      +{formatMoney(payslipDetail.line.gross, payslipDetail.run.currency)}
+                    </span>
+                  </div>
+                )}
+
+                <div style={{ borderTop: `1.5px solid ${T.line}`, paddingTop: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                    <span style={{ color: T.soft }}>Bruto</span>
+                    <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>{formatMoney(payslipDetail.line.gross, payslipDetail.run.currency)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px" }}>Neto a pagar</span>
+                    <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: "15px" }}>{formatMoney(payslipDetail.line.net, payslipDetail.run.currency)}</span>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: "14px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft }}>
+                  Generado: {new Date(payslipDetail.payslip.generated_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <div>
         {/* Back */}
         <button
@@ -298,9 +401,15 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
           <div style={{ display: "flex", gap: "10px" }}>
             {profile ? (
               <>
-                <Button variant="outline" size="sm" disabled={!data.currentPayslip}>
-                  Ver recibo
-                </Button>
+                {data.currentPayslip ? (
+                  <Button variant="outline" size="sm" onClick={openPayslip}>
+                    Ver recibo →
+                  </Button>
+                ) : (
+                  <span style={{ fontSize: "12.5px", color: T.soft, fontFamily: "'Space Mono',monospace" }}>
+                    Sin recibos aún
+                  </span>
+                )}
                 <Button variant="brand" size="sm" onClick={() => setDialogOpen(true)}>
                   Editar compensación
                 </Button>

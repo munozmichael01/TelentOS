@@ -501,6 +501,7 @@ export function PayRunDetail({ id, companyName, role }: { id: string; companyNam
   const [generating, setGenerating] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [transitionError, setTransitionError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState<string | null>(null);
   const [tab, setTab] = useState<"empleados" | "aprobacion" | "exportar">("empleados");
   const [sheetLineId, setSheetLineId] = useState<string | null>(null);
   const [payslipLineId, setPayslipLineId] = useState<string | null>(null);
@@ -526,6 +527,32 @@ export function PayRunDetail({ id, companyName, role }: { id: string; companyNam
       loadData();
     } finally {
       if (mountedRef.current) setGenerating(false);
+    }
+  }
+
+  async function handleExport(type: string, periodMonth: string) {
+    if (exporting) return;
+    setExporting(type);
+    setTransitionError(null);
+    try {
+      const resp = await fetch(`/api/payroll/runs/${id}/export?type=${type}`);
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({})) as { error?: string };
+        if (mountedRef.current) setTransitionError(body.error ?? "Error al exportar");
+        return;
+      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${type}-${periodMonth}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      loadData(); // refrescar log de exports
+    } finally {
+      if (mountedRef.current) setExporting(null);
     }
   }
 
@@ -568,12 +595,14 @@ export function PayRunDetail({ id, companyName, role }: { id: string; companyNam
 
   const issueLines = lines.filter((l) => l.has_bank_issue || l.has_adjustment_issue || l.has_salary_change);
 
+  const isExportable = ["approved", "exported", "paid"].includes(run.status);
+
   const EXPORT_TYPES = [
-    { type: "payslips_pdf",    title: "Payslips PDF",          desc: "Un PDF por empleado, descarga en ZIP.", cta: "Descargar recibos", available: true },
-    { type: "payroll_csv",     title: "Payroll Summary CSV",   desc: "Resumen tabular de toda la corrida.", cta: "Exportar CSV", available: true },
-    { type: "accounting_csv",  title: "Accounting Export",     desc: "CSV estructurado para contabilidad externa.", cta: "Exportar", available: true },
-    { type: "bank_file",       title: "Bank Payment File",     desc: "Archivo para cargar en el banco (formato local).", cta: "Generar", available: false },
-    { type: "compliance",      title: "Local Compliance (VE)", desc: "Declaraciones y planillas por país.", cta: "Generar", available: false },
+    { type: "payslips_pdf",   title: "Payslips PDF",          desc: "Un PDF por empleado, descarga en ZIP.", cta: "Descargar recibos", available: false, badge: "Próximamente" },
+    { type: "payroll_csv",    title: "Payroll Summary CSV",   desc: "Resumen tabular de toda la corrida.", cta: "Exportar CSV", available: true, badge: null },
+    { type: "accounting_csv", title: "Accounting Export",     desc: "CSV estructurado para contabilidad externa.", cta: "Exportar", available: true, badge: null },
+    { type: "bank_file",      title: "Bank Payment File",     desc: "Archivo para cargar en el banco (formato local).", cta: "Generar", available: false, badge: "Solo Pack País" },
+    { type: "compliance",     title: "Local Compliance (VE)", desc: "Declaraciones y planillas por país.", cta: "Generar", available: false, badge: "Solo Pack País" },
   ];
 
   return (
@@ -899,38 +928,49 @@ export function PayRunDetail({ id, companyName, role }: { id: string; companyNam
         {/* ── TAB: EXPORTAR ── */}
         {tab === "exportar" && (
           <div>
+            {!isExportable && (
+              <div style={{ background: T.amberSoft, border: `1px solid #E5C97A`, borderRadius: "12px", padding: "10px 16px", marginBottom: "14px", fontSize: "12.5px", color: "#5A3A00" }}>
+                Los exports se habilitan cuando la corrida esté aprobada.
+              </div>
+            )}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "14px" }}>
-              {EXPORT_TYPES.map((x) => (
-                <div key={x.type} style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "15px", padding: "18px 20px", opacity: x.available ? 1 : 0.62 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "11px", marginBottom: "10px" }}>
-                    <span style={{ width: "36px", height: "36px", flexShrink: 0, borderRadius: "10px", background: x.available ? T.brandSoft : T.surface2, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <path d="M6 2h9l4 4v16H6zM14 2v5h5" stroke={x.available ? T.brand : T.soft} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-                      </svg>
-                    </span>
-                    <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14.5px" }}>{x.title}</span>
-                    {!x.available && (
-                      <span style={{ marginLeft: "auto", fontSize: "10px", fontWeight: 700, borderRadius: "999px", padding: "3px 9px", background: T.surface2, color: T.soft, border: `1px dashed #CFC7B5` }}>
-                        Próximamente
+              {EXPORT_TYPES.map((x) => {
+                const enabled = x.available && isExportable;
+                const isLoading = exporting === x.type;
+                return (
+                  <div key={x.type} style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "15px", padding: "18px 20px", opacity: enabled ? 1 : 0.62 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "11px", marginBottom: "10px" }}>
+                      <span style={{ width: "36px", height: "36px", flexShrink: 0, borderRadius: "10px", background: enabled ? T.brandSoft : T.surface2, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                          <path d="M6 2h9l4 4v16H6zM14 2v5h5" stroke={enabled ? T.brand : T.soft} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+                        </svg>
                       </span>
-                    )}
+                      <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14.5px" }}>{x.title}</span>
+                      {x.badge && (
+                        <span style={{ marginLeft: "auto", fontSize: "10px", fontWeight: 700, borderRadius: "999px", padding: "3px 9px", background: T.surface2, color: T.soft, border: `1px dashed #CFC7B5`, whiteSpace: "nowrap" }}>
+                          {x.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: "12.5px", lineHeight: 1.5, color: T.soft, margin: "0 0 14px" }}>{x.desc}</p>
+                    <button
+                      disabled={!enabled || !!exporting}
+                      onClick={enabled ? () => handleExport(x.type, run.period_month) : undefined}
+                      style={{
+                        fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "12.5px",
+                        color: enabled ? T.ink : T.soft,
+                        background: enabled ? T.surface : T.surface2,
+                        border: enabled ? `1.5px solid ${T.ink}` : "1.5px dashed #CFC7B5",
+                        borderRadius: "10px", padding: "9px 15px",
+                        cursor: enabled && !exporting ? "pointer" : "not-allowed",
+                        opacity: isLoading ? 0.7 : 1,
+                      }}
+                    >
+                      {isLoading ? "Generando…" : x.cta}
+                    </button>
                   </div>
-                  <p style={{ fontSize: "12.5px", lineHeight: 1.5, color: T.soft, margin: "0 0 14px" }}>{x.desc}</p>
-                  <button
-                    disabled={!x.available}
-                    style={{
-                      fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "12.5px",
-                      color: x.available ? T.ink : T.soft,
-                      background: x.available ? T.surface : T.surface2,
-                      border: x.available ? `1.5px solid ${T.ink}` : "1.5px dashed #CFC7B5",
-                      borderRadius: "10px", padding: "9px 15px",
-                      cursor: x.available ? "pointer" : "not-allowed",
-                    }}
-                  >
-                    {x.cta}
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Export log */}
