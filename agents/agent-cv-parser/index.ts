@@ -2,14 +2,26 @@ import { runAgent, type AgentResult } from "@/agents/core";
 import { SYSTEM_PROMPT } from "./prompt";
 import { tools, getCandidateCvContext } from "./tools";
 
+export type CvExperience = {
+  title: string;
+  company: string | null;
+  seniority: "junior" | "mid" | "senior" | "lead" | "exec" | null;
+  start_date: string | null;
+  end_date: string | null;
+  is_current: boolean;
+};
+
 export type CvProfile = {
   name: string | null;
   email: string | null;
   phone: string | null;
   location: string | null;
+  city: string | null;
+  country_code: string | null;
   summary: string;
   skills: string[];
   experience_years: number;
+  experiences: CvExperience[];
   extracted_source: "cv_text" | "fallback";
 };
 
@@ -22,6 +34,7 @@ function isValidCvProfile(v: unknown): v is CvProfile {
     Array.isArray(o.skills) &&
     typeof o.experience_years === "number" &&
     typeof o.summary === "string" &&
+    Array.isArray(o.experiences) &&
     (o.extracted_source === "cv_text" || o.extracted_source === "fallback")
   );
 }
@@ -29,16 +42,23 @@ function isValidCvProfile(v: unknown): v is CvProfile {
 async function fallbackProfile(input: CvParserInput): Promise<CvProfile> {
   const ctx = await getCandidateCvContext(input.candidateId);
   if ("error" in ctx) {
-    return { name: null, email: null, phone: null, location: null, summary: "", skills: [], experience_years: 0, extracted_source: "fallback" };
+    return {
+      name: null, email: null, phone: null, location: null,
+      city: null, country_code: null, summary: "", skills: [],
+      experience_years: 0, experiences: [], extracted_source: "fallback",
+    };
   }
   return {
     name: ctx.name,
     email: ctx.email,
     phone: ctx.phone,
     location: ctx.location,
+    city: ctx.city,
+    country_code: ctx.country_code,
     summary: ctx.summary ?? "",
     skills: ctx.skills,
     experience_years: ctx.experience_years,
+    experiences: [],
     extracted_source: "fallback",
   };
 }

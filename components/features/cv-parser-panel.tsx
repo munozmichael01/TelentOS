@@ -1,55 +1,75 @@
 "use client";
 
 import { useState } from "react";
-import type { CvProfile } from "@/agents/agent-cv-parser";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import type { CvProfile, CvExperience } from "@/agents/agent-cv-parser";
 
-const T = {
-  ink: "#1A1A17",
-  soft: "#79746B",
-  line: "#E7E1D4",
-  surface: "#FCFAF6",
-  brand: "#0E5C4A",
-  bg: "#F4F0E8",
-  accent: "#F0857D",
-};
+// ── DS icons (line, viewBox 0 0 24 24, strokeWidth 2) ──────────────────────
 
-function IconSparkle() {
+function IconSparkle({ className }: { className?: string }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden style={{ flexShrink: 0 }}>
-      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={cn("size-4", className)}>
+      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"
+        stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
     </svg>
   );
 }
-function IconSpinner() {
+function IconSpinner({ className }: { className?: string }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden style={{ flexShrink: 0, animation: "spin 1s linear infinite" }}>
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeDasharray="28 14" strokeLinecap="round" />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden
+      className={cn("size-4 animate-spin", className)}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"
+        strokeDasharray="28 14" strokeLinecap="round" />
     </svg>
   );
 }
-function IconClose() {
+function IconClose({ className }: { className?: string }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={cn("size-4", className)}>
       <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
+function IconPlus({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={cn("size-4", className)}>
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-type Props = {
-  candidateId: string;
-  hasCv: boolean;
-};
+// ── Types ────────────────────────────────────────────────────────────────────
 
 type EditableProfile = {
   name: string;
   email: string;
   phone: string;
   location: string;
+  city: string;
+  country_code: string;
   summary: string;
   skills: string[];
   experience_years: number;
+  experiences: CvExperience[];
 };
+
+type Props = { candidateId: string; hasCv: boolean };
+
+const SENIORITY_OPTIONS = [
+  { value: "", label: "Sin especificar" },
+  { value: "junior", label: "Junior" },
+  { value: "mid", label: "Mid" },
+  { value: "senior", label: "Senior" },
+  { value: "lead", label: "Lead" },
+  { value: "exec", label: "Exec" },
+] as const;
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 export function CvParserPanel({ candidateId, hasCv }: Props) {
   const [phase, setPhase] = useState<"idle" | "loading" | "review" | "saving" | "done" | "error">("idle");
@@ -59,6 +79,8 @@ export function CvParserPanel({ candidateId, hasCv }: Props) {
   const [skillInput, setSkillInput] = useState("");
 
   if (!hasCv) return null;
+
+  // ── Actions ────────────────────────────────────────────────────────────────
 
   async function extract() {
     setPhase("loading");
@@ -77,9 +99,12 @@ export function CvParserPanel({ candidateId, hasCv }: Props) {
         email: data.profile.email ?? "",
         phone: data.profile.phone ?? "",
         location: data.profile.location ?? "",
+        city: data.profile.city ?? "",
+        country_code: data.profile.country_code ?? "",
         summary: data.profile.summary,
         skills: data.profile.skills,
         experience_years: data.profile.experience_years,
+        experiences: data.profile.experiences ?? [],
       });
       setPhase("review");
     } catch (e) {
@@ -100,9 +125,12 @@ export function CvParserPanel({ candidateId, hasCv }: Props) {
           email: profile.email || null,
           phone: profile.phone || null,
           location: profile.location || null,
+          city: profile.city || null,
+          country_code: profile.country_code || null,
           summary: profile.summary,
           skills: profile.skills,
           experience_years: profile.experience_years,
+          experiences: profile.experiences,
         }),
       });
       if (!res.ok) {
@@ -116,10 +144,15 @@ export function CvParserPanel({ candidateId, hasCv }: Props) {
     }
   }
 
+  // ── Skill helpers ─────────────────────────────────────────────────────────
+
   function addSkill() {
     const s = skillInput.trim();
     if (!s || !profile) return;
-    if (profile.skills.includes(s)) { setSkillInput(""); return; }
+    if (profile.skills.map(x => x.toLowerCase()).includes(s.toLowerCase())) {
+      setSkillInput("");
+      return;
+    }
     if (profile.skills.length >= 20) return;
     setProfile({ ...profile, skills: [...profile.skills, s] });
     setSkillInput("");
@@ -130,28 +163,42 @@ export function CvParserPanel({ candidateId, hasCv }: Props) {
     setProfile({ ...profile, skills: profile.skills.filter((x) => x !== s) });
   }
 
-  // ── Idle: just the button ──────────────────────────────────────────────────
+  // ── Experience helpers ────────────────────────────────────────────────────
+
+  function addExperience() {
+    if (!profile) return;
+    const blank: CvExperience = {
+      title: "", company: null, seniority: null,
+      start_date: null, end_date: null, is_current: false,
+    };
+    setProfile({ ...profile, experiences: [blank, ...profile.experiences] });
+  }
+
+  function removeExperience(idx: number) {
+    if (!profile) return;
+    setProfile({ ...profile, experiences: profile.experiences.filter((_, i) => i !== idx) });
+  }
+
+  function updateExperience(idx: number, patch: Partial<CvExperience>) {
+    if (!profile) return;
+    const updated = profile.experiences.map((e, i) => i === idx ? { ...e, ...patch } : e);
+    setProfile({ ...profile, experiences: updated });
+  }
+
+  // ── Renders ───────────────────────────────────────────────────────────────
+
   if (phase === "idle") {
     return (
-      <button
-        onClick={extract}
-        style={{
-          display: "inline-flex", alignItems: "center", gap: "6px",
-          fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13px", fontWeight: 600,
-          color: T.brand, background: "none", border: `1.5px solid ${T.brand}`,
-          borderRadius: "8px", padding: "7px 13px", cursor: "pointer", width: "100%",
-          justifyContent: "center",
-        }}
-      >
+      <Button variant="soft" size="sm" onClick={extract} className="w-full">
         <IconSparkle />
         Extraer del CV
-      </button>
+      </Button>
     );
   }
 
   if (phase === "loading") {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", color: T.soft, fontSize: "13px", padding: "10px 0" }}>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
         <IconSpinner />
         Analizando CV…
       </div>
@@ -160,19 +207,19 @@ export function CvParserPanel({ candidateId, hasCv }: Props) {
 
   if (phase === "done") {
     return (
-      <div style={{ fontSize: "13px", color: T.brand, fontWeight: 600, padding: "8px 0" }}>
+      <p className="text-sm font-semibold text-[#0E5C4A] py-1">
         Perfil actualizado correctamente.
-      </div>
+      </p>
     );
   }
 
   if (phase === "error") {
     return (
-      <div style={{ fontSize: "13px", color: T.accent }}>
-        {errorMsg ?? "Error desconocido"}
+      <div className="flex items-center gap-2 text-sm text-destructive">
+        <span>{errorMsg ?? "Error desconocido"}</span>
         <button
           onClick={() => setPhase("idle")}
-          style={{ marginLeft: "8px", color: T.soft, background: "none", border: "none", cursor: "pointer", textDecoration: "underline", fontSize: "12px" }}
+          className="text-muted-foreground underline text-xs hover:text-foreground"
         >
           Reintentar
         </button>
@@ -180,181 +227,223 @@ export function CvParserPanel({ candidateId, hasCv }: Props) {
     );
   }
 
-  // ── Review panel ────────────────────────────────────────────────────────────
-  if (phase === "review" || phase === "saving") {
-    const busy = phase === "saving";
-    const p = profile!;
+  // ── Review panel ──────────────────────────────────────────────────────────
 
-    const fieldStyle: React.CSSProperties = {
-      width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13px",
-      border: `1px solid ${T.line}`, borderRadius: "6px", padding: "6px 9px",
-      background: T.surface, color: T.ink, outline: "none", boxSizing: "border-box",
-    };
+  const busy = phase === "saving";
+  const p = profile!;
 
-    return (
-      <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "12px", padding: "16px", marginTop: "2px" }}>
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-            <span style={{
-              fontSize: "10.5px", fontWeight: 700, fontFamily: "'Space Mono',monospace",
-              background: aiStatus === "ok" ? "#DCEFE4" : T.bg,
-              color: aiStatus === "ok" ? T.brand : T.soft,
-              borderRadius: "999px", padding: "2px 9px",
-            }}>
-              {aiStatus === "ok" ? "extraído por IA" : "análisis heurístico"}
-            </span>
-            <span style={{ fontSize: "11.5px", color: T.soft }}>Revisa y confirma</span>
+  const selectClass = cn(
+    "flex h-10 w-full rounded-[11px] border-[1.5px] border-[#E7E1D4] bg-[#F4F0E8] px-3 py-2 text-sm",
+    "transition-colors focus-visible:outline-none focus-visible:border-[#0E5C4A]",
+    "focus-visible:ring-[3px] focus-visible:ring-[#DCEFE4] disabled:opacity-50",
+  );
+
+  return (
+    <div className="mt-1 rounded-[14px] border border-line bg-surface p-4 space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Badge variant={aiStatus === "ok" ? "brand" : "secondary"}>
+            {aiStatus === "ok" ? "extraído por IA" : "análisis heurístico"}
+          </Badge>
+          <span className="text-xs text-muted-foreground">Revisa y confirma</span>
+        </div>
+        <Button variant="ghost" size="icon" onClick={() => setPhase("idle")} disabled={busy}
+          className="h-7 w-7">
+          <IconClose />
+        </Button>
+      </div>
+
+      {/* ── Datos de contacto ─────────────────────────────────────────────── */}
+      <fieldset className="space-y-3" disabled={busy}>
+        <legend className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+          Contacto
+        </legend>
+        <div className="space-y-1">
+          <Label htmlFor="cvp-name" className="text-xs">Nombre</Label>
+          <Input id="cvp-name" value={p.name}
+            onChange={(e) => setProfile({ ...p, name: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="cvp-email" className="text-xs">Email</Label>
+          <Input id="cvp-email" type="email" value={p.email}
+            onChange={(e) => setProfile({ ...p, email: e.target.value })} />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label htmlFor="cvp-phone" className="text-xs">Teléfono</Label>
+            <Input id="cvp-phone" value={p.phone}
+              onChange={(e) => setProfile({ ...p, phone: e.target.value })} />
           </div>
-          <button
-            onClick={() => setPhase("idle")}
-            disabled={busy}
-            style={{ background: "none", border: "none", cursor: "pointer", color: T.soft, padding: "2px", display: "flex" }}
-          >
-            <IconClose />
-          </button>
+          <div className="space-y-1">
+            <Label htmlFor="cvp-location" className="text-xs">Ubicación (display)</Label>
+            <Input id="cvp-location" value={p.location}
+              onChange={(e) => setProfile({ ...p, location: e.target.value })} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label htmlFor="cvp-city" className="text-xs">Ciudad</Label>
+            <Input id="cvp-city" value={p.city}
+              onChange={(e) => setProfile({ ...p, city: e.target.value })} />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="cvp-cc" className="text-xs">País (ISO-2)</Label>
+            <Input id="cvp-cc" maxLength={2} placeholder="ES" value={p.country_code}
+              onChange={(e) => setProfile({ ...p, country_code: e.target.value.toUpperCase().slice(0, 2) })} />
+          </div>
+        </div>
+      </fieldset>
+
+      {/* ── Perfil profesional ────────────────────────────────────────────── */}
+      <fieldset className="space-y-3" disabled={busy}>
+        <legend className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+          Perfil
+        </legend>
+        <div className="space-y-1">
+          <Label htmlFor="cvp-years" className="text-xs">Experiencia (años)</Label>
+          <Input id="cvp-years" type="number" min={0} max={60} className="w-24"
+            value={p.experience_years}
+            onChange={(e) => setProfile({ ...p, experience_years: Math.max(0, parseInt(e.target.value) || 0) })} />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="cvp-summary" className="text-xs">Resumen</Label>
+          <Textarea id="cvp-summary" rows={3} value={p.summary}
+            onChange={(e) => setProfile({ ...p, summary: e.target.value })} />
+        </div>
+      </fieldset>
+
+      {/* ── Skills ───────────────────────────────────────────────────────── */}
+      <div className="space-y-2">
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Skills{p.skills.length > 0 && <span className="font-normal ml-1">({p.skills.length}/20)</span>}
+        </p>
+        {p.skills.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {p.skills.map((s) => (
+              <span key={s}
+                className="inline-flex items-center gap-1 text-xs bg-[#F4F0E8] border border-line rounded-[6px] pl-2.5 pr-1.5 py-1">
+                {s}
+                {!busy && (
+                  <button type="button" onClick={() => removeSkill(s)}
+                    className="text-muted-foreground hover:text-foreground flex items-center">
+                    <IconClose className="size-3" />
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
+        {p.skills.length < 20 && !busy && (
+          <div className="flex gap-1.5">
+            <Input placeholder="Añadir skill…" value={skillInput}
+              className="h-8 text-xs"
+              onChange={(e) => setSkillInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }} />
+            <Button type="button" variant="outline" size="sm" onClick={addSkill} className="h-8 px-2.5">
+              <IconPlus />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Experiencias ─────────────────────────────────────────────────── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Experiencia laboral
+          </p>
+          {!busy && p.experiences.length < 8 && (
+            <Button type="button" variant="ghost" size="sm" onClick={addExperience}
+              className="h-7 text-xs gap-1 px-2">
+              <IconPlus className="size-3" />
+              Añadir
+            </Button>
+          )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <label style={{ fontSize: "11px", fontWeight: 700, color: T.soft, textTransform: "uppercase", letterSpacing: ".04em" }}>
-            Nombre
-            <input
-              style={{ ...fieldStyle, marginTop: "4px", display: "block" }}
-              value={p.name}
-              disabled={busy}
-              onChange={(e) => setProfile({ ...p, name: e.target.value })}
-            />
-          </label>
+        {p.experiences.length === 0 && (
+          <p className="text-xs text-muted-foreground">Sin experiencias extraídas.</p>
+        )}
 
-          <label style={{ fontSize: "11px", fontWeight: 700, color: T.soft, textTransform: "uppercase", letterSpacing: ".04em" }}>
-            Email
-            <input
-              style={{ ...fieldStyle, marginTop: "4px", display: "block" }}
-              value={p.email}
-              disabled={busy}
-              onChange={(e) => setProfile({ ...p, email: e.target.value })}
-            />
-          </label>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-            <label style={{ fontSize: "11px", fontWeight: 700, color: T.soft, textTransform: "uppercase", letterSpacing: ".04em" }}>
-              Teléfono
-              <input
-                style={{ ...fieldStyle, marginTop: "4px", display: "block" }}
-                value={p.phone}
-                disabled={busy}
-                onChange={(e) => setProfile({ ...p, phone: e.target.value })}
-              />
-            </label>
-            <label style={{ fontSize: "11px", fontWeight: 700, color: T.soft, textTransform: "uppercase", letterSpacing: ".04em" }}>
-              Ubicación
-              <input
-                style={{ ...fieldStyle, marginTop: "4px", display: "block" }}
-                value={p.location}
-                disabled={busy}
-                onChange={(e) => setProfile({ ...p, location: e.target.value })}
-              />
-            </label>
-          </div>
-
-          <label style={{ fontSize: "11px", fontWeight: 700, color: T.soft, textTransform: "uppercase", letterSpacing: ".04em" }}>
-            Experiencia (años)
-            <input
-              type="number" min="0" max="60"
-              style={{ ...fieldStyle, marginTop: "4px", display: "block", width: "80px" }}
-              value={p.experience_years}
-              disabled={busy}
-              onChange={(e) => setProfile({ ...p, experience_years: Math.max(0, parseInt(e.target.value) || 0) })}
-            />
-          </label>
-
-          <label style={{ fontSize: "11px", fontWeight: 700, color: T.soft, textTransform: "uppercase", letterSpacing: ".04em" }}>
-            Resumen
-            <textarea
-              rows={3}
-              style={{ ...fieldStyle, marginTop: "4px", display: "block", resize: "vertical" }}
-              value={p.summary}
-              disabled={busy}
-              onChange={(e) => setProfile({ ...p, summary: e.target.value })}
-            />
-          </label>
-
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: T.soft, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: "6px" }}>
-              Skills {p.skills.length > 0 && <span style={{ fontWeight: 400 }}>({p.skills.length}/20)</span>}
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "6px" }}>
-              {p.skills.map((s) => (
-                <span key={s} style={{
-                  display: "inline-flex", alignItems: "center", gap: "4px",
-                  fontSize: "12px", background: T.bg, color: T.ink,
-                  borderRadius: "6px", padding: "2px 8px 2px 10px", border: `1px solid ${T.line}`,
-                }}>
-                  {s}
-                  {!busy && (
-                    <button
-                      onClick={() => removeSkill(s)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: T.soft, padding: "0 1px", display: "flex", lineHeight: 1 }}
-                    >
-                      <IconClose />
-                    </button>
-                  )}
-                </span>
-              ))}
-            </div>
-            {p.skills.length < 20 && !busy && (
-              <div style={{ display: "flex", gap: "6px" }}>
-                <input
-                  style={{ ...fieldStyle, flex: 1 }}
-                  placeholder="Añadir skill…"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }}
-                />
-                <button
-                  onClick={addSkill}
-                  style={{
-                    padding: "6px 11px", borderRadius: "6px", border: `1px solid ${T.line}`,
-                    background: T.bg, color: T.ink, fontSize: "12px", cursor: "pointer",
-                    fontFamily: "'Hanken Grotesk',sans-serif",
-                  }}
-                >
-                  +
-                </button>
+        <div className="space-y-3">
+          {p.experiences.map((exp, idx) => (
+            <div key={idx}
+              className="rounded-[11px] border border-line bg-[#F4F0E8] p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Cargo</Label>
+                      <Input className="h-8 text-xs" value={exp.title} disabled={busy}
+                        onChange={(e) => updateExperience(idx, { title: e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Empresa</Label>
+                      <Input className="h-8 text-xs" value={exp.company ?? ""} disabled={busy}
+                        onChange={(e) => updateExperience(idx, { company: e.target.value || null })} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Seniority</Label>
+                      <select
+                        className={cn(selectClass, "h-8 text-xs py-0")}
+                        value={exp.seniority ?? ""}
+                        disabled={busy}
+                        onChange={(e) => updateExperience(idx, {
+                          seniority: (e.target.value as CvExperience["seniority"]) || null,
+                        })}
+                      >
+                        {SENIORITY_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Inicio</Label>
+                      <Input type="date" className="h-8 text-xs" value={exp.start_date ?? ""} disabled={busy}
+                        onChange={(e) => updateExperience(idx, { start_date: e.target.value || null })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Fin</Label>
+                      <Input type="date" className="h-8 text-xs"
+                        value={exp.end_date ?? ""} disabled={busy || exp.is_current}
+                        onChange={(e) => updateExperience(idx, { end_date: e.target.value || null })} />
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                    <input type="checkbox" checked={exp.is_current} disabled={busy}
+                      className="rounded"
+                      onChange={(e) => updateExperience(idx, {
+                        is_current: e.target.checked,
+                        end_date: e.target.checked ? null : exp.end_date,
+                      })} />
+                    Trabajo actual
+                  </label>
+                </div>
+                {!busy && (
+                  <Button type="button" variant="ghost" size="icon"
+                    onClick={() => removeExperience(idx)}
+                    className="h-7 w-7 shrink-0 mt-0.5">
+                    <IconClose />
+                  </Button>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
-          <button
-            onClick={confirm}
-            disabled={busy}
-            style={{
-              flex: 1, padding: "9px 0", borderRadius: "8px", border: "none",
-              background: T.brand, color: "#fff", fontSize: "13px", fontWeight: 700,
-              fontFamily: "'Archivo',sans-serif", cursor: busy ? "not-allowed" : "pointer",
-              opacity: busy ? .7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-            }}
-          >
-            {busy ? <><IconSpinner />Guardando…</> : "Confirmar y guardar"}
-          </button>
-          <button
-            onClick={() => setPhase("idle")}
-            disabled={busy}
-            style={{
-              padding: "9px 14px", borderRadius: "8px", border: `1px solid ${T.line}`,
-              background: "none", color: T.soft, fontSize: "13px", cursor: busy ? "not-allowed" : "pointer",
-              fontFamily: "'Hanken Grotesk',sans-serif",
-            }}
-          >
-            Cancelar
-          </button>
+            </div>
+          ))}
         </div>
       </div>
-    );
-  }
 
-  return null;
+      {/* ── Actions ──────────────────────────────────────────────────────── */}
+      <div className="flex gap-2 pt-1">
+        <Button variant="brand" onClick={confirm} disabled={busy} className="flex-1">
+          {busy ? <><IconSpinner />Guardando…</> : "Confirmar y guardar"}
+        </Button>
+        <Button variant="ghost" onClick={() => setPhase("idle")} disabled={busy}>
+          Cancelar
+        </Button>
+      </div>
+    </div>
+  );
 }

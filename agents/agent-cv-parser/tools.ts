@@ -7,6 +7,8 @@ export type CandidateCvContext = {
   email: string;
   phone: string | null;
   location: string | null;
+  city: string | null;
+  country_code: string | null;
   skills: string[];
   experience_years: number;
   summary: string | null;
@@ -32,7 +34,7 @@ export async function getCandidateCvContext(candidateId: string): Promise<Candid
 
   const { data: candidate } = await db
     .from("candidates")
-    .select("id, name, email, phone, location, skills, experience_years, summary, cv_url")
+    .select("id, name, email, phone, location, city, country_code, skills, experience_years, summary, cv_url")
     .eq("id", candidateId)
     .maybeSingle();
 
@@ -66,6 +68,8 @@ export async function getCandidateCvContext(candidateId: string): Promise<Candid
     email: candidate.email as string,
     phone: (candidate.phone as string | null) ?? null,
     location: (candidate.location as string | null) ?? null,
+    city: (candidate.city as string | null) ?? null,
+    country_code: (candidate.country_code as string | null) ?? null,
     skills: (candidate.skills as string[]) ?? [],
     experience_years: (candidate.experience_years as number) ?? 0,
     summary: (candidate.summary as string | null) ?? null,
