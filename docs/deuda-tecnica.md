@@ -22,6 +22,7 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 | IA-coste | Sin `max_tokens` por agente, modelo no configurable, sin presupuesto por empresa | `agents/core.ts`, `agent_runs` | PR | Backlog pista A #4; migración 0025 ya aplicada |
 | P6-a | `slip_number` sin unique en DB; formato `{period_month}-{n}` se repite entre empresas | `payslips` (migr. 0016), `runs/[id]/route.ts` | ER | Vale hasta que haya numeración legal de recibos (packs de país) |
 | P6-b | Inserts de `payslips` y `payroll_exports` sin comprobar error de DB — fallo silencioso posible | `app/api/payroll/runs/[id]/route.ts`, `.../export/route.ts` | PR | Aprobar sin payslips creados violaría AC-6a en silencio |
+| REL-loop | React "Maximum update depth exceeded" visto en logs de consola el 2026-07-11 | sin localizar (stack solo mostró `RedirectBoundary`/`AppRouter` de Next) | Investigar si reaparece | Correlacionó con expiración de sesión + navegación rápida; NO reproducible con sesión válida (dashboard renderiza completo). Revisados `app-shell` y effects de `pay-run-detail`/`career-site-editor`/`dashboard-client`: deps correctas, sin bucle evidente. Breadcrumb: si reaparece en uso normal, es bug real → prioridad |
 
 ## Resuelto
 
