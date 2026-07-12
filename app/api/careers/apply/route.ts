@@ -3,6 +3,52 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { computeFitScore } from "@/lib/fit-score";
 import { jsonError } from "@/lib/api";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { dedupeStrings, resolveSkillIds } from "@/lib/skills";
+
+const LANGUAGE_LEVELS = new Set(["a1", "a2", "b1", "b2", "c1", "c2", "native"]);
+
+/** Perfil validado por el candidato en la modal (Parte B). Todo opcional y saneado. */
+type ValidatedProfile = {
+  city: string | null;
+  country_code: string | null;
+  summary: string | null;
+  experience_years: number;
+  skills: string[];
+  experiences: Array<{ title: string; company: string | null; seniority: string | null; start_date: string | null; end_date: string | null; is_current: boolean }>;
+  languages: Array<{ language: string; level: string | null }>;
+  education: Array<{ degree: string; institution: string | null; field: string | null; start_year: number | null; end_year: number | null }>;
+};
+
+function parseCvProfile(raw: string | null): ValidatedProfile | null {
+  if (!raw) return null;
+  let p: Record<string, unknown>;
+  try { p = JSON.parse(raw) as Record<string, unknown>; } catch { return null; }
+  if (typeof p !== "object" || !p) return null;
+  const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+  const s = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
+  return {
+    city: s(p.city),
+    country_code: s(p.country_code)?.toUpperCase().slice(0, 2) ?? null,
+    summary: s(p.summary),
+    experience_years: typeof p.experience_years === "number" && p.experience_years >= 0 ? Math.floor(p.experience_years) : 0,
+    skills: dedupeStrings(arr<string>(p.skills).filter((x) => typeof x === "string")).slice(0, 40),
+    experiences: arr<Record<string, unknown>>(p.experiences).filter((e) => s(e.title)).slice(0, 12).map((e) => ({
+      title: String(e.title).trim(),
+      company: s(e.company), seniority: s(e.seniority),
+      start_date: s(e.start_date), end_date: s(e.end_date),
+      is_current: e.is_current === true,
+    })),
+    languages: arr<Record<string, unknown>>(p.languages).filter((l) => s(l.language)).slice(0, 20).map((l) => {
+      const lvl = s(l.level)?.toLowerCase() ?? null;
+      return { language: String(l.language).trim(), level: lvl && LANGUAGE_LEVELS.has(lvl) ? lvl : null };
+    }),
+    education: arr<Record<string, unknown>>(p.education).filter((e) => s(e.degree)).slice(0, 12).map((e) => ({
+      degree: String(e.degree).trim(), institution: s(e.institution), field: s(e.field),
+      start_year: typeof e.start_year === "number" ? e.start_year : null,
+      end_year: typeof e.end_year === "number" ? e.end_year : null,
+    })),
+  };
+}
 
 const CV_MIME_ALLOWED = [
   "application/pdf",
@@ -56,17 +102,23 @@ export async function POST(req: Request) {
 
   const location = String(formData.get("location") ?? "").trim() || null;
 
+  // Perfil estructurado validado por el candidato en la modal (opcional).
+  const validated = parseCvProfile(formData.get("cv_profile") ? String(formData.get("cv_profile")) : null);
+
   // Dedupe de candidato por email
   const { data: existingCandidate } = await supabase
     .from("candidates")
-    .select("id, phone, location, cv_url")
+    .select("id, phone, location, cv_url, skills, experience_years, summary, city, country_code")
     .ilike("email", email)
     .maybeSingle();
 
   const phone = String(formData.get("phone") ?? "").trim() || null;
 
   let candidateId = existingCandidate?.id;
+  let isNewCandidate = false;
   if (!candidateId) {
+    isNewCandidate = true;
+    // Candidato nuevo: el dueño del dato validó su propio perfil → lo persistimos entero.
     const { data: candidate, error: candErr } = await supabase
       .from("candidates")
       .insert({
@@ -74,10 +126,12 @@ export async function POST(req: Request) {
         email,
         phone,
         location,
-        skills: [],
-        experience_years: 0,
+        skills: validated?.skills ?? [],
+        experience_years: validated?.experience_years ?? 0,
         cv_url: cvUrl,
-        summary: null,
+        summary: validated?.summary ?? null,
+        city: validated?.city ?? null,
+        country_code: validated?.country_code ?? null,
         source: "career_site",
       })
       .select("id")
@@ -94,8 +148,49 @@ export async function POST(req: Request) {
     if (phone && !existingCandidate?.phone) patch.phone = phone;
     if (location && !existingCandidate?.location) patch.location = location;
     if (cvUrl && !existingCandidate?.cv_url) patch.cv_url = cvUrl;
+    if (validated) {
+      const hasSkills = Array.isArray(existingCandidate?.skills) && existingCandidate!.skills.length > 0;
+      if (validated.skills.length > 0 && !hasSkills) patch.skills = validated.skills;
+      if (validated.experience_years > 0 && !existingCandidate?.experience_years) patch.experience_years = validated.experience_years;
+      if (validated.summary && !existingCandidate?.summary) patch.summary = validated.summary;
+      if (validated.city && !existingCandidate?.city) patch.city = validated.city;
+      if (validated.country_code && !existingCandidate?.country_code) patch.country_code = validated.country_code;
+    }
     if (Object.keys(patch).length > 0) {
       await supabase.from("candidates").update(patch).eq("id", candidateId);
+    }
+  }
+
+  // Persistencia estructurada (candidate_skills/experiences/languages/education):
+  // solo para candidatos NUEVOS. Para uno existente no pisamos su perfil establecido
+  // desde un endpoint público sin verificación de identidad (H3).
+  if (validated && isNewCandidate && candidateId) {
+    const skillIds = await resolveSkillIds(supabase, validated.skills);
+    if (skillIds.length > 0) {
+      await supabase.from("candidate_skills").insert(
+        skillIds.map((skill_id) => ({ candidate_id: candidateId!, skill_id, source: "cv" as const })),
+      );
+    }
+    if (validated.experiences.length > 0) {
+      await supabase.from("candidate_experiences").insert(
+        validated.experiences.map((e, idx) => ({
+          candidate_id: candidateId!, title: e.title, company: e.company, seniority: e.seniority,
+          start_date: e.start_date, end_date: e.end_date, is_current: e.is_current, order_index: idx, source: "cv",
+        })),
+      );
+    }
+    if (validated.languages.length > 0) {
+      await supabase.from("candidate_languages").insert(
+        validated.languages.map((l) => ({ candidate_id: candidateId!, language: l.language, level: l.level, source: "cv" })),
+      );
+    }
+    if (validated.education.length > 0) {
+      await supabase.from("candidate_education").insert(
+        validated.education.map((e, idx) => ({
+          candidate_id: candidateId!, degree: e.degree, institution: e.institution, field: e.field,
+          start_year: e.start_year, end_year: e.end_year, order_index: idx, source: "cv",
+        })),
+      );
     }
   }
 
@@ -108,8 +203,13 @@ export async function POST(req: Request) {
     .limit(1)
     .maybeSingle();
 
+  // Con perfil validado, el fit score ya opera sobre datos reales (no un perfil vacío).
   const fitScore = computeFitScore(
-    { skills: [], experience_years: 0, location },
+    {
+      skills: validated?.skills ?? [],
+      experience_years: validated?.experience_years ?? 0,
+      location,
+    },
     { skills: job.skills, experience_min_years: job.experience_min_years, location: job.location }
   );
 

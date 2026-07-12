@@ -73,7 +73,7 @@ export const tools: AgentTool[] = [
       function: {
         name: "get_candidate_cv",
         description:
-          "Obtiene el perfil actual del candidato y el texto extraído del CV adjunto (si existe). Úsala siempre como primer paso.",
+          "Devuelve el texto extraído del CV (cv_text) y, por separado, el perfil existente marcado como SOLO_FALLBACK. Extrae identidad y datos del cv_text; el perfil existente solo se usa si cv_text es null.",
         parameters: {
           type: "object",
           properties: {
@@ -83,6 +83,30 @@ export const tools: AgentTool[] = [
         },
       },
     },
-    execute: (args) => getCandidateCvContext(String(args.candidate_id)),
+    // La respuesta a la LLM separa cv_text (fuente real) del perfil existente
+    // (placeholders del sistema) para evitar que el agente ECO el nombre genérico
+    // en vez del extraído del CV — bug dominante del set de evaluación.
+    execute: async (args) => {
+      const ctx = await getCandidateCvContext(String(args.candidate_id));
+      if ("error" in ctx) return ctx;
+      return {
+        cv_text: ctx.cv_text,
+        cv_available: ctx.cv_available,
+        instruccion:
+          "Extrae name, email, phone, location, city, country_code y todo lo demás EXCLUSIVAMENTE de cv_text. " +
+          "existing_profile_SOLO_FALLBACK son placeholders internos — IGNÓRALOS salvo que cv_text sea null.",
+        existing_profile_SOLO_FALLBACK: {
+          name: ctx.name,
+          email: ctx.email,
+          phone: ctx.phone,
+          location: ctx.location,
+          city: ctx.city,
+          country_code: ctx.country_code,
+          skills: ctx.skills,
+          experience_years: ctx.experience_years,
+          summary: ctx.summary,
+        },
+      };
+    },
   },
 ];
