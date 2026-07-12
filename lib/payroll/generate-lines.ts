@@ -5,6 +5,14 @@
  * net = gross, employer_cost = gross (pack generic: sin retenciones ni cargas).
  */
 import { createAdminClient } from "@/lib/supabase/server";
+import {
+  computeEmployeeResult,
+  derivePeriod,
+  type EmployeeInput,
+  type ProfileInput,
+  type ComponentInput,
+  type PaymentInput,
+} from "@/lib/payroll/compute";
 
 export type GenerateIncident = {
   employee_id: string;
@@ -32,12 +40,9 @@ export async function generatePayRunLines(
     .maybeSingle();
   if (!run) throw new Error("Corrida no encontrada");
 
-  // Derive period boundaries
-  const [year, monthNum] = run.period_month.split("-").map(Number);
-  const period_start = `${run.period_month}-01`;
-  const lastDayDate = new Date(year, monthNum, 0); // day 0 of next month = last day
-  const period_end = lastDayDate.toISOString().split("T")[0];
-  const totalDays = lastDayDate.getDate();
+  // Derive period boundaries (pure)
+  const period = derivePeriod(run.period_month);
+  const { period_end } = period;
 
   // Regeneration: reset any previously included compensation_records, then delete lines
   const { data: existingLines } = await db
@@ -93,145 +98,24 @@ export async function generatePayRunLines(
   let employeeCount = 0;
   const includedRecordIds: string[] = [];
 
-  for (const emp of employees ?? []) {
-    const empProfiles = (allProfiles ?? []).filter(
-      (p) => p.employee_id === emp.id,
+  const profileList = (allProfiles ?? []) as ProfileInput[];
+  const componentList = (allComponents ?? []) as ComponentInput[];
+  const paymentList = (pendingPayments ?? []) as PaymentInput[];
+
+  for (const emp of (employees ?? []) as EmployeeInput[]) {
+    const result = computeEmployeeResult(
+      emp,
+      profileList,
+      componentList,
+      paymentList,
+      period,
+      run.currency,
     );
 
-    // Vigent profile = covers the LAST DAY of the period (rule 2)
-    const vigentProfile =
-      empProfiles
-        .filter(
-          (p) =>
-            p.effective_from <= period_end &&
-            (p.effective_to === null || p.effective_to >= period_end),
-        )
-        .sort((a, b) =>
-          b.effective_from.localeCompare(a.effective_from),
-        )[0] ?? null;
-
-    if (!vigentProfile) {
-      incidents.push({
-        employee_id: emp.id,
-        name: emp.name,
-        reason: "Sin perfil salarial vigente",
-      });
+    if (result.kind === "incident") {
+      incidents.push({ employee_id: emp.id, name: emp.name, reason: result.reason });
       continue;
     }
-
-    // Rule 6: currency must match the run
-    if (vigentProfile.currency !== run.currency) {
-      incidents.push({
-        employee_id: emp.id,
-        name: emp.name,
-        reason: `Moneda distinta (${vigentProfile.currency} ≠ ${run.currency})`,
-      });
-      continue;
-    }
-
-    // Rule 8: V1 only supports monthly
-    if (vigentProfile.frequency !== "monthly") {
-      incidents.push({
-        employee_id: emp.id,
-        name: emp.name,
-        reason: `Frecuencia no soportada (${vigentProfile.frequency})`,
-      });
-      continue;
-    }
-
-    // Flag: salary change within the period (rule 2)
-    const hasSalaryChange = empProfiles.some(
-      (p) =>
-        p.effective_from > period_start && p.effective_from <= period_end,
-    );
-
-    // Flag: missing bank details for transfer payments
-    const hasBankIssue =
-      vigentProfile.payment_method === "transfer" &&
-      (!vigentProfile.bank_name || !vigentProfile.bank_account_last4);
-
-    // Rule 3: prorate if employee started mid-period
-    const startDate = emp.start_date as string | null;
-    const needsProration =
-      startDate !== null &&
-      startDate > period_start &&
-      startDate <= period_end;
-
-    let baseSalaryAmt = vigentProfile.base_salary;
-    let salaryQtyLabel: string | null = null;
-
-    if (needsProration) {
-      const startDayNum = new Date(startDate + "T00:00:00").getDate();
-      const daysActive = totalDays - startDayNum + 1;
-      baseSalaryAmt =
-        Math.round(
-          (vigentProfile.base_salary * daysActive) / totalDays * 100,
-        ) / 100;
-      salaryQtyLabel = `${daysActive}/${totalDays} días`;
-    }
-
-    // Build line items
-    const lineItems: Array<{
-      category: string;
-      label: string;
-      amount: number;
-      quantity_label: string | null;
-      order_index: number;
-    }> = [
-      {
-        category: "earning",
-        label: "Salario base",
-        amount: baseSalaryAmt,
-        quantity_label: salaryQtyLabel,
-        order_index: 0,
-      },
-    ];
-
-    let lineGross = baseSalaryAmt;
-    let orderIdx = 1;
-
-    // Fixed and variable (with amount) components — not conditional
-    const components = (allComponents ?? []).filter(
-      (c) => c.pay_profile_id === vigentProfile.id,
-    );
-    for (const comp of components) {
-      if (comp.component_type === "conditional") continue;
-      if (comp.component_type === "variable" && comp.amount === null) continue;
-      const amt = (comp.amount as number) ?? 0;
-      lineGross += amt;
-      lineItems.push({
-        category: "earning",
-        label: comp.name,
-        amount: amt,
-        quantity_label: null,
-        order_index: orderIdx++,
-      });
-    }
-
-    // Pending bank payments for this employee
-    const empPayments = (pendingPayments ?? []).filter(
-      (p) => p.employee_id === emp.id,
-    );
-    for (const payment of empPayments) {
-      const absMin = Math.abs(payment.balance_minutes as number);
-      const hrs = Math.floor(absMin / 60);
-      const mins = absMin % 60;
-      const hLabel = mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
-      // Generic: hourly rate = base / 160h per month
-      const hourlyRate = vigentProfile.base_salary / 160;
-      const payAmt = Math.round(hourlyRate * (absMin / 60) * 100) / 100;
-      lineGross += payAmt;
-      lineItems.push({
-        category: "earning",
-        label: `Horas compensadas (${hLabel})`,
-        amount: payAmt,
-        quantity_label: hLabel,
-        order_index: orderIdx++,
-      });
-      includedRecordIds.push(payment.id as string);
-    }
-
-    const lineGrossR = Math.round(lineGross * 100) / 100;
 
     // Generic pack: net = gross, employer_cost = gross (no deductions or employer charges)
     const { data: line } = await db
@@ -239,11 +123,11 @@ export async function generatePayRunLines(
       .insert({
         pay_run_id: runId,
         employee_id: emp.id,
-        gross: lineGrossR,
-        net: lineGrossR,
-        employer_cost: lineGrossR,
-        has_bank_issue: hasBankIssue,
-        has_salary_change: hasSalaryChange,
+        gross: result.gross,
+        net: result.net,
+        employer_cost: result.employer_cost,
+        has_bank_issue: result.has_bank_issue,
+        has_salary_change: result.has_salary_change,
       })
       .select()
       .single();
@@ -251,9 +135,10 @@ export async function generatePayRunLines(
     if (line) {
       await db
         .from("pay_run_line_items")
-        .insert(lineItems.map((item) => ({ ...item, line_id: line.id })));
-      totalGross += lineGrossR;
+        .insert(result.items.map((item) => ({ ...item, line_id: line.id })));
+      totalGross += result.gross;
       employeeCount++;
+      includedRecordIds.push(...result.consumedPaymentIds);
     }
   }
 
