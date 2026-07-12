@@ -11,6 +11,8 @@
  *   }
  */
 
+import { emitToast } from "@/lib/toast-bus";
+
 export class ApiError extends Error {
   readonly status: number;
   constructor(message: string, status: number) {
@@ -28,11 +30,17 @@ type ApiFetchOptions = Omit<RequestInit, "body"> & {
 
 /**
  * Aviso de error al usuario para acciones fire-and-forget (aprobar, borrar…).
- * Punto único: hoy usa alert(); cuando exista un sistema de toasts se cambia aquí.
+ * Punto único: emite un toast al <Toaster/> del AppShell (degrada a alert si no
+ * hay ninguno montado, ver lib/toast-bus.ts).
  */
 export function notifyError(action: string, e: unknown): void {
   const detail = e instanceof ApiError ? e.message : "Error inesperado";
-  if (typeof window !== "undefined") window.alert(`${action}: ${detail}`);
+  emitToast({ variant: "error", title: action, message: detail });
+}
+
+/** Aviso de éxito (mismo canal que notifyError). */
+export function notifySuccess(message: string, title?: string): void {
+  emitToast({ variant: "success", title, message });
 }
 
 export async function apiFetch<T = unknown>(url: string, options: ApiFetchOptions = {}): Promise<T> {

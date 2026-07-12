@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { Toaster } from "@/components/ui/toaster";
 import { useEffect, useState } from "react";
 
 /* ── Icon SVGs matching TalentOS App.dc.html exactly ── */
@@ -278,6 +279,7 @@ export function AppShell({
 
   return (
     <div className="app-outer" style={{ background: "#ECEAE4", minHeight: "100vh", padding: "26px", WebkitFontSmoothing: "antialiased" }}>
+      <Toaster />
       <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
         {sidebarOpen && (
           <div
