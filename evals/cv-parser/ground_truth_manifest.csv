@@ -1,0 +1,31 @@
+file,candidate_name,target_role,language,seniority,sector,years_experience,layout,expected_email,expected_phone
+01_Product_Manager_Senior_ES.pdf,Michael Perez,Senior Product Manager,Spanish,Senior,Technology,8,classic_single_column,candidate@example.com,+58 412-555-0198
+02_Full_Stack_Developer_Senior_ES.pdf,Alejandro Martin,Senior Full Stack Developer,Spanish,Senior,Technology,9,two_column,candidate@example.com,+1 202 555 0148
+03_Data_Analyst_Senior_ES.pdf,Laura Fernandez,Senior Data Analyst,Spanish,Senior,Data,8,table_based,candidate@example.com,+1 202 555 0107
+04_Accounting_Trainee_ES.pdf,Maria Gonzalez,Accounting Trainee,Spanish,Trainee,Finance,1,classic_single_column,candidate@example.com,+58 412-555-0198
+05_Marketing_Manager_ES.pdf,Daniela Rojas,Marketing Manager,Spanish,Manager,Marketing,10,two_column,candidate@example.com,+1 202 555 0148
+06_SDR_EN.pdf,Emily Carter,Sales Development Representative,English,Mid-level,Sales,3,table_based,candidate@example.com,+1 202 555 0107
+07_Telecommunications_Engineer_ES.pdf,Carlos Mendoza,Telecommunications Engineer,Spanish,Senior,Engineering,8,classic_single_column,candidate@example.com,+58 412-555-0198
+08_Growth_Lead_EN.pdf,Olivia Bennett,Growth Lead,English,Lead,Growth,9,two_column,candidate@example.com,+1 202 555 0148
+09_Sales_Operations_Manager_EN.pdf,James Walker,Sales Operations Manager,English,Manager,Sales Operations,8,table_based,candidate@example.com,+1 202 555 0107
+10_HR_Expert_EN.pdf,Sarah Mitchell,Human Resources Expert,English,Senior,Human Resources,10,classic_single_column,candidate@example.com,+58 412-555-0198
+11_Talent_Acquisition_EN.pdf,Jessica Morgan,Senior Talent Acquisition Specialist,English,Senior,Human Resources,8,two_column,candidate@example.com,+1 202 555 0148
+12_Maintenance_Technician_ES.pdf,Luis Herrera,Industrial Maintenance Technician,Spanish,Mid-level,Industrial,7,table_based,candidate@example.com,+1 202 555 0107
+13_DevOps_Engineer_EN.pdf,Noah Thompson,Senior DevOps Engineer,English,Senior,Technology,8,classic_single_column,candidate@example.com,+58 412-555-0198
+14_UX_UI_Designer_ES.pdf,Camila Torres,UX/UI Designer,Spanish,Mid-level,Design,5,two_column,candidate@example.com,+1 202 555 0148
+15_Data_Engineer_EN.pdf,Ethan Brooks,Data Engineer,English,Senior,Data,7,table_based,candidate@example.com,+1 202 555 0107
+16_Customer_Success_Manager_EN.pdf,Sophia Reed,Customer Success Manager,English,Manager,Customer Success,7,classic_single_column,candidate@example.com,+58 412-555-0198
+17_Financial_Analyst_ES.pdf,Andres Salazar,Analista Financiero,Spanish,Mid-level,Finance,5,two_column,candidate@example.com,+1 202 555 0148
+18_Project_Manager_ES.pdf,Valentina Cruz,Project Manager,Spanish,Senior,Operations,8,table_based,candidate@example.com,+1 202 555 0107
+19_QA_Engineer_EN.pdf,Liam Parker,QA Automation Engineer,English,Mid-level,Technology,5,classic_single_column,candidate@example.com,+58 412-555-0198
+20_Electrical_Engineer_ES.pdf,Jorge Navarro,Ingeniero Electrico,Spanish,Senior,Engineering,9,two_column,candidate@example.com,+1 202 555 0148
+21_Executive_Assistant_EN.pdf,Grace Wilson,Executive Assistant,English,Mid-level,Administration,6,table_based,candidate@example.com,+1 202 555 0107
+22_Registered_Nurse_EN.pdf,Ava Collins,Registered Nurse,English,Senior,Healthcare,8,classic_single_column,candidate@example.com,+58 412-555-0198
+23_Legal_Counsel_ES.pdf,Sofia Ramirez,Abogada Corporativa,Spanish,Senior,Legal,9,two_column,candidate@example.com,+1 202 555 0148
+24_Supply_Chain_Manager_EN.pdf,Benjamin Hall,Supply Chain Manager,English,Manager,Supply Chain,10,table_based,candidate@example.com,+1 202 555 0107
+25_SEO_Specialist_ES.pdf,Mateo Silva,Especialista SEO,Spanish,Mid-level,Marketing,4,classic_single_column,candidate@example.com,+58 412-555-0198
+26_Machine_Learning_Engineer_EN.pdf,Mia Foster,Machine Learning Engineer,English,Senior,AI,7,two_column,candidate@example.com,+1 202 555 0148
+27_Retail_Store_Manager_ES.pdf,Gabriela Ortega,Gerente de Tienda,Spanish,Manager,Retail,8,table_based,candidate@example.com,+1 202 555 0107
+28_Compliance_Officer_EN.pdf,Daniel Evans,Compliance Officer,English,Senior,Legal,8,classic_single_column,candidate@example.com,+58 412-555-0198
+29_Intern_Software_Developer_ES.pdf,Diego Castillo,Desarrollador de Software Intern,Spanish,Intern,Technology,0,two_column,candidate@example.com,+1 202 555 0148
+30_Freelance_Multirole_EN_ES.pdf,Alex Rivera,Independent Consultant / Product & Growth,Mixed,Senior,Consulting,11,table_based,candidate@example.com,+1 202 555 0107
