@@ -22,11 +22,13 @@ export type Job = {
   company_id: string;
   title: string;
   description: string | null;
-  skills: string[];
+  skills: string[]; // legado/display; la fuente matcheable es job_skills + catálogo (0029)
   salary_min: number | null;
   salary_max: number | null;
   salary_currency: string;
-  location: string | null;
+  location: string | null; // texto display; ver city/country_code
+  city: string | null;
+  country_code: string | null; // ISO 3166-1 alpha-2
   employment_type: EmploymentType;
   sector: string | null;
   department: string | null;
