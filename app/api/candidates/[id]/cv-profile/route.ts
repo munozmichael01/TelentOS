@@ -33,7 +33,20 @@ type Body = {
     end_date?: string | null;
     is_current?: boolean;
   }>;
+  languages?: Array<{
+    language: string;
+    level?: string | null; // a1|a2|b1|b2|c1|c2|native
+  }>;
+  education?: Array<{
+    degree: string;
+    institution?: string | null;
+    field?: string | null;
+    start_year?: number | null;
+    end_year?: number | null;
+  }>;
 };
+
+const LANGUAGE_LEVELS = new Set(["a1", "a2", "b1", "b2", "c1", "c2", "native"]);
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const { companyId, error } = await requireApiRole(["owner", "hr_admin", "recruiter"]);
@@ -104,6 +117,50 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         })),
       );
       if (expErr) return jsonError(`No se pudieron guardar las experiencias: ${expErr.message}`, 500);
+    }
+  }
+
+  // 4. Idiomas (nivel normalizado a CEFR/native; desconocido → null).
+  if (Array.isArray(body.languages)) {
+    await db.from("candidate_languages").delete().eq("candidate_id", candidateId);
+    const langs = body.languages.filter((l) => l.language?.trim());
+    if (langs.length > 0) {
+      const seen = new Set<string>();
+      const rows = langs.flatMap((l) => {
+        const key = l.language.trim().toLowerCase();
+        if (seen.has(key)) return [];
+        seen.add(key);
+        const level = l.level?.toLowerCase() ?? null;
+        return [{
+          candidate_id: candidateId,
+          language: l.language.trim(),
+          level: level && LANGUAGE_LEVELS.has(level) ? level : null,
+          source: "cv",
+        }];
+      });
+      const { error: langErr } = await db.from("candidate_languages").insert(rows);
+      if (langErr) return jsonError(`No se pudieron guardar los idiomas: ${langErr.message}`, 500);
+    }
+  }
+
+  // 5. Educación estructurada: reemplazo completo si llega.
+  if (Array.isArray(body.education)) {
+    await db.from("candidate_education").delete().eq("candidate_id", candidateId);
+    const edu = body.education.filter((e) => e.degree?.trim());
+    if (edu.length > 0) {
+      const { error: eduErr } = await db.from("candidate_education").insert(
+        edu.map((e, idx) => ({
+          candidate_id: candidateId,
+          degree: e.degree.trim(),
+          institution: e.institution ?? null,
+          field: e.field ?? null,
+          start_year: e.start_year ?? null,
+          end_year: e.end_year ?? null,
+          order_index: idx,
+          source: "cv",
+        })),
+      );
+      if (eduErr) return jsonError(`No se pudo guardar la educación: ${eduErr.message}`, 500);
     }
   }
 

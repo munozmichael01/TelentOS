@@ -120,6 +120,27 @@ export type CandidateExperience = {
   created_at: string;
 };
 
+export type CandidateLanguage = {
+  candidate_id: string;
+  language: string;
+  level: string | null; // a1 | a2 | b1 | b2 | c1 | c2 | native
+  source: string; // 'cv' | 'manual'
+  created_at: string;
+};
+
+export type CandidateEducation = {
+  id: string;
+  candidate_id: string;
+  degree: string;
+  institution: string | null;
+  field: string | null;
+  start_year: number | null;
+  end_year: number | null; // null = en curso
+  order_index: number;
+  source: string;
+  created_at: string;
+};
+
 export type Application = {
   id: string;
   job_id: string;
