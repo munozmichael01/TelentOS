@@ -164,6 +164,12 @@ brand   #0E5C4A   verde primario
 
 Tipografía: Archivo 900 (headings/eyebrow) · Space Mono (labels/números/monospaced) · Hanken Grotesk (body text, descripciones).
 
+### Iconografía — sin emojis genéricos
+
+**Nunca uses emojis genéricos en el chrome de producto** (nav, cards, headers, badges, botones). Los emojis del sistema "huelen" a IA y a plantilla, y rompen la identidad. Usa el set de iconos SVG de línea del DS: `viewBox="0 0 24 24"`, `stroke="currentColor"`, `strokeWidth` 2–2.2, `strokeLinecap="round"` (ver los `Icon*` de `components/app-shell.tsx` y `components/ui/pack-icons.tsx`). Para banderas de país, SVG propias simplificadas, nunca el emoji de bandera (ejemplo: `components/ui/pack-icons.tsx`).
+
+**Excepción:** contenido generado por el usuario donde el emoji es la función — el picker del career site (`emoji-picker.tsx`, `career-site-editor.tsx`). Ahí el usuario elige; no es chrome nuestro.
+
 ---
 
 ## Deuda técnica conocida — no agraves

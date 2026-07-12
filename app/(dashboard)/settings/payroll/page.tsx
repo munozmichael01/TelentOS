@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PackIcon } from "@/components/ui/pack-icons";
 import { getCompany } from "@/lib/workspace";
 
 const T = {
@@ -11,7 +12,6 @@ const T = {
 
 type PackDef = {
   code: string;
-  flag: string;
   label: string;
   status: "active" | "preview" | "coming_soon";
   chips: string[];
@@ -21,7 +21,6 @@ type PackDef = {
 const PACKS: PackDef[] = [
   {
     code: "generic",
-    flag: "🌐",
     label: "Genérico",
     status: "active",
     chips: ["Salario base", "Bruto = Neto = Coste empresa", "Sin deducciones", "Sin cargas patronales"],
@@ -29,7 +28,6 @@ const PACKS: PackDef[] = [
   },
   {
     code: "ve",
-    flag: "🇻🇪",
     label: "Venezuela",
     status: "preview",
     chips: ["Salario base", "Bono alimentación", "Utilidades", "Vacaciones + bono", "Prestaciones sociales", "Anticipos", "ISLR", "SSO / RPE / FAOV"],
@@ -37,7 +35,6 @@ const PACKS: PackDef[] = [
   },
   {
     code: "br",
-    flag: "🇧🇷",
     label: "Brasil",
     status: "preview",
     chips: ["INSS", "FGTS", "IRRF", "13º salário", "Férias + 1/3", "Vale-refeição/transporte"],
@@ -45,7 +42,6 @@ const PACKS: PackDef[] = [
   },
   {
     code: "es",
-    flag: "🇪🇸",
     label: "España",
     status: "preview",
     chips: ["IRPF con tramos", "Cotizaciones SS", "Pagas extra (12/14)", "SMI", "Finiquito"],
@@ -53,7 +49,6 @@ const PACKS: PackDef[] = [
   },
   {
     code: "co",
-    flag: "🇨🇴",
     label: "Colombia",
     status: "coming_soon",
     chips: [],
@@ -61,7 +56,6 @@ const PACKS: PackDef[] = [
   },
   {
     code: "mx",
-    flag: "🇲🇽",
     label: "México",
     status: "coming_soon",
     chips: [],
@@ -115,7 +109,7 @@ export default async function PayrollSettingsPage() {
             >
               {/* Header */}
               <div className="flex items-center gap-3">
-                <span style={{ fontSize: "22px" }}>{pack.flag}</span>
+                <PackIcon code={pack.code} />
                 <span className="font-display font-black text-[16px] flex-1">{pack.label}</span>
                 {isActive && (
                   <span style={{ fontSize: "10.5px", fontWeight: 700, borderRadius: "999px", padding: "4px 11px", background: T.brandSoft, color: T.brand, flexShrink: 0 }}>
