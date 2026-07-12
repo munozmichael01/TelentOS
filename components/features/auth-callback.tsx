@@ -90,7 +90,7 @@ export function AuthCallback() {
           boxShadow: "7px 7px 0 #1A1A17", borderRadius: "18px",
           padding: "40px 32px", textAlign: "center", maxWidth: "380px",
         }}>
-          <div style={{ fontSize: "40px", marginBottom: "14px" }}>🔗</div>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CFC7B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 14px" }}><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
           <div style={{
             fontFamily: "'Archivo', sans-serif", fontWeight: 900,
             fontSize: "22px", letterSpacing: "-0.5px", marginBottom: "10px",

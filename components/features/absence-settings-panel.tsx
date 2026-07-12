@@ -206,7 +206,7 @@ function EmptyAbsenceTypes() {
 
   return (
     <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "48px 24px", textAlign: "center" }}>
-      <div style={{ fontSize: "44px", marginBottom: "14px" }}>🗂️</div>
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#CFC7B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 14px" }}><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
       <p style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "20px", color: "#1A1A17", marginBottom: "8px" }}>
         Sin tipos de ausencia
       </p>
@@ -226,7 +226,7 @@ function EmptyAbsenceTypes() {
           opacity: seeding ? 0.7 : 1,
         }}
       >
-        {seeding ? <Loader2 size={14} className="animate-spin" /> : "✨"}
+        {seeding ? <Loader2 size={14} className="animate-spin" /> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z"/></svg>}
         Crear tipos por defecto
       </button>
       <div style={{ marginTop: "10px", fontSize: "12px", color: "#79746B" }}>
@@ -1091,7 +1091,7 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
             padding: "40px 24px",
           }}
         >
-          <div style={{ fontSize: "40px", marginBottom: "12px" }}>🎉</div>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0E5C4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 12px" }}><circle cx="12" cy="12" r="9"/><polyline points="9 12 11 14 15 10"/></svg>
           <p
             style={{
               fontFamily: "'Archivo', sans-serif",

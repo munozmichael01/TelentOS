@@ -76,7 +76,7 @@ export function ResetPasswordForm() {
         <div style={{ padding: "26px 32px 30px" }}>
           {noSession ? (
             <div style={{ textAlign: "center", padding: "12px 0" }}>
-              <div style={{ fontSize: "36px", marginBottom: "12px" }}>🔗</div>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#CFC7B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 12px" }}><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
               <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "18px", marginBottom: "8px" }}>
                 El enlace expiró
               </div>

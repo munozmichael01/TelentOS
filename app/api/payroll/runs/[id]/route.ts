@@ -174,12 +174,18 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
         if (!existing || existing.length === 0) {
           const periodMonth = (run as unknown as { period_month: string }).period_month;
-          await db.from("payslips").insert(
+          const { error: slipErr } = await db.from("payslips").insert(
             lineList.map((line, idx) => ({
               pay_run_line_id: line.id,
               slip_number: `${periodMonth}-${String(idx + 1).padStart(4, "0")}`,
             })),
           );
+          if (slipErr) {
+            return NextResponse.json(
+              { error: `Error al crear recibos de pago: ${slipErr.message}` },
+              { status: 500 },
+            );
+          }
         }
       }
     }
