@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatMoney } from "@/lib/format";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, notifySuccess } from "@/lib/api-client";
 import type { PayRun, PayRunLine, PayRunLineItem, PayRunAuditLog, PayrollExport } from "@/lib/types";
 
 // ── Design tokens ────────────────────────────────────────────────────────────
@@ -106,6 +106,7 @@ function EmployeeSheet({
         method: "PATCH",
         json: { action: "approve" },
       });
+      notifySuccess("Empleado aprobado");
       onRefresh();
       onClose();
     } catch (e) {
@@ -147,6 +148,7 @@ function EmployeeSheet({
       setAdjLabel("");
       setAdjAmount("");
       setAdjCategory("earning");
+      notifySuccess("Ajuste añadido · total recalculado");
       onRefresh();
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Error al añadir ajuste");
@@ -550,6 +552,7 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      notifySuccess("CSV exportado");
       loadData(); // refrescar log de exports
     } finally {
       if (mountedRef.current) setExporting(null);
@@ -562,6 +565,13 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
     setTransitionError(null);
     try {
       await apiFetch(`/api/payroll/runs/${id}`, { method: "PATCH", json: { status: newStatus } });
+      const STATUS_MSGS: Record<string, string> = {
+        in_review: "Corrida enviada a revisión",
+        approved: "Corrida aprobada",
+        exported: "Corrida marcada como exportada",
+        paid: "Corrida marcada como pagada",
+      };
+      notifySuccess(STATUS_MSGS[newStatus] ?? "Estado actualizado");
       loadData();
     } catch (e) {
       if (mountedRef.current) setTransitionError(e instanceof Error ? e.message : "Error al cambiar estado");
