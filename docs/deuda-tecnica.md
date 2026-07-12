@@ -20,7 +20,6 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 | RL-redis | Rate-limit en memoria — no sobrevive multi-instancia ni redeploys | `lib/rate-limit.ts` | PR | Portar a Redis/Upstash antes de producción real |
 | IA-coste | Sin `max_tokens` por agente, modelo no configurable, sin presupuesto por empresa | `agents/core.ts`, `agent_runs` | PR | Backlog pista A #4; migración 0025 ya aplicada |
 | P6-a | `slip_number` sin unique en DB; formato `{period_month}-{n}` se repite entre empresas | `payslips` (migr. 0016), `runs/[id]/route.ts` | ER | Vale hasta que haya numeración legal de recibos (packs de país) |
-| P6-b | Inserts de `payslips` y `payroll_exports` sin comprobar error de DB — fallo silencioso posible | `app/api/payroll/runs/[id]/route.ts`, `.../export/route.ts` | PR | Aprobar sin payslips creados violaría AC-6a en silencio |
 | REL-loop | React "Maximum update depth exceeded" floodea el buffer de consola (~450 entradas) | sin localizar (stack solo muestra `RedirectBoundary`/`AppRouter` de Next) | PR | Confirmado que **precede al `<Toaster/>`** (estaba en logs previos a su creación) y que el Toaster no lo genera (interceptor no cazó ninguno con él montado). NO reproducible bajo demanda: navegación cliente ida/vuelta = 0 warnings. Correlaciona con churn de reload/redirect (expiración de sesión). Revisados `app-shell` y effects de `pay-run-detail`/`career-site-editor`/`dashboard-client`: deps correctas. Pendiente: reproducir de forma determinista para pinchar el componente (probable un effect que hace router redirect en bucle bajo cierta condición de auth) |
 
 ## Resuelto
@@ -40,3 +39,6 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 | AUD-M5/M7/L4 (payroll) | Guards unificados, selects explícitos y orden de tenancy en rutas de nómina | pasos 4-5 (`5c9e...f99697f`) |
 | AUD-agent_runs | Log de agentes roto en silencio (RLS) → service_role + `company_id` | `374ba4e` + migr. 0025 |
 | ENG-tests | Motor: lógica pura extraída a `compute.ts` + 28 tests (AC-2a/2b/2d/2e/2g/2h) + verificación runtime | `7d64d1e` |
+| AUD-H6b | `notifyError` → sistema de toasts real (bus + `<Toaster/>`), fin del `window.alert` | `8d6b117` |
+| P6-b | Inserts de payslips/exports sin comprobar error → 500 + payslips antes del flip a approved | `493ef69` (pista B) |
+| DS-emojis | Barrido de emojis genéricos del chrome → iconos SVG del DS + regla en CLAUDE.md | `653f6cd`, `159de2` (pista B), `77bc08e` |
