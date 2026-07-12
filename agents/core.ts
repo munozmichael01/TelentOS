@@ -27,7 +27,7 @@ export type AgentResult<T> = {
   status: "ok" | "fallback";
 };
 
-const MODEL = "gpt-4o";
+const DEFAULT_MODEL = "gpt-4o";
 const MAX_TOOL_TURNS = 6;
 
 export function hasOpenAI() {
@@ -63,8 +63,10 @@ export async function runAgent<T>(opts: {
   tools: AgentTool[];
   input: unknown;
   fallback: () => Promise<T> | T;
+  /** Override model per agent — default: gpt-4o. Use gpt-4o-mini for extraction tasks. */
+  model?: string;
 }): Promise<AgentResult<T>> {
-  const { agent, system, user, priorMessages, tools, input, fallback } = opts;
+  const { agent, system, user, priorMessages, tools, input, fallback, model = DEFAULT_MODEL } = opts;
 
   if (!hasOpenAI()) {
     const output = await fallback();
@@ -82,7 +84,7 @@ export async function runAgent<T>(opts: {
 
     for (let turn = 0; turn < MAX_TOOL_TURNS; turn++) {
       const completion = await openai.chat.completions.create({
-        model: MODEL,
+        model,
         messages,
         tools: tools.length ? tools.map((t) => t.definition) : undefined,
         response_format: { type: "json_object" },

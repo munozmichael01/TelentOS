@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { FitBadge } from "@/components/fit-badge";
 import { FileLink } from "@/components/features/file-link";
+import { CvParserPanel } from "@/components/features/cv-parser-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -118,8 +119,9 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Currículum</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <FileLink bucket="cvs" resourceId={candidate.id} label="Ver CV adjunto" />
+                <CvParserPanel candidateId={candidate.id} hasCv={Boolean(candidate.cv_url)} />
               </CardContent>
             </Card>
           )}
