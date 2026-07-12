@@ -78,11 +78,44 @@ export type Candidate = {
   name: string;
   email: string;
   phone: string | null;
-  location: string | null;
-  skills: string[];
+  location: string | null; // texto libre crudo/display; ver city/country_code para estructurado
+  city: string | null;
+  country_code: string | null; // ISO 3166-1 alpha-2
+  skills: string[]; // legado (text[]); el modelo estructurado vive en candidate_skills + catálogo skills
   experience_years: number;
   cv_url: string | null;
   summary: string | null;
+  source: string;
+  created_at: string;
+};
+
+/** Catálogo canónico de skills (migración 0027). El CV-parser resuelve aliases → name. */
+export type Skill = {
+  id: string;
+  name: string;
+  category: string | null; // language | framework | tool | domain | soft
+  aliases: string[];
+  created_at: string;
+};
+
+export type CandidateSkill = {
+  candidate_id: string;
+  skill_id: string;
+  source: string; // 'cv' | 'manual'
+  confidence: number | null;
+  created_at: string;
+};
+
+export type CandidateExperience = {
+  id: string;
+  candidate_id: string;
+  title: string;
+  company: string | null;
+  seniority: string | null; // junior | mid | senior | lead | exec
+  start_date: string | null;
+  end_date: string | null;
+  is_current: boolean;
+  order_index: number;
   source: string;
   created_at: string;
 };
