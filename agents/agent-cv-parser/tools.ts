@@ -1,5 +1,6 @@
 import type { AgentTool } from "@/agents/core";
 import { createAdminClient } from "@/lib/supabase/server";
+import { extractCvText } from "@/lib/cv-text";
 
 export type CandidateCvContext = {
   candidate_id: string;
@@ -15,19 +16,6 @@ export type CandidateCvContext = {
   cv_text: string | null;
   cv_available: boolean;
 };
-
-/** Extrae texto legible de un buffer. Funciona bien para plain-text; da texto parcial para PDFs. */
-function extractText(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let text = "";
-  for (let i = 0; i < bytes.length; i++) {
-    const c = bytes[i];
-    if ((c >= 32 && c < 127) || c === 10 || c === 13 || c === 9) {
-      text += String.fromCharCode(c);
-    }
-  }
-  return text.replace(/[ \t]{4,}/g, "   ").replace(/\n{5,}/g, "\n\n").trim();
-}
 
 export async function getCandidateCvContext(candidateId: string): Promise<CandidateCvContext | { error: string }> {
   const db = createAdminClient();
@@ -52,9 +40,9 @@ export async function getCandidateCvContext(candidateId: string): Promise<Candid
         const res = await fetch(signData.signedUrl);
         if (res.ok) {
           const buffer = await res.arrayBuffer();
-          const raw = extractText(buffer);
+          const raw = await extractCvText(buffer); // PDF real vía unpdf; plain-text si no
           // Trim to 8 000 chars to stay within token budget
-          cvText = raw.length > 8000 ? raw.slice(0, 8000) + "…" : raw;
+          cvText = raw.length > 8000 ? raw.slice(0, 8000) + "…" : raw || null;
         }
       }
     } catch {
