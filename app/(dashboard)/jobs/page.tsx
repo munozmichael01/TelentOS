@@ -117,7 +117,7 @@ export default async function JobsPage({
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-[Archivo] text-[16px] font-extrabold tracking-[-0.3px] text-[#1A1A17]">{job.title}</span>
                     <Badge variant={STATUS_VARIANT[job.status]}>{STATUS_LABEL[job.status]}</Badge>
-                    {job.source === "ai" && <Badge variant="outline">✨ IA</Badge>}
+                    {job.source === "ai" && <Badge variant="outline"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z"/></svg> IA</Badge>}
                     {job.source.startsWith("import") && <Badge variant="outline">importada</Badge>}
                   </div>
                   <p className="mt-1.5 font-mono text-[11.5px] text-[#79746B]">

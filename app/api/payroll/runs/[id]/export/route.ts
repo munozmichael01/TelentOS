@@ -130,12 +130,18 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 
   // Registrar en payroll_exports (AC-5a)
-  await db.from("payroll_exports").insert({
+  const { error: exportLogErr } = await db.from("payroll_exports").insert({
     pay_run_id: params.id,
     export_type: exportType,
     generated_by: user?.email ?? "Sistema",
     file_path: null,
   });
+  if (exportLogErr) {
+    return NextResponse.json(
+      { error: `Error al registrar la exportación: ${exportLogErr.message}` },
+      { status: 500 },
+    );
+  }
 
   const filename = `${exportType}-${run.period_month}.csv`;
   return new NextResponse(csvContent, {

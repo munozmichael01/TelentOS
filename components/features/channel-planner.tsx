@@ -338,7 +338,7 @@ export function ChannelPlanner({ jobId, campaigns: initialCampaigns }: { jobId: 
                   <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
                     {alerts.map((a) => (
                       <span key={a.msg} style={{ ...mono, fontSize: "10.5px", color: a.level === "danger" ? "#BD4332" : "#946312", background: a.level === "danger" ? "#FDE8E5" : "rgba(148,99,18,.08)", border: `1px solid ${a.level === "danger" ? "#F5B4AA" : "rgba(148,99,18,.25)"}`, borderRadius: "999px", padding: "3px 10px", display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                        ⚠ {a.msg}
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: "3px" }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>{a.msg}
                       </span>
                     ))}
                   </div>

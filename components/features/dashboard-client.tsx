@@ -218,7 +218,7 @@ export function DashboardClient({
         <div style={{ background: T.surface, border: `1.5px solid ${T.ink}`, borderRadius: "16px", boxShadow: `4px 4px 0 ${T.ink}`, padding: "18px 20px", marginBottom: "22px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
             <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "16px" }}>Personaliza tu panel</div>
-            <button onClick={() => setPersOpen(false)} style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft, background: "none", border: "none", cursor: "pointer" }}>Cerrar ✕</button>
+            <button onClick={() => setPersOpen(false)} style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft, background: "none", border: "none", cursor: "pointer" }}>Cerrar</button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
             {/* Métricas */}

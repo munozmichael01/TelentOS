@@ -542,7 +542,7 @@ function RequestRow({
               ✓ Aprobar
             </button>
             <button onClick={onReject} disabled={loading} style={{ ...BTN_DANGER, opacity: loading ? .6 : 1 }}>
-              ✕ Rechazar
+              Rechazar
             </button>
           </>
         )}

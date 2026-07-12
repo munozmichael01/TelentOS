@@ -427,9 +427,9 @@ export function InterviewPanel({
                   Hola {ivCandName || "…"},<br /><br />
                   Gracias por tu interés. Nos gustaría avanzar con una entrevista de <b>{ivType}</b>.<br /><br />
                   <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px", color: "#79746B" }}>
-                    📅 {pvWhen} · {ivDur}<br />
-                    👤 {ivInterviewer || "por confirmar"}<br />
-                    {ivParticipants.length > 0 && <>👥 {ivParticipants.join(", ")}<br /></>}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{pvWhen} · {ivDur}<br />
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>{ivInterviewer || "por confirmar"}<br />
+                    {ivParticipants.length > 0 && <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>{ivParticipants.join(", ")}<br /></>}
                   </span><br />
                   Se incluirá un enlace de videollamada en la invitación de calendario.<br /><br />
                   Un saludo,<br />Equipo de Talento

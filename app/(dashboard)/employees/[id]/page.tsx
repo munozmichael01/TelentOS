@@ -429,7 +429,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
 
             {!(allowances ?? []).length ? (
               <div style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "36px 24px", textAlign: "center", boxShadow: "3px 3px 0 #1A1A17", marginBottom: "32px" }}>
-                <div style={{ fontSize: "32px", marginBottom: "10px" }}>📋</div>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CFC7B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "10px", display: "block", margin: "0 auto 10px" }}><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>
                 <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "6px" }}>Sin permisos asignados</div>
                 <div style={{ fontSize: "13px", color: "#79746B", marginBottom: "16px" }}>Los nuevos empleados reciben la política por defecto automáticamente.</div>
                 <Link href="/settings/absences" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "underline" }}>
@@ -535,7 +535,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
               if (!allAbs.length) {
                 return (
                   <div style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "36px 24px", textAlign: "center", boxShadow: "3px 3px 0 #1A1A17" }}>
-                    <div style={{ fontSize: "32px", marginBottom: "10px" }}>🌴</div>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CFC7B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 10px" }}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Sin ausencias registradas</div>
                   </div>
                 );
@@ -673,7 +673,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
 
             {!(compRecords ?? []).length ? (
               <div style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "36px 24px", textAlign: "center", boxShadow: "3px 3px 0 #1A1A17" }}>
-                <div style={{ fontSize: "32px", marginBottom: "10px" }}>📊</div>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CFC7B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 10px" }}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
                 <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Sin registros de compensación</div>
               </div>
             ) : (
@@ -720,7 +720,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
 
             {!(schedules ?? []).length ? (
               <div style={{ background: "#FCFAF6", border: "2px solid #1A1A17", borderRadius: "14px", padding: "36px 24px", textAlign: "center", boxShadow: "3px 3px 0 #1A1A17" }}>
-                <div style={{ fontSize: "32px", marginBottom: "10px" }}>🗓️</div>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CFC7B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 10px" }}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "6px" }}>Sin horario asignado</div>
                 <div style={{ fontSize: "13px", color: "#79746B", marginBottom: "16px" }}>Los nuevos empleados reciben el horario por defecto automáticamente.</div>
                 <Link href="/settings/schedules" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "underline" }}>

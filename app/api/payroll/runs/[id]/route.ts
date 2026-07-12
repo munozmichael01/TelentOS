@@ -94,17 +94,19 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   const db = createAdminClient();
   let prevStatus: string | null = null;
+  let periodMonthForSlips: string | null = null;
 
   if (typeof body.status === "string") {
     const { data: current } = await db
       .from("pay_runs")
-      .select("id, status")
+      .select("id, status, period_month")
       .eq("id", params.id)
       .eq("company_id", companyId!)
       .maybeSingle();
 
     if (!current) return NextResponse.json({ error: "Corrida no encontrada" }, { status: 404 });
     prevStatus = current.status;
+    periodMonthForSlips = (current as unknown as { period_month: string }).period_month ?? null;
 
     const NEXT: Record<string, string> = {
       draft: "in_review", in_review: "approved", approved: "exported", exported: "paid",
@@ -133,6 +135,40 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
   }
 
+  // AC-6a: crear payslips ANTES del flip de estado — si el insert falla, la corrida
+  // permanece en in_review y el usuario puede reintentar sin quedar bloqueado por 422.
+  if (body.status === "approved") {
+    const { data: runLines } = await db
+      .from("pay_run_lines")
+      .select("id")
+      .eq("pay_run_id", params.id);
+
+    const lineListForSlips = (runLines ?? []) as { id: string }[];
+    if (lineListForSlips.length > 0) {
+      const lineIds = lineListForSlips.map((l) => l.id);
+      const { data: existing } = await db
+        .from("payslips")
+        .select("id")
+        .in("pay_run_line_id", lineIds)
+        .limit(1);
+
+      if (!existing || existing.length === 0) {
+        const { error: slipErr } = await db.from("payslips").insert(
+          lineListForSlips.map((line, idx) => ({
+            pay_run_line_id: line.id,
+            slip_number: `${periodMonthForSlips ?? ""}-${String(idx + 1).padStart(4, "0")}`,
+          })),
+        );
+        if (slipErr) {
+          return NextResponse.json(
+            { error: `Error al crear recibos de pago: ${slipErr.message}` },
+            { status: 500 },
+          );
+        }
+      }
+    }
+  }
+
   const allowed = ["status", "entity_name", "gross", "net", "employer_cost", "employee_count"];
   const patch: Record<string, unknown> = {};
   for (const key of allowed) {
@@ -155,34 +191,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       text: `Estado: ${STATUS_LABELS[prevStatus!] ?? prevStatus} → ${STATUS_LABELS[body.status] ?? body.status}`,
       who: user?.email ?? "Sistema",
     });
-
-    // AC-6a: crear payslips al aprobar (idempotente: solo si no existen aún)
-    if (body.status === "approved") {
-      const { data: runLines } = await db
-        .from("pay_run_lines")
-        .select("id")
-        .eq("pay_run_id", params.id);
-
-      const lineList = (runLines ?? []) as { id: string }[];
-      if (lineList.length > 0) {
-        const lineIds = lineList.map((l) => l.id);
-        const { data: existing } = await db
-          .from("payslips")
-          .select("id")
-          .in("pay_run_line_id", lineIds)
-          .limit(1);
-
-        if (!existing || existing.length === 0) {
-          const periodMonth = (run as unknown as { period_month: string }).period_month;
-          await db.from("payslips").insert(
-            lineList.map((line, idx) => ({
-              pay_run_line_id: line.id,
-              slip_number: `${periodMonth}-${String(idx + 1).padStart(4, "0")}`,
-            })),
-          );
-        }
-      }
-    }
   }
 
   return NextResponse.json({ run });

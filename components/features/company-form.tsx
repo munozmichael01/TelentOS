@@ -14,11 +14,11 @@ import { slugify } from "@/lib/utils";
 import type { Company } from "@/lib/types";
 
 const COUNTRIES = [
-  { code: "ES", label: "🇪🇸 España", currency: "EUR" },
-  { code: "VE", label: "🇻🇪 Venezuela", currency: "USD" },
-  { code: "BR", label: "🇧🇷 Brasil", currency: "BRL" },
-  { code: "CO", label: "🇨🇴 Colombia", currency: "COP" },
-  { code: "MX", label: "🇲🇽 México", currency: "MXN" },
+  { code: "ES", label: "España", currency: "EUR" },
+  { code: "VE", label: "Venezuela", currency: "USD" },
+  { code: "BR", label: "Brasil", currency: "BRL" },
+  { code: "CO", label: "Colombia", currency: "COP" },
+  { code: "MX", label: "México", currency: "MXN" },
 ] as const;
 
 /** Configuración del workspace y del career site público. */
