@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireApiRole, jsonError } from "@/lib/api";
 import { createAdminClient } from "@/lib/supabase/server";
 import { dedupeStrings, resolveSkillIds } from "@/lib/skills";
+import { computeFitScore } from "@/lib/fit-score";
 
 /**
  * Confirmación del perfil extraído por el CV-parser (agentes P1).
@@ -164,5 +165,52 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
   }
 
-  return NextResponse.json({ ok: true, skills: normalizedSkills });
+  // 6. Re-puntuar las candidaturas del candidato: su perfil cambió, el fit_score
+  //    debe reflejarlo (solape canónico candidato∩oferta cuando ambos lados están
+  //    estructurados; ver lib/fit-score.ts).
+  const { data: freshCand } = await db
+    .from("candidates")
+    .select("skills, experience_years, location, city, country_code")
+    .eq("id", candidateId)
+    .single();
+  const { data: candSkillRows } = await db
+    .from("candidate_skills")
+    .select("skill_id")
+    .eq("candidate_id", candidateId);
+  const candidateSkillIds = (candSkillRows ?? []).map((r) => r.skill_id as string);
+
+  const { data: apps } = await db
+    .from("applications")
+    .select("id, job_id, jobs!inner(skills, experience_min_years, location, city, country_code)")
+    .eq("candidate_id", candidateId);
+
+  for (const app of (apps ?? []) as unknown as Array<{
+    id: string;
+    job_id: string;
+    jobs: { skills: string[]; experience_min_years: number; location: string | null; city: string | null; country_code: string | null };
+  }>) {
+    const { data: jobSkillRows } = await db
+      .from("job_skills")
+      .select("skill_id")
+      .eq("job_id", app.job_id);
+    const score = computeFitScore(
+      {
+        skills: (freshCand?.skills as string[]) ?? [],
+        experience_years: (freshCand?.experience_years as number) ?? 0,
+        location: (freshCand?.location as string | null) ?? null,
+      },
+      app.jobs,
+      {
+        candidateSkillIds,
+        jobSkillIds: (jobSkillRows ?? []).map((r) => r.skill_id as string),
+        candidateCity: freshCand?.city as string | null,
+        candidateCountry: freshCand?.country_code as string | null,
+        jobCity: app.jobs.city,
+        jobCountry: app.jobs.country_code,
+      },
+    );
+    await db.from("applications").update({ fit_score: score }).eq("id", app.id);
+  }
+
+  return NextResponse.json({ ok: true, skills: normalizedSkills, rescored: (apps ?? []).length });
 }

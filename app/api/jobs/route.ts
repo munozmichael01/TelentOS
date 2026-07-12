@@ -1,29 +1,35 @@
 import { NextResponse } from "next/server";
-import { requireUser, jsonError } from "@/lib/api";
+import { requireApiRole, jsonError } from "@/lib/api";
+import { createAdminClient } from "@/lib/supabase/server";
 import { dedupeHash } from "@/lib/import";
+import { dedupeStrings, resolveSkillIds } from "@/lib/skills";
 import { DEFAULT_STAGES } from "@/lib/types";
 
 export async function POST(req: Request) {
-  const { user, supabase, error } = await requireUser();
+  // Chokepoint de creación de ofertas: formulario, job-writer (source: "ai") e imports.
+  const { companyId, user, error } = await requireApiRole(["owner", "hr_admin", "recruiter"]);
   if (error) return error;
 
   const body = await req.json().catch(() => null);
   if (!body?.title?.trim()) return jsonError("El título es obligatorio");
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
-  if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
+  const skills = dedupeStrings(Array.isArray(body.skills) ? body.skills : []);
+  const db = createAdminClient();
 
-  const { data: job, error: dbError } = await supabase
+  const { data: job, error: dbError } = await db
     .from("jobs")
     .insert({
-      company_id: company.id,
+      company_id: companyId!,
       title: body.title.trim(),
       description: body.description ?? null,
-      skills: Array.isArray(body.skills) ? body.skills : [],
+      skills, // display/legado; la fuente matcheable es job_skills
       salary_min: body.salary_min ?? null,
       salary_max: body.salary_max ?? null,
       salary_currency: body.salary_currency ?? "EUR",
       location: body.location ?? null,
+      // city/country_code solo si llegan (tolerante a migración 0029 pendiente)
+      ...(body.city !== undefined ? { city: body.city } : {}),
+      ...(body.country_code !== undefined ? { country_code: body.country_code } : {}),
       employment_type: body.employment_type ?? "full_time",
       sector: body.sector ?? null,
       department: body.department ?? null,
@@ -32,7 +38,7 @@ export async function POST(req: Request) {
       status: body.status === "active" ? "active" : "draft",
       source: body.source === "ai" ? "ai" : "manual",
       dedupe_hash: dedupeHash(body.title, body.location),
-      created_by: user.id,
+      created_by: user!.id,
     })
     .select()
     .single();
@@ -42,10 +48,20 @@ export async function POST(req: Request) {
     return jsonError(dbError.message, 500);
   }
 
-  // Pipeline por defecto; configurable después desde la oferta
-  await supabase
-    .from("job_stages")
-    .insert(DEFAULT_STAGES.map((s) => ({ ...s, job_id: job.id })));
+  // Skills → catálogo canónico (mismo patrón que candidatos: alias→nombre, crea nuevas).
+  let structuredSkills = false;
+  if (skills.length > 0) {
+    const skillIds = await resolveSkillIds(db, skills);
+    const { error: jsErr } = await db
+      .from("job_skills")
+      .insert(skillIds.map((skill_id) => ({ job_id: job.id, skill_id })));
+    // Degradación explícita mientras la migración 0029 no esté aplicada: la oferta
+    // se crea (skills text[] intactas), el matching cae al modo texto legado.
+    structuredSkills = !jsErr;
+  }
 
-  return NextResponse.json({ job });
+  // Pipeline por defecto; configurable después desde la oferta
+  await db.from("job_stages").insert(DEFAULT_STAGES.map((s) => ({ ...s, job_id: job.id })));
+
+  return NextResponse.json({ job, structured_skills: structuredSkills });
 }
