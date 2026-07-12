@@ -18,7 +18,6 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 | AUD-M5b | `company_members` con `.maybeSingle()` — rompe con 2 memberships por usuario | `lib/api.ts:44` | ER | Mina si se activa multi-empresa real |
 | AUD-L3 | Naming mixto ES/EN en rutas (`/horas` vs `/timeoff`) | `app/(dashboard)/**` | V1-OK | Decisión de producto pendiente |
 | RL-redis | Rate-limit en memoria — no sobrevive multi-instancia ni redeploys | `lib/rate-limit.ts` | PR | Portar a Redis/Upstash antes de producción real |
-| ENG-tests | AC-2a…2h del motor de líneas sin tests de regresión (2e/2f/2g sin evidencia runtime) | `lib/payroll/generate-lines.ts` | PR | En curso (pista A) |
 | IA-coste | Sin `max_tokens` por agente, modelo no configurable, sin presupuesto por empresa | `agents/core.ts`, `agent_runs` | PR | Backlog pista A #4; migración 0025 ya aplicada |
 | P6-a | `slip_number` sin unique en DB; formato `{period_month}-{n}` se repite entre empresas | `payslips` (migr. 0016), `runs/[id]/route.ts` | ER | Vale hasta que haya numeración legal de recibos (packs de país) |
 | P6-b | Inserts de `payslips` y `payroll_exports` sin comprobar error de DB — fallo silencioso posible | `app/api/payroll/runs/[id]/route.ts`, `.../export/route.ts` | PR | Aprobar sin payslips creados violaría AC-6a en silencio |
@@ -40,3 +39,4 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 | AUD-L2 | `any` en cálculo de allowances de employees/[id] | `b168c04` |
 | AUD-M5/M7/L4 (payroll) | Guards unificados, selects explícitos y orden de tenancy en rutas de nómina | pasos 4-5 (`5c9e...f99697f`) |
 | AUD-agent_runs | Log de agentes roto en silencio (RLS) → service_role + `company_id` | `374ba4e` + migr. 0025 |
+| ENG-tests | Motor: lógica pura extraída a `compute.ts` + 28 tests (AC-2a/2b/2d/2e/2g/2h) + verificación runtime | `7d64d1e` |
