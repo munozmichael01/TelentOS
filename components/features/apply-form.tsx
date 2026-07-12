@@ -17,21 +17,21 @@ const fieldLabel: React.CSSProperties = {
 
 /* ── Phone prefixes ────────────────────────────────────────────────────── */
 const PREFIXES = [
-  { code: "+34", flag: "🇪🇸", label: "ES" },
-  { code: "+52", flag: "🇲🇽", label: "MX" },
-  { code: "+54", flag: "🇦🇷", label: "AR" },
-  { code: "+57", flag: "🇨🇴", label: "CO" },
-  { code: "+56", flag: "🇨🇱", label: "CL" },
-  { code: "+51", flag: "🇵🇪", label: "PE" },
-  { code: "+58", flag: "🇻🇪", label: "VE" },
-  { code: "+593", flag: "🇪🇨", label: "EC" },
-  { code: "+1",  flag: "🇺🇸", label: "US" },
-  { code: "+44", flag: "🇬🇧", label: "GB" },
-  { code: "+33", flag: "🇫🇷", label: "FR" },
-  { code: "+49", flag: "🇩🇪", label: "DE" },
-  { code: "+39", flag: "🇮🇹", label: "IT" },
-  { code: "+351", flag: "🇵🇹", label: "PT" },
-  { code: "+55", flag: "🇧🇷", label: "BR" },
+  { code: "+34", label: "ES" },
+  { code: "+52", label: "MX" },
+  { code: "+54", label: "AR" },
+  { code: "+57", label: "CO" },
+  { code: "+56", label: "CL" },
+  { code: "+51", label: "PE" },
+  { code: "+58", label: "VE" },
+  { code: "+593", label: "EC" },
+  { code: "+1",  label: "US" },
+  { code: "+44", label: "GB" },
+  { code: "+33", label: "FR" },
+  { code: "+49", label: "DE" },
+  { code: "+39", label: "IT" },
+  { code: "+351", label: "PT" },
+  { code: "+55", label: "BR" },
 ];
 
 /* ── Main form ──────────────────────────────────────────────────────────── */
@@ -124,7 +124,7 @@ export function ApplyForm({ jobId, brandColor = "#0E5C4A" }: { jobId: string; br
               className="w-auto min-w-[80px] flex-shrink-0"
             >
               {PREFIXES.map((p) => (
-                <option key={p.code} value={p.code}>{p.flag} {p.code}</option>
+                <option key={p.code} value={p.code}>{p.label} {p.code}</option>
               ))}
             </NativeSelect>
             <Input
