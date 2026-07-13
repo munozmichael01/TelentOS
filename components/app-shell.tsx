@@ -6,6 +6,7 @@ import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Toaster } from "@/components/ui/toaster";
+import { AssistantHost, AssistantTrigger } from "@/components/features/assistant-host";
 import { useEffect, useState } from "react";
 
 /* ── Icon SVGs matching TalentOS App.dc.html exactly ── */
@@ -282,6 +283,7 @@ export function AppShell({
   return (
     <div className="app-outer" style={{ background: "#ECEAE4", minHeight: "100vh", padding: "26px", WebkitFontSmoothing: "antialiased" }}>
       <Toaster />
+      <AssistantHost />
       <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
         {sidebarOpen && (
           <div
@@ -448,6 +450,7 @@ export function AppShell({
                 <span style={{ marginLeft: "auto", fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#79746B", border: "1px solid #E7E1D4", borderRadius: "5px", padding: "1px 5px" }}>⌘K</span>
               </div>
               <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
+                <AssistantTrigger />
                 <button style={{ width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", color: "#79746B", background: "none", border: "none", cursor: "pointer" }}>
                   <IconBell />
                 </button>
