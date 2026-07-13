@@ -715,40 +715,59 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
           </div>
         </div>
 
-        {/* Copilot de nómina — S2 narrativa: la voz del agente en tinta. Solo señala. */}
-        {review && (
-          <AgentPanel className="mb-5">
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-              <AgentBadge kind={review.summary_source === "ok" ? "ia" : "heuristica"} onDark />
-              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", letterSpacing: ".5px", color: "#8C877E" }}>
-                {review.compared_to ? `vs ${review.compared_to.period_label}` : "sin corrida anterior comparable"}
-              </span>
-              <button
-                onClick={() => setReview(null)}
-                aria-label="Cerrar anotaciones"
-                style={{ marginLeft: "auto", background: "none", border: "none", color: "#8C877E", cursor: "pointer", display: "inline-flex", padding: "2px" }}
-              >
-                <IconClose />
-              </button>
-            </div>
-            <p style={{ fontSize: "13.5px", lineHeight: 1.55, margin: "0 0 12px" }}>{review.summary}</p>
-            {review.findings.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                {review.findings.map((f, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                    <span
-                      style={{
-                        width: "6px", height: "6px", borderRadius: "50%", marginTop: "6px", flexShrink: 0,
-                        background: f.severity === "warning" ? "#E0A23C" : "#8C877E",
-                      }}
-                    />
-                    <span style={{ fontSize: "12.5px", lineHeight: 1.5, color: "#D8D3C8" }}>{f.text}</span>
-                  </div>
-                ))}
+        {/* Revisión de la corrida (P6, blueprint B-5) — regla anti-redundancia:
+            solo lo comparativo-temporal (lo que la tabla no puede mostrar); los
+            flags ya visibles en la tabla se colapsan en una línea de enlace. */}
+        {review && (() => {
+          const COMPARATIVE = new Set(["variation", "new_in_run", "missing_from_run"]);
+          const comparative = review.findings.filter((f) => COMPARATIVE.has(f.kind));
+          const inTable = review.findings.length - comparative.length;
+          return (
+            <AgentPanel className="mb-5">
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px" }}>Revisión de la corrida</span>
+                <AgentBadge kind={review.summary_source === "ok" ? "ia" : "heuristica"} onDark />
+                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", letterSpacing: ".5px", color: "#8C877E" }}>
+                  {review.compared_to ? `vs ${review.compared_to.period_label}` : "sin corrida anterior comparable"}
+                </span>
+                <button
+                  onClick={() => setReview(null)}
+                  aria-label="Cerrar revisión"
+                  style={{ marginLeft: "auto", background: "none", border: "none", color: "#8C877E", cursor: "pointer", display: "inline-flex", padding: "2px" }}
+                >
+                  <IconClose />
+                </button>
               </div>
-            )}
-          </AgentPanel>
-        )}
+              <p style={{ fontSize: "13.5px", lineHeight: 1.55, margin: comparative.length || inTable ? "0 0 12px" : 0 }}>{review.summary}</p>
+              {comparative.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+                  {comparative.map((f, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                      <span
+                        style={{
+                          width: "6px", height: "6px", borderRadius: "50%", marginTop: "6px", flexShrink: 0,
+                          background: f.severity === "warning" ? "#E0A23C" : "#8C877E",
+                        }}
+                      />
+                      <span style={{ fontSize: "12.5px", lineHeight: 1.5, color: "#D8D3C8" }}>{f.text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {inTable > 0 && (
+                <button
+                  onClick={() => {
+                    setTab("empleados");
+                    setTimeout(() => document.getElementById("run-lines-table")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+                  }}
+                  style={{ marginTop: comparative.length ? "10px" : 0, background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#C6F24E", textDecoration: "underline", textUnderlineOffset: "3px" }}
+                >
+                  {inTable} incidencia{inTable !== 1 ? "s" : ""} marcada{inTable !== 1 ? "s" : ""} en la tabla ↓
+                </button>
+              )}
+            </AgentPanel>
+          );
+        })()}
 
         {/* Summary strip */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: "10px", marginBottom: "20px" }}>
@@ -782,7 +801,7 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
 
         {/* ── TAB: EMPLEADOS ── */}
         {tab === "empleados" && (
-          <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", overflow: "hidden" }}>
+          <div id="run-lines-table" style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "16px", overflow: "hidden", scrollMarginTop: "16px" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1.7fr 1.1fr 1fr 0.9fr 0.8fr", padding: "12px 20px", borderBottom: `1px solid ${T.line}`, fontFamily: "'Space Mono',monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft }}>
               <span>Empleado</span><span>Departamento</span>
               <span style={{ textAlign: "right" }}>Neto</span>
