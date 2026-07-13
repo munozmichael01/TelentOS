@@ -1,60 +1,56 @@
+import { z } from "zod";
 import { runAgent, type AgentResult, type AgentTool } from "@/agents/core";
 import { SYSTEM_PROMPT, SYSTEM_PROMPT_TEXT } from "./prompt";
 import { tools, getCandidateCvContext } from "./tools";
 
-export type CvExperience = {
-  title: string;
-  company: string | null;
-  seniority: "junior" | "mid" | "senior" | "lead" | "exec" | null;
-  start_date: string | null;
-  end_date: string | null;
-  is_current: boolean;
-};
+// Schema zod = contrato del agente (validado en core con 1 reintento in-conversation).
+// Robustez barata donde no cambia el significado: enums case-insensitive, números coercidos.
+const lower = (v: unknown) => (typeof v === "string" ? v.toLowerCase() : v);
 
-export type CvLanguage = {
-  language: string;
-  level: "a1" | "a2" | "b1" | "b2" | "c1" | "c2" | "native" | null;
-};
+const CvExperienceSchema = z.object({
+  title: z.string(),
+  company: z.string().nullable().default(null),
+  seniority: z.preprocess(lower, z.enum(["junior", "mid", "senior", "lead", "exec"]).nullable().default(null)),
+  start_date: z.string().nullable().default(null),
+  end_date: z.string().nullable().default(null),
+  is_current: z.boolean().default(false),
+});
 
-export type CvEducation = {
-  degree: string;
-  institution: string | null;
-  field: string | null;
-  start_year: number | null;
-  end_year: number | null;
-};
+const CvLanguageSchema = z.object({
+  language: z.string(),
+  level: z.preprocess(lower, z.enum(["a1", "a2", "b1", "b2", "c1", "c2", "native"]).nullable().default(null)),
+});
 
-export type CvProfile = {
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  location: string | null;
-  city: string | null;
-  country_code: string | null;
-  summary: string;
-  skills: string[];
-  experience_years: number;
-  experiences: CvExperience[];
-  languages: CvLanguage[];
-  education: CvEducation[];
-  extracted_source: "cv_text" | "fallback";
-};
+const CvEducationSchema = z.object({
+  degree: z.string(),
+  institution: z.string().nullable().default(null),
+  field: z.string().nullable().default(null),
+  start_year: z.coerce.number().int().nullable().default(null),
+  end_year: z.coerce.number().int().nullable().default(null),
+});
+
+export const CvProfileSchema = z.object({
+  name: z.string().nullable().default(null),
+  email: z.string().nullable().default(null),
+  phone: z.string().nullable().default(null),
+  location: z.string().nullable().default(null),
+  city: z.string().nullable().default(null),
+  country_code: z.string().nullable().default(null),
+  summary: z.string().default(""),
+  skills: z.array(z.string()),
+  experience_years: z.coerce.number(),
+  experiences: z.array(CvExperienceSchema),
+  languages: z.array(CvLanguageSchema),
+  education: z.array(CvEducationSchema),
+  extracted_source: z.enum(["cv_text", "fallback"]),
+});
+
+export type CvExperience = z.infer<typeof CvExperienceSchema>;
+export type CvLanguage = z.infer<typeof CvLanguageSchema>;
+export type CvEducation = z.infer<typeof CvEducationSchema>;
+export type CvProfile = z.infer<typeof CvProfileSchema>;
 
 export type CvParserInput = { candidateId: string };
-
-function isValidCvProfile(v: unknown): v is CvProfile {
-  if (typeof v !== "object" || !v) return false;
-  const o = v as Record<string, unknown>;
-  return (
-    Array.isArray(o.skills) &&
-    typeof o.experience_years === "number" &&
-    typeof o.summary === "string" &&
-    Array.isArray(o.experiences) &&
-    Array.isArray(o.languages) &&
-    Array.isArray(o.education) &&
-    (o.extracted_source === "cv_text" || o.extracted_source === "fallback")
-  );
-}
 
 async function fallbackProfile(input: CvParserInput): Promise<CvProfile> {
   const ctx = await getCandidateCvContext(input.candidateId);
@@ -84,35 +80,19 @@ async function fallbackProfile(input: CvParserInput): Promise<CvProfile> {
 }
 
 export async function runCvParser(input: CvParserInput): Promise<AgentResult<CvProfile>> {
-  // First attempt
-  const result = await runAgent<CvProfile>({
+  // Validación + 1 reintento los hace el core in-conversation (más barato que
+  // re-invocar: no repaga el contexto completo); doble fallo → fallback.
+  return runAgent<CvProfile>({
     agent: "cv-parser",
     model: "gpt-4o-mini",
+    maxTokens: 1200,
     system: SYSTEM_PROMPT,
     user: `Extrae el perfil del candidato con id "${input.candidateId}". Llama primero a get_candidate_cv.`,
     tools,
     input,
+    validate: (v) => CvProfileSchema.parse(v),
     fallback: () => fallbackProfile(input),
   });
-
-  if (isValidCvProfile(result.output)) return result;
-
-  // 1 retry if output shape is invalid
-  const retry = await runAgent<CvProfile>({
-    agent: "cv-parser",
-    model: "gpt-4o-mini",
-    system: SYSTEM_PROMPT,
-    user: `Extrae el perfil del candidato con id "${input.candidateId}". Llama primero a get_candidate_cv. Devuelve SOLO JSON válido sin markdown.`,
-    tools,
-    input,
-    fallback: () => fallbackProfile(input),
-  });
-
-  if (isValidCvProfile(retry.output)) return retry;
-
-  // Both attempts failed — degrade to heuristic
-  const fb = await fallbackProfile(input);
-  return { output: fb, status: "fallback" };
 }
 
 /** Perfil vacío — usado cuando el texto del CV no da para extraer nada. */
@@ -137,24 +117,15 @@ export async function extractProfileFromText(cvText: string): Promise<AgentResul
   }
 
   const user = `Texto del CV a analizar:\n\n"""\n${trimmed.slice(0, 8000)}\n"""`;
-  const opts = {
+  return runAgent<CvProfile>({
     agent: "cv-parser",
     model: "gpt-4o-mini",
+    maxTokens: 1200,
     system: SYSTEM_PROMPT_TEXT,
     user,
     tools: [] as AgentTool[],
     input: { source: "careers-parse", length: trimmed.length },
+    validate: (v) => CvProfileSchema.parse(v),
     fallback: () => emptyCvProfile(),
-  };
-
-  const result = await runAgent<CvProfile>(opts);
-  if (isValidCvProfile(result.output)) return result;
-
-  const retry = await runAgent<CvProfile>({
-    ...opts,
-    user: `${user}\n\nDevuelve SOLO JSON válido con la estructura exacta, sin markdown.`,
   });
-  if (isValidCvProfile(retry.output)) return retry;
-
-  return { output: emptyCvProfile(), status: "fallback" };
 }

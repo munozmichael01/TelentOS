@@ -29,6 +29,9 @@ export type AgentResult<T> = {
 
 const DEFAULT_MODEL = "gpt-4o";
 const MAX_TOOL_TURNS = 6;
+// Techo de facturación y latencia (doc de coste §6.2): los outputs medidos de todos
+// los agentes actuales caben en 1.024 tok; quien necesite más lo pide explícito.
+const DEFAULT_MAX_TOKENS = 1024;
 
 export function hasOpenAI() {
   return Boolean(process.env.OPENAI_API_KEY);
@@ -65,8 +68,20 @@ export async function runAgent<T>(opts: {
   fallback: () => Promise<T> | T;
   /** Override model per agent — default: gpt-4o. Use gpt-4o-mini for extraction tasks. */
   model?: string;
+  /**
+   * Validación del output antes de entregarlo a la UI (auditoría §1: JSON.parse
+   * directo). Debe LANZAR con mensaje descriptivo si el valor no cumple — encaja
+   * `schema.parse` de zod tal cual. Un fallo → 1 reintento con feedback del error
+   * al modelo; segundo fallo → fallback heurístico.
+   */
+  validate?: (value: unknown) => T;
+  /** Techo de tokens de output por agente — default 1024. */
+  maxTokens?: number;
 }): Promise<AgentResult<T>> {
-  const { agent, system, user, priorMessages, tools, input, fallback, model = DEFAULT_MODEL } = opts;
+  const {
+    agent, system, user, priorMessages, tools, input, fallback,
+    model = DEFAULT_MODEL, validate, maxTokens = DEFAULT_MAX_TOKENS,
+  } = opts;
 
   if (!hasOpenAI()) {
     const output = await fallback();
@@ -82,6 +97,8 @@ export async function runAgent<T>(opts: {
       { role: "user", content: user },
     ];
 
+    let retryUsed = false;
+
     for (let turn = 0; turn < MAX_TOOL_TURNS; turn++) {
       const completion = await openai.chat.completions.create({
         model,
@@ -89,6 +106,7 @@ export async function runAgent<T>(opts: {
         tools: tools.length ? tools.map((t) => t.definition) : undefined,
         response_format: { type: "json_object" },
         temperature: 0.4,
+        max_tokens: maxTokens,
       });
 
       const msg = completion.choices[0].message;
@@ -116,9 +134,25 @@ export async function runAgent<T>(opts: {
         continue;
       }
 
-      const output = JSON.parse(msg.content ?? "{}") as T;
-      await logRun(agent, input, output, "ok");
-      return { output, status: "ok" };
+      // Output final: parse + validación (si el agente define schema). Un output
+      // inválido no llega jamás a la UI: 1 reintento con el error como feedback,
+      // y si reincide, fallback heurístico.
+      try {
+        const parsed = JSON.parse(msg.content ?? "{}");
+        const output = validate ? validate(parsed) : (parsed as T);
+        await logRun(agent, input, output, "ok");
+        return { output, status: "ok" };
+      } catch (validationErr) {
+        if (retryUsed) throw validationErr;
+        retryUsed = true;
+        messages.push({
+          role: "user",
+          content:
+            `Tu última respuesta no cumple el formato requerido: ${String(validationErr).slice(0, 400)}. ` +
+            `Responde de nuevo SOLO con el objeto JSON corregido, sin explicaciones.`,
+        });
+        continue;
+      }
     }
     throw new Error("Máximo de turnos de tools alcanzado");
   } catch (e) {
