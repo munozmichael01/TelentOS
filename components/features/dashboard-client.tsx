@@ -6,6 +6,7 @@ import { apiFetch, notifyError } from "@/lib/api-client";
 import { StatCard } from "@/components/stat-card";
 import { AgentPanel } from "@/components/agent-hint";
 import { IconSparkle } from "@/components/ui/icons";
+import { AgentActionButton } from "@/components/ui/agent-action-button";
 import { InboxItem } from "@/components/features/inbox-item";
 import type { DashboardData, InboxItem as InboxItemType, InboxType, InboxAction, AgentInsight, PulseMetric } from "@/lib/dashboard";
 
@@ -94,7 +95,6 @@ export function DashboardClient({
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<string | null>(data.lastInsightAt);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
-  const [showUpdateTip, setShowUpdateTip] = useState(false);
 
   useEffect(() => { setPrefs(loadPrefs()); }, []);
 
@@ -366,32 +366,19 @@ export function DashboardClient({
               <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "9px", color: "#8C877E" }}>
                 {lastRefresh ? `Actualizado ${relativeTime(lastRefresh)}` : "Sin analizar aún"}
               </span>
-              <span
-                style={{ position: "relative", display: "inline-flex" }}
-                onMouseEnter={() => !canRefresh && setShowUpdateTip(true)}
-                onMouseLeave={() => setShowUpdateTip(false)}
-              >
-                <button
-                  onClick={refreshInsights}
-                  disabled={!canRefresh || refreshing}
-                  style={{
-                    fontFamily: "'Space Mono',monospace", fontSize: "9px",
-                    color: canRefresh ? "#C6F24E" : "#5A574F",
-                    background: "none", border: "none",
-                    display: "flex", alignItems: "center", gap: "4px",
-                    padding: 0, cursor: canRefresh ? "pointer" : "not-allowed",
-                    opacity: refreshing ? 0.6 : 1,
-                  }}
-                >
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 018-8 8 8 0 016.9 4M20 12a8 8 0 01-8 8 8 8 0 01-6.9-4M18 3v4h-4M6 21v-4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  {refreshing ? "…" : "Actualizar"}
-                </button>
-                {showUpdateTip && (
-                  <span style={{ position: "absolute", top: "calc(100% + 7px)", left: 0, zIndex: 30, width: "214px", background: "#FCFAF6", color: "#1A1A17", border: "1px solid #E7E1D4", borderRadius: "9px", boxShadow: "0 12px 26px -12px rgba(0,0,0,.55)", padding: "9px 11px", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "10.5px", lineHeight: 1.5, fontWeight: 500, pointerEvents: "none" }}>
-                    Marca <strong>Hecho</strong> o <strong>Ignorar</strong> en las {openInsights.length} sugerencias actuales antes de pedir un análisis nuevo.
-                  </span>
-                )}
-              </span>
+              {/* Gated hasta triar los insights abiertos — la afordancia y el porqué los da
+                  AgentActionButton (tone minimal, onDark) vía disabled + gatedReason (tooltip nativo). */}
+              <AgentActionButton
+                idleLabel="Actualizar"
+                busyLabel="…"
+                busy={refreshing}
+                onClick={refreshInsights}
+                disabled={!canRefresh}
+                gatedReason={`Marca Hecho o Ignorar en las ${openInsights.length} sugerencias actuales antes de pedir un análisis nuevo.`}
+                tone="minimal"
+                size="xs"
+                onDark
+              />
             </div>
 
             {/* Feed */}

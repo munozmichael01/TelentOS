@@ -83,9 +83,11 @@ export function AssistantHost() {
   const [busy, setBusy] = useState(false);
   const [context, setContext] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [seed, setSeed] = useState<string | null>(null);
   const threadRef = useRef<HTMLDivElement>(null);
 
-  // ⌘J abre/cierra; Esc cierra; el trigger de la topbar dispara "assistant:toggle"
+  // ⌘J abre/cierra; Esc cierra; "assistant:toggle" (topbar / módulos) abre/cierra;
+  // "assistant:ask" (entrada de módulo) abre y siembra el primer turno.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j") {
@@ -97,13 +99,32 @@ export function AssistantHost() {
     function onToggle() {
       setOpen((o) => !o);
     }
+    function onAsk(e: Event) {
+      const q = (e as CustomEvent<{ question?: string }>).detail?.question;
+      if (!q) return;
+      setOpen(true);
+      setSeed(q);
+    }
     window.addEventListener("keydown", onKey);
     window.addEventListener("assistant:toggle", onToggle);
+    window.addEventListener("assistant:ask", onAsk);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("assistant:toggle", onToggle);
+      window.removeEventListener("assistant:ask", onAsk);
     };
   }, []);
+
+  // Dispara el primer turno sembrado una vez el drawer está abierto (contexto del
+  // módulo pasado explícito para no depender del timing del estado).
+  useEffect(() => {
+    if (open && seed) {
+      const q = seed;
+      setSeed(null);
+      void ask(q, moduleContext(pathname).label);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, seed]);
 
   // Al abrir, precarga el contexto del módulo actual (descartable)
   useEffect(() => {
@@ -119,7 +140,7 @@ export function AssistantHost() {
     threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: "smooth" });
   }, [msgs, busy]);
 
-  async function ask(q: string) {
+  async function ask(q: string, ctxOverride?: string | null) {
     const query = q.trim();
     if (!query || busy) return;
     setInput("");
@@ -130,7 +151,9 @@ export function AssistantHost() {
         method: "POST",
         json: {
           query,
-          context,
+          // ctxOverride cubre el seeding desde un módulo (assistant:ask) sin depender
+          // del timing del estado `context` recién fijado al abrir.
+          context: ctxOverride !== undefined ? ctxOverride : context,
           history: msgs.map((m) => ({ role: m.role, content: m.content })),
         },
       });
