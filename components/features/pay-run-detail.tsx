@@ -4,6 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatMoney } from "@/lib/format";
 import { apiFetch, notifySuccess } from "@/lib/api-client";
+import { AgentActionButton } from "@/components/ui/agent-action-button";
+import { AgentBadge } from "@/components/ui/agent-badge";
+import { AgentPanel } from "@/components/agent-hint";
+import { IconClose } from "@/components/ui/icons";
+import type { ReviewFinding } from "@/lib/payroll/copilot";
 import type { PayRun, PayRunLine, PayRunLineItem, PayRunAuditLog, PayrollExport } from "@/lib/types";
 
 // ── Design tokens ────────────────────────────────────────────────────────────
@@ -507,6 +512,14 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
   const [tab, setTab] = useState<"empleados" | "aprobacion" | "exportar">("empleados");
   const [sheetLineId, setSheetLineId] = useState<string | null>(null);
   const [payslipLineId, setPayslipLineId] = useState<string | null>(null);
+  // Copilot de nómina (S1→S2): anota la corrida antes de aprobar; solo señala.
+  const [review, setReview] = useState<{
+    findings: ReviewFinding[];
+    summary: string;
+    summary_source: "ok" | "fallback";
+    compared_to: { period_label: string } | null;
+  } | null>(null);
+  const [reviewing, setReviewing] = useState(false);
   const mountedRef = useRef(true);
 
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -520,6 +533,18 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
   }, [id]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  async function handleAnnotate() {
+    setReviewing(true);
+    try {
+      const res = await apiFetch<NonNullable<typeof review>>(`/api/payroll/runs/${id}/review`);
+      if (mountedRef.current) setReview(res);
+    } catch {
+      // apiFetch ya notifica; el botón vuelve a reposo
+    } finally {
+      if (mountedRef.current) setReviewing(false);
+    }
+  }
 
   async function handleRegenerate() {
     if (generating) return;
@@ -647,6 +672,12 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
           </div>
           <div style={{ display: "flex", gap: "10px", flexDirection: "column", alignItems: "flex-end" }}>
             <div style={{ display: "flex", gap: "10px" }}>
+              <AgentActionButton
+                idleLabel="Anotar corrida"
+                busyLabel="Anotando…"
+                busy={reviewing}
+                onClick={handleAnnotate}
+              />
               {run.status === "draft" && (
                 <button
                   onClick={handleRegenerate}
@@ -683,6 +714,41 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
             )}
           </div>
         </div>
+
+        {/* Copilot de nómina — S2 narrativa: la voz del agente en tinta. Solo señala. */}
+        {review && (
+          <AgentPanel className="mb-5">
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+              <AgentBadge kind={review.summary_source === "ok" ? "ia" : "heuristica"} onDark />
+              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", letterSpacing: ".5px", color: "#8C877E" }}>
+                {review.compared_to ? `vs ${review.compared_to.period_label}` : "sin corrida anterior comparable"}
+              </span>
+              <button
+                onClick={() => setReview(null)}
+                aria-label="Cerrar anotaciones"
+                style={{ marginLeft: "auto", background: "none", border: "none", color: "#8C877E", cursor: "pointer", display: "inline-flex", padding: "2px" }}
+              >
+                <IconClose />
+              </button>
+            </div>
+            <p style={{ fontSize: "13.5px", lineHeight: 1.55, margin: "0 0 12px" }}>{review.summary}</p>
+            {review.findings.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+                {review.findings.map((f, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                    <span
+                      style={{
+                        width: "6px", height: "6px", borderRadius: "50%", marginTop: "6px", flexShrink: 0,
+                        background: f.severity === "warning" ? "#E0A23C" : "#8C877E",
+                      }}
+                    />
+                    <span style={{ fontSize: "12.5px", lineHeight: 1.5, color: "#D8D3C8" }}>{f.text}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </AgentPanel>
+        )}
 
         {/* Summary strip */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: "10px", marginBottom: "20px" }}>
