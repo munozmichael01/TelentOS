@@ -37,7 +37,22 @@ export function hasOpenAI() {
   return Boolean(process.env.OPENAI_API_KEY);
 }
 
-async function logRun(agent: string, input: unknown, output: unknown, status: string) {
+/** Consumo real por invocación — la base de datos para calibrar max_tokens y del presupuesto por empresa. */
+export type RunUsage = {
+  prompt_tokens: number;
+  completion_tokens: number;
+  completions: number; // turnos del loop (cada uno repaga el contexto)
+  truncated: boolean; // algún finish_reason === "length" (techo alcanzado)
+  model: string;
+};
+
+async function logRun(
+  agent: string,
+  input: unknown,
+  output: unknown,
+  status: string,
+  usage?: RunUsage,
+) {
   try {
     // service_role: 0015 dejó agent_runs sin políticas de INSERT para
     // authenticated y el log fallaba en silencio (catch de abajo).
@@ -46,10 +61,14 @@ async function logRun(agent: string, input: unknown, output: unknown, status: st
       input && typeof input === "object" && "companyId" in input
         ? (input as { companyId?: string }).companyId ?? null
         : null;
+    // _usage viaja dentro del jsonb de input (sin migración); cuando llegue el
+    // presupuesto por empresa se promueve a columnas con backfill desde aquí.
+    const inputPayload =
+      input && typeof input === "object" ? { ...(input as object), ...(usage ? { _usage: usage } : {}) } : input ?? {};
     await supabase.from("agent_runs").insert({
       agent,
       company_id: companyId,
-      input: input ?? {},
+      input: inputPayload,
       output: output ?? {},
       status,
     });
@@ -89,6 +108,8 @@ export async function runAgent<T>(opts: {
     return { output, status: "fallback" };
   }
 
+  const usage: RunUsage = { prompt_tokens: 0, completion_tokens: 0, completions: 0, truncated: false, model };
+
   try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const messages: ChatCompletionMessageParam[] = [
@@ -108,6 +129,11 @@ export async function runAgent<T>(opts: {
         temperature: 0.4,
         max_tokens: maxTokens,
       });
+
+      usage.prompt_tokens += completion.usage?.prompt_tokens ?? 0;
+      usage.completion_tokens += completion.usage?.completion_tokens ?? 0;
+      usage.completions++;
+      if (completion.choices[0].finish_reason === "length") usage.truncated = true;
 
       const msg = completion.choices[0].message;
       messages.push(msg);
@@ -140,7 +166,7 @@ export async function runAgent<T>(opts: {
       try {
         const parsed = JSON.parse(msg.content ?? "{}");
         const output = validate ? validate(parsed) : (parsed as T);
-        await logRun(agent, input, output, "ok");
+        await logRun(agent, input, output, "ok", usage);
         return { output, status: "ok" };
       } catch (validationErr) {
         if (retryUsed) throw validationErr;
@@ -156,9 +182,10 @@ export async function runAgent<T>(opts: {
     }
     throw new Error("Máximo de turnos de tools alcanzado");
   } catch (e) {
-    // Degradación elegante: heurística determinista + log del error
+    // Degradación elegante: heurística determinista + log del error (con el
+    // consumo parcial: un fallback también factura los turnos que llegó a dar)
     const output = await fallback();
-    await logRun(agent, input, { fallback: output, error: String(e) }, "fallback");
+    await logRun(agent, input, { fallback: output, error: String(e) }, "fallback", usage);
     return { output, status: "fallback" };
   }
 }
