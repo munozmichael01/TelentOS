@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
 import { AgentActionButton } from "@/components/ui/agent-action-button";
-import { IconSparkle } from "@/components/ui/icons";
+import { GeneratorBlock } from "@/components/ui/generator-block";
+import { FieldProposal } from "@/components/ui/field-proposal";
 
 type FormState = {
   title: string;
@@ -190,17 +191,14 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
     <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "16px", alignItems: "start" }}>
       {/* ── left column ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-        {/* dark agent panel */}
-        <div style={{ background: "#1A1A17", color: "#F4F0E8", borderRadius: "16px", padding: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "12px" }}>
-            <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "rgba(198,242,78,.16)", color: "#C6F24E", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <IconSparkle className="size-3.5" />
-            </span>
-            <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px" }}>Agente redactor</span>
-          </div>
-          <div style={{ fontSize: "13px", color: "#CFCAC0", marginBottom: "10px", lineHeight: 1.55 }}>
-            Describe el rol en una frase y genero el borrador completo: título, descripción, skills y salario de mercado.
-          </div>
+        {/* Redacción asistida — B-6 GeneratorBlock (§4.5a) */}
+        <GeneratorBlock
+          hint="Describe el rol en una frase y genero el borrador completo: título, descripción, skills y salario de mercado. Lo editas todo después."
+          idleLabel="Redactar con IA"
+          busyLabel="Redactando…"
+          busy={loadingAgent}
+          onGenerate={() => { if (brief.trim()) askAgent("draft"); }}
+        >
           <textarea
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
@@ -210,19 +208,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
             onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 3px rgba(220,239,228,0.7)"; }}
             onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
           />
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "12px" }}>
-            {/* Gate de brief vacío en el onClick: AgentActionButton solo deshabilita por busy (fit gap reportado). */}
-            <AgentActionButton
-              idleLabel="Generar borrador"
-              busyLabel="Generando…"
-              busy={loadingAgent}
-              onClick={() => { if (brief.trim()) askAgent("draft"); }}
-            />
-            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#8C877E" }}>
-              Edítalo todo después · tú decides
-            </span>
-          </div>
-        </div>
+        </GeneratorBlock>
 
         {/* form card */}
         <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "22px" }}>
@@ -437,20 +423,15 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
               </div>
             )}
 
-            {/* title/description suggestion */}
+            {/* title suggestion — B-7 FieldProposal (editable + "usar sugerencia") */}
             {suggestion.title && (
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#0E5C4A", marginBottom: "8px" }}>Título sugerido</div>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "#3A3833", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "10px", padding: "9px 12px", marginBottom: "4px" }}>
-                  {suggestion.title}
-                </div>
-                <button
-                  onClick={() => applySuggestion(["title"])}
-                  style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#0E5C4A", textDecoration: "underline", background: "none", border: "none", padding: 0, cursor: "pointer" }}
-                >
-                  aplicar título
-                </button>
-              </div>
+              <FieldProposal
+                label="Título sugerido"
+                value={form.title}
+                suggested={suggestion.title}
+                onUse={() => applySuggestion(["title"])}
+                onChange={(v) => set("title", v)}
+              />
             )}
 
             {suggestion.rationale && (

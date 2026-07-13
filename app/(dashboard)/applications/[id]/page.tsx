@@ -14,7 +14,12 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/utils";
+import { explainFitScore, type SkillRef } from "@/lib/fit-explain";
 import type { EvaluationTemplate, JobStage } from "@/lib/types";
+
+type SkillJoinRow = { skill_id: string; skills: { name: string } | null };
+const toSkillRefs = (rows: SkillJoinRow[] | null): SkillRef[] =>
+  (rows ?? []).filter((r) => r.skills).map((r) => ({ id: r.skill_id, name: r.skills!.name }));
 
 export default async function ApplicationPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -38,10 +43,33 @@ export default async function ApplicationPage({ params }: { params: { id: string
 
   const candidate = app.candidates as unknown as {
     id: string; name: string; email: string; phone: string | null; location: string | null;
+    city: string | null; country_code: string | null;
     skills: string[]; experience_years: number; summary: string | null; cv_url: string | null;
   };
-  const job = app.jobs as unknown as { title: string };
+  const job = app.jobs as unknown as {
+    id: string; title: string; skills: string[]; experience_min_years: number;
+    location: string | null; city: string | null; country_code: string | null;
+  };
   const currentStage = app.job_stages as unknown as { name: string } | null;
+
+  // Desglose determinista del fit (§4.5b): mismo cálculo que el score persistido —
+  // el número no depende del LLM. Se muestra al cargar, sin invocar al agente.
+  const [{ data: candSkillRows }, { data: jobSkillRows }] = await Promise.all([
+    supabase.from("candidate_skills").select("skill_id, skills(name)").eq("candidate_id", candidate.id),
+    supabase.from("job_skills").select("skill_id, skills(name)").eq("job_id", app.job_id),
+  ]);
+  const fitBreakdown = explainFitScore(
+    { skills: candidate.skills ?? [], experience_years: candidate.experience_years ?? 0, location: candidate.location },
+    { skills: job.skills ?? [], experience_min_years: job.experience_min_years ?? 0, location: job.location },
+    {
+      candidateSkills: toSkillRefs(candSkillRows as unknown as SkillJoinRow[] | null),
+      jobSkills: toSkillRefs(jobSkillRows as unknown as SkillJoinRow[] | null),
+      candidateCity: candidate.city,
+      candidateCountry: candidate.country_code,
+      jobCity: job.city,
+      jobCountry: job.country_code,
+    },
+  );
 
   return (
     <div>
@@ -136,7 +164,7 @@ export default async function ApplicationPage({ params }: { params: { id: string
         <div>
           <CandidateAnalyzerPanel
             applicationId={app.id}
-            fitScore={app.fit_score}
+            fitBreakdown={fitBreakdown}
             savedAnalysis={app.ai_analysis ?? null}
           />
         </div>

@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, notifyError } from "@/lib/api-client";
 import { formatDate } from "@/lib/utils";
-import { AgentActionButton } from "@/components/ui/agent-action-button";
-import { IconSparkle } from "@/components/ui/icons";
+import { GeneratorBlock } from "@/components/ui/generator-block";
 import type { OnboardingTask } from "@/lib/types";
 
 export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tasks: OnboardingTask[] }) {
@@ -71,52 +70,38 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
     }
   }
 
+  const hasAgentTasks = tasks.some((t) => t.generated_by === "agent");
+
   return (
-    <div style={{ maxWidth: "680px" }}>
+    <div style={{ maxWidth: "680px", display: "flex", flexDirection: "column", gap: "14px" }}>
+      {/* Taller del agente — B-6 GeneratorBlock; la checklist aterriza en la card clara de abajo */}
+      <GeneratorBlock
+        title="Checklist de onboarding"
+        hint="Genero una checklist según el rol y el departamento. La editas, marcas tareas o la regeneras — el seguimiento es tuyo."
+        idleLabel={hasAgentTasks ? "Regenerar checklist" : "Generar checklist"}
+        busyLabel="Generando…"
+        busy={generating}
+        onGenerate={generate}
+      />
+
       <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "20px 22px" }}>
-        {/* header */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-          <span style={{ width: "24px", height: "24px", borderRadius: "7px", background: "#1A1A17", color: "#C6F24E", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <IconSparkle className="size-3.5" />
-          </span>
-          <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Onboarding</span>
-          <span style={{ marginLeft: "auto", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#79746B" }}>
+        {/* counter */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+          <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px" }}>Tareas</span>
+          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#79746B" }}>
             {done}/{tasks.length}
           </span>
-          <AgentActionButton
-            idleLabel={tasks.some((t) => t.generated_by === "agent") ? "Regenerar checklist" : "Generar checklist"}
-            busyLabel="Generando…"
-            busy={generating}
-            onClick={generate}
-          />
         </div>
 
-        {/* agent hint banner */}
-        {tasks.some((t) => t.generated_by === "agent") && (
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "9px", background: "#DCEFE4", border: "1px solid #BFE0D2", borderRadius: "11px", padding: "10px 12px", margin: "12px 0 4px" }}>
-            <span style={{ color: "#0E5C4A", display: "flex", flexShrink: 0, marginTop: "1px" }}>
-              <IconSparkle className="size-4" />
-            </span>
-            <span style={{ fontSize: "12px", lineHeight: 1.45, color: "#2C5247" }}>
-              El <b>agente de onboarding</b> propuso esta checklist según el rol y departamento. Edítala, marca tareas o regenérala — el seguimiento es tuyo.
-            </span>
-          </div>
-        )}
-
         {tasks.length === 0 && !generating && (
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "9px", background: "#DCEFE4", border: "1px solid #BFE0D2", borderRadius: "11px", padding: "10px 12px", margin: "12px 0 4px" }}>
-            <span style={{ color: "#0E5C4A", display: "flex", flexShrink: 0, marginTop: "1px" }}>
-              <IconSparkle className="size-4" />
-            </span>
-            <span style={{ fontSize: "12px", lineHeight: 1.45, color: "#2C5247" }}>
-              Sin tareas aún. Pulsa <b>Generar checklist</b> para que el agente genere la checklist según el rol y departamento, o añade tareas manualmente.
-            </span>
-          </div>
+          <p style={{ fontSize: "12.5px", lineHeight: 1.45, color: "#79746B", marginBottom: "12px" }}>
+            Sin tareas aún. Genera la checklist con el agente arriba o añade tareas manualmente.
+          </p>
         )}
 
         {/* progress bar */}
         {tasks.length > 0 && (
-          <div style={{ height: "7px", borderRadius: "99px", background: "#F4F0E8", overflow: "hidden", margin: "10px 0 16px" }}>
+          <div style={{ height: "7px", borderRadius: "99px", background: "#F4F0E8", overflow: "hidden", margin: "0 0 16px" }}>
             <div style={{ width: `${pct}%`, height: "100%", background: "#0E5C4A", transition: "width .2s ease" }} />
           </div>
         )}
