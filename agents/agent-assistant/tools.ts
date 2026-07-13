@@ -99,6 +99,27 @@ async function getAbsenceOverlaps(companyId: string, args: { from?: string; to?:
   };
 }
 
+async function getRecruitingStats(companyId: string, args: { period_month?: string }) {
+  const db = createAdminClient();
+  const month = args.period_month ?? new Date().toISOString().slice(0, 7);
+  const from = `${month}-01`;
+  const to = `${month}-31`;
+  const { data } = await db
+    .from("applications")
+    .select("id, source, created_at, jobs!inner(company_id, title)")
+    .eq("jobs.company_id", companyId)
+    .gte("created_at", from)
+    .lte("created_at", `${to}T23:59:59`);
+  const rows = (data ?? []) as unknown as Array<{ source: string | null; jobs: { title: string } }>;
+  const bySource: Record<string, number> = {};
+  const byJob: Record<string, number> = {};
+  for (const a of rows) {
+    bySource[a.source ?? "desconocido"] = (bySource[a.source ?? "desconocido"] ?? 0) + 1;
+    byJob[a.jobs.title] = (byJob[a.jobs.title] ?? 0) + 1;
+  }
+  return { period_month: month, total_applications: rows.length, by_source: bySource, by_job: byJob };
+}
+
 async function getPipelineSnapshot(companyId: string, args: { job_title?: string }) {
   const db = createAdminClient();
   let jobsQ = db.from("jobs").select("id, title, status").eq("company_id", companyId).eq("status", "active").limit(10);
@@ -196,6 +217,14 @@ export function buildAssistantTools(companyId: string, role: AssistantRole): Age
         { from: { type: "string", description: "YYYY-MM-DD" }, to: { type: "string" }, department: { type: "string" } },
       ),
       execute: (a) => getAbsenceOverlaps(companyId, a as Record<string, string>),
+    },
+    {
+      definition: def(
+        "get_recruiting_stats",
+        "Candidaturas (inscritos) de un mes: total, por origen/canal y por oferta. Para '¿cuántos inscritos este mes?'.",
+        { period_month: { type: "string", description: "YYYY-MM; por defecto el mes actual" } },
+      ),
+      execute: (a) => getRecruitingStats(companyId, a as { period_month?: string }),
     },
     {
       definition: def(
