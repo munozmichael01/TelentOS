@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
+import { LocationAutocomplete } from "@/components/features/location-autocomplete";
+import { COUNTRIES, countryName } from "@/lib/countries";
+import { COMMON_LANGUAGES, LANGUAGE_LEVELS } from "@/lib/languages";
 import { cn } from "@/lib/utils";
 import type { EditableCvProfile } from "@/lib/cv-profile";
 import type { CvExperience, CvLanguage, CvEducation } from "@/agents/agent-cv-parser";
@@ -35,22 +39,11 @@ const SENIORITY_OPTIONS = [
   { value: "exec", label: "Exec" },
 ] as const;
 
-const LEVEL_OPTIONS = [
-  { value: "", label: "Sin especificar" },
-  { value: "a1", label: "A1" },
-  { value: "a2", label: "A2" },
-  { value: "b1", label: "B1" },
-  { value: "b2", label: "B2" },
-  { value: "c1", label: "C1" },
-  { value: "c2", label: "C2" },
-  { value: "native", label: "Nativo" },
-] as const;
+/** Valor centinela del select de idioma para "no está en el catálogo → texto libre". */
+const OTHER_LANGUAGE = "__other__";
 
-const selectClass = cn(
-  "flex h-8 w-full rounded-[11px] border-[1.5px] border-[#E7E1D4] bg-[#F4F0E8] px-2 text-xs",
-  "transition-colors focus-visible:outline-none focus-visible:border-[#0E5C4A]",
-  "focus-visible:ring-[3px] focus-visible:ring-[#DCEFE4] disabled:opacity-50",
-);
+/** Altura compacta para selects dentro de filas (el NativeSelect base es h-10). */
+const compactSelect = "h-8 text-xs px-2";
 
 const sectionLegend = "text-xs font-bold uppercase tracking-widest text-muted-foreground";
 
@@ -67,6 +60,10 @@ type Props = {
  */
 export function CvProfileFields({ profile: p, onChange, disabled = false }: Props) {
   const [skillInput, setSkillInput] = useState("");
+  // Filas de idioma en modo "Otro" (texto libre). Complementa la derivación por
+  // catálogo: una fila recién cambiada a "Otro" tiene language === "" y sin esto
+  // volvería a renderizarse como select vacío.
+  const [otherLangRows, setOtherLangRows] = useState<Set<number>>(new Set());
 
   // ── Skills ──────────────────────────────────────────────────────────────
   function addSkill() {
@@ -102,6 +99,12 @@ export function CvProfileFields({ profile: p, onChange, disabled = false }: Prop
     onChange({ ...p, languages: p.languages.map((l, i) => (i === idx ? { ...l, ...patch } : l)) });
   }
   function removeLanguage(idx: number) {
+    // Reindexar el set de filas "Otro": las posteriores a la borrada bajan una posición.
+    setOtherLangRows((cur) => {
+      const next = new Set<number>();
+      cur.forEach((i) => { if (i < idx) next.add(i); else if (i > idx) next.add(i - 1); });
+      return next;
+    });
     onChange({ ...p, languages: p.languages.filter((_, i) => i !== idx) });
   }
 
@@ -130,15 +133,17 @@ export function CvProfileFields({ profile: p, onChange, disabled = false }: Prop
           <Label htmlFor="cvp-email" className="text-xs">Email</Label>
           <Input id="cvp-email" type="email" value={p.email} onChange={(e) => onChange({ ...p, email: e.target.value })} />
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <Label htmlFor="cvp-phone" className="text-xs">Teléfono</Label>
-            <Input id="cvp-phone" value={p.phone} onChange={(e) => onChange({ ...p, phone: e.target.value })} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="cvp-location" className="text-xs">Ubicación (display)</Label>
-            <Input id="cvp-location" value={p.location} onChange={(e) => onChange({ ...p, location: e.target.value })} />
-          </div>
+        <div className="space-y-1">
+          <Label htmlFor="cvp-phone" className="text-xs">Teléfono</Label>
+          <Input id="cvp-phone" value={p.phone} onChange={(e) => onChange({ ...p, phone: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Ubicación</Label>
+          <LocationAutocomplete
+            name="cvp-location"
+            value={p.location}
+            onChange={(v) => onChange({ ...p, location: v })}
+          />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
@@ -146,9 +151,16 @@ export function CvProfileFields({ profile: p, onChange, disabled = false }: Prop
             <Input id="cvp-city" value={p.city} onChange={(e) => onChange({ ...p, city: e.target.value })} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="cvp-cc" className="text-xs">País (ISO-2)</Label>
-            <Input id="cvp-cc" maxLength={2} placeholder="ES" value={p.country_code}
-              onChange={(e) => onChange({ ...p, country_code: e.target.value.toUpperCase().slice(0, 2) })} />
+            <Label htmlFor="cvp-cc" className="text-xs">País</Label>
+            <NativeSelect id="cvp-cc" value={p.country_code}
+              onChange={(e) => onChange({ ...p, country_code: e.target.value })}>
+              <option value="">Sin especificar</option>
+              {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+              {/* Código extraído fuera del catálogo: se preserva en vez de perderse en silencio */}
+              {p.country_code && !COUNTRIES.some((c) => c.code === p.country_code) && (
+                <option value={p.country_code}>{countryName(p.country_code)}</option>
+              )}
+            </NativeSelect>
           </div>
         </div>
       </fieldset>
@@ -230,10 +242,10 @@ export function CvProfileFields({ profile: p, onChange, disabled = false }: Prop
                   <div className="grid grid-cols-3 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Seniority</Label>
-                      <select className={selectClass} value={exp.seniority ?? ""} disabled={disabled}
+                      <NativeSelect className={compactSelect} value={exp.seniority ?? ""} disabled={disabled}
                         onChange={(e) => updateExperience(idx, { seniority: (e.target.value as CvExperience["seniority"]) || null })}>
                         {SENIORITY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
+                      </NativeSelect>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Inicio</Label>
@@ -275,27 +287,55 @@ export function CvProfileFields({ profile: p, onChange, disabled = false }: Prop
         </div>
         {p.languages.length === 0 && <p className="text-xs text-muted-foreground">Sin idiomas.</p>}
         <div className="space-y-2">
-          {p.languages.map((lang, idx) => (
-            <div key={idx} className="flex items-end gap-2">
-              <div className="flex-1 space-y-1">
-                <Label className="text-xs">Idioma</Label>
-                <Input className="h-8 text-xs" value={lang.language} disabled={disabled}
-                  onChange={(e) => updateLanguage(idx, { language: e.target.value })} />
+          {p.languages.map((lang, idx) => {
+            // "Otro": idioma no vacío que no está en el catálogo, o fila que el
+            // usuario cambió explícitamente a texto libre.
+            const isOther = otherLangRows.has(idx) || (lang.language !== "" && !(COMMON_LANGUAGES as readonly string[]).includes(lang.language));
+            return (
+              <div key={idx} className="flex items-end gap-2">
+                <div className="flex-1 space-y-1">
+                  <Label className="text-xs">Idioma</Label>
+                  <NativeSelect className={compactSelect} disabled={disabled}
+                    value={isOther ? OTHER_LANGUAGE : lang.language}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === OTHER_LANGUAGE) {
+                        setOtherLangRows((cur) => new Set(cur).add(idx));
+                        updateLanguage(idx, { language: "" });
+                      } else {
+                        setOtherLangRows((cur) => { const next = new Set(cur); next.delete(idx); return next; });
+                        updateLanguage(idx, { language: v });
+                      }
+                    }}>
+                    <option value="">Selecciona idioma</option>
+                    {COMMON_LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
+                    <option value={OTHER_LANGUAGE}>Otro…</option>
+                  </NativeSelect>
+                </div>
+                {isOther && (
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-xs">Especifica</Label>
+                    <Input className="h-8 text-xs" value={lang.language} disabled={disabled}
+                      placeholder="Idioma"
+                      onChange={(e) => updateLanguage(idx, { language: e.target.value })} />
+                  </div>
+                )}
+                <div className="w-40 space-y-1">
+                  <Label className="text-xs">Nivel</Label>
+                  <NativeSelect className={compactSelect} value={lang.level ?? ""} disabled={disabled}
+                    onChange={(e) => updateLanguage(idx, { level: (e.target.value as CvLanguage["level"]) || null })}>
+                    <option value="">Sin especificar</option>
+                    {LANGUAGE_LEVELS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </NativeSelect>
+                </div>
+                {!disabled && (
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeLanguage(idx)} className="h-8 w-8 shrink-0">
+                    <IconClose />
+                  </Button>
+                )}
               </div>
-              <div className="w-28 space-y-1">
-                <Label className="text-xs">Nivel</Label>
-                <select className={selectClass} value={lang.level ?? ""} disabled={disabled}
-                  onChange={(e) => updateLanguage(idx, { level: (e.target.value as CvLanguage["level"]) || null })}>
-                  {LEVEL_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              {!disabled && (
-                <Button type="button" variant="ghost" size="icon" onClick={() => removeLanguage(idx)} className="h-8 w-8 shrink-0">
-                  <IconClose />
-                </Button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

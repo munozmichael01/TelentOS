@@ -38,3 +38,37 @@ export function languageLevelLabel(level: string | null | undefined): string | n
   if (!level) return null;
   return LANGUAGE_LEVELS.find((l) => l.value === level.toLowerCase())?.label ?? level;
 }
+
+// El parser puede devolver el idioma en el idioma del CV ("English", "Spanish");
+// el catálogo de la UI está en español. Sin esta normalización el select cae a
+// "Otro…" y se pierde el match visual con el catálogo.
+const LANGUAGE_ALIASES: Record<string, (typeof COMMON_LANGUAGES)[number]> = {
+  english: "Inglés",
+  spanish: "Español",
+  castellano: "Español",
+  portuguese: "Portugués",
+  french: "Francés",
+  german: "Alemán",
+  italian: "Italiano",
+  catalan: "Catalán",
+  basque: "Euskera",
+  galician: "Gallego",
+  chinese: "Chino",
+  mandarin: "Chino",
+  arabic: "Árabe",
+  russian: "Ruso",
+  japanese: "Japonés",
+  dutch: "Neerlandés",
+  polish: "Polaco",
+  romanian: "Rumano",
+};
+
+/** Normaliza al nombre del catálogo (case-insensitive + alias EN→ES); si no está, devuelve el original limpio. */
+export function normalizeLanguageName(raw: string): string {
+  const s = raw.trim();
+  if (!s) return s;
+  const key = s.toLowerCase();
+  const catalogHit = COMMON_LANGUAGES.find((l) => l.toLowerCase() === key);
+  if (catalogHit) return catalogHit;
+  return LANGUAGE_ALIASES[key] ?? s;
+}

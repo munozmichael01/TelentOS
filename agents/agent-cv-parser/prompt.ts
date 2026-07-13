@@ -48,9 +48,10 @@ Reglas estrictas:
   - seniority: infiere del título (Junior→"junior", Lead/Head→"lead", Director/VP/Chief→"exec"). null si no está claro.
   - start_date / end_date: formato YYYY-MM-DD. Si solo hay año, usa YYYY-01-01.
   - is_current: true si es el trabajo actual (keywords: "actual", "presente", "present", "current", o sin end_date).
-- languages: idiomas que el CV mencione explícitamente, con su nivel. level en escala CEFR (a1..c2) o "native"
-  para lengua materna; null si el CV no especifica nivel. Si el CV NO tiene sección de idiomas → [] (array vacío).
-  NUNCA inventes idiomas ni niveles.
+- languages: idiomas que el CV mencione explícitamente, con su nivel. El NOMBRE del idioma siempre en español
+  ("Inglés", "Español", "Portugués" — no "English"/"Spanish", aunque el CV esté en inglés). level en escala CEFR
+  (a1..c2) o "native" para lengua materna; null si el CV no especifica nivel. Si el CV NO tiene sección de
+  idiomas → [] (array vacío). NUNCA inventes idiomas ni niveles.
 - education: formación académica del CV (degree obligatorio). field = área de estudio; institution = centro.
   end_year null = en curso. Si el CV no tiene sección de educación → [] (array vacío). NUNCA inventes.
 - summary: 2-4 oraciones que describan el perfil profesional. Usa el idioma del CV. No inventes logros.
