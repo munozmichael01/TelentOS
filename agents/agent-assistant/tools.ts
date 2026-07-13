@@ -37,23 +37,32 @@ async function searchEmployees(companyId: string, args: { name?: string; departm
     .from("employees")
     .select("id, name, role_title, department, status, start_date")
     .eq("company_id", companyId)
-    .limit(15);
-  if (args.name) q = q.ilike("name", `%${args.name}%`);
-  if (args.department) q = q.ilike("department", `%${args.department}%`);
+    .limit(500);
   if (args.status) q = q.eq("status", args.status);
   const { data } = await q;
-  return { employees: data ?? [], hint: "url de ficha: /employees/{id}" };
+  // Filtros de texto insensibles a acentos (el LLM escribe "Lucia", la DB "Lucía")
+  let rows = data ?? [];
+  if (args.name) rows = rows.filter((e) => fold(e.name as string).includes(fold(args.name!)));
+  if (args.department) rows = rows.filter((e) => fold((e.department as string) ?? "").includes(fold(args.department!)));
+  return { employees: rows.slice(0, 15), hint: "url de ficha: /employees/{id}" };
 }
+
+/** Normaliza para comparar sin acentos ni mayúsculas ("Lucia" ↔ "Lucía"). */
+const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
 async function getEmployee(companyId: string, args: { name: string }, includeComp: boolean) {
   const db = createAdminClient();
-  const { data: emp } = await db
+  // El LLM suele escribir nombres sin acentos: ilike no basta. Traemos los
+  // nombres de la empresa y matcheamos insensible a diacríticos en JS.
+  const { data: all, error: qErr } = await db
     .from("employees")
-    .select("id, name, role_title, department, status, start_date, city, country")
+    .select("id, name, role_title, department, status, start_date")
     .eq("company_id", companyId)
-    .ilike("name", `%${args.name}%`)
-    .limit(1)
-    .maybeSingle();
+    .limit(500);
+  // Un error de query NUNCA debe disfrazarse de "no encontré" (lección del eval).
+  if (qErr) return { error: `No pude consultar empleados: ${qErr.message}` };
+  const q = fold(args.name);
+  const emp = (all ?? []).find((e) => fold(e.name as string).includes(q));
   if (!emp) return { error: `No encontré a "${args.name}" en la empresa` };
 
   const today = new Date().toISOString().slice(0, 10);

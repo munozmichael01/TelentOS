@@ -9,7 +9,8 @@
     "lint": "next lint",
     "db:push": "supabase db push",
     "test": "vitest run",
-    "eval:cv": "node scripts/eval-cv-parser.mjs"
+    "eval:cv": "node scripts/eval-cv-parser.mjs",
+    "eval:assistant": "node scripts/eval-assistant.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.1",
