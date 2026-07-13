@@ -1,16 +1,21 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 import type { Channel } from "@/lib/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { IconSparkle } from "@/components/ui/icons";
+import { AgentActionButton } from "@/components/ui/agent-action-button";
 
-/** Convierte **negrita** en <strong> sin dangerouslySetInnerHTML. */
-function renderBold(text: string) {
-  const parts = text.split(/\*\*(.+?)\*\*/g);
-  return parts.map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : part));
+/* ── Asistente global (Ola 2) — el vertical es un chip, no otro chat ──────────── */
+function openAssistant() {
+  window.dispatchEvent(new Event("assistant:toggle"));
+}
+function askAssistant(question: string) {
+  // El host abre el drawer, precarga el chip "Canales" por pathname y siembra el turno.
+  window.dispatchEvent(new CustomEvent("assistant:ask", { detail: { question } }));
 }
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
@@ -40,15 +45,6 @@ type ReportData = {
   jobs: { id: string; title: string; sector: string | null; location: string | null }[];
   meta: { period: string; total_applications: number };
 };
-
-type AnalystResponse = {
-  answer: string;
-  suggested_questions: string[];
-  redirect: { url: string; label: string } | null;
-  filters_applied: { period?: string; sector?: string; location?: string; source?: string };
-};
-
-type HistoryEntry = { role: "user" | "assistant"; content: string };
 
 /* ── Design tokens ──────────────────────────────────────────────────────────── */
 
@@ -93,27 +89,14 @@ const STARTER_QUESTIONS = [
   "¿Qué canal funciona mejor por sector?",
 ];
 
-type ThreadTurn = { query: string; response: AnalystResponse };
+/* ── Entrada al Asistente (sustituye al chat embebido, Ola 2) ────────────────── */
 
-/* ── Chat sub-components ────────────────────────────────────────────────────── */
-
-function AgentAvatar({ loading = false }: { loading?: boolean }) {
-  return (
-    <div style={{ width: "26px", height: "26px", borderRadius: "8px", background: "#DCEFE4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
-      {loading
-        ? <Loader2 size={12} className="animate-spin" style={{ color: "#0E5C4A" }} />
-        : <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 19V9M10 19V5M16 19v-7M20 19V11" stroke="#0E5C4A" strokeWidth="2.2" strokeLinecap="round"/></svg>
-      }
-    </div>
-  );
-}
-
-function ChipRow({ chips, onAsk, disabled }: { chips: string[]; onAsk: (q: string) => void; disabled: boolean }) {
+function ChipRow({ chips, onAsk }: { chips: string[]; onAsk: (q: string) => void }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
       {chips.map((q) => (
-        <button key={q} onClick={() => onAsk(q)} disabled={disabled}
-          style={{ fontFamily: "inherit", fontSize: "12px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "5px 13px", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.6 : 1, whiteSpace: "nowrap" }}>
+        <button key={q} onClick={() => onAsk(q)}
+          style={{ fontFamily: "inherit", fontSize: "12px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "5px 13px", cursor: "pointer", whiteSpace: "nowrap" }}>
           {q}
         </button>
       ))}
@@ -121,40 +104,27 @@ function ChipRow({ chips, onAsk, disabled }: { chips: string[]; onAsk: (q: strin
   );
 }
 
-function InputRow({ query, setQuery, onAsk, onKeyDown, loading, inputRef }: {
-  query: string;
-  setQuery: (v: string) => void;
-  onAsk: () => void;
-  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  loading: boolean;
-  inputRef: React.Ref<HTMLInputElement>;
-}) {
+/** Lanzador compacto (superficie clara — es una acción): abre el drawer global con el
+ *  contexto de Canales; los chips siembran directamente la primera pregunta. */
+function AssistantEntry() {
   return (
-    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-      <div style={{ position: "relative", flex: 1 }}>
-        <svg style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="15" height="15" viewBox="0 0 24 24" fill="none">
-          <circle cx="11" cy="11" r="7" stroke={soft} strokeWidth="1.8"/>
-          <path d="M16.5 16.5L21 21" stroke={soft} strokeWidth="1.8" strokeLinecap="round"/>
-          <path d="M8 11.5c.5-1.5 2-2.5 3.5-2.5" stroke="#0E5C4A" strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder="Pregunta sobre canales y campañas…"
-          style={{ width: "100%", paddingLeft: "40px", paddingRight: "12px", paddingTop: "10px", paddingBottom: "10px", fontFamily: "inherit", fontSize: "14px", color: ink, background: "#F4F0E8", border: `1.5px solid ${line}`, borderRadius: "11px", outline: "none", boxSizing: "border-box" }}
-          onFocus={(e) => { e.currentTarget.style.borderColor = "#0E5C4A"; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = line; e.currentTarget.style.boxShadow = "none"; }}
-        />
+    <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "16px", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "11px" }}>
+        <span style={{ width: "30px", height: "30px", borderRadius: "9px", background: "#DCEFE4", color: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <IconSparkle className="size-4" />
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px" }}>Asistente</span>
+            <span style={{ ...mono, fontSize: "10px", color: soft, background: "#F4F0E8", border: `1px solid ${line}`, borderRadius: "999px", padding: "2px 8px" }}>Contexto: Canales</span>
+          </div>
+          <div style={{ fontSize: "12px", color: soft, lineHeight: 1.45, marginTop: "2px" }}>
+            Pregunta por rendimiento de canales, CPA o campañas estancadas — responde con tus datos y enlaces.
+          </div>
+        </div>
+        <AgentActionButton idleLabel="Preguntar al asistente" busyLabel="…" busy={false} onClick={openAssistant} />
       </div>
-      <button onClick={onAsk} disabled={!query.trim() || loading}
-        style={{ flexShrink: 0, background: "#0E5C4A", color: "#fff", border: "none", borderRadius: "11px", padding: "10px 18px", fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", cursor: query.trim() && !loading ? "pointer" : "not-allowed", opacity: query.trim() && !loading ? 1 : 0.5, display: "flex", alignItems: "center", gap: "7px" }}>
-        {loading ? <Loader2 size={14} className="animate-spin" /> : (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        )}
-        Preguntar
-      </button>
+      <ChipRow chips={STARTER_QUESTIONS} onAsk={askAssistant} />
     </div>
   );
 }
@@ -166,66 +136,17 @@ function KPIsTab() {
   const [dataLoading, setDataLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  // AI conversation state
-  const [query, setQuery] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [thread, setThread] = useState<ThreadTurn[]>([]);
-  const threadEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const lastResponse = thread[thread.length - 1]?.response ?? null;
-  const chips = lastResponse?.suggested_questions ?? STARTER_QUESTIONS;
-
-  const loadData = useCallback(async (filters: Record<string, string>) => {
+  const loadData = useCallback(async () => {
     setDataLoading(true);
     try {
-      const params = new URLSearchParams({ period: filters.period ?? "30d" });
-      if (filters.sector) params.set("sector", filters.sector);
-      if (filters.location) params.set("location", filters.location);
-      if (filters.source) params.set("source", filters.source);
-      const r = await fetch(`/api/channels/report?${params}`);
+      const r = await fetch(`/api/channels/report?period=30d`);
       if (r.ok) setData(await r.json());
     } finally {
       setDataLoading(false);
     }
   }, []);
 
-  useEffect(() => { loadData({}); }, [loadData]);
-
-  // Scroll to latest response
-  useEffect(() => {
-    if (thread.length > 0) threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [thread.length]);
-
-  const ask = useCallback(async (q: string) => {
-    if (!q.trim() || aiLoading) return;
-    setAiLoading(true);
-    setQuery("");
-    try {
-      // Build history from thread for proper OpenAI context
-      const history: HistoryEntry[] = thread.flatMap((t) => [
-        { role: "user" as const, content: t.query },
-        { role: "assistant" as const, content: t.response.answer },
-      ]);
-      const r = await fetch("/api/agents/channel-analyst", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: q, history }),
-      });
-      if (!r.ok) return;
-      const result: AnalystResponse = await r.json();
-      setThread((prev) => [...prev, { query: q, response: result }]);
-      loadData(result.filters_applied ?? {});
-    } finally {
-      setAiLoading(false);
-    }
-  }, [aiLoading, thread, loadData]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") ask(query);
-  };
-
-  const clearThread = () => { setThread([]); loadData({}); };
+  useEffect(() => { loadData(); }, [loadData]);
 
   const visibleRows = data?.rows ?? [];
   const maxApps = visibleRows[0]?.applications ?? 1;
@@ -233,91 +154,8 @@ function KPIsTab() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-      {/* AI panel — two modes: idle (input top) / chat (input bottom) */}
-      <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "16px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-
-        {thread.length === 0 ? (
-          /* ── Idle mode: input + chips at top ── */
-          <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
-            <InputRow query={query} setQuery={setQuery} onAsk={() => ask(query)} onKeyDown={handleKeyDown} loading={aiLoading} inputRef={inputRef} />
-            <ChipRow chips={chips} onAsk={ask} disabled={aiLoading} />
-            {aiLoading && (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Loader2 size={13} className="animate-spin" style={{ color: soft }} />
-                <span style={{ ...mono, fontSize: "11px", color: soft }}>Analizando datos…</span>
-              </div>
-            )}
-          </div>
-        ) : (
-          /* ── Chat mode: thread + chips + input at bottom ── */
-          <>
-            {/* Header with "Nueva conversación" button */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", borderBottom: `1px solid ${line}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "20px", height: "20px", borderRadius: "6px", background: "#DCEFE4", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M4 19V9M10 19V5M16 19v-7M20 19V11" stroke="#0E5C4A" strokeWidth="2.2" strokeLinecap="round"/></svg>
-                </span>
-                <span style={{ ...mono, fontSize: "10px", color: soft, textTransform: "uppercase", letterSpacing: ".5px" }}>Análisis de canales</span>
-              </div>
-              <button onClick={clearThread}
-                style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "11px", color: ink, background: surface, border: `2px solid ${ink}`, borderRadius: "8px", padding: "5px 11px", boxShadow: `2px 2px 0 ${ink}`, cursor: "pointer" }}>
-                + Nueva conversación
-              </button>
-            </div>
-
-            {/* Thread */}
-            <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "20px", maxHeight: "420px", overflowY: "auto" }}>
-              {thread.map((turn, i) => (
-                <div key={i} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <div style={{ background: "#F4F0E8", border: `1px solid ${line}`, borderRadius: "12px 12px 4px 12px", padding: "8px 14px", maxWidth: "75%", fontSize: "13.5px", color: ink, lineHeight: "1.5" }}>
-                      {turn.query}
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                    <AgentAvatar />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "13.5px", lineHeight: "1.6", color: ink }}>
-                        {renderBold(turn.response.answer)}
-                      </div>
-                      {turn.response.redirect && (
-                        <a href={turn.response.redirect.url}
-                          style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginTop: "8px", fontSize: "13px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "9px", padding: "6px 12px" }}>
-                          {turn.response.redirect.label}
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#0E5C4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        </a>
-                      )}
-                      {i === thread.length - 1 && Object.entries(turn.response.filters_applied ?? {}).some(([, v]) => Boolean(v)) && (
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "8px" }}>
-                          <span style={{ ...mono, fontSize: "10px", color: soft }}>Datos filtrados:</span>
-                          {Object.entries(turn.response.filters_applied).map(([k, v]) => v && (
-                            <span key={k} style={{ ...mono, fontSize: "10px", color: "#0E5C4A", background: "#EAF4EF", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "2px 8px" }}>
-                              {k === "period" || k === "days_ago" ? String(v) : `${k}: ${v}`}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {aiLoading && (
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <AgentAvatar loading />
-                  <span style={{ ...mono, fontSize: "11px", color: soft }}>Analizando datos…</span>
-                </div>
-              )}
-              <div ref={threadEndRef} />
-            </div>
-
-            {/* Chips + input pinned at bottom */}
-            <div style={{ borderTop: `1px solid ${line}`, padding: "12px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
-              <ChipRow chips={chips} onAsk={ask} disabled={aiLoading} />
-              <InputRow query={query} setQuery={setQuery} onAsk={() => ask(query)} onKeyDown={handleKeyDown} loading={aiLoading} inputRef={inputRef} />
-            </div>
-          </>
-        )}
-      </div>
+      {/* Entrada al Asistente global — reemplaza el chat embebido (Ola 2) */}
+      <AssistantEntry />
 
       {/* Summary KPI strip */}
       {data && (
