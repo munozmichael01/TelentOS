@@ -191,3 +191,4 @@ Estos temas requieren decisión explícita del producto antes de implementar:
 - **Proveedor de calendario para entrevistas**: ¿Google Calendar, Outlook, o solo gestión interna? Afecta `interviews` + integraciones.
 - **Alcance del beta de payroll VE**: ¿Solo cálculo de nómina o también envío a bancos y generación de archivos IVSS/SSO/LPH? Afecta `pay_run_lines` + `payroll_exports`.
 - **Eyebrow de Horas/Ausencias/Compensación/Calendario**: ¿Son sub-áreas de "Personas" (eyebrow = "Personas") o secciones propias del sidebar? Actualmente usan su propio nombre de área.
+- **Persistencia de conversaciones del Asistente**: hoy el hilo vive en la sesión del navegador (recargar = hilo nuevo). Persistir conversaciones tiene coste (storage + privacidad + UX de historial) y valor (continuidad, auditoría) — decidir con datos de uso real del asistente.
