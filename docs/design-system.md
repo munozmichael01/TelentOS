@@ -402,18 +402,88 @@ Patrón canónico `[PROPUESTO]` (del dominante inline): contenedor `surface`/das
 
 ---
 
-# 4 · Superficies de IA (resumen)
+# 4 · Superficies de IA — doctrina
 
-Principio: **la IA es una voz, no un lugar.** Cuatro superficies canónicas, misma voz visual (tinta invertida = el agente habla; papel claro = dato del usuario). Máximo **una** superficie de agente visible por pantalla en reposo. Detalle y anti-patrones en `handoff/…UX de agentes (sistema de superficies).md`; blueprints implementables en **Anexo B**.
+Principio: **la IA es una voz, no un lugar.** Misma voz visual en todo el producto: **tinta invertida = el agente habla; papel claro = tú actúas.** Máximo **una** superficie de agente visible por pantalla en reposo. Anti-patrones en `handoff/…UX de agentes (sistema de superficies).md`; blueprints en **Anexo B**.
 
-| Superficie | Qué es | Base en código | Componente |
-|---|---|---|---|
-| **S1 · Acción** | El botón "verbo+objeto" en el punto de trabajo. Reposo→pensando→propuesta. | `cv-parser-panel` (soft+sparkle+spinner) | `AgentActionButton` (B-2) |
-| **S2 · Propuesta** | Salida revisable. Narrativa=panel oscuro; datos=form claro + franja de procedencia. | `AgentPanel`, `cv-profile-fields` | `ProposalFrame` (B-3) |
-| **S3 · Señal** | Bandeja proactiva. "Requiere tu atención" (claro, hechos) vs "Sugerencias del agente" (oscuro, juicios). | `dashboard-client`, `inbox-item` | `SignalCard` (promover) |
-| **S4 · Asistente** | Drawer derecho ~400px, invocado por sparkle topbar / ⌘J / entradas contextuales con chip. | chasis del chat de canales | `AssistantDrawer` (B-4) |
+## 4.1 Regla anti-redundancia — _la más importante, valídala primero_
 
-**Procedencia siempre visible** — el desbloqueo transversal es `AgentBadge` (B-1): `IA` / `heurística` / `estimación`. Hoy el estado `fallback` se muestra de **tres formas distintas** (o se oculta) — la mayor incoherencia de las superficies de IA. Ver Anexo A-3.
+> **La IA nunca repite lo que la pantalla ya muestra. Añade lo que la pantalla no puede.**
+
+Lo que una superficie de datos (tabla, ficha, checklist, contador) ya hace visible **no vuelve a decirse** en tinta. El agente aporta **solo** lo que la pantalla estructuralmente no puede dar:
+
+- **Comparación temporal** — "vs el mes anterior", tendencias, variaciones. La tabla muestra el ahora; el agente, el cambio.
+- **Cruce de módulos** — un dato de nómina leído contra el organigrama, un canal contra el pipeline.
+- **Síntesis** — 2 líneas que ordenan 40 filas ("empieza por X"), no la relista.
+- **Extracción** — sacar estructura de un blob (CV → campos).
+
+**Corolario operativo:** si un aviso del agente **ya es un flag visible** en la pantalla (un icono de alerta en la fila, un contador de incidencias, una sección de "sin datos"), el agente **lo enlaza, no lo repite**: una línea "3 incidencias marcadas en la tabla ↓" que hace scroll/filtro, en vez de tres bullets que duplican los iconos.
+
+_Origen: el copilot de payroll v1 (`pay-run-detail.tsx`) relistaba en tinta los `bank_issue`/`salary_change`/`no_profile` que la tabla de Empleados ya marca con `AlertIcon` y ya cuenta en "Incidencias" → denso, no accionable, redundante (feedback de Michael, confirmado). La regla es la enmienda estructural, no un ajuste cosmético._ **Validada y adoptada.**
+
+## 4.2 Taxonomía — 4 ejes
+
+Toda superficie de IA se clasifica por cuatro ejes. Los ejes **determinan la piel** (claro vs oscuro, efímero vs persistente):
+
+1. **Quién inicia** — `invocada` (el usuario pulsa/pregunta) · `proactiva` (el sistema/cron rellena; el usuario nunca "recarga la IA").
+2. **Alcance** — `entidad` (una ficha/línea/oferta) · `módulo` (una vista completa: una corrida, un canal) · `cross-módulo` (el asistente).
+3. **Naturaleza** — `hecho` (determinista, reproducible, sin LLM) · `juicio` (opinión/lectura del LLM) · `generación` (redacta contenido nuevo) · `extracción` (estructura un blob).
+4. **Ciclo de vida** — `efímera` (se confirma o se descarta y desaparece) · `persistente-triage` (vive hasta que la marcas hecho/ignorar) · `conversacional` (hilo).
+
+**Regla de piel derivada de los ejes:**
+- Naturaleza `hecho` → **superficie clara, filas accionables** (tú actúas sobre hechos).
+- Naturaleza `juicio`/`generación` → **tinta oscura, texto corto** (el agente habla; nunca un muro de texto).
+- Naturaleza `extracción` → **formulario claro** pre-rellenado (el dato es tuyo en cuanto lo tocas).
+- Ciclo `efímera` → confirmar/descartar con **igual peso** (nunca auto-aplicar — invariante + AI Act).
+
+## 4.3 Los 6 patrones vivos
+
+Los seis patrones que existen hoy en el producto, clasificados y con su componente canónico. **No se crean patrones nuevos fuera de esta lista sin spec de esta pista.**
+
+| # | Patrón | Ejes (inicia / alcance / naturaleza / ciclo) | Piel | Componente |
+|---|---|---|---|---|
+| P1 | **Bandeja de hechos** | proactiva · módulo · hecho · persistente-triage | Claro, filas accionables (borde-izq de color por tipo) | `SignalCard`/`InboxItem` (promover) |
+| P2 | **Panel de juicios con triage** | proactiva · módulo · juicio · persistente-triage | **Tinta**, texto corto + acción/triage | `AgentPanel` + `InsightCard` |
+| P3 | **Bloque generador** | invocada · entidad · generación · efímera | Tinta (borrador/rationale) → salida a campos claros | `GeneratorBlock` (B-6) |
+| P4 | **Propuesta por campos** | invocada · entidad · extracción/generación · efímera | Claro, formulario + franja de procedencia | `ProposalFrame` (B-3) + `FieldProposal` (B-7) |
+| P5 | **Panel de análisis** | invocada · entidad · juicio + hecho · efímera/persistida | **Tinta**, síntesis + desglose determinista | `AgentPanel` + `FitBreakdown` (§4.5b) |
+| P6 | **Copilot de revisión** | invocada · módulo · hecho comparativo + síntesis · efímera | **Tinta**, resumen 2 líneas + solo lo comparativo | `FindingGroup`/`FindingRow` (B-5) |
+| — | **Asistente (drawer)** | invocada · cross-módulo · todo · conversacional | Drawer derecho (Ola 2) | `AssistantDrawer` (B-4) |
+
+Las cuatro superficies canónicas del doc de origen (S1 Acción, S2 Propuesta, S3 Señal, S4 Asistente) siguen vigentes como **momentos**; los 6 patrones son su **encarnación concreta** en pantalla (S1→P3/P4, S2→P4/P5, S3→P1/P2, S4→drawer, y P6 es el copilot = S1-acción "Anotar" → S2-narrativa filtrada por la regla anti-redundancia).
+
+## 4.4 Procedencia — siempre visible
+
+`AgentBadge` (B-1) en toda superficie: `IA` (hubo LLM) · `Heurística` (fallback) · `Estimación` (mock). El `Heurística` **nunca se oculta** (anti-patrón #7). Ola 1 ya lo cableó — ver §6.
+
+## 4.5 Resolución de los 3 conflictos
+
+**(a) Colisión de nombre "Sugerencias del agente".** Aparecía en el dashboard (juicios proactivos) **y** en ofertas (generador). Se separan los nombres user-facing definitivos, uno por patrón:
+
+| Patrón | Nombre user-facing definitivo | Dónde |
+|---|---|---|
+| P1 Bandeja | **"Requiere tu atención"** | Dashboard (claro) |
+| P2 Juicios | **"Sugerencias del agente"** | Dashboard (oscuro) — **dueño único del nombre** |
+| P3 Generador | **"Redacción asistida"** (título del bloque) + botón "Redactar con IA" / "Mejorar la oferta" | Nueva oferta, checklist onboarding |
+| P4 Propuesta | franja **"Extraído por IA — revisa y confirma"** / **"Redactado por IA…"** | CV, oferta |
+| P5 Análisis | **"Análisis del agente"** | Ficha de candidato |
+| P6 Copilot | **"Revisión de la corrida"** | Pay-run |
+| Drawer | **"Asistente"** | Global (Ola 2) |
+
+Regla: **"Sugerencias del agente" queda reservado a P2** (el riel proactivo del dashboard). Ningún otro patrón usa esa etiqueta.
+
+**(b) Desglose de fit — canoniza el determinista, retira las barras 0–10.** El panel de análisis (`candidate-analyzer-panel.tsx`) pinta hoy tres barras **subjetivas 0–10** (Skills / Experiencia / **Liderazgo**) inventadas por el LLM — "Liderazgo" no existe en el scoring y el número que ordena el pipeline **no** debe depender de un LLM. Se **retiran**. El desglose canónico es el **determinista de `lib/fit-score.ts`**: **60% skills · 25% experiencia · 15% ubicación**, con **matched/missing** explícitos. Componente `FitBreakdown` `[PROPUESTO]`:
+
+- Barra por eje con su **peso** rotulado (60/25/15) y su aporte real.
+- Skills como **chips**: `matched` (fondo `success-bg`) vs `missing` (fondo `danger-bg`, tachado o con "falta").
+- El LLM sigue aportando la **lectura cualitativa** (summary, gaps, preguntas) en tinta — pero el **número y su desglose son deterministas y explicables**. La franja del panel lleva `AgentBadge` para la parte de juicio; el desglose no necesita badge (es hecho).
+
+**(c) B-5 reencuadrado — el copilot solo muestra lo comparativo-temporal.** El copilot de payroll (P6) muestra **exclusivamente**:
+1. **Resumen de 2 líneas** (`fallbackSummary` o el redactor LLM) — la síntesis que ordena.
+2. **Findings comparativo-temporales**: `variation` (bruto vs mes anterior), `new_in_run` (alta), `missing_from_run` (baja). Eso es lo que la tabla **no puede** mostrar.
+3. Los flags **ya visibles en la tabla** (`bank_issue`, `salary_change`, `no_profile` → `AlertIcon` + contador "Incidencias" + sección "sin línea") se colapsan en **una línea de enlace**: "N incidencias marcadas en la tabla ↓" que hace scroll/filtra la tabla. **No se relistan.**
+
+Esto requiere una nota mínima a pista A (dato, no diseño): `computeRunFindings` ya distingue los `kind`; el corte es **de presentación** — B-5 filtra por `kind ∈ {variation, new_in_run, missing_from_run}` para bullets, y agrega el resto en el contador de enlace.
 
 ---
 
@@ -446,6 +516,36 @@ Lote cerrado por Michael. Ya incorporadas al cuerpo del documento.
 **D4 · Responsive → desktop-first.** Se mantiene solo el corte móvil (`<768`); no se abre doctrina tablet por ahora. → §1.9.
 
 **D5 · Dark mode → premio de la tokenización.** No en paralelo; objetivo post-Fase 3, cuando el DS lea `var(--token)`. → §1.10.
+
+---
+
+# 6 · Revisión de la Ola 1 implementada
+
+Revisados los 4 componentes (`agent-badge`, `agent-action-button`, `proposal-frame` + `icons`) y la primera superficie nueva (copilot de payroll). **Veredicto: los 3 primitivos aprueban tal cual; el copilot necesita reencuadre — no es fallo del primitivo, es aplicación de patrón.**
+
+## 6.1 Primitivos — ✅ fieles al blueprint
+
+- **`AgentBadge`** (`ui/agent-badge.tsx`) — correcto: D1 aplicado (`ia`=brand, sin violeta), variantes light/dark, `heuristica` nunca oculta. Nota menor: documenta el comentario `#7` como está. Sin cambios.
+- **`AgentActionButton`** (`ui/agent-action-button.tsx`) — correcto: `Button variant="soft"`, sparkle único importado de `ui/icons`, `aria-busy`, gerundio en `busyLabel`. ✅ El sparkle de 4 puntas es ya el único (la varita salió). Sin cambios.
+- **`ProposalFrame`** (`ui/proposal-frame.tsx`) — correcto: franja de procedencia + confirmar/descartar con igual peso, `rationale` con borde-izq, `aria-label` en el cierre. Sin cambios. _Añadir a futuro (no bloqueante): soportar `provenance="estimacion"` para propuestas sobre datos mock._
+
+## 6.2 Copilot de payroll (P6) — ⚠ reencuadrar por la regla anti-redundancia
+
+El disparador (`AgentActionButton "Anotar corrida"`) y la piel oscura (`AgentPanel` + `AgentBadge onDark`) son correctos. El problema es **qué se lista dentro**: hoy `pay-run-detail.tsx:733-751` mapea **todos** los `review.findings` como bullets — incluidos `bank_issue`, `salary_change` y `no_profile`, que la tabla de Empleados **ya** marca con `AlertIcon` (`:820-828`), ya cuenta en la tira "Incidencias" (`:625`) y ya lista en la sección "sin línea". Eso es exactamente la redundancia que generó el feedback.
+
+**Correcciones (aplicar B-5, §4.5c):**
+1. Filtrar los bullets a `kind ∈ {variation, new_in_run, missing_from_run}` — lo único comparativo-temporal que la tabla no puede mostrar.
+2. Colapsar el resto (`bank_issue`/`salary_change`/`no_profile`) en **una línea de enlace** "N incidencias marcadas en la tabla ↓" que hace scroll/filtra la tabla Empleados. No relistar.
+3. Mantener el resumen de 2 líneas arriba (ya está — `review.summary`).
+4. Encabezar el panel como **"Revisión de la corrida"** (nombre definitivo §4.5a), no "anotaciones".
+5. Regla de reposo: el panel **solo aparece tras invocar** "Anotar corrida" — ✅ ya es así (`review && …`). Mantener; nunca permanente.
+
+Resultado esperado: de ~10 bullets densos (mitad duplicados) a **resumen + 2-3 variaciones + 1 enlace** — corto, no redundante, accionable. Es el caso de prueba de la doctrina §4.1.
+
+## 6.3 Deuda transversal detectada en la Ola 1
+
+- `candidate-analyzer-panel.tsx` **aún no migrado**: sigue con las barras 0–10 (Skills/Experiencia/**Liderazgo**) y su propia pill "heurístico" inline. Migrar a `AgentBadge` + `FitBreakdown` determinista (conflicto b, §4.5b). Es la siguiente pieza de la ola.
+- Confirmar que la varita (`M5 19l1-4…`) se retiró de `job-form.tsx`, `onboarding-panel.tsx`, `dashboard-client.tsx` — el grep de A-3 seguía encontrándola en el snapshot auditado.
 
 ---
 
@@ -502,7 +602,19 @@ Ordenado por gravedad. `archivo:línea` para grep directo. Alimenta H5/M6/L5 de 
 
 # Anexo B · Blueprints — componentes de superficie de IA
 
-Listos para que A/B los implementen literal. Código de referencia en TSX (stack real). Cada uno: anatomía · tokens · estados · código. Orden de construcción: **B-1 → B-2/B-3 → B-4** (el doc de superficies §2).
+Listos para que A/B los implementen literal. Código de referencia en TSX (stack real). Cada uno: anatomía · tokens · estados · código.
+
+**Estado:** B-1/B-2/B-3 ✅ implementados en Ola 1 (revisión §6). **B-5** (FindingGroup) es el fix inmediato del copilot; **B-6** (GeneratorBlock) y **B-7** (FieldProposal) canonizan lo que ya funciona en Nueva oferta; **B-4** (AssistantDrawer) es Ola 2. Orden sugerido: **B-5 (fix copilot) → B-6/B-7 + migrar candidate-analyzer con FitBreakdown → B-4**.
+
+| | Blueprint | Patrón | Estado |
+|---|---|---|---|
+| B-1 | AgentBadge | procedencia (transversal) | ✅ Ola 1 |
+| B-2 | AgentActionButton | S1 · Acción | ✅ Ola 1 |
+| B-3 | ProposalFrame | P4 · Propuesta | ✅ Ola 1 |
+| B-4 | AssistantDrawer | drawer · Ola 2 | pendiente |
+| B-5 | FindingGroup/FindingRow | P6 · Copilot | **fix ahora** |
+| B-6 | GeneratorBlock | P3 · Generador | nuevo |
+| B-7 | FieldProposal | P4 · Propuesta granular | nuevo |
 
 ## B-1 · AgentBadge — procedencia
 
@@ -681,6 +793,119 @@ export function AssistantDrawer({
 }
 ```
 Burbujas: agente = `background:#1A1A17; color:#F4F0E8; radius: 12px 12px 12px 4px`; usuario = `background:#F4F0E8; border:1px line; radius: 12px 12px 4px 12px`. Migración: al usar el chat de canales, abre este drawer con chip "Canales" precargado; el chat embebido se retira cuando el drawer esté estable (cero regresión).
+
+## B-5 · FindingGroup / FindingRow — copilot de revisión (P6, reencuadrado)
+
+**Qué es:** el cuerpo del copilot de módulo (payroll y futuros). **No** es una lista de todo lo que el detector encuentra: es la aplicación en componente de la **regla anti-redundancia** (§4.1). Vive dentro de `AgentPanel` (tinta), debajo del resumen de 2 líneas.
+
+**Contrato de reparto (la regla, en código):**
+- `FindingRow` (bullet en tinta) = **solo** lo comparativo-temporal que la pantalla no puede mostrar: `variation` · `new_in_run` · `missing_from_run`.
+- `FindingGroup` = el resto (`bank_issue` · `salary_change` · `no_profile`) **no se relista**: se colapsa en **una línea de enlace** con el conteo, que hace scroll/filtro a la superficie de datos que ya los muestra.
+
+**Anatomía:** resumen (`AgentPanel`, ya existe) → `FindingRow[]` (punto `warning`/`info` + texto 12.5px `agent-text`) → `<LinkedFlagsRow>` ("N incidencias marcadas en la tabla ↓"). Sin acciones dentro del panel salvo ese enlace — **el agente señala, tú actúas en la tabla clara**.
+
+```tsx
+import type { ReviewFinding } from "@/lib/payroll/copilot";
+
+const COMPARATIVE = new Set(["variation", "new_in_run", "missing_from_run"]);
+
+function FindingRow({ f }: { f: ReviewFinding }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", marginTop: 6, flexShrink: 0,
+        background: f.severity === "warning" ? "#E0A23C" : "#8C877E" }} />
+      <span style={{ fontSize: "12.5px", lineHeight: 1.5, color: "#D8D3C8" }}>{f.text}</span>
+    </div>
+  );
+}
+
+/** Aplica la regla anti-redundancia: bullets = comparativo-temporal; el resto → enlace. */
+export function FindingGroup({ findings, onJumpToTable }: { findings: ReviewFinding[]; onJumpToTable: () => void }) {
+  const bullets = findings.filter((f) => COMPARATIVE.has(f.kind));
+  const linkedCount = findings.length - bullets.length; // ya visibles en la tabla
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+      {bullets.map((f, i) => <FindingRow key={i} f={f} />)}
+      {linkedCount > 0 && (
+        <button
+          onClick={onJumpToTable}
+          style={{ marginTop: "4px", alignSelf: "flex-start", background: "none", border: "none", cursor: "pointer",
+            fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#C6F24E", display: "inline-flex", alignItems: "center", gap: "5px" }}
+        >
+          {linkedCount} incidencia{linkedCount !== 1 ? "s" : ""} marcada{linkedCount !== 1 ? "s" : ""} en la tabla ↓
+        </button>
+      )}
+    </div>
+  );
+}
+```
+> Reemplaza el `review.findings.map(...)` de `pay-run-detail.tsx:734-751`. `onJumpToTable` fija `tab="empleados"` + resalta las filas con `AlertIcon` (o filtra por incidencia). **Nunca** renderizar los `kind` ya-visibles como bullets. Este es el fix de §6.2.
+
+## B-6 · GeneratorBlock — patrón "agente redactor" (P3)
+
+**Qué es:** el patrón de generación de contenido nuevo (redactar/mejorar una oferta, generar un checklist de onboarding). Extraído de lo que ya funciona bien en **Nueva oferta** (`job-form.tsx`, panel oscuro). Dos zonas: el **agente habla en tinta** (rationale/borrador) y su salida **aterriza en campos claros** editables (donde se convierte en dato del usuario).
+
+**Anatomía:** `AgentPanel` (tinta) con sparkle + título "Redacción asistida" (§4.5a) + `AgentBadge` → textarea/prompt corto de intención → `AgentActionButton` ("Redactar con IA" / "Mejorar la oferta") → al responder, el borrador se **inserta en los campos del formulario claro** de abajo (no se queda en tinta). Regenerar mantiene el borrador anterior hasta confirmar el nuevo.
+
+```tsx
+export function GeneratorBlock({
+  title = "Redacción asistida", provenance, busy, hint, onGenerate, children,
+}: {
+  title?: string; provenance?: AgentProvenance; busy: boolean; hint?: string;
+  onGenerate: () => void; children?: React.ReactNode; /* controles de intención (chips, textarea) */
+}) {
+  return (
+    <div style={{ background: "#1A1A17", color: "#F4F0E8", borderRadius: "16px", padding: "18px 20px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: hint ? "6px" : "12px" }}>
+        <IconSparkle /> {/* lima sobre tinta vía color */}
+        <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>{title}</span>
+        {provenance && <span style={{ marginLeft: "auto" }}><AgentBadge kind={provenance} onDark /></span>}
+      </div>
+      {hint && <p style={{ fontSize: "13px", lineHeight: 1.55, color: "#8C877E", margin: "0 0 12px" }}>{hint}</p>}
+      {children}
+      <div style={{ marginTop: "12px" }}>
+        <AgentActionButton idleLabel="Redactar con IA" busyLabel="Redactando…" busy={busy} onClick={onGenerate} variant="brand" />
+      </div>
+    </div>
+  );
+}
+```
+> Canoniza `job-form.tsx:192-224` y el bloque equivalente de `onboarding-panel.tsx`. **Regla clave (§4.1):** el resultado no vive en la tinta — se escribe en los campos claros del form, que el usuario edita y confirma. La tinta es el taller; el papel es el entregable. Icono = sparkle único (retira la varita de `job-form.tsx:196`).
+
+## B-7 · FieldProposal — propuesta por campos (P4, granular)
+
+**Qué es:** el refinamiento de `ProposalFrame` para propuestas **campo a campo** donde cada campo propuesto se **acepta o edita individualmente** (la oferta redactada de Nueva oferta: título, descripción, requisitos, banda salarial — cada uno con su "usar sugerencia"). Se apoya en `ProposalFrame` (franja + confirmar/descartar global) y añade la fila por campo.
+
+**Anatomía (por campo):** label → valor propuesto (editable, campo DS) → si difiere del actual, micro-acción "usar" / "descartar" a la derecha + rationale de una línea opcional (`percentil`, `fuente`). El conjunto se envuelve en `ProposalFrame` que da la franja de procedencia y el confirmar global.
+
+```tsx
+export function FieldProposal({
+  label, value, suggested, rationale, disabled, onUse, onChange,
+}: {
+  label: string; value: string; suggested?: string; rationale?: string;
+  disabled?: boolean; onUse: () => void; onChange: (v: string) => void;
+}) {
+  const differs = suggested != null && suggested !== value;
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-xs">{label}</Label>
+        {differs && !disabled && (
+          <button type="button" onClick={onUse}
+            className="text-[11px] font-semibold text-[#0E5C4A] hover:underline">
+            Usar sugerencia
+          </button>
+        )}
+      </div>
+      <Input value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} />
+      {rationale && <p className="text-[11px] text-muted-foreground">{rationale}</p>}
+    </div>
+  );
+}
+// Uso: dentro de <ProposalFrame provenance="ia" …>  {campos.map(c => <FieldProposal … />)}  </ProposalFrame>
+```
+> Extrae el patrón de la oferta redactada (`job-form.tsx`). Regla: **cada campo es editable y su aceptación es explícita** — nada se auto-aplica; el `ProposalFrame` contenedor confirma todo junto (invariante + AI Act). `rationale` cubre "banda salarial por percentil de tus 12 ofertas previas".
 
 ---
 
