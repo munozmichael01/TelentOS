@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Copy, Check, ExternalLink, Play, Pause, RefreshCw } from "lucide-react";
+import { Loader2, Copy, Check, ExternalLink, Play, Pause } from "lucide-react";
+import { AgentActionButton } from "@/components/ui/agent-action-button";
+import { AgentBadge } from "@/components/ui/agent-badge";
 import { formatMoney } from "@/lib/utils";
 import type { Campaign, Channel } from "@/lib/types";
 import type { ChannelPlan } from "@/agents/agent-channel-optimizer";
@@ -440,11 +442,13 @@ export function ChannelPlanner({ jobId, campaigns: initialCampaigns }: { jobId: 
                   onFocus={(e) => { e.currentTarget.style.borderColor = "#0E5C4A"; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = line; e.currentTarget.style.boxShadow = "none"; }} />
               </div>
-              <button onClick={generatePlan} disabled={optimizing}
-                style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: `2px solid ${ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: `3px 3px 0 ${ink}`, cursor: optimizing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px", opacity: optimizing ? 0.7 : 1 }}>
-                {optimizing ? <Loader2 size={13} className="animate-spin" /> : plan ? <RefreshCw size={13} /> : null}
-                {plan ? "Regenerar plan" : "Generar plan"}
-              </button>
+              <AgentActionButton
+                idleLabel={plan ? "Regenerar plan" : "Generar plan"}
+                busyLabel="Generando…"
+                busy={optimizing}
+                onClick={generatePlan}
+                variant="brand"
+              />
             </div>
 
             {plan && planMeta && (
@@ -454,9 +458,8 @@ export function ChannelPlanner({ jobId, campaigns: initialCampaigns }: { jobId: 
                   <span style={{ ...mono, fontSize: "10px", color: soft }}>
                     {objectiveLabel[planMeta.objective]} · {formatMoney(planMeta.budget)} · {relativeDate(planMeta.created_at)}
                   </span>
-                  {planMeta.model === "fallback" && (
-                    <span style={{ ...mono, fontSize: "10px", color: "#946312", background: "rgba(148,99,18,.1)", border: "1px solid rgba(148,99,18,.25)", borderRadius: "999px", padding: "2px 8px" }}>heurístico</span>
-                  )}
+                  {/* Procedencia SIEMPRE visible (invariante #7): IA cuando hubo LLM, heurística en fallback. */}
+                  <AgentBadge kind={planMeta.model === "fallback" ? "heuristica" : "ia"} />
                   {planMeta.status === "activated" && (
                     <span style={{ ...mono, fontSize: "10px", color: "#1B6B4F", background: "#DCEFE3", border: "1px solid #A8D9BC", borderRadius: "999px", padding: "2px 8px" }}>✓ activado</span>
                   )}

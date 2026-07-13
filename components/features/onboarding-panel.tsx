@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { apiFetch, notifyError } from "@/lib/api-client";
 import { formatDate } from "@/lib/utils";
+import { AgentActionButton } from "@/components/ui/agent-action-button";
+import { IconSparkle } from "@/components/ui/icons";
 import type { OnboardingTask } from "@/lib/types";
 
 export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tasks: OnboardingTask[] }) {
@@ -75,37 +76,27 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
       <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "20px 22px" }}>
         {/* header */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-          <span style={{ width: "24px", height: "24px", borderRadius: "7px", background: "#1A1A17", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round"/>
-            </svg>
+          <span style={{ width: "24px", height: "24px", borderRadius: "7px", background: "#1A1A17", color: "#C6F24E", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <IconSparkle className="size-3.5" />
           </span>
           <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Onboarding</span>
           <span style={{ marginLeft: "auto", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#79746B" }}>
             {done}/{tasks.length}
           </span>
-          <button
+          <AgentActionButton
+            idleLabel={tasks.some((t) => t.generated_by === "agent") ? "Regenerar checklist" : "Generar checklist"}
+            busyLabel="Generando…"
+            busy={generating}
             onClick={generate}
-            disabled={generating}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12px", color: "#0E5C4A", background: "#DCEFE4", border: "1px solid #BFE0D2", borderRadius: "9px", padding: "6px 11px", cursor: generating ? "not-allowed" : "pointer" }}
-          >
-            {generating ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#0E5C4A" strokeWidth="2" strokeLinejoin="round"/>
-              </svg>
-            )}
-            Regenerar con IA
-          </button>
+          />
         </div>
 
         {/* agent hint banner */}
         {tasks.some((t) => t.generated_by === "agent") && (
           <div style={{ display: "flex", alignItems: "flex-start", gap: "9px", background: "#DCEFE4", border: "1px solid #BFE0D2", borderRadius: "11px", padding: "10px 12px", margin: "12px 0 4px" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}>
-              <path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#0E5C4A" strokeWidth="2" strokeLinejoin="round"/>
-            </svg>
+            <span style={{ color: "#0E5C4A", display: "flex", flexShrink: 0, marginTop: "1px" }}>
+              <IconSparkle className="size-4" />
+            </span>
             <span style={{ fontSize: "12px", lineHeight: 1.45, color: "#2C5247" }}>
               El <b>agente de onboarding</b> propuso esta checklist según el rol y departamento. Edítala, marca tareas o regenérala — el seguimiento es tuyo.
             </span>
@@ -114,11 +105,11 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
 
         {tasks.length === 0 && !generating && (
           <div style={{ display: "flex", alignItems: "flex-start", gap: "9px", background: "#DCEFE4", border: "1px solid #BFE0D2", borderRadius: "11px", padding: "10px 12px", margin: "12px 0 4px" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}>
-              <path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#0E5C4A" strokeWidth="2" strokeLinejoin="round"/>
-            </svg>
+            <span style={{ color: "#0E5C4A", display: "flex", flexShrink: 0, marginTop: "1px" }}>
+              <IconSparkle className="size-4" />
+            </span>
             <span style={{ fontSize: "12px", lineHeight: 1.45, color: "#2C5247" }}>
-              Sin tareas aún. Pulsa <b>Regenerar con IA</b> para que el agente genere la checklist según el rol y departamento, o añade tareas manualmente.
+              Sin tareas aún. Pulsa <b>Generar checklist</b> para que el agente genere la checklist según el rol y departamento, o añade tareas manualmente.
             </span>
           </div>
         )}
