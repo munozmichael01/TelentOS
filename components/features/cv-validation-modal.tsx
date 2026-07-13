@@ -2,7 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+import { AgentBadge } from "@/components/ui/agent-badge";
 import { Button } from "@/components/ui/button";
 import { CvProfileFields } from "@/components/features/cv-profile-fields";
 import type { EditableCvProfile } from "@/lib/cv-profile";
@@ -37,7 +37,8 @@ export function CvValidationModal({
         <DialogHeader className="p-5 pb-3 border-b border-line text-left">
           <div className="flex items-center gap-2">
             <DialogTitle>Revisa los datos de tu CV</DialogTitle>
-            {aiStatus === "ok" && <Badge variant="brand">extraído por IA</Badge>}
+            {/* Procedencia SIEMPRE visible (invariante anti-patrón #7): si no hubo LLM, se dice. */}
+            <AgentBadge kind={aiStatus === "ok" ? "ia" : "heuristica"} />
           </div>
           <DialogDescription>
             Hemos leído tu CV para ahorrarte tiempo. Revisa y corrige lo que haga falta —

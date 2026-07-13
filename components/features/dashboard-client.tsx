@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiFetch, notifyError } from "@/lib/api-client";
 import { StatCard } from "@/components/stat-card";
 import { AgentPanel } from "@/components/agent-hint";
+import { IconSparkle } from "@/components/ui/icons";
 import { InboxItem } from "@/components/features/inbox-item";
 import type { DashboardData, InboxItem as InboxItemType, InboxType, InboxAction, AgentInsight, PulseMetric } from "@/lib/dashboard";
 
@@ -350,8 +351,8 @@ export function DashboardClient({
           <AgentPanel>
             {/* Header row 1: icon + title + count */}
             <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "5px" }}>
-              <span style={{ width: "24px", height: "24px", borderRadius: "7px", background: "rgba(198,242,78,.16)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round"/></svg>
+              <span style={{ width: "24px", height: "24px", borderRadius: "7px", background: "rgba(198,242,78,.16)", color: "#C6F24E", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <IconSparkle className="size-3.5" />
               </span>
               <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px", color: "#F4F0E8" }}>
                 Sugerencias del agente

@@ -9,6 +9,8 @@ import type { JobDraft } from "@/agents/agent-job-writer";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
+import { AgentActionButton } from "@/components/ui/agent-action-button";
+import { IconSparkle } from "@/components/ui/icons";
 
 type FormState = {
   title: string;
@@ -191,10 +193,8 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
         {/* dark agent panel */}
         <div style={{ background: "#1A1A17", color: "#F4F0E8", borderRadius: "16px", padding: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "12px" }}>
-            <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "rgba(198,242,78,.16)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round"/>
-              </svg>
+            <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "rgba(198,242,78,.16)", color: "#C6F24E", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <IconSparkle className="size-3.5" />
             </span>
             <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px" }}>Agente redactor</span>
           </div>
@@ -211,28 +211,13 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
             onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
           />
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "12px" }}>
-            <button
-              onClick={() => askAgent("draft")}
-              disabled={!brief.trim() || loadingAgent}
-              style={{
-                fontFamily: "'Archivo',sans-serif",
-                fontWeight: 800,
-                fontSize: "13px",
-                color: "#1A1A17",
-                background: brief.trim() ? "#C6F24E" : "#38352E",
-                border: "none",
-                borderRadius: "10px",
-                padding: "10px 16px",
-                cursor: brief.trim() && !loadingAgent ? "pointer" : "not-allowed",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                opacity: !brief.trim() || loadingAgent ? 0.6 : 1,
-              }}
-            >
-              {loadingAgent && <Loader2 size={13} className="animate-spin" />}
-              Generar borrador con IA
-            </button>
+            {/* Gate de brief vacío en el onClick: AgentActionButton solo deshabilita por busy (fit gap reportado). */}
+            <AgentActionButton
+              idleLabel="Generar borrador"
+              busyLabel="Generando…"
+              busy={loadingAgent}
+              onClick={() => { if (brief.trim()) askAgent("draft"); }}
+            />
             <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#8C877E" }}>
               Edítalo todo después · tú decides
             </span>
@@ -400,14 +385,12 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
             Sugerencias del agente
           </div>
           {form.title.trim() && (
-            <button
+            <AgentActionButton
+              idleLabel="Actualizar sugerencias"
+              busyLabel="Actualizando…"
+              busy={loadingAgent}
               onClick={() => askAgent("assist")}
-              disabled={loadingAgent}
-              style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "11px", color: "#0E5C4A", background: "#DCEFE4", border: "none", borderRadius: "8px", padding: "5px 10px", cursor: loadingAgent ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "4px" }}
-            >
-              {loadingAgent && <Loader2 size={10} className="animate-spin" />}
-              Actualizar
-            </button>
+            />
           )}
         </div>
 

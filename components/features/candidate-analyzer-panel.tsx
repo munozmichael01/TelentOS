@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { AgentActionButton } from "@/components/ui/agent-action-button";
+import { AgentBadge } from "@/components/ui/agent-badge";
+import { IconSparkle } from "@/components/ui/icons";
 import type { CandidateAnalysis } from "@/agents/agent-candidate-analyzer";
 
 type SubScores = {
@@ -94,19 +96,18 @@ export function CandidateAnalyzerPanel({
     >
       {/* header */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-        <span style={{ width: "30px", height: "30px", borderRadius: "9px", background: "rgba(198,242,78,.16)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M5 19l1-4 9-9 3 3-9 9-4 1ZM14 6l3 3" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round"/>
-          </svg>
+        <span style={{ width: "30px", height: "30px", borderRadius: "9px", background: "rgba(198,242,78,.16)", color: "#C6F24E", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <IconSparkle className="size-4" />
         </span>
         <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "17px" }}>Agente de análisis</span>
-        {mode === "fallback" && (
-          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#E0A23C", background: "rgba(224,162,60,.12)", border: "1px solid rgba(224,162,60,.3)", borderRadius: "999px", padding: "3px 10px", marginLeft: "auto" }}>
-            heurístico
+        {/* Procedencia visible sobre panel oscuro (invariante #7): solo tras correr el agente. */}
+        {mode && (
+          <span style={{ marginLeft: "auto" }}>
+            <AgentBadge kind={mode === "ok" ? "ia" : "heuristica"} onDark />
           </span>
         )}
         {fitScore != null && (
-          <span style={{ fontSize: "12px", fontWeight: 800, color: "#0E5C4A", background: "#C6F24E", borderRadius: "999px", padding: "3px 11px", marginLeft: mode === "fallback" ? "0" : "auto", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: "12px", fontWeight: 800, color: "#0E5C4A", background: "#C6F24E", borderRadius: "999px", padding: "3px 11px", marginLeft: mode ? "0" : "auto", whiteSpace: "nowrap" }}>
             Fit {fitScore}
           </span>
         )}
@@ -175,29 +176,12 @@ export function CandidateAnalyzerPanel({
         <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#8C877E" }}>
           El agente propone · tú decides
         </span>
-        <button
+        <AgentActionButton
+          idleLabel={analysis ? "Reanalizar" : "Analizar perfil"}
+          busyLabel="Analizando…"
+          busy={loading}
           onClick={analyze}
-          disabled={loading}
-          style={{
-            fontFamily: "'Archivo',sans-serif",
-            fontWeight: 800,
-            fontSize: "12px",
-            color: "#1A1A17",
-            background: "#C6F24E",
-            border: "none",
-            borderRadius: "9px",
-            padding: "8px 14px",
-            cursor: loading ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            opacity: loading ? 0.7 : 1,
-            flexShrink: 0,
-          }}
-        >
-          {loading && <Loader2 size={13} className="animate-spin" />}
-          {analysis ? "Reanalizar" : "Analizar perfil"}
-        </button>
+        />
       </div>
     </div>
   );
