@@ -24,12 +24,12 @@ Todo agente pasa por `runAgent<T>(opts)`. Lo que el core garantiza, agente por a
 | Agente | Modelo | Qué hace | Superficie | Eval |
 |---|---|---|---|---|
 | `cv-parser` | mini | Extrae perfil estructurado del CV (skills→catálogo, experiencias, idiomas CEFR, educación) | Modal del candidato en inscripción + "Extraer del CV" admin | ✅ `npm run eval:cv` (5/6) |
-| `assistant` | 4o | **Punto central conversacional** — packs de tools por vertical con RBAC | Drawer global (sparkle topbar + ⌘J), chip de contexto por módulo | ❌ pendiente (siguiente) |
-| `payroll-copilot` | mini | Redacta el resumen de la revisión pre-aprobación (detectores en `lib/payroll/copilot.ts`) | "Anotar corrida" en pay-run-detail (reencuadre B-5 en curso) | ❌ pendiente |
+| `assistant` | 4o | **Punto central conversacional** — packs de tools por vertical con RBAC | Drawer global (sparkle topbar + ⌘J + `assistant:ask` desde módulos), chip de contexto | ✅ `npm run eval:assistant` (6/6, 3 roles) |
+| `payroll-copilot` | mini | Redacta el resumen de la revisión pre-aprobación (detectores en `lib/payroll/copilot.ts`) | "Revisión de la corrida" en pay-run-detail (B-5: solo comparativo + colapso a tabla; colapsable, no cerrable) | ❌ pendiente |
 | `candidate-analyzer` | 4o | Lectura cualitativa del candidato explicando el fit determinista (`lib/fit-explain.ts`) | Panel de análisis en la ficha | ❌ pendiente |
 | `job-writer` | 4o | Borrador de oferta desde una frase + mejora de campos | "Redacción asistida" en Nueva oferta (B-6/B-7) | ❌ |
 | `channel-optimizer` | 4o | Plan de distribución (canales, presupuesto, copy) | Pestaña Distribución de la oferta | ❌ |
-| `channel-analyst` | 4o | Chat de analytics de canales — **en retirada: migra al assistant** (su capa de datos ya es una tool del assistant) | Pestaña Canales → pasará a entrada del drawer | — |
+| `channel-analyst` | — | **RETIRADO como superficie** (2026-07-13): Canales abre el drawer del assistant con chip precargado; su `queryChannelData` vive como tool del assistant. Endpoint `/api/agents/channel-analyst` deprecado sin consumidores — eliminar en próxima limpieza | — | — |
 | `onboarding-builder` | 4o | Checklist de incorporación por rol/departamento | Ficha del empleado | ❌ |
 | `dashboard-insights` | mini | Redactor del motor de señales (determinista calcula) | "Sugerencias del agente" en dashboard | ❌ |
 
@@ -55,7 +55,7 @@ Fuera del framework (deuda): `career-site/translate` (gpt-4o directo, sin audito
 ### ¿Cómo sabemos que la plataforma está cubierta? — el método de cobertura
 
 1. **Mapa módulo → preguntas core.** Cada módulo funcional (Notion → Funcionalidades actuales) define sus 3-5 preguntas de negocio; cada pregunta debe mapear a una tool. Hueco en el mapa = tool que falta. (El bug de "inscritos" era exactamente esto: Reclutamiento tenía pipeline y canales pero no volumen por período.)
-2. **Evals de preguntas doradas** (`evals/assistant/` — pendiente, siguiente tarea): preguntas reales con la respuesta esperada contra la DB de seeds, corridas en cada cambio de prompt o de tools. Toda pregunta que falle en producción (como la de Michael) **se añade al set** — los bugs se convierten en tests.
+2. **Evals de preguntas doradas** ✅ (`scripts/eval-assistant.mjs`, `npm run eval:assistant`): 6 casos × 3 roles contra el endpoint real — checks de forma y franqueza (números presentes, RBAC sin fugas, sin "permisos" falsos), resilientes a datos cambiantes. Toda pregunta que falle en producción **se añade al set** — los bugs se convierten en tests (el caso #1 es el bug real de "inscritos"). **Su estreno cazó 3 bugs**: columna inexistente (`employees.city`) cuyo error de query se disfrazaba de "no encontré"; matching de nombres sensible a acentos (el LLM escribe "Lucia", la DB "Lucía" → fold de diacríticos en las tools); errores de Supabase tragados como lista vacía. Regla derivada: **un error de query jamás se disfraza de "no encontré" — se propaga al modelo como error consultable**.
 3. **Telemetría de huecos:** los `agent_runs` del assistant guardan pregunta y respuesta; revisar periódicamente las respuestas tipo "aún no puedo" da la lista priorizada de tools que faltan, por demanda real.
 
 ## 4. Control de coste
@@ -71,4 +71,6 @@ Fuera del framework (deuda): `career-site/translate` (gpt-4o directo, sin audito
 - **Un asistente, no tres**: el vertical es un chip de contexto (UI determinista por pantalla, descartable, sesgo no muro); el hilo es único y cruza verticales; RBAC por tool montada.
 - **Persistencia de conversaciones**: pendiente de producto — decidir con uso real (CLAUDE.md § Decisiones pendientes).
 - **Streaming del chat**: exigido por la doctrina; V1 sin streaming (fast-follow anotado).
-- **Canales**: el chat embebido se retira; la pestaña conserva una entrada que abre el drawer con chip "Canales".
+- **Canales**: ✅ migrado (2026-07-13) — chat embebido retirado; la pestaña tiene `AssistantEntry` (chips plantilla que despachan `assistant:ask{question}` → el drawer abre y siembra el turno con el contexto del módulo).
+- **Ciclo de vida de paneles invocados** (ratificado, DS §4.6): se colapsan ("Ver menos/Ver más"), no se cierran; expandir ≠ re-invocar (el toggle nunca llama a la API).
+- **Fit canónico end-to-end**: `POST /api/candidates/rescore-fits` re-puntúa toda la empresa con el cálculo canónico (backfill 2026-07-13: 19 apps, 12 actualizadas, drift medio 14 pts); las barras 0-10 subjetivas retiradas a favor de `FitBreakdown` determinista.

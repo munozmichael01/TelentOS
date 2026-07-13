@@ -346,7 +346,47 @@ Primitivos en `components/ui/`: `Input`, `Textarea`, `NativeSelect`, `Label`, `S
 
 `components/empty-state.tsx` existe **pero está fuera del lenguaje visual**: usa clases shadcn genéricas (`rounded-xl border-dashed text-muted-foreground`) mientras las features rehacen su propio empty-state inline (tile de icono + borde dashed 2px + padding 48–60px: `absence-panel.tsx:569`, `pay-profile.tsx:403`, `interview-panel.tsx:302`, `channels-view.tsx:348`).
 
-`[PROPUESTO]` reescribir `EmptyState` al patrón inline dominante y adoptarlo: tile de icono `r-lg` sobre `brand-soft`/`surface-2` → título `card-title` → descripción `body` soft → acción opcional. Ver §3.3 y Anexo A-6.
+`[PROPUESTO]` reescribir `EmptyState` al patrón inline dominante y adoptarlo. Blueprint canónico (cierra el ad-hoc de hoy):
+
+**Anatomía:** contenedor centrado con borde `dashed line` `r-lg` y padding 40–56px → **tile de icono** `r-lg` 48px sobre `brand-soft` (icono de línea `stroke brand`, nunca emoji) → **título** `card-title` (Archivo 800, 15px) → **cuerpo** `body` soft, ≤ ~44ch, `text-wrap:pretty` → **CTA opcional** (`Button`, la acción que resuelve el vacío). Nada de sombra dura en el contenedor: el vacío no es accionable, el CTA sí.
+
+```tsx
+import { Button } from "@/components/ui/button";
+
+export function EmptyState({
+  icon, title, description, action,
+}: {
+  icon: React.ReactNode;                 // icono de línea 22px, hereda stroke
+  title: string;
+  description?: string;
+  action?: React.ReactNode;              // <Button> que resuelve el vacío
+}) {
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+      border: "1.5px dashed var(--line)", borderRadius: "14px", padding: "48px 32px", gap: "6px",
+    }}>
+      <span style={{
+        width: "48px", height: "48px", borderRadius: "14px", background: "var(--brand-soft)",
+        color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "8px",
+      }}>
+        {icon}
+      </span>
+      <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", color: "var(--ink)" }}>{title}</div>
+      {description && (
+        <p style={{ fontSize: "14px", lineHeight: 1.5, color: "var(--soft)", maxWidth: "44ch", margin: 0, textWrap: "pretty" }}>
+          {description}
+        </p>
+      )}
+      {action && <div style={{ marginTop: "14px" }}>{action}</div>}
+    </div>
+  );
+}
+// <EmptyState icon={<IconInbox/>} title="Sin candidaturas todavía"
+//   description="Llegan desde el career site y los canales activos."
+//   action={<Button asChild><Link href="/career-site">Configurar career site</Link></Button>} />
+```
+> Sustituye el `empty-state.tsx` shadcn actual y absorbe los inline de `absence-panel.tsx:569`, `pay-profile.tsx:403`, `interview-panel.tsx:302`, `channels-view.tsx:348`, `compensation-panel.tsx:472` (Anexo A-6). El icono es **prop** (cada vacío el suyo, del set `ui/icons`). Un solo CTA como máximo: el que desbloquea el estado. Ver §3.3.
 
 ## 2.9 AgentPanel — _consolidado_ (voz narrativa del agente)
 
@@ -485,6 +525,21 @@ Regla: **"Sugerencias del agente" queda reservado a P2** (el riel proactivo del 
 
 Esto requiere una nota mínima a pista A (dato, no diseño): `computeRunFindings` ya distingue los `kind`; el corte es **de presentación** — B-5 filtra por `kind ∈ {variation, new_in_run, missing_from_run}` para bullets, y agrega el resto en el contador de enlace.
 
+## 4.6 Ciclo de vida de un panel invocado — colapsar, no cerrar (ratificada)
+
+Pista A implementó el ciclo de vida de las superficies invocadas (P3, P5, P6) y **lo ratifico como regla del DS**. Un panel de agente que el usuario invocó no se **descarta**: se **colapsa**, y sus datos **persisten**.
+
+**Contrato:**
+1. **Toggle único.** Un solo control «Ver menos / Ver más» (no un botón cerrar + un botón reabrir). El agente no tiene un estado «cerrado» — tiene expandido y colapsado.
+2. **Colapsado = barra fina.** Al colapsar, el panel deja una **barra de una línea** con: icono sparkle + **título** (el nombre user-facing del patrón, §4.5a) + **`AgentBadge`** de procedencia + **conteo** de lo que contiene («3 variaciones», «Fit 82», «6 campos»). La barra es la promesa de que el trabajo sigue ahí, sin ocupar la pantalla.
+3. **Persistencia hasta salir de página.** El contenido generado **sobrevive** a colapsar/expandir mientras el usuario siga en la vista. No se recomputa al re-expandir: expandir es gratis e instantáneo.
+4. **Re-invocar = datos frescos.** Volver a pulsar el disparador (`AgentActionButton`) **sí** relanza el especialista y **reemplaza** el contenido. Distinción dura: **expandir ≠ re-invocar.** El toggle nunca golpea la API; el disparador siempre sí.
+5. **Al salir de la página, se descarta.** No hay persistencia entre navegaciones (un análisis es del momento). Al volver, el panel arranca en reposo — el disparador, sin contenido.
+
+Por qué importa: separa «guardar sitio» (barato, local) de «pedir a la IA» (caro, con procedencia). El usuario nunca pierde una propuesta por plegar la UI, y nunca dispara el modelo sin querer.
+
+**¿Aplica a P5 (panel de análisis del candidato)?** — **Sí, decisión tomada.** Hoy P5 está **siempre expandido** en la ficha; se alinea al mismo ciclo. Colapsado, su barra fina muestra `sparkle · "Análisis del agente" · AgentBadge · "Fit 82"`. Justificación: el análisis compite por espacio con el resto de la ficha (historial, notas, pipeline), y el `FitBreakdown` determinista ya deja el número visible en la tabla de candidatos — el panel es profundidad opcional, no permanente. Excepción: si el análisis **aún no se ha invocado**, no hay barra — solo el disparador (mismo reposo que P3/P6). La barra fina existe únicamente cuando hay contenido que preservar.
+
 ---
 
 # 5 · Accesibilidad — mínimos `[PROPUESTO]`
@@ -546,6 +601,34 @@ Resultado esperado: de ~10 bullets densos (mitad duplicados) a **resumen + 2-3 v
 
 - `candidate-analyzer-panel.tsx` **aún no migrado**: sigue con las barras 0–10 (Skills/Experiencia/**Liderazgo**) y su propia pill "heurístico" inline. Migrar a `AgentBadge` + `FitBreakdown` determinista (conflicto b, §4.5b). Es la siguiente pieza de la ola.
 - Confirmar que la varita (`M5 19l1-4…`) se retiró de `job-form.tsx`, `onboarding-panel.tsx`, `dashboard-client.tsx` — el grep de A-3 seguía encontrándola en el snapshot auditado.
+
+---
+
+# 7 · Revisión de implementaciones nuevas — gate (2026-07-13)
+
+Revisadas 4 piezas que pistas A/B implementaron desde blueprints. **Veredicto global: las 4 pasan el gate.** Ninguna requiere corrección bloqueante; anoto 3 notas menores, todas no-bloqueantes.
+
+## 7.1 `generator-block.tsx` (B-6, pista B) — ✅ pasa
+
+Fiel al blueprint: panel de tinta, sparkle lima, título "Redacción asistida", `AgentBadge onDark`, `idle/busyLabel` configurables para las dos voces ("Redactar con IA" / "Mejorar la oferta"), `children` para los controles de intención. El disparador usa `AgentActionButton variant="brand"` (no `soft`).
+- **Nota (no bloqueante):** el disparador **no** pasa `onDark`, y es correcto — `onDark` en `AgentActionButton` solo re-estiliza cuando `variant="soft"`; con `brand` es un no-op y el teal con borde ya lee bien sobre tinta. La decisión está documentada en el propio comentario del archivo. Sin cambios.
+
+## 7.2 `field-proposal.tsx` (B-7 base, pista B) — ✅ pasa
+
+Réplica exacta del blueprint base: `differs`/«usar sugerencia», `Input` DS, `rationale`, `disabled` en cascada. Correcto.
+- **Nota:** cubre solo el caso escalar. El rail de ofertas necesita además **`FieldProposalRange`** (banda salarial) y **`FieldProposalMulti`** (requisitos) — entregados hoy en **B-7b/B-7c**. No es un defecto de esta pieza; es la ampliación que faltaba.
+
+## 7.3 `fit-breakdown.tsx` (§4.5b, pista B) — ✅ pasa, ejemplar
+
+La mejor de las cuatro. Determinista de punta a punta: consume `FitExplanation` de una capa `lib/fit-explain.ts` (pista A añadió el `explain` sobre `fit-score.ts` — exactamente el desacople correcto), **sin `AgentBadge`** (es hecho, no juicio), pesos 60/25/15 rotulados, chips `matched` (verde) / `missing` (coral, tachado). Va más allá del blueprint con acierto: veredicto de ubicación legible, detalle de años de experiencia, y manejo de los modos `sin-requisitos`/`texto`. Las barras subjetivas 0–10 quedan retiradas. Sin cambios.
+- **Nota (no bloqueante):** vive en `#26241F` (agent-surface) dentro del panel; cuando se envuelva en `AgentPanelShell` (B-5b) para el ciclo de vida §4.6, el `count` colapsado será `"Fit " + score`.
+
+## 7.4 `agent-action-button.tsx` — addendum B-2 (pista A) — ✅ pasa
+
+Los 5 fit-gaps del addendum están todos, fieles: `disabled` separado de `busy` (`isDisabled = busy || disabled`), `gatedReason` como `title` accesible (solo cuando disabled y no busy — correcto), `tone="minimal"` (botón-texto Space Mono, sin píldora), `onDark` (acento lima), `size="xs"`. La afordancia gated y el spinner/gerundio funcionan.
+- **Nota (no bloqueante):** en `tone="solid"`, `onDark` re-estiliza vía `className` **solo** si `variant="soft"`; con `variant="brand"` + `onDark` no hay tratamiento especial (innecesario — brand lee sobre tinta). Comportamiento aceptable y coherente con 7.1. Si algún día se quiere un brand más luminoso sobre tinta, sería una variante nueva, no un fix.
+
+**Cierre del gate:** las 4 quedan **aprobadas para uso**. Lo único pendiente de la familia es migrar `candidate-analyzer-panel.tsx` para que **consuma** `FitBreakdown` (hoy sigue con las barras viejas — §6.3), y envolver P3/P5/P6 en `AgentPanelShell` (B-5b) para el ciclo de vida §4.6.
 
 ---
 
@@ -615,6 +698,7 @@ Listos para que A/B los implementen literal. Código de referencia en TSX (stack
 | B-5 | FindingGroup/FindingRow | P6 · Copilot | **fix ahora** |
 | B-6 | GeneratorBlock | P3 · Generador | nuevo |
 | B-7 | FieldProposal | P4 · Propuesta granular | nuevo |
+| B-8 | ModuleAssistantEntry | entrada de módulo → drawer | nuevo (Ola 2) |
 
 ## B-1 · AgentBadge — procedencia
 
@@ -694,6 +778,72 @@ export function AgentActionButton({
 ```
 Uso: `<AgentActionButton idleLabel="Extraer del CV" busyLabel="Analizando CV…" busy={phase==="loading"} onClick={extract} />`.
 > Unifica los 5 disparadores actuales (cv-parser, candidate-analyzer, channel-planner, job-writer, onboarding-builder). Regla: vive junto a la acción manual, nunca flotante.
+
+### B-2 · Addendum — fit-gaps de pista B (resueltos)
+
+Tres huecos reales al implementar. Se enmienda el contrato:
+
+**1 · `disabled` separado de `busy` → SÍ (coincido con pista B).** Son dos estados distintos: `busy` = _pensando_ (spinner + gerundio); `disabled`/**gated** = _no puedes invocar aún_ (label en reposo, no interactivo, con motivo). Se añade `disabled?: boolean` + `gatedReason?: string`. Ambos bloquean el click; solo `busy` muta a spinner. Cuando está gated con motivo, el motivo se expone como `title`/tooltip (nunca un botón muerto y mudo — anti-patrón de "por qué no puedo pulsar esto").
+
+**2 · Variante compacta/gated para "Actualizar insights" → SÍ, `size="xs"` + tono `minimal`.** El refresh del riel de sugerencias (`dashboard-client.tsx`) no es un CTA primario: es una acción terciaria dentro de un panel, gated hasta que el usuario triaje las sugerencias abiertas (`canRefresh`). Necesita un tratamiento **compacto** (texto pequeño, sin relleno de botón) y **gated con motivo**. Se añade `size?: "sm" | "xs"` y `tone?: "solid" | "minimal"`. `xs+minimal` = el botón-texto de 10–11px con sparkle/refresh pequeño.
+
+**3 · `onDark` explícito → SÍ; el `soft` actual NO vale sobre tinta.** `variant="soft"` es `brand-soft` sobre papel — dentro de un `AgentPanel` (tinta) se ve mal (bajo contraste, rompe la voz). Se añade `onDark?: boolean` que conmuta al tratamiento oscuro (lima sobre tinta translúcida, como los chips de agente existentes). Regla: **cualquier disparador que viva dentro de un panel oscuro pasa `onDark`**; el `soft`/`brand` claros solo sobre papel.
+
+**Contrato revisado:**
+```tsx
+export function AgentActionButton({
+  idleLabel, busyLabel, busy,
+  disabled = false, gatedReason,          // gap 1
+  onClick, variant = "soft",
+  size = "sm", tone = "solid",            // gap 2
+  onDark = false,                         // gap 3
+  className,
+}: {
+  idleLabel: string; busyLabel: string; busy: boolean;
+  disabled?: boolean; gatedReason?: string;
+  onClick: () => void; variant?: "soft" | "brand";
+  size?: "sm" | "xs"; tone?: "solid" | "minimal"; onDark?: boolean; className?: string;
+}) {
+  const blocked = busy || disabled;
+
+  // tono minimal (acción terciaria dentro de panel): botón-texto, sin relleno
+  if (tone === "minimal") {
+    return (
+      <button
+        onClick={onClick} disabled={blocked} aria-busy={busy}
+        title={disabled && !busy ? gatedReason : undefined}
+        className={className}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: "5px", background: "none", border: "none",
+          padding: 0, cursor: blocked ? "not-allowed" : "pointer", opacity: busy ? 0.6 : 1,
+          fontFamily: "'Space Mono',monospace", fontSize: size === "xs" ? "10px" : "11px",
+          color: onDark ? (blocked ? "#5A574F" : "#C6F24E") : (blocked ? "#B7C0AE" : "#0E5C4A"),
+        }}
+      >
+        {busy ? <IconSpinner /> : <IconSparkle />}
+        {busy ? busyLabel : idleLabel}
+      </button>
+    );
+  }
+
+  // tono solid: el Button del DS. onDark => tratamiento lima-sobre-tinta.
+  const darkStyle = onDark
+    ? { background: "rgba(198,242,78,.14)", color: "#C6F24E", border: "1px solid rgba(198,242,78,.3)", boxShadow: "none" }
+    : undefined;
+  return (
+    <Button
+      variant={variant} size={size === "xs" ? "sm" : size}
+      onClick={onClick} disabled={blocked} aria-busy={busy}
+      title={disabled && !busy ? gatedReason : undefined}
+      style={darkStyle} className={className}
+    >
+      {busy ? <IconSpinner /> : <IconSparkle />}
+      {busy ? busyLabel : idleLabel}
+    </Button>
+  );
+}
+```
+> Migra el refresh de `dashboard-client.tsx` a `tone="minimal" size="xs" onDark disabled={!canRefresh} gatedReason="Triaje las sugerencias abiertas antes de pedir un análisis nuevo."` — sustituye el botón-texto inline + el tooltip manual (`showUpdateTip`) por el contrato. `size="xs"` remite a la decisión D2 (el `xs` acotado para densidad); no baja de 32px de área táctil real cuando es `solid`.
 
 ## B-3 · ProposalFrame — S2 Propuesta (datos editables)
 
@@ -842,6 +992,49 @@ export function FindingGroup({ findings, onJumpToTable }: { findings: ReviewFind
 ```
 > Reemplaza el `review.findings.map(...)` de `pay-run-detail.tsx:734-751`. `onJumpToTable` fija `tab="empleados"` + resalta las filas con `AlertIcon` (o filtra por incidencia). **Nunca** renderizar los `kind` ya-visibles como bullets. Este es el fix de §6.2.
 
+### B-5b · CollapsedAgentBar — barra fina (ciclo de vida §4.6)
+
+El chasis colapsado de **cualquier** panel invocado (P3/P5/P6), no solo el copilot. Es lo que queda cuando el usuario pulsa «Ver menos». Un solo `<AgentPanelShell>` envuelve el contenido y gestiona el toggle; colapsado, renderiza esta barra.
+
+```tsx
+function IconChevron({ open }: { open: boolean }) {
+  return (<svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden
+    style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}>
+    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>);
+}
+
+/** Panel de agente con ciclo de vida §4.6: expandido ↔ barra fina. El contenido
+ *  persiste (no se recomputa al expandir). Re-invocar es responsabilidad del
+ *  disparador externo, NUNCA de este toggle. */
+export function AgentPanelShell({
+  title, provenance, count, defaultOpen = true, children,
+}: { title: string; provenance: AgentProvenance; count: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  return (
+    <div style={{ background: "#1A1A17", color: "#F4F0E8", borderRadius: "16px", overflow: "hidden" }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        style={{ width: "100%", display: "flex", alignItems: "center", gap: "9px", background: "none", border: "none",
+          cursor: "pointer", color: "inherit", padding: open ? "16px 20px 10px" : "12px 18px", textAlign: "left" }}
+      >
+        <span style={{ color: "#C6F24E", display: "flex", flexShrink: 0 }}><IconSparkle className="size-4" /></span>
+        <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>{title}</span>
+        <AgentBadge kind={provenance} onDark />
+        {/* el conteo solo se muestra colapsado: expandido, el contenido ya lo dice */}
+        {!open && <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#8C877E" }}>{count}</span>}
+        <span style={{ marginLeft: "auto", color: "#8C877E", display: "inline-flex", alignItems: "center", gap: "6px",
+          fontFamily: "'Space Mono',monospace", fontSize: "10.5px" }}>
+          {open ? "Ver menos" : "Ver más"}<IconChevron open={open} />
+        </span>
+      </button>
+      {open && <div style={{ padding: "0 20px 18px" }}>{children}</div>}
+    </div>
+  );
+}
+```
+> Envuelve el cuerpo del copilot (`FindingGroup`), del generador (`GeneratorBlock`) y del análisis (`FitBreakdown` + lectura cualitativa). `count` es el resumen de una palabra por patrón: `"3 variaciones"` (P6) · `"Fit 82"` (P5) · `"6 campos"` (P3). Invariante §4.6: **el toggle no llama a la API**; re-invocar cuelga del `AgentActionButton` externo, que reemplaza `children`. Si el patrón aún no se invocó, no se monta este shell — solo el disparador en reposo.
+
 ## B-6 · GeneratorBlock — patrón "agente redactor" (P3)
 
 **Qué es:** el patrón de generación de contenido nuevo (redactar/mejorar una oferta, generar un checklist de onboarding). Extraído de lo que ya funciona bien en **Nueva oferta** (`job-form.tsx`, panel oscuro). Dos zonas: el **agente habla en tinta** (rationale/borrador) y su salida **aterriza en campos claros** editables (donde se convierte en dato del usuario).
@@ -906,6 +1099,174 @@ export function FieldProposal({
 // Uso: dentro de <ProposalFrame provenance="ia" …>  {campos.map(c => <FieldProposal … />)}  </ProposalFrame>
 ```
 > Extrae el patrón de la oferta redactada (`job-form.tsx`). Regla: **cada campo es editable y su aceptación es explícita** — nada se auto-aplica; el `ProposalFrame` contenedor confirma todo junto (invariante + AI Act). `rationale` cubre "banda salarial por percentil de tus 12 ofertas previas".
+
+### B-7b · FieldProposal.Range — banda de dos números (salario mín/máx)
+
+**Qué es:** la variante para un campo que es un **rango de dos números** (banda salarial es el caso guía del rail de ofertas). Un solo `differs`/«usar sugerencia» gobierna **ambos** extremos a la vez — la sugerencia es la banda entera, no cada número por separado. Dos `Input` numéricos con un separador, dentro del mismo contrato de fila que la base.
+
+```tsx
+export function FieldProposalRange({
+  label, value, suggested, unit = "€", rationale, disabled, onUse, onChange,
+}: {
+  label: string;
+  value: [number | "", number | ""];         // [min, max]
+  suggested?: [number, number];
+  unit?: string;
+  rationale?: string;
+  disabled?: boolean;
+  onUse: () => void;                          // aplica la banda sugerida completa
+  onChange: (v: [number | "", number | ""]) => void;
+}) {
+  const [min, max] = value;
+  const differs = suggested != null && (suggested[0] !== min || suggested[1] !== max);
+  const set = (i: 0 | 1) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const n = e.target.value === "" ? "" : Number(e.target.value);
+    onChange(i === 0 ? [n, max] : [min, n]);
+  };
+  const invalid = min !== "" && max !== "" && Number(max) < Number(min);
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-xs">{label}</Label>
+        {differs && !disabled && (
+          <button type="button" onClick={onUse} className="text-[11px] font-semibold text-[#0E5C4A] hover:underline">
+            Usar {unit}{suggested![0].toLocaleString()}–{unit}{suggested![1].toLocaleString()}
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <Input type="number" inputMode="numeric" value={min} disabled={disabled} onChange={set(0)} aria-label={`${label} mínimo`} aria-invalid={invalid} />
+        <span className="text-muted-foreground text-xs shrink-0">—</span>
+        <Input type="number" inputMode="numeric" value={max} disabled={disabled} onChange={set(1)} aria-label={`${label} máximo`} aria-invalid={invalid} />
+      </div>
+      {invalid && <p className="text-[11px] text-[#BD4332]">El máximo no puede ser menor que el mínimo.</p>}
+      {rationale && !invalid && <p className="text-[11px] text-muted-foreground">{rationale}</p>}
+    </div>
+  );
+}
+```
+> La «sugerencia» es atómica: aceptar aplica ambos extremos. Validación `max ≥ min` con `aria-invalid` (patrón §2.7). El `rationale` es el sitio natural para "percentil de tus 12 ofertas".
+
+### B-7c · FieldProposal.Multi — lista de chips añadibles/quitables (skills)
+
+**Qué es:** la variante para un campo que es una **lista** (skills/requisitos de la oferta). El agente propone un set; el usuario **quita** los que no encajan (× en el chip) y **añade** los suyos (input + Enter). «Usar sugerencia» rellena la lista con la propuesta; a partir de ahí es edición libre. Los chips propuestos-y-aún-no-tocados pueden marcarse para que se vea qué vino del agente.
+
+```tsx
+export function FieldProposalMulti({
+  label, value, suggested, rationale, disabled, onUse, onChange,
+}: {
+  label: string;
+  value: string[];
+  suggested?: string[];
+  rationale?: string;
+  disabled?: boolean;
+  onUse: () => void;                          // value := suggested
+  onChange: (v: string[]) => void;
+}) {
+  const [draft, setDraft] = React.useState("");
+  const differs = suggested != null && suggested.join("\u0001") !== value.join("\u0001");
+  const add = () => {
+    const t = draft.trim();
+    if (t && !value.includes(t)) onChange([...value, t]);
+    setDraft("");
+  };
+  const remove = (s: string) => onChange(value.filter((x) => x !== s));
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-xs">{label}</Label>
+        {differs && !disabled && (
+          <button type="button" onClick={onUse} className="text-[11px] font-semibold text-[#0E5C4A] hover:underline">
+            Usar sugerencia ({suggested!.length})
+          </button>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-1.5 rounded-[11px] border-[1.5px] border-line bg-paper p-2 min-h-9">
+        {value.map((s) => (
+          <span key={s} className="inline-flex items-center gap-1.5 text-xs font-semibold bg-brand-soft text-brand rounded-full pl-2.5 pr-1.5 py-1">
+            {s}
+            {!disabled && (
+              <button type="button" onClick={() => remove(s)} aria-label={`Quitar ${s}`} className="text-brand/60 hover:text-brand flex items-center">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
+              </button>
+            )}
+          </span>
+        ))}
+        {!disabled && (
+          <input
+            value={draft} onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+            onBlur={add}
+            placeholder={value.length ? "Añadir…" : "Añade una skill y pulsa Enter"}
+            aria-label={`Añadir a ${label}`}
+            className="flex-1 min-w-[120px] bg-transparent text-sm outline-none px-1"
+          />
+        )}
+      </div>
+      {rationale && <p className="text-[11px] text-muted-foreground">{rationale}</p>}
+    </div>
+  );
+}
+```
+> Reusa el chip `brand-soft` del contrato (§2.6) y el patrón de skills de `cv-profile-fields.tsx:194`. Añadir por Enter **o** blur; sin duplicados. `onUse` es "acepta el set del agente"; a partir de ahí toda edición es del usuario. Para el rail de ofertas, `FieldProposalRange` (banda) y `FieldProposalMulti` (requisitos) conviven dentro del mismo `ProposalFrame` que ya da la franja de procedencia y el confirmar global.
+
+## B-8 · ModuleAssistantEntry — entrada de módulo al asistente
+
+**Qué es:** cómo queda una pestaña/módulo **cuando se retira su chat embebido** y la conversación se muda al `AssistantDrawer` (B-4). Caso guía: la pestaña **Canales**, que hoy tiene un chat propio (thread + burbujas + input ocupando el área) y pasa a mostrar su analítica a plena anchura + un **lanzador** que abre el drawer con el **chip "Canales" precargado**. El vertical es un **chip, no otro chat** (invariante S4). Reutilizable por cualquier módulo (payroll, candidatos…).
+
+**Qué cambia en la pestaña:**
+- **Se retira:** el panel de chat embebido (thread/burbujas/input) de `channels-view.tsx`. Su historial migra al hilo del drawer; el motor pasa a ser el asistente global con el **pack de tools de canales** (cero regresión: mismas preguntas, un solo cerebro).
+- **Queda:** la analítica del módulo a plena anchura + un `ModuleAssistantEntry` — lanzador compacto, **no** un chat. La redirección muere: preguntar = abrir el drawer ya contextualizado.
+
+**Anatomía del lanzador** (superficie clara — es una acción, no voz del agente): fila/tarjeta con sparkle + "Pregunta sobre tus canales" + 2–3 **chips de sugerencia** (prompts profundos del módulo). Click en el lanzador → drawer vacío con chip. Click en una sugerencia → drawer con chip **y** esa pregunta como primer turno (o sembrada en el input). El mismo componente alimenta el link "Preguntar al asistente" de las cabeceras de módulo (S4).
+
+```tsx
+// Abre el AssistantDrawer global (contexto + semilla opcional). El estado del
+// drawer vive en un provider de app (pista A); aquí solo se dispara.
+export function ModuleAssistantEntry({
+  context,            // etiqueta del chip: "Canales", "Corrida Julio 2026"…
+  prompt,             // placeholder del lanzador: "Pregunta sobre tus canales…"
+  suggestions,        // 2-3 prompts profundos del módulo
+  onOpen,             // (seed?: string) => void  → abre el drawer con chip=context
+}: { context: string; prompt: string; suggestions: string[]; onOpen: (seed?: string) => void }) {
+  return (
+    <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "14px", padding: "16px 18px" }}>
+      <button
+        onClick={() => onOpen()}
+        style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+      >
+        <span style={{ width: "30px", height: "30px", flexShrink: 0, borderRadius: "9px", background: "#DCEFE4", color: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <IconSparkle />
+        </span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: "block", fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px", color: "#1A1A17" }}>Preguntar al asistente</span>
+          <span style={{ display: "block", fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", marginTop: "2px" }}>
+            Contexto: {context}
+          </span>
+        </span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden><path d="M9 6l6 6-6 6" stroke="#79746B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </button>
+      {suggestions.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "7px", marginTop: "12px" }}>
+          {suggestions.map((s) => (
+            <button
+              key={s}
+              onClick={() => onOpen(s)}
+              style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "12px", color: "#3A3833",
+                background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "999px", padding: "6px 12px", cursor: "pointer" }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+Uso (Canales): `<ModuleAssistantEntry context="Canales" prompt="Pregunta sobre tus canales…" suggestions={["¿Qué canal trae mejor fit este trimestre?","Compara coste por canal","Canales con más abandono"]} onOpen={(seed) => openAssistant({ context: "Canales", seed })} />`.
+
+> Retiro del chat de `channels-view.tsx`: hacerlo **solo cuando el drawer esté estable** (B-4, Ola 2). Los chips de sugerencia son los que hoy ya existen bajo el input del chat embebido (`thread.png`) — se conservan, cambian de destino. El chip de contexto es **descartable** en el drawer (el usuario ve qué sabe el asistente y puede soltarlo). Ningún módulo abre su propio chat: todos entran por aquí al drawer único.
 
 ---
 
