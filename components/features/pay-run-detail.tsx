@@ -7,7 +7,6 @@ import { apiFetch, notifySuccess } from "@/lib/api-client";
 import { AgentActionButton } from "@/components/ui/agent-action-button";
 import { AgentBadge } from "@/components/ui/agent-badge";
 import { AgentPanel } from "@/components/agent-hint";
-import { IconClose } from "@/components/ui/icons";
 import type { ReviewFinding } from "@/lib/payroll/copilot";
 import type { PayRun, PayRunLine, PayRunLineItem, PayRunAuditLog, PayrollExport } from "@/lib/types";
 
@@ -520,6 +519,9 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
     compared_to: { period_label: string } | null;
   } | null>(null);
   const [reviewing, setReviewing] = useState(false);
+  // Regla de ciclo de vida (doctrina §4): los paneles invocados se COLAPSAN, no
+  // se cierran — el contenido generado no se pierde hasta salir de la página.
+  const [reviewCollapsed, setReviewCollapsed] = useState(false);
   const mountedRef = useRef(true);
 
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -538,7 +540,10 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
     setReviewing(true);
     try {
       const res = await apiFetch<NonNullable<typeof review>>(`/api/payroll/runs/${id}/review`);
-      if (mountedRef.current) setReview(res);
+      if (mountedRef.current) {
+        setReview(res);
+        setReviewCollapsed(false);
+      }
     } catch {
       // apiFetch ya notifica; el botón vuelve a reposo
     } finally {
@@ -724,20 +729,28 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
           const inTable = review.findings.length - comparative.length;
           return (
             <AgentPanel className="mb-5">
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: reviewCollapsed ? 0 : "10px" }}>
                 <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px" }}>Revisión de la corrida</span>
                 <AgentBadge kind={review.summary_source === "ok" ? "ia" : "heuristica"} onDark />
                 <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", letterSpacing: ".5px", color: "#8C877E" }}>
-                  {review.compared_to ? `vs ${review.compared_to.period_label}` : "sin corrida anterior comparable"}
+                  {reviewCollapsed
+                    ? `${comparative.length} aviso${comparative.length !== 1 ? "s" : ""} · ${inTable} en tabla`
+                    : review.compared_to ? `vs ${review.compared_to.period_label}` : "sin corrida anterior comparable"}
                 </span>
                 <button
-                  onClick={() => setReview(null)}
-                  aria-label="Cerrar revisión"
-                  style={{ marginLeft: "auto", background: "none", border: "none", color: "#8C877E", cursor: "pointer", display: "inline-flex", padding: "2px" }}
+                  onClick={() => setReviewCollapsed((c) => !c)}
+                  aria-label={reviewCollapsed ? "Ver más" : "Ver menos"}
+                  aria-expanded={!reviewCollapsed}
+                  style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: "5px", background: "none", border: "none", color: "#8C877E", cursor: "pointer", padding: "2px", fontFamily: "'Space Mono',monospace", fontSize: "10.5px" }}
                 >
-                  <IconClose />
+                  {reviewCollapsed ? "Ver más" : "Ver menos"}
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden style={{ transform: reviewCollapsed ? "rotate(180deg)" : "none", transition: "transform .15s" }}>
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </button>
               </div>
+              {!reviewCollapsed && (
+              <>
               <p style={{ fontSize: "13.5px", lineHeight: 1.55, margin: comparative.length || inTable ? "0 0 12px" : 0 }}>{review.summary}</p>
               {comparative.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
@@ -764,6 +777,8 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
                 >
                   {inTable} incidencia{inTable !== 1 ? "s" : ""} marcada{inTable !== 1 ? "s" : ""} en la tabla ↓
                 </button>
+              )}
+              </>
               )}
             </AgentPanel>
           );
