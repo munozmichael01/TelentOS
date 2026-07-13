@@ -1,18 +1,22 @@
+import { z } from "zod";
 import { runAgent, type AgentResult } from "@/agents/core";
 import { SYSTEM_PROMPT } from "./prompt";
 import { tools, getApplicationContext } from "./tools";
 
-export type CandidateAnalysis = {
-  summary: string;
-  strengths: string[];
-  gaps: string[];
-  interview_questions: string[];
-  fit_assessment: string;
-};
+// Schema zod = contrato del agente (validado en core con 1 reintento in-conversation).
+export const CandidateAnalysisSchema = z.object({
+  summary: z.string(),
+  strengths: z.array(z.string()),
+  gaps: z.array(z.string()),
+  interview_questions: z.array(z.string()),
+  fit_assessment: z.string(),
+});
+
+export type CandidateAnalysis = z.infer<typeof CandidateAnalysisSchema>;
 
 export type CandidateAnalyzerInput = { applicationId: string };
 
-/** Heurística sin LLM: análisis estructural por solape de skills. */
+/** Heurística sin LLM sobre el mismo desglose determinista que usa el agente. */
 async function fallbackAnalysis(input: CandidateAnalyzerInput): Promise<CandidateAnalysis> {
   const ctx = await getApplicationContext(input.applicationId);
   if ("error" in ctx) {
@@ -24,21 +28,17 @@ async function fallbackAnalysis(input: CandidateAnalyzerInput): Promise<Candidat
       fit_assessment: "Sin datos.",
     };
   }
-  const candSkills = (ctx.candidate.skills as string[]).map((s: string) => s.toLowerCase());
-  const jobSkills = ctx.job.skills as string[];
-  const matched = jobSkills.filter((s) =>
-    candSkills.some((c) => c.includes(s.toLowerCase()) || s.toLowerCase().includes(c))
-  );
-  const missing = jobSkills.filter((s) => !matched.includes(s));
-  const expGap = ctx.candidate.experience_years < ctx.job.experience_min_years;
+  const { matched, missing, mode } = ctx.fit_breakdown.skills;
+  const { requiredYears, actualYears } = ctx.fit_breakdown.experience;
+  const expGap = requiredYears > 0 && actualYears < requiredYears;
 
   return {
-    summary: `${ctx.candidate.name}: ${ctx.candidate.experience_years} años de experiencia, aplica a ${ctx.job.title} desde ${ctx.source}. ${ctx.candidate.summary ?? ""}`.trim(),
+    summary: `${ctx.candidate.name}: ${actualYears} años de experiencia, aplica a ${ctx.job.title} desde ${ctx.source}. ${ctx.candidate.summary ?? ""}`.trim(),
     strengths: matched.map((s) => `Cubre el requisito "${s}"`),
     gaps: [
       ...missing.map((s) => `No hay evidencia de "${s}" en el perfil`),
       ...(expGap
-        ? [`Experiencia (${ctx.candidate.experience_years} años) por debajo del mínimo requerido (${ctx.job.experience_min_years})`]
+        ? [`Experiencia (${actualYears} años) por debajo del mínimo requerido (${requiredYears})`]
         : []),
     ],
     interview_questions: [
@@ -46,7 +46,10 @@ async function fallbackAnalysis(input: CandidateAnalyzerInput): Promise<Candidat
       ...matched.slice(0, 2).map((s) => `Profundiza en ${s}: ¿cuál fue el reto más difícil que resolviste con ello?`),
       "¿Por qué este rol y esta empresa, y no otra oferta similar?",
     ],
-    fit_assessment: `Análisis heurístico (sin OPENAI_API_KEY): cubre ${matched.length}/${jobSkills.length} skills requeridas. Fit score determinista: ${ctx.fit_score ?? "—"}/100.`,
+    fit_assessment:
+      `Análisis heurístico: fit ${ctx.fit_breakdown.score}/100 — cubre ${matched.length}/${matched.length + missing.length} skills ` +
+      `(${ctx.fit_breakdown.skills.points}/60 pts, matching ${mode}), experiencia ${ctx.fit_breakdown.experience.points}/25, ` +
+      `ubicación ${ctx.fit_breakdown.location.points}/15 (${ctx.fit_breakdown.location.verdict}).`,
   };
 }
 
@@ -59,6 +62,7 @@ export async function runCandidateAnalyzer(
     user: `Analiza la candidatura con id "${input.applicationId}". Obtén primero su contexto con la tool.`,
     tools,
     input,
+    validate: (v) => CandidateAnalysisSchema.parse(v),
     fallback: () => fallbackAnalysis(input),
   });
 }

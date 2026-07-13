@@ -5,6 +5,7 @@
  * (components/features/cv-profile-fields.tsx) → un solo contrato con el endpoint.
  */
 import type { CvProfile, CvExperience, CvLanguage, CvEducation } from "@/agents/agent-cv-parser";
+import { normalizeLanguageName } from "@/lib/languages";
 
 export type EditableCvProfile = {
   name: string;
@@ -41,7 +42,9 @@ export function fromCvProfile(p: CvProfile): EditableCvProfile {
     experience_years: p.experience_years ?? 0,
     skills: p.skills ?? [],
     experiences: p.experiences ?? [],
-    languages: p.languages ?? [],
+    // Nombre de idioma al catálogo de la UI ("English" → "Inglés"): sin esto el
+    // select cae a "Otro…" aunque el idioma sea común.
+    languages: (p.languages ?? []).map((l) => ({ ...l, language: normalizeLanguageName(l.language) })),
     education: p.education ?? [],
   };
 }
