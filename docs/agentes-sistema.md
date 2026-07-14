@@ -25,7 +25,7 @@ Todo agente pasa por `runAgent<T>(opts)`. Lo que el core garantiza, agente por a
 |---|---|---|---|---|
 | `cv-parser` | mini | Extrae perfil estructurado del CV (skills→catálogo, experiencias, idiomas CEFR, educación) | Modal del candidato en inscripción + "Extraer del CV" admin | ✅ `npm run eval:cv` (5/6) |
 | `assistant` | 4o | **Punto central conversacional** — packs de tools por vertical con RBAC | Drawer global (sparkle topbar + ⌘J + `assistant:ask` desde módulos), chip de contexto | ✅ `npm run eval:assistant` (6/6, 3 roles) |
-| `payroll-copilot` | mini | Redacta el resumen de la revisión pre-aprobación (detectores en `lib/payroll/copilot.ts`) | "Revisión de la corrida" en pay-run-detail (B-5: solo comparativo + colapso a tabla; colapsable, no cerrable) | ❌ pendiente |
+| `payroll-copilot` | mini | Redacta el resumen de la revisión pre-aprobación (detectores en `lib/payroll/copilot.ts`) | "Revisión de la corrida" en pay-run-detail (B-5: solo comparativo + colapso a tabla; colapsable, no cerrable) | ✅ 13 vitest + `npm run eval:payroll` (3/3) |
 | `candidate-analyzer` | 4o | Lectura cualitativa del candidato explicando el fit determinista (`lib/fit-explain.ts`) | Panel de análisis en la ficha | ❌ pendiente |
 | `job-writer` | 4o | Borrador de oferta desde una frase + mejora de campos | "Redacción asistida" en Nueva oferta (B-6/B-7) | ❌ |
 | `channel-optimizer` | 4o | Plan de distribución (canales, presupuesto, copy) | Pestaña Distribución de la oferta | ❌ |
@@ -63,10 +63,13 @@ Los casos NO viven en prosa (se perderían/divergirían): viven **versionados en
 |---|---|---|---|
 | CV-parser | `npm run eval:cv` | extracción sobre 30 CVs reales (`evals/cv-parser/` + ground truth) | 5/6 (SDR: años, caso frontera aceptado) |
 | Asistente | `npm run eval:assistant` | 6+ preguntas doradas × 3 roles (`scripts/eval-assistant.mjs`) | 8/8 — incluye: bug "inscritos" (capacidad≠permisos), RBAC salario recruiter, oferta≠canal, recomendación ambigua |
+| Payroll copilot | vitest + `npm run eval:payroll` | **dos capas**: detectores deterministas (`lib/payroll/__tests__/copilot.test.ts`) + comportamiento del redactor LLM vs endpoint real (`scripts/eval-payroll-copilot.mjs`) | 13 casos vitest (incl. frontera: bajada de bruto >20%, umbral exacto, prev=0 sin NaN) · 3/3 eval (fidelidad: no inventa personas, sin veredicto aprobar/rechazar, RBAC recruiter→403) |
 
 Cada caso lleva `id` + comentario en el script explicando qué bug real cubre. Añadir un caso = editar el script; el doc no lista casos individuales (evita drift).
 
 **Convención (por qué unos en `scripts/` y otros en `evals/`):** el **runner** (ejecutable, invocado por `npm run eval:*`) vive en `scripts/eval-<agente>.mjs`; el **corpus de datos** (fixtures que no caben inline — p. ej. 30 PDFs) vive en `evals/<agente>/`. Un eval de pocos casos ligeros (el asistente: query+rol+checks) los lleva **inline en su runner** y no necesita carpeta en `evals/`; uno con corpus pesado (cv-parser) sí. **Este índice es el mapa único** — da igual dónde esté cada pieza, se encuentra aquí.
+
+**Cuándo vitest y cuándo eval de endpoint (patrón payroll copilot):** un agente con capa **determinista** (detectores puros que calculan, tipo `computeRunFindings`) se blinda ahí con **casos dorados en vitest** — sin red, sin LLM, sin flakiness, corren en CI; es el sitio correcto para la lógica de detección (donde se esconden los bugs de nómina: una variación no cazada = pago mal aprobado). La capa **LLM** (el redactor) se prueba con un **eval de endpoint** (`.mjs`) que verifica lo que vitest no puede: que el modelo redacte FIEL a los avisos —sin inventar personas, sin veredicto de aprobar/rechazar—, con checks de forma resilientes a datos cambiantes. No hay `tsx` en el repo, así que el runner `.mjs` no importa TS: pega al endpoint real (las corridas del demo ya existen, no se siembra nada). Pendiente menor: eval de la integración completa con corrida sembrada efímera (hoy se apoya en las corridas del demo).
 
 ### ¿Cómo sabemos que la plataforma está cubierta? — el método de cobertura
 

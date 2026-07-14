@@ -10,7 +10,8 @@
     "db:push": "supabase db push",
     "test": "vitest run",
     "eval:cv": "node scripts/eval-cv-parser.mjs",
-    "eval:assistant": "node scripts/eval-assistant.mjs"
+    "eval:assistant": "node scripts/eval-assistant.mjs",
+    "eval:payroll": "node scripts/eval-payroll-copilot.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.1",

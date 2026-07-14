@@ -82,6 +82,66 @@ describe("computeRunFindings — detectores del payroll copilot (nunca tocan imp
   });
 });
 
+// Casos frontera: cada uno cubre un modo de fallo que un test previo no cazaba.
+// Disciplina "bug → test permanente": si una detección se rompe, aquí se ve.
+describe("computeRunFindings — casos frontera (los peligrosos)", () => {
+  it("BAJADA de bruto >20% → variation warning (un recorte es tan grave como una subida)", () => {
+    // El set anterior solo probaba subidas; un recorte no cazado = pago menor silencioso.
+    const findings = computeRunFindings({
+      currentLines: [line({ gross: 2200, employee_name: "Marta" })], // 3000 → 2200 = −27%
+      previousLines: [line({ gross: 3000, employee_name: "Marta" })],
+      previousPeriodLabel: "junio",
+      activeEmployeesWithoutLine: [],
+    });
+    expect(findings).toHaveLength(1);
+    expect(findings[0].kind).toBe("variation");
+    expect(findings[0].severity).toBe("warning");
+    expect(findings[0].data.delta_pct).toBe(-27);
+    expect(findings[0].text).not.toContain("+"); // signo negativo, no "+"
+    expect(findings[0].text).toContain("-27%");
+  });
+
+  it("variación EXACTAMENTE en el umbral (+20%) → sin finding (comparación estricta >)", () => {
+    const findings = computeRunFindings({
+      currentLines: [line({ gross: 3600 })], // exactamente +20%
+      previousLines: [line({ gross: 3000 })],
+      activeEmployeesWithoutLine: [],
+    });
+    expect(findings).toHaveLength(0);
+  });
+
+  it("bruto anterior = 0 → sin división por cero ni NaN; cae al aviso de cambio salarial", () => {
+    const findings = computeRunFindings({
+      currentLines: [line({ gross: 3000, has_salary_change: true })],
+      previousLines: [line({ gross: 0 })], // prev.gross === 0: no calcular variación
+      activeEmployeesWithoutLine: [],
+    });
+    expect(findings.map((f) => f.kind)).toEqual(["salary_change"]);
+    expect(findings.some((f) => Number.isNaN(f.data.delta_pct))).toBe(false);
+  });
+
+  it("mismo empleado con banco incompleto Y variación fuerte → dos findings, no se pisan", () => {
+    const findings = computeRunFindings({
+      currentLines: [line({ employee_id: "e1", employee_name: "Iván", gross: 4200, has_bank_issue: true })],
+      previousLines: [line({ employee_id: "e1", employee_name: "Iván", gross: 3000 })],
+      activeEmployeesWithoutLine: [],
+    });
+    const kinds = findings.map((f) => f.kind).sort();
+    expect(kinds).toEqual(["bank_issue", "variation"]);
+    expect(findings.every((f) => f.employee_name === "Iván")).toBe(true);
+  });
+
+  it("varios activos sin línea → todos salen (no solo el primero)", () => {
+    const findings = computeRunFindings({
+      currentLines: [],
+      previousLines: null,
+      activeEmployeesWithoutLine: [{ id: "a", name: "Ada" }, { id: "b", name: "Bruno" }, { id: "c", name: "Cira" }],
+    });
+    expect(findings.filter((f) => f.kind === "no_profile")).toHaveLength(3);
+    expect(findings.every((f) => f.severity === "warning")).toBe(true);
+  });
+});
+
 describe("fallbackSummary", () => {
   it("sin findings → mensaje limpio", () => {
     expect(fallbackSummary([])).toContain("Sin avisos");
