@@ -12,6 +12,8 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { AgentActionButton } from "@/components/ui/agent-action-button";
 import { GeneratorBlock } from "@/components/ui/generator-block";
 import { FieldProposal } from "@/components/ui/field-proposal";
+import { FieldProposalRange } from "@/components/ui/field-proposal-range";
+import { FieldProposalMulti } from "@/components/ui/field-proposal-multi";
 
 type FormState = {
   title: string;
@@ -382,47 +384,6 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
 
         {suggestion ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {/* salary range */}
-            {(suggestion.salary_min || suggestion.salary_max) && (
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#0E5C4A", marginBottom: "8px" }}>Rango de mercado</div>
-                <div style={{ background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "11px", padding: "12px 13px", marginBottom: "4px" }}>
-                  <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "20px", letterSpacing: "-.5px" }}>
-                    {suggestion.salary_min.toLocaleString("es-ES")} – {suggestion.salary_max.toLocaleString("es-ES")} €
-                  </div>
-                  <div style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#79746B", marginTop: "3px" }}>
-                    {suggestion.sector || "Mercado"} · {suggestion.employment_type === "full_time" ? "Full-time" : suggestion.employment_type} · España
-                  </div>
-                </div>
-                <button
-                  onClick={() => applySuggestion(["salary_min", "salary_max"])}
-                  style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#0E5C4A", textDecoration: "underline", background: "none", border: "none", padding: 0, cursor: "pointer" }}
-                >
-                  aplicar salario
-                </button>
-              </div>
-            )}
-
-            {/* skills */}
-            {suggestion.skills.length > 0 && (
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#0E5C4A", marginBottom: "8px" }}>Skills sugeridas</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "6px" }}>
-                  {suggestion.skills.map((s) => (
-                    <span key={s} style={{ fontSize: "11.5px", fontWeight: 600, background: "#EAF7C4", color: "#46540F", border: "1px solid #D6E89A", borderRadius: "999px", padding: "4px 9px", whiteSpace: "nowrap" }}>
-                      + {s}
-                    </span>
-                  ))}
-                </div>
-                <button
-                  onClick={() => applySuggestion(["skills"])}
-                  style={{ fontFamily: "'Space Mono',monospace", fontSize: "10.5px", color: "#0E5C4A", textDecoration: "underline", background: "none", border: "none", padding: 0, cursor: "pointer" }}
-                >
-                  aplicar skills
-                </button>
-              </div>
-            )}
-
             {/* title suggestion — B-7 FieldProposal (editable + "usar sugerencia") */}
             {suggestion.title && (
               <FieldProposal
@@ -431,6 +392,32 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
                 suggested={suggestion.title}
                 onUse={() => applySuggestion(["title"])}
                 onChange={(v) => set("title", v)}
+              />
+            )}
+
+            {/* salary band — B-7b FieldProposal.Range (la banda es atómica) */}
+            {(suggestion.salary_min || suggestion.salary_max) && (
+              <FieldProposalRange
+                label="Banda salarial"
+                value={[form.salary_min ? Number(form.salary_min) : "", form.salary_max ? Number(form.salary_max) : ""]}
+                suggested={[suggestion.salary_min, suggestion.salary_max]}
+                rationale={`${suggestion.sector || "Mercado"} · ${suggestion.employment_type === "full_time" ? "Full-time" : suggestion.employment_type} · España`}
+                onUse={() => applySuggestion(["salary_min", "salary_max"])}
+                onChange={([min, max]) => {
+                  set("salary_min", min === "" ? "" : String(min));
+                  set("salary_max", max === "" ? "" : String(max));
+                }}
+              />
+            )}
+
+            {/* skills — B-7c FieldProposal.Multi (chips añadibles/quitables) */}
+            {suggestion.skills.length > 0 && (
+              <FieldProposalMulti
+                label="Requisitos / skills"
+                value={form.skills}
+                suggested={suggestion.skills}
+                onUse={() => applySuggestion(["skills"])}
+                onChange={(v) => set("skills", v)}
               />
             )}
 

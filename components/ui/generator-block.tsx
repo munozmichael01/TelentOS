@@ -6,18 +6,20 @@
  * los campos claros del formulario de abajo (§4.1: la tinta es el taller, el
  * papel el entregable). Título "Redacción asistida" (§4.5a). Icono = sparkle único.
  *
- * El disparador vive dentro del panel oscuro → variant="brand" (lima/tinta no
- * aplica al Button; el brand teal con borde lee bien sobre tinta). idle/busyLabel
- * configurables para las dos voces documentadas ("Redactar con IA" / "Mejorar la oferta").
+ * Ciclo de vida §4.6: el chasis (colapsar/expandir) lo da AgentPanelShell (B-5b),
+ * para que P3/P5/P6 compartan un solo código. El disparador vive dentro del panel
+ * → variant="brand" (lee bien sobre tinta). idle/busyLabel configurables para las
+ * dos voces documentadas ("Redactar con IA" / "Mejorar la oferta").
  */
 
 import { AgentActionButton } from "@/components/ui/agent-action-button";
-import { AgentBadge, type AgentProvenance } from "@/components/ui/agent-badge";
-import { IconSparkle } from "@/components/ui/icons";
+import { AgentPanelShell } from "@/components/ui/agent-panel-shell";
+import type { AgentProvenance } from "@/components/ui/agent-badge";
 
 export function GeneratorBlock({
   title = "Redacción asistida",
   provenance,
+  count,
   busy,
   hint,
   idleLabel = "Redactar con IA",
@@ -27,6 +29,8 @@ export function GeneratorBlock({
 }: {
   title?: string;
   provenance?: AgentProvenance;
+  /** Resumen colapsado (p. ej. "6 campos" tras redactar). */
+  count?: string;
   busy: boolean;
   hint?: string;
   idleLabel?: string;
@@ -36,23 +40,12 @@ export function GeneratorBlock({
   children?: React.ReactNode;
 }) {
   return (
-    <div style={{ background: "#1A1A17", color: "#F4F0E8", borderRadius: "16px", padding: "18px 20px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: hint ? "6px" : "12px" }}>
-        <span style={{ color: "#C6F24E", display: "flex", flexShrink: 0 }}>
-          <IconSparkle className="size-4" />
-        </span>
-        <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>{title}</span>
-        {provenance && (
-          <span style={{ marginLeft: "auto" }}>
-            <AgentBadge kind={provenance} onDark />
-          </span>
-        )}
-      </div>
+    <AgentPanelShell title={title} provenance={provenance} count={count}>
       {hint && <p style={{ fontSize: "13px", lineHeight: 1.55, color: "#8C877E", margin: "0 0 12px" }}>{hint}</p>}
       {children}
       <div style={{ marginTop: "12px" }}>
         <AgentActionButton idleLabel={idleLabel} busyLabel={busyLabel} busy={busy} onClick={onGenerate} variant="brand" />
       </div>
-    </div>
+    </AgentPanelShell>
   );
 }

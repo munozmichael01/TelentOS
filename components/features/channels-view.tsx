@@ -8,6 +8,7 @@ import type { Channel } from "@/lib/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IconSparkle } from "@/components/ui/icons";
 import { AgentActionButton } from "@/components/ui/agent-action-button";
+import { EmptyState } from "@/components/empty-state";
 
 /* ── Asistente global (Ola 2) — el vertical es un chip, no otro chat ──────────── */
 function openAssistant() {
@@ -183,9 +184,11 @@ function KPIsTab() {
 
       {/* Channel rows — always visible once data loaded; refresh happens in background */}
       {data && visibleRows.length === 0 && (
-        <div style={{ background: surface, border: `1px solid ${line}`, borderRadius: "14px", padding: "40px", textAlign: "center", color: soft, fontSize: "14px" }}>
-          Sin datos para los filtros actuales.
-        </div>
+        <EmptyState
+          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 19V9M10 19V5M16 19v-7M20 19V11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>}
+          title="Sin datos de canales"
+          description="No hay candidaturas para los filtros actuales. Publica ofertas en tus canales para empezar a ver rendimiento."
+        />
       )}
 
       {visibleRows.map((row) => {
