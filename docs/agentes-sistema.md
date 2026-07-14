@@ -52,6 +52,17 @@ Fuera del framework (deuda): `career-site/translate` (gpt-4o directo, sin audito
 
 **Reglas del prompt que gobiernan los huecos:** "permisos" solo puede decirse de nómina; para cualquier otro hueco el asistente intenta la tool más cercana y si no existe **lo dice honestamente** ("aún no puedo consultar ese dato") y ofrece lo que sí puede. Confundir ambos fue el primer bug real (2026-07-12, "inscritos este mes").
 
+### Índice de evals — dónde viven los casos dorados (fuente de verdad)
+
+Los casos NO viven en prosa (se perderían/divergirían): viven **versionados en el repo**, ejecutables. El doc solo referencia. **Regla dura:** todo fallo encontrado en producción se añade como caso al script correspondiente **en el mismo commit** que lo corrige — un bug se convierte en test permanente y no depende de la memoria de nadie.
+
+| Eval | Comando | Cubre | Casos actuales |
+|---|---|---|---|
+| CV-parser | `npm run eval:cv` | extracción sobre 30 CVs reales (`evals/cv-parser/` + ground truth) | 5/6 (SDR: años, caso frontera aceptado) |
+| Asistente | `npm run eval:assistant` | 6+ preguntas doradas × 3 roles (`scripts/eval-assistant.mjs`) | 8/8 — incluye: bug "inscritos" (capacidad≠permisos), RBAC salario recruiter, oferta≠canal, recomendación ambigua |
+
+Cada caso lleva `id` + comentario en el script explicando qué bug real cubre. Añadir un caso = editar el script; el doc no lista casos individuales (evita drift).
+
 ### ¿Cómo sabemos que la plataforma está cubierta? — el método de cobertura
 
 1. **Mapa módulo → preguntas core.** Cada módulo funcional (Notion → Funcionalidades actuales) define sus 3-5 preguntas de negocio; cada pregunta debe mapear a una tool. Hueco en el mapa = tool que falta. (El bug de "inscritos" era exactamente esto: Reclutamiento tenía pipeline y canales pero no volumen por período.)
