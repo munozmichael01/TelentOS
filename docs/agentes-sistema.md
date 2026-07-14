@@ -70,6 +70,7 @@ Fuera del framework (deuda): `career-site/translate` (gpt-4o directo, sin audito
 
 - **Un asistente, no tres**: el vertical es un chip de contexto (UI determinista por pantalla, descartable, sesgo no muro); el hilo es único y cruza verticales; RBAC por tool montada.
 - **Persistencia de conversaciones**: pendiente de producto — decidir con uso real (CLAUDE.md § Decisiones pendientes).
+- **Bandas salariales con origen** (decisión 2026-07-13): el número lleva su `source` (`own_history`/`baseline`/`seed`) y la etiqueta se deriva de él; sin dato para un rol+ubicación → **no se muestra estimación**. Baseline curado por investigación (con citas, periódico y cacheado, nunca en vivo) para ES/VE/BR. Detalle en `handoff/…Agentes v2…§8`. Horizonte 2-3, no bloquea Olas 1-2.
 - **Streaming del chat**: exigido por la doctrina; V1 sin streaming (fast-follow anotado).
 - **Canales**: ✅ migrado (2026-07-13) — chat embebido retirado; la pestaña tiene `AssistantEntry` (chips plantilla que despachan `assistant:ask{question}` → el drawer abre y siembra el turno con el contexto del módulo).
 - **Ciclo de vida de paneles invocados** (ratificado, DS §4.6): se colapsan ("Ver menos/Ver más"), no se cierran; expandir ≠ re-invocar (el toggle nunca llama a la API).
