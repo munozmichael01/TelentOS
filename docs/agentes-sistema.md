@@ -32,9 +32,11 @@ Todo agente pasa por `runAgent<T>(opts)`. Lo que el core garantiza, agente por a
 | `channel-analyst` | — | **RETIRADO como superficie** (2026-07-13): Canales abre el drawer del assistant con chip precargado; su `queryChannelData` vive como tool del assistant. Endpoint `/api/agents/channel-analyst` deprecado sin consumidores — eliminar en próxima limpieza | — | — |
 | `onboarding-builder` | 4o | Checklist de incorporación por rol/departamento | Ficha del empleado | ❌ |
 | `career-writer` | mini | Redacta UNA sección del career site (about/culture/benefits) → propuesta revisable | Editor del career site (B-9); contexto de empresa resuelto en server | ✅ verificado E2E (3 secciones × contrato) |
-| `dashboard-insights` | mini | Redactor del motor de señales (determinista calcula) | "Sugerencias del agente" en dashboard | ❌ |
+| `dashboard-insights` | mini | Redactor del motor de señales (determinista calcula) | "Sugerencias del agente" en dashboard **+ cron diario** (plano proactivo) | ❌ |
 
 Fuera del framework (deuda): `career-site/translate` (gpt-4o directo, sin auditoría) — meter a `runAgent`.
+
+**Motor de insights → cron (plano proactivo, 2026-07-14).** La lógica de señales vive en `lib/insights/generate.ts` (`generateInsightsForCompany(db, companyId)`): calcula señales deterministas (scope+entidades+acción), el LLM SOLO redacta el texto **vía `runAgent`** (antes era `new OpenAI()` directo → se saltaba presupuesto y auditoría; ahora ambos aplican), y persiste en `agent_insights`. Dos disparadores comparten ese generador: el refresh manual del dashboard (`POST /api/agents/dashboard-insights/refresh`, ahora `requireApiRole`→companyId, no `.limit(1)`) y el **cron** (`GET /api/cron/insights`, barre TODAS las empresas). El cron se auth por `CRON_SECRET` (bearer; `/api/cron/*` excluido del middleware de sesión), es fail-closed (sin secreto → 401) y resiliente (fallo de una empresa no aborta el resto). Coste acotado: solo se invoca al LLM cuando hay señales reales + presupuesto por empresa → empresas vacías cuestan $0. `vercel.json` lo agenda diario 06:00 UTC. **Requiere `CRON_SECRET` en el entorno de Vercel (Production) para activarse.** `applications` no tiene `company_id`: el generador scopea vía `jobs!inner` + `jobs.company_id` (crítico bajo admin client sin RLS).
 
 ## 3. Tools del Asistente — qué son y cómo se gobiernan
 

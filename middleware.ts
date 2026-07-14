@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Refresca la sesión de Supabase y protege las rutas privadas.
-// Públicas: /login, /careers/* y /api/careers/* (career site).
+// Públicas: /login, /careers/* y /api/careers/* (career site), /api/cron/* (auth
+// propia por CRON_SECRET — Vercel Cron manda bearer, no cookie de sesión).
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -33,7 +34,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/login") ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/careers") ||
-    pathname.startsWith("/api/careers");
+    pathname.startsWith("/api/careers") ||
+    pathname.startsWith("/api/cron");
 
   if (!user && !isPublic) {
     const redirectUrl = request.nextUrl.clone();
