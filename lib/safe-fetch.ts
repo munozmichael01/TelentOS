@@ -27,8 +27,18 @@ function isPrivateIp(ip: string): boolean {
 }
 
 async function assertPublicHost(host: string): Promise<void> {
-  const addrs = net.isIP(host) ? [host] : (await dns.lookup(host, { all: true })).map((r) => r.address);
-  if (!addrs.length) throw new Error("No se pudo resolver el host");
+  let addrs: string[];
+  if (net.isIP(host)) {
+    addrs = [host];
+  } else {
+    try {
+      addrs = (await dns.lookup(host, { all: true })).map((r) => r.address);
+    } catch {
+      // ENOTFOUND / EAI_AGAIN etc. → mensaje limpio (no filtrar el error crudo de Node).
+      throw new Error("No pudimos leer esa web. Revisa que la URL sea correcta.");
+    }
+  }
+  if (!addrs.length) throw new Error("No pudimos leer esa web. Revisa que la URL sea correcta.");
   if (addrs.some(isPrivateIp)) throw new Error("Host no permitido (red interna)");
 }
 
@@ -57,6 +67,10 @@ export async function safeFetchHtml(
         signal: ctrl.signal,
         headers: { "user-agent": "TalentOS-CareerImport/1.0", accept: "text/html,application/xhtml+xml" },
       });
+    } catch (e) {
+      // Timeout (abort) o error de red → mensaje limpio, nunca el error crudo de Node.
+      if (e instanceof Error && e.name === "AbortError") throw new Error("La web tardó demasiado en responder.");
+      throw new Error("No pudimos leer esa web. Revisa que la URL sea correcta.");
     } finally {
       clearTimeout(timer);
     }
