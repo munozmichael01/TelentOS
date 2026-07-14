@@ -69,15 +69,13 @@ export function CareerAIPanel({ onApply, onGenerated, hasContent }: { onApply: (
 
   const upd = (patch: Partial<Intake>) => setIntake((p) => ({ ...p, ...patch }));
 
-  async function importSource() {
-    if (!url.trim()) return;
+  // Import desde web (URL) o documento (PDF/Word) — ambos pueblan el mismo intake.
+  async function runImport(init: RequestInit) {
     setImportState("loading"); setImportErr(null);
     try {
-      const res = await fetch("/api/agents/company-parser", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: url.trim() }),
-      });
+      const res = await fetch("/api/agents/company-parser", init);
       const j = await res.json();
-      if (!res.ok) throw new Error(j.error || "No se pudo leer la web");
+      if (!res.ok) throw new Error(j.error || "No se pudo leer la fuente");
       // Puebla el intake (🟢) con lo extraído, sin pisar lo que el usuario ya escribió.
       setIntake((p) => ({
         ...p,
@@ -94,6 +92,8 @@ export function CareerAIPanel({ onApply, onGenerated, hasContent }: { onApply: (
       setImportState("idle");
     }
   }
+  const importSource = () => { if (url.trim()) runImport({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: url.trim() }) }); };
+  const importFile = (file: File) => { const fd = new FormData(); fd.append("file", file); runImport({ method: "POST", body: fd }); };
 
   async function generate() {
     setPhase("generating"); setError(null);
@@ -171,6 +171,12 @@ export function CareerAIPanel({ onApply, onGenerated, hasContent }: { onApply: (
           <button onClick={importSource} disabled={importState === "loading" || !url.trim()} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "12.5px", color: importState === "loading" || !url.trim() ? "#7C7768" : "#1A1A17", background: importState === "loading" || !url.trim() ? "rgba(198,242,78,.35)" : T.lime, border: "none", borderRadius: "8px", padding: "8px 14px", cursor: importState === "loading" || !url.trim() ? "default" : "pointer", whiteSpace: "nowrap" }}>
             {importState === "loading" ? "Leyendo…" : importState === "done" ? "Importado ✓" : "Importar"}
           </button>
+        </div>
+        <div style={{ marginTop: "8px", fontSize: "11.5px", color: T.soft }}>
+          o <label style={{ color: T.lime, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "2px" }}>
+            adjunta un PDF o Word
+            <input type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = ""; }} />
+          </label>
         </div>
         {importState === "done" && <div style={{ fontSize: "11.5px", color: "#D8E9B0", marginTop: "8px" }}>Rellenamos lo que encontramos abajo. Completa los huecos y las cifras (no las inventamos).</div>}
         {importErr && <div style={{ fontSize: "11.5px", color: "#E0A23C", marginTop: "8px" }}>{importErr}</div>}
