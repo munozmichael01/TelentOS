@@ -98,6 +98,10 @@ export type CompanySpend = {
 export type PlatformSpend = SpendAggregation & {
   sinceISO: string;
   companies: CompanySpend[];
+  /** Gasto de runs SIN company_id (cv-parser público, verificaciones internas). No
+   *  atribuible a ninguna empresa — el total lo incluye; el ranking por empresa no. */
+  unattributedUsd: number;
+  unattributedRuns: number;
 };
 
 /** Límite mensual por empresa: override `companies.ai_monthly_budget_usd` si existe (fast-follow), si no el default. Tolerante a que la columna aún no exista. */
@@ -156,5 +160,13 @@ export async function platformSpend(db: AdminDb, sinceISO?: string): Promise<Pla
       };
     });
 
-  return { ...agg, sinceISO: since, companies };
+  const unattributed = agg.byCompany.find((c) => c.companyId === NO_ID);
+
+  return {
+    ...agg,
+    sinceISO: since,
+    companies,
+    unattributedUsd: unattributed?.spendUsd ?? 0,
+    unattributedRuns: unattributed?.runs ?? 0,
+  };
 }
