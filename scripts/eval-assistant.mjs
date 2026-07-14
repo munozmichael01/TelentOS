@@ -78,6 +78,22 @@ const CASES = [
     mustMatch: /candidatura|canal|career|infojobs|linkedin/i,
     mustNotMatch: /permisos/i,
   },
+  {
+    // Bug real (Michael): preguntó por OFERTAS sin inscripciones, respondió CANALES.
+    id: "oferta sin inscripciones ≠ canal",
+    role: "recruiter",
+    query: "¿Qué ofertas no están recibiendo inscripciones?",
+    mustMatch: /oferta|puesto|vacante|manager|engineer|técnic|analyst|lead/i,
+    mustNotMatch: /(google for jobs|glassdoor|meta ads|infojobs).*(no.*recib|sin.*inscrip)/i,
+  },
+  {
+    // Bug real (Michael): "qué promover" es ambiguo; no asumir una sola lectura.
+    id: "recomendación ambigua da ambas lecturas",
+    role: "recruiter",
+    query: "¿Qué oferta debería promover?",
+    mustMatch: /(más|mayor).*(interés|inscrip|candidat)|(menos|menor).*(interés|inscrip|candidat)|cuál buscas|a qué te refieres|depende/i,
+    mustNotMatch: /permisos/i,
+  },
 ];
 
 async function sessionCookie(email) {
