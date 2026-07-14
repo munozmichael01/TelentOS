@@ -14,7 +14,7 @@ export const CandidateAnalysisSchema = z.object({
 
 export type CandidateAnalysis = z.infer<typeof CandidateAnalysisSchema>;
 
-export type CandidateAnalyzerInput = { applicationId: string };
+export type CandidateAnalyzerInput = { applicationId: string; companyId?: string };
 
 /** Heurística sin LLM sobre el mismo desglose determinista que usa el agente. */
 async function fallbackAnalysis(input: CandidateAnalyzerInput): Promise<CandidateAnalysis> {

@@ -19,6 +19,7 @@ export type JobDraft = {
 };
 
 export type JobWriterInput = {
+  companyId?: string;
   /** Brief libre ("necesito un SDR junior para Barcelona") o vacío si hay draft */
   brief?: string;
   /** Estado actual del formulario para el modo asistencia */

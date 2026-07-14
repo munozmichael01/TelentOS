@@ -4,6 +4,7 @@ import type {
   ChatCompletionTool,
 } from "openai/resources/chat/completions";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkBudget, type RunUsage } from "@/lib/agent-budget";
 
 /**
  * Infraestructura común de los agentes en-flujo.
@@ -37,14 +38,14 @@ export function hasOpenAI() {
   return Boolean(process.env.OPENAI_API_KEY);
 }
 
-/** Consumo real por invocación — la base de datos para calibrar max_tokens y del presupuesto por empresa. */
-export type RunUsage = {
-  prompt_tokens: number;
-  completion_tokens: number;
-  completions: number; // turnos del loop (cada uno repaga el contexto)
-  truncated: boolean; // algún finish_reason === "length" (techo alcanzado)
-  model: string;
-};
+export type { RunUsage };
+
+/** Extrae companyId del input (si el agente lo incluye) — para log y presupuesto. */
+function companyIdOf(input: unknown): string | null {
+  return input && typeof input === "object" && "companyId" in input
+    ? (input as { companyId?: string }).companyId ?? null
+    : null;
+}
 
 async function logRun(
   agent: string,
@@ -57,10 +58,7 @@ async function logRun(
     // service_role: 0015 dejó agent_runs sin políticas de INSERT para
     // authenticated y el log fallaba en silencio (catch de abajo).
     const supabase = createAdminClient();
-    const companyId =
-      input && typeof input === "object" && "companyId" in input
-        ? (input as { companyId?: string }).companyId ?? null
-        : null;
+    const companyId = companyIdOf(input);
     // _usage viaja dentro del jsonb de input (sin migración); cuando llegue el
     // presupuesto por empresa se promueve a columnas con backfill desde aquí.
     const inputPayload =
@@ -106,6 +104,19 @@ export async function runAgent<T>(opts: {
     const output = await fallback();
     await logRun(agent, input, output, "fallback");
     return { output, status: "fallback" };
+  }
+
+  // Presupuesto por empresa (doc de coste §6.3): si la empresa superó su límite
+  // mensual, se degrada al fallback heurístico ($0) — nunca error, nunca se
+  // bloquea al usuario. Solo aplica si el agente aporta companyId en su input.
+  const companyId = companyIdOf(input);
+  if (companyId) {
+    const budget = await checkBudget(createAdminClient(), companyId);
+    if (!budget.allowed) {
+      const output = await fallback();
+      await logRun(agent, input, { budget_exceeded: budget, output }, "budget_exceeded");
+      return { output, status: "fallback" };
+    }
   }
 
   const usage: RunUsage = { prompt_tokens: 0, completion_tokens: 0, completions: 0, truncated: false, model };

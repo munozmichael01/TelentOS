@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { requireUser, jsonError } from "@/lib/api";
+import { requireApiRole, jsonError } from "@/lib/api";
 import { runOnboardingBuilder } from "@/agents/agent-onboarding-builder";
 
 export async function POST(req: Request) {
-  const { supabase, error } = await requireUser();
+  const { companyId, supabase, error } = await requireApiRole(["owner", "hr_admin", "recruiter"]);
   if (error) return error;
 
   const body = await req.json().catch(() => null);
   if (!body?.employeeId) return jsonError("Se requiere 'employeeId'");
 
-  const result = await runOnboardingBuilder({ employeeId: body.employeeId });
+  const result = await runOnboardingBuilder({ employeeId: body.employeeId, companyId: companyId! });
 
   // El humano ya pulsó "Generar": persistimos el checklist propuesto como
   // tareas editables (se pueden borrar/cambiar una a una desde la UI).

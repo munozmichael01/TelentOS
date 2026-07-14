@@ -12,7 +12,7 @@ export type OnboardingChecklist = {
   rationale: string;
 };
 
-export type OnboardingBuilderInput = { employeeId: string };
+export type OnboardingBuilderInput = { employeeId: string; companyId?: string };
 
 /** Heurística sin LLM: checklist base + bloque específico por departamento. */
 async function fallbackChecklist(input: OnboardingBuilderInput): Promise<OnboardingChecklist> {
