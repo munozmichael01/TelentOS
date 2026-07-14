@@ -5,6 +5,7 @@ import { Loader2, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight, X 
 import type { CompensationRecord } from "@/lib/types";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
+import { EmptyState } from "@/components/empty-state";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -469,9 +470,11 @@ export function CompensationPanel({
               <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} label="Filtrar empleados" />
             </div>
             {visibleSummaries.length === 0 ? (
-              <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", padding: "40px", textAlign: "center", color: T.soft, background: T.surface }}>
-                <div style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>Sin empleados activos</div>
-              </div>
+              <EmptyState
+                icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" strokeWidth="2"/><path d="M3.5 20a5.5 5.5 0 0111 0M16 6.5a3 3 0 010 6M17.5 20a5.5 5.5 0 00-2-4.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>}
+                title="Sin empleados activos"
+                description="Los resúmenes de compensación aparecerán aquí cuando haya empleados activos con horas registradas."
+              />
             ) : (
               <HairlineTable
                 cols="2fr 1.2fr 1.2fr 1fr"

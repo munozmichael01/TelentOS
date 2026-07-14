@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { apiFetch } from "@/lib/api-client";
 import { formatMoney } from "@/lib/format";
 import type { Employee, PayProfile, PayComponent } from "@/lib/types";
@@ -399,19 +400,12 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
         </div>
 
         {!profile ? (
-          /* Empty state */
-          <div style={{ background: T.surface, border: `2px dashed ${T.line}`, borderRadius: "16px", padding: "48px", textAlign: "center" }}>
-            <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: T.brandSoft, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke={T.brand} strokeWidth="2" strokeLinecap="round"/></svg>
-            </div>
-            <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px", marginBottom: "8px" }}>Sin perfil salarial</div>
-            <div style={{ fontSize: "13.5px", color: T.soft, marginBottom: "20px" }}>
-              Este empleado no tiene un perfil de compensación configurado todavía.
-            </div>
-            <Button variant="brand" onClick={() => setDialogOpen(true)}>
-              Configurar compensación
-            </Button>
-          </div>
+          <EmptyState
+            icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>}
+            title="Sin perfil salarial"
+            description="Este empleado no tiene un perfil de compensación configurado todavía."
+            action={<Button variant="brand" onClick={() => setDialogOpen(true)}>Configurar compensación</Button>}
+          />
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1.55fr 1fr", gap: "16px", alignItems: "start" }}>
             {/* Main column */}

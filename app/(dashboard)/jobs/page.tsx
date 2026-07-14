@@ -94,12 +94,13 @@ export default async function JobsPage({
         <EmptyState
           title="No hay ofertas con estos filtros"
           description="Crea una oferta desde cero con el agente de redacción o importa desde XML, CSV, Excel o una URL."
-        >
-          <div className="flex gap-2">
-            <Button asChild><Link href="/jobs/new">Crear con IA</Link></Button>
-            <Button variant="outline" asChild><Link href="/jobs/import">Importar</Link></Button>
-          </div>
-        </EmptyState>
+          action={
+            <div className="flex gap-2">
+              <Button asChild><Link href="/jobs/new">Crear con IA</Link></Button>
+              <Button variant="outline" asChild><Link href="/jobs/import">Importar</Link></Button>
+            </div>
+          }
+        />
       ) : (
         <div className="flex flex-col gap-2">
           {(jobs as Job[]).map((job) => {

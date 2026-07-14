@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiFetch, notifyError } from "@/lib/api-client";
 import type { AbsenceRequest, AbsenceType, Employee, AbsenceStatus } from "@/lib/types";
 import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
+import { EmptyState as EmptyStateBase } from "@/components/empty-state";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -566,16 +567,16 @@ function EmptyState({ filter }: { filter: string }) {
     rejected: "No hay solicitudes rechazadas.",
   };
   return (
-    <div style={{ textAlign: "center", padding: "60px 24px", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px" }}>
-      <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "#F4F0E8", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="4" width="18" height="18" rx="2" stroke="#79746B" strokeWidth="2"/>
-          <path d="M16 2v4M8 2v4M3 10h18" stroke="#79746B" strokeWidth="2" strokeLinecap="round"/>
+    <EmptyStateBase
+      icon={
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
+          <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
-      </div>
-      <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "17px", color: "#1A1A17" }}>{msgs[filter] ?? "Sin resultados"}</div>
-      <div style={{ fontSize: "13.5px", color: "#79746B", marginTop: "6px" }}>Las solicitudes aparecerán aquí cuando se creen.</div>
-    </div>
+      }
+      title={msgs[filter] ?? "Sin resultados"}
+      description="Las solicitudes aparecerán aquí cuando se creen."
+    />
   );
 }
 

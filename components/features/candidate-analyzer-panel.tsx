@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { AgentActionButton } from "@/components/ui/agent-action-button";
-import { AgentBadge } from "@/components/ui/agent-badge";
+import { AgentPanelShell } from "@/components/ui/agent-panel-shell";
 import { FitBreakdown } from "@/components/ui/fit-breakdown";
-import { IconSparkle } from "@/components/ui/icons";
 import type { CandidateAnalysis } from "@/agents/agent-candidate-analyzer";
 import type { FitExplanation } from "@/lib/fit-explain";
 
@@ -42,30 +41,15 @@ export function CandidateAnalyzerPanel({
     }
   }
 
+  // Ciclo de vida §4.6: chasis colapsable compartido (B-5b). Colapsado muestra "Fit N".
+  // Procedencia solo tras correr el agente (invariante #7); el número lo posee el
+  // FitBreakdown determinista (§4.5b), que además marca su propia franja "determinista".
   return (
-    <div
-      style={{
-        background: "#1A1A17",
-        color: "#F4F0E8",
-        borderRadius: "18px",
-        padding: "22px",
-      }}
+    <AgentPanelShell
+      title="Análisis del agente"
+      provenance={mode ? (mode === "ok" ? "ia" : "heuristica") : undefined}
+      count={fitBreakdown ? `Fit ${fitBreakdown.score}` : undefined}
     >
-      {/* header */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-        <span style={{ width: "30px", height: "30px", borderRadius: "9px", background: "rgba(198,242,78,.16)", color: "#C6F24E", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <IconSparkle className="size-4" />
-        </span>
-        <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "17px" }}>Agente de análisis</span>
-        {/* Procedencia visible sobre panel oscuro (invariante #7): solo tras correr el agente.
-            El número de fit lo posee el FitBreakdown determinista de abajo (§4.5b) — sin píldora duplicada. */}
-        {mode && (
-          <span style={{ marginLeft: "auto" }}>
-            <AgentBadge kind={mode === "ok" ? "ia" : "heuristica"} onDark />
-          </span>
-        )}
-      </div>
-
       {error && <p style={{ fontSize: "13px", color: "#F1543F", marginBottom: "12px" }}>{error}</p>}
 
       {/* Desglose determinista (§4.5b) — hecho, no juicio; se muestra sin invocar al agente. */}
@@ -129,8 +113,9 @@ export function CandidateAnalyzerPanel({
           busyLabel="Analizando…"
           busy={loading}
           onClick={analyze}
+          onDark
         />
       </div>
-    </div>
+    </AgentPanelShell>
   );
 }
