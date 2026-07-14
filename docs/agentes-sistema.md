@@ -31,6 +31,7 @@ Todo agente pasa por `runAgent<T>(opts)`. Lo que el core garantiza, agente por a
 | `channel-optimizer` | 4o | Plan de distribución (canales, presupuesto, copy) | Pestaña Distribución de la oferta | ❌ |
 | `channel-analyst` | — | **RETIRADO como superficie** (2026-07-13): Canales abre el drawer del assistant con chip precargado; su `queryChannelData` vive como tool del assistant. Endpoint `/api/agents/channel-analyst` deprecado sin consumidores — eliminar en próxima limpieza | — | — |
 | `onboarding-builder` | 4o | Checklist de incorporación por rol/departamento | Ficha del empleado | ❌ |
+| `career-writer` | mini | Redacta UNA sección del career site (about/culture/benefits) → propuesta revisable | Editor del career site (B-9); contexto de empresa resuelto en server | ✅ verificado E2E (3 secciones × contrato) |
 | `dashboard-insights` | mini | Redactor del motor de señales (determinista calcula) | "Sugerencias del agente" en dashboard | ❌ |
 
 Fuera del framework (deuda): `career-site/translate` (gpt-4o directo, sin auditoría) — meter a `runAgent`.
@@ -88,3 +89,4 @@ Cada caso lleva `id` + comentario en el script explicando qué bug real cubre. A
 - **Canales**: ✅ migrado (2026-07-13) — chat embebido retirado; la pestaña tiene `AssistantEntry` (chips plantilla que despachan `assistant:ask{question}` → el drawer abre y siembra el turno con el contexto del módulo).
 - **Ciclo de vida de paneles invocados** (ratificado, DS §4.6): se colapsan ("Ver menos/Ver más"), no se cierran; expandir ≠ re-invocar (el toggle nunca llama a la API).
 - **Fit canónico end-to-end**: `POST /api/candidates/rescore-fits` re-puntúa toda la empresa con el cálculo canónico (backfill 2026-07-13: 19 apps, 12 actualizadas, drift medio 14 pts); las barras 0-10 subjetivas retiradas a favor de `FitBreakdown` determinista.
+- **TalentOS Platform Console** (super-admin, roadmap `handoff/…Agentes v2…§9`): plano de administración de plataforma (rol `platform_admin`, cross-tenant) — NO es sistema de agentes. Tres capacidades: monitoreo+alertas de gasto de IA (su dato ya existe en `agent_runs._usage`/`lib/agent-budget.ts`, la pieza más madura), taxonomías globales con override por empresa (extiende el patrón del catálogo de skills sin `company_id`), y KPIs globales por módulo. Horizonte 2-3; no bloquea Olas 1-2.
