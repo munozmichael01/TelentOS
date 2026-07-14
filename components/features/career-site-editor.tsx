@@ -14,6 +14,7 @@ import type {
 import { HEADING_FONTS, BODY_FONTS } from "@/lib/career-site-types";
 import { CareerSitePreview } from "@/components/features/career-site-preview";
 import { EmojiPicker } from "@/components/features/emoji-picker";
+import { CareerSectionGenerator, type CareerSectionProposal } from "@/components/features/career-section-generator";
 import { PageHeader } from "@/components/page-header";
 
 /* ─── Design tokens ─────────────────────────────────────────────────────── */
@@ -407,6 +408,12 @@ export function CareerSiteEditor({
     setContent((p) => ({ ...p, [key]: ((p[key] as unknown[]) ?? []).filter((_, i) => i !== idx) }));
   }
 
+  // B-9: aplica el borrador redactado por el agente a draft_content (merge de las
+  // claves de una sección). Solo muta el borrador; publicar es un paso aparte.
+  function applySection(proposal: CareerSectionProposal) {
+    setContent((p) => ({ ...p, ...proposal }));
+  }
+
   async function saveContent() {
     setSaving(true); setError(null);
     try {
@@ -633,6 +640,7 @@ export function CareerSiteEditor({
               </SectionPanel>
 
               <SectionPanel id="about" title="Sobre nosotros" open={openSection === "about"} onToggle={toggleSection} badge={content.aboutDescription ? "con contenido" : undefined}>
+                <CareerSectionGenerator section="about" current={{ aboutTitle: content.aboutTitle, aboutDescription: content.aboutDescription }} onApply={applySection} />
                 <Field label="Título"><Input placeholder="Quiénes somos" value={content.aboutTitle ?? ""} onChange={(e) => upd("aboutTitle", e.target.value)} /></Field>
                 <Field label="Descripción"><Textarea rows={4} value={content.aboutDescription ?? ""} onChange={(e) => upd("aboutDescription", e.target.value)} /></Field>
               </SectionPanel>
@@ -681,6 +689,7 @@ export function CareerSiteEditor({
               </SectionPanel>
 
               <SectionPanel id="culture" title="Cultura y valores" open={openSection === "culture"} onToggle={toggleSection} badge={cultureVals.length ? `${cultureVals.length} valores` : undefined}>
+                <CareerSectionGenerator section="culture" current={{ cultureTitle: content.cultureTitle, cultureDescription: content.cultureDescription, cultureValues: content.cultureValues }} onApply={applySection} />
                 <Field label="Título"><Input placeholder="Nuestra cultura" value={content.cultureTitle ?? ""} onChange={(e) => upd("cultureTitle", e.target.value)} /></Field>
                 <Field label="Descripción"><Textarea rows={3} value={content.cultureDescription ?? ""} onChange={(e) => upd("cultureDescription", e.target.value)} /></Field>
                 {cultureVals.map((v, i) => (
@@ -700,6 +709,7 @@ export function CareerSiteEditor({
               </SectionPanel>
 
               <SectionPanel id="benefits" title="Beneficios" open={openSection === "benefits"} onToggle={toggleSection} badge={benefits.length ? `${benefits.length}` : undefined}>
+                <CareerSectionGenerator section="benefits" current={{ benefitsTitle: content.benefitsTitle, benefits: content.benefits }} onApply={applySection} />
                 <Field label="Título"><Input placeholder="Qué te ofrecemos" value={content.benefitsTitle ?? ""} onChange={(e) => upd("benefitsTitle", e.target.value)} /></Field>
                 {benefits.map((b, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("benefits", i)}>
