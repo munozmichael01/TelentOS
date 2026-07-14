@@ -14,9 +14,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect("/login");
 
   const company = await getCompany();
+  // Sin empresa propia → onboarding self-serve (nunca se cae en la empresa demo).
+  if (!company) redirect("/onboarding");
 
   // Ensure HRIS defaults exist for this company (no-op if already seeded)
-  if (company) await seedHrisDefaults(supabase, company.id);
+  await seedHrisDefaults(supabase, company.id);
 
   // Use service-role client to read company_members without RLS interference.
   // Runs server-side only; user is already verified above.
