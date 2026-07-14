@@ -27,7 +27,7 @@ Todo agente pasa por `runAgent<T>(opts)`. Lo que el core garantiza, agente por a
 | `assistant` | 4o | **Punto central conversacional** — packs de tools por vertical con RBAC | Drawer global (sparkle topbar + ⌘J + `assistant:ask` desde módulos), chip de contexto | ✅ `npm run eval:assistant` (6/6, 3 roles) |
 | `payroll-copilot` | mini | Redacta el resumen de la revisión pre-aprobación (detectores en `lib/payroll/copilot.ts`) | "Revisión de la corrida" en pay-run-detail (B-5: solo comparativo + colapso a tabla; colapsable, no cerrable) | ✅ 13 vitest + `npm run eval:payroll` (3/3) |
 | `candidate-analyzer` | 4o | Lectura cualitativa del candidato explicando el fit determinista (`lib/fit-explain.ts`) | Panel de análisis en la ficha | ❌ pendiente |
-| `job-writer` | 4o | Borrador de oferta desde una frase + mejora de campos | "Redacción asistida" en Nueva oferta (B-6/B-7) | ❌ |
+| `job-writer` | 4o | Borrador de oferta desde una frase + mejora de campos | "Redacción asistida" en Nueva oferta (B-6/B-7); **banda salarial → `FieldProposal.Range` (B-7b), skills → `FieldProposal.Multi` (B-7c)** — verificados en vivo (`bcbf52a`) | ❌ |
 | `channel-optimizer` | 4o | Plan de distribución (canales, presupuesto, copy) | Pestaña Distribución de la oferta | ❌ |
 | `channel-analyst` | — | **RETIRADO como superficie** (2026-07-13): Canales abre el drawer del assistant con chip precargado; su `queryChannelData` vive como tool del assistant. Endpoint `/api/agents/channel-analyst` deprecado sin consumidores — eliminar en próxima limpieza | — | — |
 | `onboarding-builder` | 4o | Checklist de incorporación por rol/departamento | Ficha del empleado | ❌ |
