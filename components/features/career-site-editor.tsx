@@ -14,7 +14,7 @@ import type {
 import { HEADING_FONTS, BODY_FONTS } from "@/lib/career-site-types";
 import { CareerSitePreview } from "@/components/features/career-site-preview";
 import { EmojiPicker } from "@/components/features/emoji-picker";
-import { CareerAIPanel } from "@/components/features/career-ai-panel";
+import { CareerAIPanel, type Intake } from "@/components/features/career-ai-panel";
 import { PageHeader } from "@/components/page-header";
 
 /* ─── Design tokens ─────────────────────────────────────────────────────── */
@@ -141,9 +141,10 @@ function emptyReason(id: string, bucket: Bucket): string {
   return "Esto lo aportas tú: la IA no lo fabrica.";
 }
 
-function SectionPanel({ id, title, badge, bucket, isEmpty, open, onToggle, children }: {
+function SectionPanel({ id, title, badge, bucket, isEmpty, open, onToggle, onRegen, regenBusy, children }: {
   id: string; title: string; badge?: string; bucket: Bucket; isEmpty: boolean;
-  open: boolean; onToggle: (id: string) => void; children: React.ReactNode;
+  open: boolean; onToggle: (id: string) => void;
+  onRegen?: () => void; regenBusy?: boolean; children: React.ReactNode;
 }) {
   return (
     <div style={{ border: `1.5px solid ${T.line}`, borderRadius: "12px", overflow: "hidden", marginBottom: "8px" }}>
@@ -166,6 +167,16 @@ function SectionPanel({ id, title, badge, bucket, isEmpty, open, onToggle, child
             <div style={{ display: "flex", alignItems: "center", gap: "7px", background: bucket === "green" ? "#F1F7E8" : bucket === "yellow" ? T.warnBg : "#F6EEEC", border: `1px solid ${bucket === "green" ? "#D8E9B0" : bucket === "yellow" ? "#EAD9A6" : "#E5CFC9"}`, borderRadius: "9px", padding: "8px 11px", marginBottom: "12px", fontSize: "12px", color: bucket === "yellow" ? T.warnText : "#5A564E" }}>
               <span style={{ width: "7px", height: "7px", borderRadius: "999px", background: BUCKET_DOT[bucket], flexShrink: 0 }} />
               {emptyReason(id, bucket)}
+            </div>
+          )}
+          {onRegen && !isEmpty && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", background: T.bg, border: `1px solid ${T.line}`, borderRadius: "9px", padding: "7px 11px", marginBottom: "12px" }}>
+              <span style={{ ...FL, background: T.successBg, color: T.brand, borderRadius: "999px", padding: "2px 8px", fontSize: "9.5px" }}>IA</span>
+              <span style={{ fontSize: "12px", color: "#54504A" }}>Bloque redactado por la IA. Edítalo o pide otra versión.</span>
+              <button type="button" onClick={onRegen} disabled={regenBusy}
+                style={{ marginLeft: "auto", fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12px", color: T.brand, background: "transparent", border: "none", cursor: regenBusy ? "default" : "pointer", whiteSpace: "nowrap" }}>
+                {regenBusy ? "Regenerando…" : "↻ Regenerar bloque"}
+              </button>
             </div>
           )}
           {children}
@@ -442,6 +453,32 @@ export function CareerSiteEditor({
     setContent((p) => ({ ...p, ...proposal }));
   }
 
+  // Regenerar-por-bloque (secundario, §2.7): reusa el intake de la última generación
+  // y aplica SOLO las claves de ese bloque. Sin intake previo, no se ofrece.
+  const [lastIntake, setLastIntake] = useState<Intake | null>(null);
+  const [regenBusy, setRegenBusy] = useState<string | null>(null);
+  const BLOCK_KEYS: Record<string, string[]> = {
+    hero: ["headline"],
+    about: ["aboutTitle", "aboutDescription"],
+    culture: ["cultureTitle", "cultureDescription", "cultureValues"],
+    lookingfor: ["lookingForTitle", "lookingForDescription"],
+    benefits: ["benefitsTitle", "benefits"],
+    faqs: ["faqsTitle", "faqs"],
+  };
+  async function regenBlock(id: string) {
+    if (!lastIntake) return;
+    setRegenBusy(id); setError(null);
+    try {
+      const res = await fetch("/api/agents/career-writer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ intake: lastIntake }) });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || "Error al regenerar");
+      const subset: Record<string, unknown> = {};
+      for (const k of BLOCK_KEYS[id] ?? []) if (k in j.proposal) subset[k] = j.proposal[k];
+      applyProposal(subset);
+    } catch (e) { setError(String(e instanceof Error ? e.message : e)); }
+    finally { setRegenBusy(null); }
+  }
+
   async function saveContent() {
     setSaving(true); setError(null);
     try {
@@ -660,16 +697,16 @@ export function CareerSiteEditor({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 420px", gap: "20px", alignItems: "start" }}>
             <div>
 
-              <CareerAIPanel onApply={applyProposal} hasContent={!!content.aboutDescription} />
+              <CareerAIPanel onApply={applyProposal} onGenerated={setLastIntake} hasContent={!!content.aboutDescription} />
 
-              <SectionPanel id="hero" title="Hero" bucket="green" isEmpty={!content.headline} open={openSection === "hero"} onToggle={toggleSection} badge={content.headline ? "1 campo" : undefined}>
+              <SectionPanel id="hero" title="Hero" bucket="green" isEmpty={!content.headline} open={openSection === "hero"} onToggle={toggleSection} badge={content.headline ? "1 campo" : undefined} onRegen={lastIntake ? () => regenBlock("hero") : undefined} regenBusy={regenBusy === "hero"}>
                 <Field label="Titular principal">
                   <Input placeholder="Únete al equipo que transforma el sector" value={content.headline ?? ""} onChange={(e) => upd("headline", e.target.value)} />
                 </Field>
                 <ImageUploadField label="Imagen hero (1920×600 px recomendado)" value={content.heroImageUrl ?? ""} onChange={(u) => upd("heroImageUrl", u)} />
               </SectionPanel>
 
-              <SectionPanel id="about" title="Sobre nosotros" bucket="green" isEmpty={!content.aboutDescription} open={openSection === "about"} onToggle={toggleSection} badge={content.aboutDescription ? "con contenido" : undefined}>
+              <SectionPanel id="about" title="Sobre nosotros" bucket="green" isEmpty={!content.aboutDescription} open={openSection === "about"} onToggle={toggleSection} badge={content.aboutDescription ? "con contenido" : undefined} onRegen={lastIntake ? () => regenBlock("about") : undefined} regenBusy={regenBusy === "about"}>
                 <Field label="Título"><Input placeholder="Quiénes somos" value={content.aboutTitle ?? ""} onChange={(e) => upd("aboutTitle", e.target.value)} /></Field>
                 <Field label="Descripción"><Textarea rows={4} value={content.aboutDescription ?? ""} onChange={(e) => upd("aboutDescription", e.target.value)} /></Field>
               </SectionPanel>
@@ -717,7 +754,7 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSBrand>("brands", { name: "", logoUrl: "", website: "" })} label="Añadir marca" />
               </SectionPanel>
 
-              <SectionPanel id="culture" title="Cultura y valores" bucket="green" isEmpty={cultureVals.length === 0} open={openSection === "culture"} onToggle={toggleSection} badge={cultureVals.length ? `${cultureVals.length} valores` : undefined}>
+              <SectionPanel id="culture" title="Cultura y valores" bucket="green" isEmpty={cultureVals.length === 0} open={openSection === "culture"} onToggle={toggleSection} badge={cultureVals.length ? `${cultureVals.length} valores` : undefined} onRegen={lastIntake ? () => regenBlock("culture") : undefined} regenBusy={regenBusy === "culture"}>
                 <Field label="Título"><Input placeholder="Nuestra cultura" value={content.cultureTitle ?? ""} onChange={(e) => upd("cultureTitle", e.target.value)} /></Field>
                 <Field label="Descripción"><Textarea rows={3} value={content.cultureDescription ?? ""} onChange={(e) => upd("cultureDescription", e.target.value)} /></Field>
                 {cultureVals.map((v, i) => (
@@ -731,12 +768,12 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSCultureValue>("cultureValues", { icon: "", name: "" })} label="Añadir valor" />
               </SectionPanel>
 
-              <SectionPanel id="lookingfor" title="Qué buscamos" bucket="green" isEmpty={!content.lookingForDescription} open={openSection === "lookingfor"} onToggle={toggleSection} badge={content.lookingForDescription ? "con contenido" : undefined}>
+              <SectionPanel id="lookingfor" title="Qué buscamos" bucket="green" isEmpty={!content.lookingForDescription} open={openSection === "lookingfor"} onToggle={toggleSection} badge={content.lookingForDescription ? "con contenido" : undefined} onRegen={lastIntake ? () => regenBlock("lookingfor") : undefined} regenBusy={regenBusy === "lookingfor"}>
                 <Field label="Título"><Input placeholder="El perfil que buscamos" value={content.lookingForTitle ?? ""} onChange={(e) => upd("lookingForTitle", e.target.value)} /></Field>
                 <Field label="Descripción"><Textarea rows={4} value={content.lookingForDescription ?? ""} onChange={(e) => upd("lookingForDescription", e.target.value)} /></Field>
               </SectionPanel>
 
-              <SectionPanel id="benefits" title="Beneficios" bucket="green" isEmpty={benefits.length === 0} open={openSection === "benefits"} onToggle={toggleSection} badge={benefits.length ? `${benefits.length}` : undefined}>
+              <SectionPanel id="benefits" title="Beneficios" bucket="green" isEmpty={benefits.length === 0} open={openSection === "benefits"} onToggle={toggleSection} badge={benefits.length ? `${benefits.length}` : undefined} onRegen={lastIntake ? () => regenBlock("benefits") : undefined} regenBusy={regenBusy === "benefits"}>
                 <Field label="Título"><Input placeholder="Qué te ofrecemos" value={content.benefitsTitle ?? ""} onChange={(e) => upd("benefitsTitle", e.target.value)} /></Field>
                 {benefits.map((b, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("benefits", i)}>
@@ -779,7 +816,7 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSTestimonial>("testimonials", { name: "", position: "", text: "", photoUrl: "" })} label="Añadir testimonio" />
               </SectionPanel>
 
-              <SectionPanel id="faqs" title="Preguntas frecuentes" bucket="green" isEmpty={faqs.length === 0} open={openSection === "faqs"} onToggle={toggleSection} badge={faqs.length ? `${faqs.length}` : undefined}>
+              <SectionPanel id="faqs" title="Preguntas frecuentes" bucket="green" isEmpty={faqs.length === 0} open={openSection === "faqs"} onToggle={toggleSection} badge={faqs.length ? `${faqs.length}` : undefined} onRegen={lastIntake ? () => regenBlock("faqs") : undefined} regenBusy={regenBusy === "faqs"}>
                 <Field label="Título"><Input placeholder="Preguntas frecuentes" value={content.faqsTitle ?? ""} onChange={(e) => upd("faqsTitle", e.target.value)} /></Field>
                 {faqs.map((f, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("faqs", i)}>

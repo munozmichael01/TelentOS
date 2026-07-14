@@ -23,7 +23,7 @@ const TONES = [
 
 export type CareerAIProposal = Record<string, unknown>;
 
-type Intake = {
+export type Intake = {
   about: string;
   values: string[];
   benefits: string[];
@@ -58,13 +58,42 @@ function ChipList({ items, onChange, placeholder }: { items: string[]; onChange:
 
 const monoLabel: React.CSSProperties = { fontFamily: "'Space Mono',monospace", fontSize: "9.5px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, marginBottom: "7px", display: "block" };
 
-export function CareerAIPanel({ onApply, hasContent }: { onApply: (p: CareerAIProposal) => void; hasContent: boolean }) {
+export function CareerAIPanel({ onApply, onGenerated, hasContent }: { onApply: (p: CareerAIProposal) => void; onGenerated?: (intake: Intake) => void; hasContent: boolean }) {
   const [phase, setPhase] = useState<"entry" | "setup" | "generating" | "done">(hasContent ? "done" : "entry");
   const [intake, setIntake] = useState<Intake>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<"ok" | "fallback" | null>(null);
+  const [url, setUrl] = useState("");
+  const [importState, setImportState] = useState<"idle" | "loading" | "done">("idle");
+  const [importErr, setImportErr] = useState<string | null>(null);
 
   const upd = (patch: Partial<Intake>) => setIntake((p) => ({ ...p, ...patch }));
+
+  async function importSource() {
+    if (!url.trim()) return;
+    setImportState("loading"); setImportErr(null);
+    try {
+      const res = await fetch("/api/agents/company-parser", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: url.trim() }),
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || "No se pudo leer la web");
+      // Puebla el intake (🟢) con lo extraído, sin pisar lo que el usuario ya escribió.
+      setIntake((p) => ({
+        ...p,
+        about: p.about || j.about || "",
+        values: p.values.length ? p.values : (j.values ?? []),
+        benefits: p.benefits.length ? p.benefits : (j.benefits ?? []),
+        metrics: p.metrics.length ? p.metrics : (j.metrics ?? []),
+      }));
+      // Redes sociales (🟡) → van directas al borrador.
+      if (Array.isArray(j.social) && j.social.length) onApply({ socialLinks: j.social });
+      setImportState("done");
+    } catch (e) {
+      setImportErr(String(e instanceof Error ? e.message : e));
+      setImportState("idle");
+    }
+  }
 
   async function generate() {
     setPhase("generating"); setError(null);
@@ -75,6 +104,7 @@ export function CareerAIPanel({ onApply, hasContent }: { onApply: (p: CareerAIPr
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Error al generar");
       onApply(j.proposal);
+      onGenerated?.(intake); // el editor guarda el intake para regenerar bloques sueltos
       setSource(j.status === "fallback" ? "fallback" : "ok");
       setPhase("done");
     } catch (e) {
@@ -133,11 +163,17 @@ export function CareerAIPanel({ onApply, hasContent }: { onApply: (p: CareerAIPr
       </div>
       <p style={{ fontSize: "12.5px", lineHeight: 1.5, color: T.soft, margin: "0 0 16px" }}>Danos tu contexto real y lo redactamos pulido. Cuanta más verdad, mejor sale — la IA no inventa hechos.</p>
 
-      {/* import (parser de empresa) — próximamente */}
-      <div style={{ display: "flex", alignItems: "center", gap: "9px", background: "rgba(244,240,232,0.05)", border: `1px dashed ${T.line}`, borderRadius: "12px", padding: "10px 12px", marginBottom: "16px" }}>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="9" stroke={T.soft} strokeWidth="2" /><path d="M3 12h18M12 3a15 15 0 010 18" stroke={T.soft} strokeWidth="2" /></svg>
-        <span style={{ fontSize: "12px", color: T.soft }}>Autorrellenar desde tu web o LinkedIn</span>
-        <span style={{ marginLeft: "auto", fontFamily: "'Space Mono',monospace", fontSize: "9px", textTransform: "uppercase", letterSpacing: ".5px", color: T.soft, background: "rgba(244,240,232,0.08)", borderRadius: "999px", padding: "2px 8px" }}>Pronto</span>
+      {/* import (parser de empresa) — POBLA el intake desde la web (§2.1) */}
+      <div style={{ background: "rgba(244,240,232,0.05)", border: `1px solid ${T.line}`, borderRadius: "12px", padding: "11px 12px", marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="9" stroke={T.soft} strokeWidth="2" /><path d="M3 12h18M12 3a15 15 0 010 18" stroke={T.soft} strokeWidth="2" /></svg>
+          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Autorrellenar desde tu web:  https://tuempresa.com" style={{ flex: 1, background: "#FCFAF6", border: "none", borderRadius: "8px", padding: "8px 11px", fontSize: "12.5px", color: "#1A1A17", outline: "none" }} />
+          <button onClick={importSource} disabled={importState === "loading" || !url.trim()} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "12.5px", color: importState === "loading" || !url.trim() ? "#7C7768" : "#1A1A17", background: importState === "loading" || !url.trim() ? "rgba(198,242,78,.35)" : T.lime, border: "none", borderRadius: "8px", padding: "8px 14px", cursor: importState === "loading" || !url.trim() ? "default" : "pointer", whiteSpace: "nowrap" }}>
+            {importState === "loading" ? "Leyendo…" : importState === "done" ? "Importado ✓" : "Importar"}
+          </button>
+        </div>
+        {importState === "done" && <div style={{ fontSize: "11.5px", color: "#D8E9B0", marginTop: "8px" }}>Rellenamos lo que encontramos abajo. Completa los huecos y las cifras (no las inventamos).</div>}
+        {importErr && <div style={{ fontSize: "11.5px", color: "#E0A23C", marginTop: "8px" }}>{importErr}</div>}
       </div>
 
       <div style={{ marginBottom: "13px" }}>
