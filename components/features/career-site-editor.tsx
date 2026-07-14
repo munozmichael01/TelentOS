@@ -14,7 +14,7 @@ import type {
 import { HEADING_FONTS, BODY_FONTS } from "@/lib/career-site-types";
 import { CareerSitePreview } from "@/components/features/career-site-preview";
 import { EmojiPicker } from "@/components/features/emoji-picker";
-import { CareerSectionGenerator, type CareerSectionProposal } from "@/components/features/career-section-generator";
+import { CareerAIPanel } from "@/components/features/career-ai-panel";
 import { PageHeader } from "@/components/page-header";
 
 /* ─── Design tokens ─────────────────────────────────────────────────────── */
@@ -129,14 +129,30 @@ function ColorField({ label, value, defaultColor, onChange }: { label: string; v
 
 /* ─── SectionPanel ───────────────────────────────────────────────────────── */
 
-function SectionPanel({ id, title, badge, open, onToggle, children }: {
-  id: string; title: string; badge?: string; open: boolean; onToggle: (id: string) => void; children: React.ReactNode;
+// Mapa de generabilidad (§3.1): quién rellena cada bloque.
+type Bucket = "green" | "yellow" | "red";
+const BUCKET_DOT: Record<Bucket, string> = { green: "#6FBF3F", yellow: "#E0A23C", red: "#C77A6B" };
+// Por qué está vacío un bloque (§3.2) — nunca mudo. Métricas es el caso especial (arista):
+// es 🟢 pero la IA no inventa cifras, así que su vacío pide datos, no promete generación.
+function emptyReason(id: string, bucket: Bucket): string {
+  if (id === "metrics") return "Añade tus cifras reales aquí — la IA no las inventa.";
+  if (bucket === "green") return "La IA lo rellenará al generar (o edítalo a mano).";
+  if (bucket === "yellow") return "No lo encontramos en tu web — pégalo aquí.";
+  return "Esto lo aportas tú: la IA no lo fabrica.";
+}
+
+function SectionPanel({ id, title, badge, bucket, isEmpty, open, onToggle, children }: {
+  id: string; title: string; badge?: string; bucket: Bucket; isEmpty: boolean;
+  open: boolean; onToggle: (id: string) => void; children: React.ReactNode;
 }) {
   return (
     <div style={{ border: `1.5px solid ${T.line}`, borderRadius: "12px", overflow: "hidden", marginBottom: "8px" }}>
       <button type="button" onClick={() => onToggle(id)}
         style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 14px", background: open ? T.surface : T.bg, border: "none", cursor: "pointer", gap: "10px" }}>
-        <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: T.ink }}>{title}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span title={`Bloque ${bucket === "green" ? "generable por IA" : bucket === "yellow" ? "extraíble de tu web" : "que aportas tú"}`} style={{ width: "8px", height: "8px", borderRadius: "999px", background: BUCKET_DOT[bucket], flexShrink: 0 }} />
+          <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: T.ink }}>{title}</span>
+        </span>
         <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {badge && <span style={{ ...FL, background: T.limeSoft, borderRadius: "999px", padding: "2px 8px", fontSize: "9.5px" }}>{badge}</span>}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .18s", flexShrink: 0 }}>
@@ -144,7 +160,17 @@ function SectionPanel({ id, title, badge, open, onToggle, children }: {
           </svg>
         </span>
       </button>
-      {open && <div style={{ padding: "14px 16px 16px", background: T.surface, borderTop: `1px solid ${T.line}` }}>{children}</div>}
+      {open && (
+        <div style={{ padding: "14px 16px 16px", background: T.surface, borderTop: `1px solid ${T.line}` }}>
+          {isEmpty && (
+            <div style={{ display: "flex", alignItems: "center", gap: "7px", background: bucket === "green" ? "#F1F7E8" : bucket === "yellow" ? T.warnBg : "#F6EEEC", border: `1px solid ${bucket === "green" ? "#D8E9B0" : bucket === "yellow" ? "#EAD9A6" : "#E5CFC9"}`, borderRadius: "9px", padding: "8px 11px", marginBottom: "12px", fontSize: "12px", color: bucket === "yellow" ? T.warnText : "#5A564E" }}>
+              <span style={{ width: "7px", height: "7px", borderRadius: "999px", background: BUCKET_DOT[bucket], flexShrink: 0 }} />
+              {emptyReason(id, bucket)}
+            </div>
+          )}
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -408,9 +434,11 @@ export function CareerSiteEditor({
     setContent((p) => ({ ...p, [key]: ((p[key] as unknown[]) ?? []).filter((_, i) => i !== idx) }));
   }
 
-  // B-9: aplica el borrador redactado por el agente a draft_content (merge de las
-  // claves de una sección). Solo muta el borrador; publicar es un paso aparte.
-  function applySection(proposal: CareerSectionProposal) {
+  // B-9 (rework): aplica el borrador del agente a draft_content. La generación con IA
+  // devuelve TODO el site de una vez (bloques 🟢); aquí se mergean sus claves sobre el
+  // borrador SIN pisar 🟡/🔴 (marcas, redes, galería, equipo, testimonios). Solo muta
+  // el borrador; publicar es un paso aparte.
+  function applyProposal(proposal: Record<string, unknown>) {
     setContent((p) => ({ ...p, ...proposal }));
   }
 
@@ -632,20 +660,21 @@ export function CareerSiteEditor({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 420px", gap: "20px", alignItems: "start" }}>
             <div>
 
-              <SectionPanel id="hero" title="Hero" open={openSection === "hero"} onToggle={toggleSection} badge={content.headline ? "1 campo" : undefined}>
+              <CareerAIPanel onApply={applyProposal} hasContent={!!content.aboutDescription} />
+
+              <SectionPanel id="hero" title="Hero" bucket="green" isEmpty={!content.headline} open={openSection === "hero"} onToggle={toggleSection} badge={content.headline ? "1 campo" : undefined}>
                 <Field label="Titular principal">
                   <Input placeholder="Únete al equipo que transforma el sector" value={content.headline ?? ""} onChange={(e) => upd("headline", e.target.value)} />
                 </Field>
                 <ImageUploadField label="Imagen hero (1920×600 px recomendado)" value={content.heroImageUrl ?? ""} onChange={(u) => upd("heroImageUrl", u)} />
               </SectionPanel>
 
-              <SectionPanel id="about" title="Sobre nosotros" open={openSection === "about"} onToggle={toggleSection} badge={content.aboutDescription ? "con contenido" : undefined}>
-                <CareerSectionGenerator section="about" current={{ aboutTitle: content.aboutTitle, aboutDescription: content.aboutDescription }} onApply={applySection} />
+              <SectionPanel id="about" title="Sobre nosotros" bucket="green" isEmpty={!content.aboutDescription} open={openSection === "about"} onToggle={toggleSection} badge={content.aboutDescription ? "con contenido" : undefined}>
                 <Field label="Título"><Input placeholder="Quiénes somos" value={content.aboutTitle ?? ""} onChange={(e) => upd("aboutTitle", e.target.value)} /></Field>
                 <Field label="Descripción"><Textarea rows={4} value={content.aboutDescription ?? ""} onChange={(e) => upd("aboutDescription", e.target.value)} /></Field>
               </SectionPanel>
 
-              <SectionPanel id="metrics" title="Métricas" open={openSection === "metrics"} onToggle={toggleSection} badge={metrics.length ? `${metrics.length}` : undefined}>
+              <SectionPanel id="metrics" title="Métricas" bucket="green" isEmpty={metrics.length === 0} open={openSection === "metrics"} onToggle={toggleSection} badge={metrics.length ? `${metrics.length}` : undefined}>
                 {metrics.map((m, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("aboutMetrics", i)}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
@@ -657,7 +686,7 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSMetric>("aboutMetrics", { label: "", value: "" })} label="Añadir métrica" />
               </SectionPanel>
 
-              <SectionPanel id="gallery" title="Galería" open={openSection === "gallery"} onToggle={toggleSection} badge={gallery.length ? `${gallery.length}` : undefined}>
+              <SectionPanel id="gallery" title="Galería" bucket="red" isEmpty={gallery.length === 0} open={openSection === "gallery"} onToggle={toggleSection} badge={gallery.length ? `${gallery.length}` : undefined}>
                 {gallery.map((g, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("aboutGallery", i)}>
                     <Field label="Tipo">
@@ -676,7 +705,7 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSGalleryItem>("aboutGallery", { url: "", type: "image" })} label="Añadir elemento" />
               </SectionPanel>
 
-              <SectionPanel id="brands" title="Marcas / Partners" open={openSection === "brands"} onToggle={toggleSection} badge={brands.length ? `${brands.length}` : undefined}>
+              <SectionPanel id="brands" title="Marcas / Partners" bucket="yellow" isEmpty={brands.length === 0} open={openSection === "brands"} onToggle={toggleSection} badge={brands.length ? `${brands.length}` : undefined}>
                 <Field label="Título"><Input placeholder="Empresas del grupo" value={content.brandsTitle ?? ""} onChange={(e) => upd("brandsTitle", e.target.value)} /></Field>
                 {brands.map((b, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("brands", i)}>
@@ -688,8 +717,7 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSBrand>("brands", { name: "", logoUrl: "", website: "" })} label="Añadir marca" />
               </SectionPanel>
 
-              <SectionPanel id="culture" title="Cultura y valores" open={openSection === "culture"} onToggle={toggleSection} badge={cultureVals.length ? `${cultureVals.length} valores` : undefined}>
-                <CareerSectionGenerator section="culture" current={{ cultureTitle: content.cultureTitle, cultureDescription: content.cultureDescription, cultureValues: content.cultureValues }} onApply={applySection} />
+              <SectionPanel id="culture" title="Cultura y valores" bucket="green" isEmpty={cultureVals.length === 0} open={openSection === "culture"} onToggle={toggleSection} badge={cultureVals.length ? `${cultureVals.length} valores` : undefined}>
                 <Field label="Título"><Input placeholder="Nuestra cultura" value={content.cultureTitle ?? ""} onChange={(e) => upd("cultureTitle", e.target.value)} /></Field>
                 <Field label="Descripción"><Textarea rows={3} value={content.cultureDescription ?? ""} onChange={(e) => upd("cultureDescription", e.target.value)} /></Field>
                 {cultureVals.map((v, i) => (
@@ -703,13 +731,12 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSCultureValue>("cultureValues", { icon: "", name: "" })} label="Añadir valor" />
               </SectionPanel>
 
-              <SectionPanel id="lookingfor" title="Qué buscamos" open={openSection === "lookingfor"} onToggle={toggleSection} badge={content.lookingForDescription ? "con contenido" : undefined}>
+              <SectionPanel id="lookingfor" title="Qué buscamos" bucket="green" isEmpty={!content.lookingForDescription} open={openSection === "lookingfor"} onToggle={toggleSection} badge={content.lookingForDescription ? "con contenido" : undefined}>
                 <Field label="Título"><Input placeholder="El perfil que buscamos" value={content.lookingForTitle ?? ""} onChange={(e) => upd("lookingForTitle", e.target.value)} /></Field>
                 <Field label="Descripción"><Textarea rows={4} value={content.lookingForDescription ?? ""} onChange={(e) => upd("lookingForDescription", e.target.value)} /></Field>
               </SectionPanel>
 
-              <SectionPanel id="benefits" title="Beneficios" open={openSection === "benefits"} onToggle={toggleSection} badge={benefits.length ? `${benefits.length}` : undefined}>
-                <CareerSectionGenerator section="benefits" current={{ benefitsTitle: content.benefitsTitle, benefits: content.benefits }} onApply={applySection} />
+              <SectionPanel id="benefits" title="Beneficios" bucket="green" isEmpty={benefits.length === 0} open={openSection === "benefits"} onToggle={toggleSection} badge={benefits.length ? `${benefits.length}` : undefined}>
                 <Field label="Título"><Input placeholder="Qué te ofrecemos" value={content.benefitsTitle ?? ""} onChange={(e) => upd("benefitsTitle", e.target.value)} /></Field>
                 {benefits.map((b, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("benefits", i)}>
@@ -722,7 +749,7 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSBenefit>("benefits", { icon: "", name: "" })} label="Añadir beneficio" />
               </SectionPanel>
 
-              <SectionPanel id="team" title="Equipo" open={openSection === "team"} onToggle={toggleSection} badge={teamProfiles.length ? `${teamProfiles.length} personas` : undefined}>
+              <SectionPanel id="team" title="Equipo" bucket="red" isEmpty={teamProfiles.length === 0} open={openSection === "team"} onToggle={toggleSection} badge={teamProfiles.length ? `${teamProfiles.length} personas` : undefined}>
                 <Field label="Título"><Input placeholder="Conoce al equipo" value={content.teamTitle ?? ""} onChange={(e) => upd("teamTitle", e.target.value)} /></Field>
                 <Field label="Descripción"><Textarea rows={2} value={content.teamDescription ?? ""} onChange={(e) => upd("teamDescription", e.target.value)} /></Field>
                 {teamProfiles.map((p, i) => (
@@ -738,7 +765,7 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSTeamProfile>("teamProfiles", { name: "", position: "", photoUrl: "", linkedinUrl: "" })} label="Añadir persona" />
               </SectionPanel>
 
-              <SectionPanel id="testimonials" title="Testimonios" open={openSection === "testimonials"} onToggle={toggleSection} badge={testimonials.length ? `${testimonials.length}` : undefined}>
+              <SectionPanel id="testimonials" title="Testimonios" bucket="red" isEmpty={testimonials.length === 0} open={openSection === "testimonials"} onToggle={toggleSection} badge={testimonials.length ? `${testimonials.length}` : undefined}>
                 {testimonials.map((t, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("testimonials", i)}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
@@ -752,7 +779,7 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSTestimonial>("testimonials", { name: "", position: "", text: "", photoUrl: "" })} label="Añadir testimonio" />
               </SectionPanel>
 
-              <SectionPanel id="faqs" title="Preguntas frecuentes" open={openSection === "faqs"} onToggle={toggleSection} badge={faqs.length ? `${faqs.length}` : undefined}>
+              <SectionPanel id="faqs" title="Preguntas frecuentes" bucket="green" isEmpty={faqs.length === 0} open={openSection === "faqs"} onToggle={toggleSection} badge={faqs.length ? `${faqs.length}` : undefined}>
                 <Field label="Título"><Input placeholder="Preguntas frecuentes" value={content.faqsTitle ?? ""} onChange={(e) => upd("faqsTitle", e.target.value)} /></Field>
                 {faqs.map((f, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("faqs", i)}>
@@ -763,7 +790,7 @@ export function CareerSiteEditor({
                 <AddBtn onClick={() => addItem<CSFAQ>("faqs", { question: "", answer: "" })} label="Añadir pregunta" />
               </SectionPanel>
 
-              <SectionPanel id="social" title="Redes sociales" open={openSection === "social"} onToggle={toggleSection} badge={socialLinks.length ? `${socialLinks.length}` : undefined}>
+              <SectionPanel id="social" title="Redes sociales" bucket="yellow" isEmpty={socialLinks.length === 0} open={openSection === "social"} onToggle={toggleSection} badge={socialLinks.length ? `${socialLinks.length}` : undefined}>
                 {socialLinks.map((s, i) => (
                   <ArrayItemCard key={i} onRemove={() => removeItem("socialLinks", i)}>
                     <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: "8px" }}>
