@@ -31,7 +31,8 @@ Todo agente pasa por `runAgent<T>(opts)`. Lo que el core garantiza, agente por a
 | `channel-optimizer` | 4o | Plan de distribución (canales, presupuesto, copy) | Pestaña Distribución de la oferta | ❌ |
 | `channel-analyst` | — | **RETIRADO como superficie** (2026-07-13): Canales abre el drawer del assistant con chip precargado; su `queryChannelData` vive como tool del assistant. Endpoint `/api/agents/channel-analyst` deprecado sin consumidores — eliminar en próxima limpieza | — | — |
 | `onboarding-builder` | 4o | Checklist de incorporación por rol/departamento | Ficha del empleado | ❌ |
-| `career-writer` | mini | Redacta UNA sección del career site (about/culture/benefits) → propuesta revisable | Editor del career site (B-9); contexto de empresa resuelto en server | ✅ verificado E2E (3 secciones × contrato) |
+| `career-writer` | mini | Genera TODO el contenido redactable del career site de una vez desde el intake (hero, about, métricas, cultura, beneficios, qué buscamos, FAQs) — bloques 🟢, fiel al intake (no inventa) | `CareerAIPanel` (entrada única del Editor); intake → `POST /api/agents/career-writer` | ✅ verificado E2E (12 claves, valores/métricas fieles) |
+| `company-parser` | mini | "Autorrellenar desde tu web": extrae perfil (about/valores/beneficios/métricas) del texto de la web para poblar el intake — patrón cv-parser, EXTRAE no inventa | Botón Importar del `CareerAIPanel` → `POST /api/agents/company-parser` (Node runtime; fetch anti-SSRF en `lib/safe-fetch.ts`) | ✅ verificado E2E (SSRF + extracción fiel) |
 | `dashboard-insights` | mini | Redactor del motor de señales (determinista calcula) | "Sugerencias del agente" en dashboard **+ cron diario** (plano proactivo) | ❌ |
 
 Fuera del framework (deuda): `career-site/translate` (gpt-4o directo, sin auditoría) — meter a `runAgent`.
