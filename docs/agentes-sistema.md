@@ -75,7 +75,7 @@ Cada caso lleva `id` + comentario en el script explicando qué bug real cubre. A
 
 - Telemetría `_usage` por invocación en `agent_runs` (tokens, turnos, truncado, modelo) → coste atribuible por empresa/agente. ✅
 - `max_tokens` por agente. ✅ (calibrar con `_usage` real, no a ojo)
-- **Presupuesto mensual por empresa** con degradación al fallback: ❌ pendiente (pista A, siguiente tras evals) — bloqueante para encender el cron de insights.
+- **Presupuesto mensual por empresa** con degradación al fallback: ✅ `lib/agent-budget.ts` — `checkBudget` en `runAgent` antes de la llamada LLM; superado el límite (default $50, override `companies.ai_monthly_budget_usd` pendiente de migración) → fallback heurístico + log `budget_exceeded`, nunca error. `costOf`/`monthSpendUsd` calculan gasto real por empresa desde `_usage`. Desbloquea el cron de insights. Solo aplica a agentes que aportan `companyId` en su input (todos los internos ya lo hacen).
 - Rate-limit por IP en el único endpoint LLM público (`careers/parse-cv`). ✅
 - Referencia completa de precios/estimaciones: `handoff/Handoff Claude Code - Agentes coste.md` (§0 estado).
 
