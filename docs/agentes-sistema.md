@@ -63,6 +63,8 @@ Los casos NO viven en prosa (se perderían/divergirían): viven **versionados en
 
 Cada caso lleva `id` + comentario en el script explicando qué bug real cubre. Añadir un caso = editar el script; el doc no lista casos individuales (evita drift).
 
+**Convención (por qué unos en `scripts/` y otros en `evals/`):** el **runner** (ejecutable, invocado por `npm run eval:*`) vive en `scripts/eval-<agente>.mjs`; el **corpus de datos** (fixtures que no caben inline — p. ej. 30 PDFs) vive en `evals/<agente>/`. Un eval de pocos casos ligeros (el asistente: query+rol+checks) los lleva **inline en su runner** y no necesita carpeta en `evals/`; uno con corpus pesado (cv-parser) sí. **Este índice es el mapa único** — da igual dónde esté cada pieza, se encuentra aquí.
+
 ### ¿Cómo sabemos que la plataforma está cubierta? — el método de cobertura
 
 1. **Mapa módulo → preguntas core.** Cada módulo funcional (Notion → Funcionalidades actuales) define sus 3-5 preguntas de negocio; cada pregunta debe mapear a una tool. Hueco en el mapa = tool que falta. (El bug de "inscritos" era exactamente esto: Reclutamiento tenía pipeline y canales pero no volumen por período.)
