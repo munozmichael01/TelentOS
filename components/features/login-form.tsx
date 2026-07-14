@@ -31,7 +31,9 @@ export function LoginForm() {
       if (mode === "forgot") {
         const origin = window.location.origin;
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${origin}/auth/callback`,
+          // type=recovery explícito: el handler de /auth/callback enruta a
+          // /auth/reset-password de forma fiable aunque Supabase no lo añada (PKCE).
+          redirectTo: `${origin}/auth/callback?type=recovery`,
         });
         if (error) throw error;
         setInfo("Te hemos enviado un email con las instrucciones. Revisa tu bandeja de entrada.");
