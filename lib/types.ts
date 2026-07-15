@@ -202,6 +202,20 @@ export type Employee = {
   vacation_days_total: number;
   status: "active" | "offboarded";
   created_at: string;
+  // Datos personales / legales (migr. 0002, 0033)
+  national_id: string | null;
+  birth_date: string | null;
+  address: string | null;
+  phone: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  seniority_level: string | null;
+  country: string | null;
+  city: string | null;
+  work_location: string | null;
+  work_modality: "presencial" | "hibrido" | "remoto" | null;
+  legal_entity: string | null;
+  benefits: string[];
 };
 
 export type OnboardingTask = {

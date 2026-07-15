@@ -4,6 +4,10 @@ import { requireApiRole, jsonError } from "@/lib/api";
 const EDITABLE = [
   "name", "email", "role_title", "department", "start_date",
   "contract_type", "manager_id", "vacation_days_total", "status",
+  "national_id", "birth_date", "address",
+  "phone", "emergency_contact_name", "emergency_contact_phone",
+  "seniority_level", "country", "city", "work_location", "work_modality",
+  "legal_entity", "benefits",
 ] as const;
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {

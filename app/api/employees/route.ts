@@ -23,6 +23,16 @@ export async function POST(req: Request) {
       start_date: body.start_date ?? null,
       contract_type: body.contract_type ?? "indefinido",
       manager_id: body.manager_id || null,
+      phone: body.phone ?? null,
+      emergency_contact_name: body.emergency_contact_name ?? null,
+      emergency_contact_phone: body.emergency_contact_phone ?? null,
+      seniority_level: body.seniority_level ?? null,
+      country: body.country ?? null,
+      city: body.city ?? null,
+      work_location: body.work_location ?? null,
+      work_modality: body.work_modality || null,
+      legal_entity: body.legal_entity ?? null,
+      benefits: Array.isArray(body.benefits) ? body.benefits : [],
     })
     .select()
     .single();
