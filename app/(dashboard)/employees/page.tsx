@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { EmployeeForm } from "@/components/features/employee-form";
+import { AddMeAsEmployee } from "@/components/features/add-me-as-employee";
 import { Badge } from "@/components/ui/badge";
 import { HairlineTable, HairlineRow } from "@/components/hairline-table";
 import { createClient } from "@/lib/supabase/server";
@@ -29,19 +30,24 @@ const contractLabel: Record<string, string> = {
 
 export default async function EmployeesPage() {
   const supabase = createClient();
-  const { data: employees } = await supabase
-    .from("employees")
-    .select("*")
-    .order("name");
+  const [{ data: employees }, { data: { user } }] = await Promise.all([
+    supabase.from("employees").select("*").order("name"),
+    supabase.auth.getUser(),
+  ]);
 
   const list = (employees ?? []) as Employee[];
   const byId = new Map(list.map((e) => [e.id, e]));
+  const alreadyEmployee = !!user && list.some((e) => e.user_id === user.id);
+  const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+  const myName = (meta.full_name as string) || (meta.name as string) || user?.email?.split("@")[0] || "";
 
   return (
     <div>
       <PageHeader title="Empleados" eyebrow="Personas">
         <EmployeeForm managers={list.map((e) => ({ id: e.id, name: e.name }))} />
       </PageHeader>
+
+      {!alreadyEmployee && <AddMeAsEmployee name={myName} />}
 
       {list.length === 0 ? (
         <EmptyState

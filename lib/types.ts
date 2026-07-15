@@ -192,6 +192,7 @@ export type Employee = {
   company_id: string;
   candidate_id: string | null;
   application_id: string | null;
+  user_id: string | null;
   name: string;
   email: string | null;
   role_title: string | null;

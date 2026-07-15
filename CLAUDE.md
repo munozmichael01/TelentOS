@@ -112,7 +112,7 @@ agent_runs         (auditoría de ejecuciones de agentes)
 
 **Campos nuevos en `applications`**: `offer_salary`, `offer_currency`, `offer_frequency`, `offer_start_date` — capturan los términos de la oferta aceptada; se usan como **pre-relleno** del formulario de compensación al contratar (nunca auto-create).
 
-**Campos en `employees`**: `national_id` (cédula V-..., requerida para recibo VE), `birth_date`, `address`.
+**Campos en `employees`**: `national_id` (cédula V-..., requerida para recibo VE), `birth_date`, `address`. Ampliados (migr. 0033): `phone`, `emergency_contact_name/phone`, `seniority_level`, `country`, `city`, `work_location`, `work_modality` (presencial/hibrido/remoto), `legal_entity`, `benefits` (text[]). **`user_id`** (migr. 0034, nullable): enlace opcional user↔employee — un user que además es plantilla se vincula vía «Añadirme como empleado» (`POST /api/employees/self`). `user ≠ employee`: el onboarding nunca crea ficha.
 
 **Campo en `companies`**: `rif` (J-XXXXXXXX-X).
 
