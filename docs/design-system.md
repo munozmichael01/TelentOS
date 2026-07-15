@@ -1,8 +1,12 @@
 # TalentOS — Sistema de Diseño
 
 > **Documento canónico del DS.** Fuente única de verdad del sistema visual de TalentOS.
-> **Pista:** Diseño (solo lectura) · **Fecha:** 2026-07-12 · **Estado:** v1 — para revisión de Michael.
+> **Pista:** Diseño (solo lectura) · **Fecha:** 2026-07-12 (v1) · **rev. 2026-07-14** · **Estado:** v1 — para revisión de Michael.
 > **Destino:** `handoff/` → la pista A lo promueve a `docs/design-system.md` cuando se apruebe.
+>
+> **Rev. 14 jul — formalización pedida por pista A** (career site shippeado inline): §2.12 `ToneSelector` (compartido con ofertas), §3.6 estado de origen del contenido (buckets 🟢🟡🔴), **B-10 `CareerAIPanel`** (variante `surface-entry` de B-5b), y B-9 reencuadrado a camino secundario.
+>
+> **Rev. 14 jul (tarde) — onboarding self-serve + ficha de empleado** (brief `handoff/Design brief - Onboarding self-serve...`): §2.13 pantalla de **Onboarding** (auth-card), §2.14 `ModalitySelector` (preset de icono del segmentado de §2.12), §3.1 **agrupación de formularios largos** (ficha de empleado en 4 grupos) y §3.7 afordance **«Añadirme como empleado»** (puente user↔employee). Auditados contra tokens: ver notas de conformidad en cada §.
 
 ## Cómo leer este documento
 
@@ -159,7 +163,8 @@ Definidas en `tailwind.config.ts:55-58`. Sistema de **sombra dura** (offset sól
 
 1. **`transform` SOLO en CTAs/controles.** Hover `translate(-1px,-1px)` + sombra a `5px`; active `translate(2px,2px)` + sombra a `1px` (`globals.css:83-84`, `button.tsx`).
 2. **NUNCA `translateY` en cards ni StatCards.** El hover de card es solo `border-color` + `box-shadow` (`CLAUDE.md`, `globals.css:110`). Regla dura.
-3. Escala de offset de sombra dura observada: `2px` (chips/tiles internos), `3px` (CTAs), `4px` (paneles destacados como Personalización). Consistente — mantener.
+3. Escala de offset de sombra dura observada: `2px` (chips/tiles internos), `3px` (CTAs), `4px` (paneles destacados como Personalización), `10px` (modales — `dialog.tsx`, §3.5). Consistente — mantener.
+4. **Excepción documentada — auth-card `7px 7px 0 ink`.** Las tarjetas de autenticación a pantalla completa (`login-form.tsx`, `OnboardingForm`, §2.13) usan un offset `7px`, fuera de la escala anterior. Es intencional: son la única superficie que flota sola centrada sobre `bg`, sin chrome alrededor, y necesita más peso. No la repliques en cards embebidas — es exclusiva del patrón auth-card.
 
 ---
 
@@ -413,6 +418,91 @@ Patrones nacidos en features que ya se repiten y deberían ser primitivos:
 - **`<Avatar>`** — `AVATAR_PALETTES`+`avatarPalette` está **copiado 6 veces** e `initials()` **4 veces** (Auditoría §M4). Un `<Avatar name email size>` los mata. Alto ROI.
 - **`<SignalCard>` / `<InboxItem>`** — `inbox-item.tsx` es la tarjeta de señal (borde-izquierdo de color por tipo). El doc de superficies pide **moverla a `ui/`** para reusar en módulos (§4·S3).
 - **`<FilterChip>`** — definido inline en `dashboard-client.tsx:436`; se repetirá.
+- **`<ToneSelector>`** — el selector Cercano/Profesional/Creativo (§2.12) ya vive en el intake del career site y **debe** compartirse con la redacción de ofertas. Blueprint completo en §2.12.
+
+---
+
+## 2.12 ToneSelector — _componente compartido (formalizado 14 jul)_
+
+`components/ui/tone-selector.tsx` `[PROPUESTO promover]`. Selector de **tono de redacción** — la voz con la que la IA escribe el contenido. Hoy vive **inline** dentro de `CareerAIPanel` (`career-ai-panel.tsx:203-214`, `TONES` + botones); esta es su formalización como **primitivo compartido**.
+
+> **Por qué compartido (no del career site).** El tono no es propiedad del career site: es un parámetro de **toda superficie que redacta** (P3). Se usa **hoy** en el intake del career site y **debe cablearse** en el job-writer de ofertas (`GeneratorBlock`, B-6), que hoy **no lo pregunta** — dependencia abierta de pista A. Diseñarlo una vez evita dos selectores divergentes.
+
+**Contrato canónico.** Tres tonos fijos, valor único seleccionado (radiogroup, no multi). El `id` es estable (se manda al modelo); el `label` es user-facing.
+
+| `value` | Label | Voz |
+|---|---|---|
+| `cercano` | Cercano | Cálido, tú, primera persona plural. **Default.** |
+| `profesional` | Profesional | Sobrio, institucional, tercera persona. |
+| `creativo` | Creativo | Enérgico, con personalidad, frases cortas. |
+
+**Anatomía:** fila de 3 botones-segmento, Space Mono 700 11.5px, `r-md` (11), `padding 7px 13px`, `gap 7px`. Seleccionado = relleno del acento + texto de contraste; resto = transparente + borde 1px + texto atenuado. **Dos pieles** (como `AgentActionButton`, B-2 gap 3):
+
+| piel | seleccionado | reposo |
+|---|---|---|
+| **claro** (`onDark=false`, sobre papel — ofertas) | `background: brand #0E5C4A`, texto `paper` | borde `line`, texto `soft` |
+| **oscuro** (`onDark=true`, dentro de panel de agente — career site) | `background: lime #C6F24E`, texto `ink` | borde `rgba(244,240,232,.2)`, texto `#C9C4BA` |
+
+> Regla de acento heredada del DS: sobre **papel** el acento activo es `brand`; sobre **tinta** (voz del agente) es `lime`. El selector NO inventa color — sigue §1.1.
+
+```tsx
+export type Tone = "cercano" | "profesional" | "creativo";
+export const TONES: { id: Tone; label: string }[] = [
+  { id: "cercano", label: "Cercano" },
+  { id: "profesional", label: "Profesional" },
+  { id: "creativo", label: "Creativo" },
+];
+
+export function ToneSelector({
+  value, onChange, onDark = false, "aria-label": ariaLabel = "Tono de redacción",
+}: { value: Tone; onChange: (t: Tone) => void; onDark?: boolean; "aria-label"?: string }) {
+  return (
+    <div role="radiogroup" aria-label={ariaLabel} style={{ display: "flex", gap: "7px" }}>
+      {TONES.map((t) => {
+        const on = value === t.id;
+        const sel = onDark
+          ? { background: "#C6F24E", color: "#1A1A17", border: "1px solid #C6F24E" }
+          : { background: "#0E5C4A", color: "#F4F0E8", border: "1px solid #0E5C4A" };
+        const off = onDark
+          ? { background: "transparent", color: "#C9C4BA", border: "1px solid rgba(244,240,232,.2)" }
+          : { background: "transparent", color: "#79746B", border: "1px solid #E7E1D4" };
+        return (
+          <button key={t.id} role="radio" aria-checked={on} onClick={() => onChange(t.id)}
+            style={{ fontFamily: "'Space Mono',monospace", fontSize: "11.5px", fontWeight: 700,
+              padding: "7px 13px", borderRadius: "11px", cursor: "pointer", ...(on ? sel : off) }}>
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+```
+> Migra el inline de `career-ai-panel.tsx:203-214` a `<ToneSelector value={intake.tone} onChange={(tone) => upd({ tone })} onDark />`. **Cablear en ofertas** (`GeneratorBlock` de `job-form.tsx`): añadir `<ToneSelector value={tone} onChange={setTone} />` (piel clara) a los controles de intención y pasar `tone` en el payload de `/api/agents/job-writer`. A11y: `radiogroup`/`radio`+`aria-checked` (§5) — hoy el inline son botones sueltos sin rol.
+
+---
+
+## 2.13 Onboarding (auth-card) — _formalizado 14 jul_
+
+`components/features/onboarding-form.tsx` `[PROPUESTO reemplazar placeholder]`. Primera pantalla tras el signup self-serve: cuenta creada → `/onboarding` → nombra empresa → entra como owner a su workspace vacío. La versión de pista A es placeholder inline (un solo campo); esta es la formalización.
+
+**Conforme al DS** (auditado): reusa la **auth-card** del login (`login-form.tsx`) sin inventar nada — card `r-xl` 18, borde `1.5px ink`, sombra `7px 7px 0 ink` (§1.5 excepción auth-card), logo `r-lg` 14 con sombra `3px`, inputs `r-md` 11 / borde `1.5px line` / focus `brand`+ring `brand-soft` (§1.7), CTA `brand` con sombra dura `3px` y `transform` en hover/active (§1.5).
+
+**Contrato.** Un solo paso, **sin wizard**. Captura **3 campos** (decisión de producto 14 jul, modelo desacoplado): `companyName`, `firstName`, `lastName`. El email viene del signup → **chip read-only** (`brand-soft`), no es un campo. Reassurance en Space Mono: "paso único · el equipo entra por invitación".
+
+> **Invariante user ≠ employee.** El onboarding crea **la cuenta** (`POST /api/onboarding/company` solo necesita `name`; nombre/apellido van al perfil del user), **nunca un empleado**. No hay fichas fantasma: la conexión user↔employee la hace la afordance de §3.7, nunca este flujo.
+
+**Deuda menor detectada:** el borde del CTA en las auth-cards es `1.5px ink` (login), mientras el DS canónico de CTA es `2px ink` (§1.6). Divergencia heredada del login — no la corrijo aquí (no es mío); anotada para tokenizar el botón auth en la Fase 3. La pantalla nueva **sigue al login** por coherencia, no al canon, a propósito.
+
+## 2.14 ModalitySelector — _preset de icono del segmentado (14 jul)_
+
+`components/ui/modality-selector.tsx` `[PROPUESTO]`. Selector de **modalidad de trabajo** de la ficha de empleado: `presencial · híbrido · remoto`. Valor único (radiogroup).
+
+> **Decisión — es el MISMO segmentado que `ToneSelector` (§2.12), preset distinto.** No es un control nuevo: es la familia "segmento de selección única, relleno de marca sobre papel". Se evita el problema de "dos selectores divergentes" que §2.12 ya advierte. Diferencia formal única: **icono de línea + label apilados** (la modalidad se escanea mejor con icono; es un campo persistente del HRIS, no un parámetro de redacción efímero). El `ToneSelector` es el **preset texto**; `ModalitySelector` el **preset icono**.
+
+**Anatomía.** Fila/grilla de 3 segmentos, `r-md` 11. Icono de línea 17px (`stroke currentColor` 1.8, §1.8) sobre label Archivo 700 13px, apilados y centrados. Colores heredados de §2.12 **piel clara** (vive entre inputs, sobre papel): seleccionado = relleno `brand` + texto `paper` + borde `1.5px brand`; reposo = fondo `bg` + borde `1.5px line` + texto `soft`.
+
+> **Conforme al DS** (auditado + corregido): la selección es un **estado, no un CTA** → **sin sombra dura ni `transform`** (§1.5 regla 1). Un draft previo puso sombra `2px` + borde `2px ink` en el seleccionado; corregido a relleno de marca plano para igualar al `ToneSelector`. Iconografía del set `ui/icons` (nunca emoji, §1.8). A11y: `radiogroup`/`radio`+`aria-checked`.
 
 ---
 
@@ -423,6 +513,8 @@ Patrones nacidos en features que ya se repiten y deberían ser primitivos:
 - Estructura: `<fieldset>` + `<legend>` por grupo; `<Label htmlFor>` por campo; grilla `grid grid-cols-2 gap-2` para campos cortos emparejados (patrón `cv-profile-fields.tsx`).
 - Validación (§2.7): borde+texto `danger`, `aria-invalid`, `aria-describedby`, franja de error sobre el submit. El submit muta a estado loading (§1.7), nunca bloquea la página.
 - **Mutaciones:** usar `apiFetch()` (`lib/api-client.ts`, ya existe y `dashboard-client.tsx` lo usa) que comprueba `res.ok` y togglea toast de error. **~20 llamadas fire-and-forget** siguen sin migrar (Auditoría §H6) — no es DS puro pero afecta a todo submit.
+
+**Agrupación de formularios largos (14 jul).** Cuando una ficha supera ~6 campos, se **agrupa por secciones divididas** (no tabs, no wizard): cada grupo = `<fieldset>` con `<legend>` Space Mono uppercase + divisor `1px line`, campos en grilla 2–3 col. Referencia: `employee-form.tsx` ampliada del §2 del backlog HRIS, en **4 grupos** — **Personales · Puesto y organización · Ubicación y modalidad · Legal y compensación**. Los campos nuevos del feedback HR (teléfono, contacto de emergencia, nivel/seniority, país/ciudad/centro, modalidad, entidad legal, beneficios) caen cada uno en su grupo; la **modalidad** usa `ModalitySelector` (§2.14) y los **beneficios** el chip multi-selección (pill `r-999`, seleccionado `brand-soft`+borde `brand`). El diálogo mantiene el contrato de modal (§3.5): `r-xl` 18, borde `1.5px ink`, sombra `10px`, cuerpo scrolleable, footer con cancelar/guardar de igual peso.
 
 ## 3.2 Tablas y listas
 
@@ -441,6 +533,43 @@ Patrón canónico `[PROPUESTO]` (del dominante inline): contenedor `surface`/das
 ## 3.5 Modales y diálogos — _consolidado_
 
 `components/ui/dialog.tsx` (radix). Contenido `r-xl`, borde `1.5px ink`, sombra dura grande (`10px 10px 0 rgba(...)` en `new-run-dialog.tsx`, `pay-run-detail.tsx`). Cabecera con `DialogTitle`+`DialogDescription`. Confirmar/cancelar con **igual peso visual** (nada de dark patterns — invariante de IA §4). Modal bloquea solo cuando `submitting`.
+
+## 3.6 Estado de origen del contenido `[PROPUESTO]` — _formalizado 14 jul_
+
+Patrón reutilizable de **"quién rellena esto"**: cuando un editor mezcla bloques que la IA genera, bloques que se extraen de una fuente, y bloques que solo aporta el usuario, cada bloque **declara su origen** — nunca deja un vacío mudo. Nace en el editor del career site (`career-site-editor.tsx:132-142`, `SectionPanel`), donde tres tipos de bloque conviven; es generalizable a cualquier intake por bloques.
+
+**Los tres buckets** (el punto de color en la cabecera del bloque + el mensaje de "por qué está vacío"):
+
+| bucket | punto | significado | mensaje de vacío |
+|---|---|---|---|
+| 🟢 generable | `success` | la IA lo redacta desde el intake | "La IA lo rellenará al generar (o edítalo a mano)." |
+| 🟡 extraíble | `warning` | solo se saca de una fuente (tu web), no se fabrica | "No lo encontramos en tu web — pégalo aquí." |
+| 🔴 de usuario | `danger`/coral suave | la IA **nunca** lo inventa (imágenes, equipo, testimonios, cifras) | "Esto lo aportas tú: la IA no lo fabrica." |
+
+**Reglas del patrón:**
+1. **El vacío siempre dice por qué.** Un bloque vacío nunca es un hueco silencioso: lleva el mensaje de su bucket. Deriva de la honestidad de §4.4 (procedencia) aplicada al **contenido ausente**.
+2. **La arista manda sobre el bucket.** Un bloque puede ser 🟢 y aún así pedir dato real: **Métricas** es generable de estructura pero la IA **no inventa cifras** → su mensaje de vacío pide datos, no promete generación (`emptyReason` trata `metrics` aparte). Regla: si un 🟢 contiene un hecho no fabricable, el mensaje lo dice.
+3. **Bloque ya redactado por IA** → su cabecera lleva `AgentBadge kind="ia"` (B-1) + la acción secundaria "↻ Regenerar bloque" (nunca la voz oscura de agente aquí: es chrome de editor, papel claro).
+4. **El punto de color usa tokens intencionados** (ver decisión de origen abajo), no hex sueltos.
+
+> **Decisión de origen (D-origin, UX — 14 jul).** Los tres puntos, canonizados:
+> - 🟢 generable → dot `success #1B6B4F`, fondo de mensaje `success-bg #DCEFE3`.
+> - 🟡 extraíble → dot `warning #946312`, fondo `warning-bg #F8E7C4`.
+> - 🔴 de usuario → dot **`origin-user #C77A6B`** (rosa terracota apagado, NO `danger` — no es un error), fondo de mensaje **neutro `surface-2 #F8F4EB`** (se elimina el `#F6EEEC` rosado que leía como alarma-lite).
+>
+> Razón: mantener tres luces distintas y aprendibles (la 🔴 conserva peso porque es la que el usuario más debe accionar), pero sin que "esto lo aportas tú" grite error. `origin-user` se canoniza como token nuevo (el shipped `#C77A6B` ya era el acierto de pista A; solo se le da nombre y se le quita el fondo de alarma). El `#6FBF3F` verde del shipped **sí** se sustituye por `success` (estaba fuera de escala).
+
+## 3.7 Afordance «Añadirme como empleado» `[PROPUESTO]` — _formalizado 14 jul_
+
+Puente **user ↔ employee**: acción opcional de un clic, en la sección **Empleados**, para el owner (o cualquier user) que **además** es plantilla. Crea su ficha desde nombre + email (backend pista A). Es el **único** sitio donde un user se convierte en employee — el onboarding (§2.13) nunca lo hace, porque no todo user es empleado (admin externo, contable) ni todo empleado es user.
+
+**Anatomía.** Call-out promocional sobre la lista de empleados: tile de avatar (iniciales, `brand`/`lime`), título Archivo 800 + cuerpo `body` que explica qué hará, CTA `lime` con borde `ink` + sombra dura (§1.5, la acción **sí** es accionable → sombra dura permitida) y un cierre `✕` (descartable — no es obligatoria). Fondo **plano** lima suave (`#EAF7C4`) para separarlo de la lista sin gritar.
+
+> **No confundir con el «Banner en degradado» (patrón de marca).** El banner es una tira **de marketing** con degradado teal + textura + CTA lima (superficie de captación). Esta afordance es un **call-out contextual inline** dentro de una lista: fondo **plano**, descartable, una sola acción de dato. Regla: el degradado queda **reservado al banner de marca**; los call-outs contextuales van en tinta plana. Así no se leen como el mismo objeto.
+
+**Estados:** (1) oferta → (2) `success` tras el clic (`ResultState` hermano de §2.8: check en círculo `success`, «Tu ficha está creada» + enlace «Completar ficha»), o (3) descartada. Tras crearse, la fila aparece en el roster con badge de rol (Owner/Manager/Empleado, pills semánticas §2.6).
+
+> **Conforme al DS:** no inventa color (lima del sistema, semánticos de éxito), CTA con sombra dura porque **es** una acción, descartable porque es opcional. Reusa el patrón `ResultState` (confirmación efímera, §2.8) para el éxito.
 
 ---
 
@@ -718,7 +847,8 @@ Listos para que A/B los implementen literal. Código de referencia en TSX (stack
 | B-6 | GeneratorBlock | P3 · Generador | nuevo |
 | B-7 | FieldProposal | P4 · Propuesta granular | nuevo |
 | B-8 | ModuleAssistantEntry | entrada de módulo → drawer | nuevo (Ola 2) |
-| B-9 | CareerSectionGenerator | P3 · Career Site por secciones | nuevo (Ola 3) |
+| B-9 | CareerSectionGenerator | P3 · regenerar bloque (secundario) | ✅ shippeado |
+| B-10 | CareerAIPanel | P3 · Career Site, intake único (primario) | ✅ shippeado — formalizar |
 
 ## B-1 · AgentBadge — procedencia
 
@@ -1055,6 +1185,8 @@ export function AgentPanelShell({
 ```
 > Envuelve el cuerpo del copilot (`FindingGroup`), del generador (`GeneratorBlock`) y del análisis (`FitBreakdown` + lectura cualitativa). `count` es el resumen de una palabra por patrón: `"3 variaciones"` (P6) · `"Fit 82"` (P5) · `"6 campos"` (P3). Invariante §4.6: **el toggle no llama a la API**; re-invocar cuelga del `AgentActionButton` externo, que reemplaza `children`. Si el patrón aún no se invocó, no se monta este shell — solo el disparador en reposo.
 
+> **Variante `surface-entry` (D-CareerAIPanel, 14 jul).** `CareerAIPanel` (B-10) es una **variante de esta familia**, no un componente aparte: comparte la piel de tinta, el `AgentBadge onDark`, y **reutiliza esta barra fina colapsada como su estado `done`** (la entrada que se recede tras generar). Lo que añade es un **preludio de estados** antes del contenido (`entry` → `setup` → `generating`) porque es una **entrada de pantalla** (genera el site entero), no un panel invocado por-bloque. Ver B-10.
+
 ## B-6 · GeneratorBlock — patrón "agente redactor" (P3)
 
 **Qué es:** el patrón de generación de contenido nuevo (redactar/mejorar una oferta, generar un checklist de onboarding). Extraído de lo que ya funciona bien en **Nueva oferta** (`job-form.tsx`, panel oscuro). Dos zonas: el **agente habla en tinta** (rationale/borrador) y su salida **aterriza en campos claros** editables (donde se convierte en dato del usuario).
@@ -1290,6 +1422,8 @@ Uso (Canales): `<ModuleAssistantEntry context="Canales" prompt="Pregunta sobre t
 
 ## B-9 · CareerSectionGenerator — B-6 aplicado por secciones (P3, primera pieza Ola 3)
 
+> **Reencuadre (14 jul) — B-9 pasa a ser el camino SECUNDARIO.** Michael pidió implementar en vivo el rework del career site: la entrada primaria es ahora **un intake único que genera todo el site de una vez** (`CareerAIPanel`, **B-10**), no un generador por sección. B-9 **no muere**: se conserva como el **"↻ Regenerar bloque"** que vive dentro de cada `SectionPanel` del acordeón (`career-site-editor.tsx`, `onRegen`), para rehacer una sección suelta con el `intake` ya guardado. Sigue siendo B-6 aplicado por sección; deja de ser la vía de entrada. Léelo con esa democión en mente.
+
 **Qué es:** el generador del editor del Career Site (`career-site-editor.tsx`) — el agente redacta **una sección** de la página pública (Quiénes somos, Cultura y valores, Beneficios) y su salida aterriza como **propuesta de sección con aplicar/descartar**. **No es un patrón nuevo:** es **B-6 (`GeneratorBlock`, P3) aplicado tres veces** con una envoltura de propuesta. Clasificación (§4.2): `invocada · entidad` (la sección es la entidad) `· generación · efímera`.
 
 **Por qué merece spec propio (la desviación de B-6 vanilla — y su justificación).** El B-6 canónico (`job-form.tsx`) rellena campos **vacíos**: el borrador *se convierte* en el valor del campo. El Career Site casi siempre se **edita sobre contenido vivo** (la página ya está publicada). Por eso el borrador **no puede pisar** lo que hay al aterrizar: aterriza como **propuesta** en papel claro, editable, **gated por "Aplicar a la sección"** con "Descartar" de igual peso (§4.6 efímera · invariante + AI Act). Discard restaura el snapshot previo. La regla B-6 "la tinta es el taller, el papel el entregable" se mantiene; lo que cambia es que el papel guarda su estado anterior hasta la confirmación explícita.
@@ -1343,6 +1477,54 @@ export function CareerSectionGenerator({ cfg, prov, busy, draft, onGenerate, onA
 **Guardas (qué NO hace):** no auto-aplica (el borrador nunca toca `draft_content` sin "Aplicar"); no abre generador en más de una sección a la vez; no republica; no re-lista el contenido actual en tinta.
 
 > **Dependencias:** `GeneratorBlock` (B-6, que ya incorpora `AgentPanelShell` B-5b) y `ProposalFrame` (B-3) — **las tres entregadas y en `components/ui/`**. B-9 queda **desbloqueado**. Reutiliza `GeneratorBlock` y el `SectionPanel`/`upd`/`updArr` del editor sin tocarlos. Coherencia verificada contra la impl de B: `provenance`/`count` son opcionales (superset seguro) y el chasis lo da el propio `GeneratorBlock` — el spec ya no lo re-envuelve.
+
+## B-10 · CareerAIPanel — entrada única de generación del Career Site (P3, variante `surface-entry` de B-5b)
+
+**Qué es:** la **entrada primaria** de generación con IA del editor del Career Site. **Una** superficie visible arriba del Editor que, desde un **intake único editable**, genera **todo el site de una vez** (todos los bloques 🟢) y luego **se recede a una barra fina**. Sustituye como vía de entrada al generador por-secciones (B-9, hoy secundario). Clasificación (§4.2): `invocada · página · generación · efímera`. Shippeado inline en `career-ai-panel.tsx` (14 jul); esto lo formaliza.
+
+**Por qué es variante de B-5b y no componente nuevo (D resuelta: _variante_).** Comparte la doctrina de la familia de agente: piel de tinta (`agent-bg`), acento lima, `AgentBadge onDark` (IA/Heurística), y el **estado colapsado ES la barra fina de B-5b** (§4.6: se recede, no se cierra). Lo único que añade es un **preludio de estados** antes del contenido, porque es una entrada de pantalla y no un panel invocado por-bloque. Canonizar aparte duplicaría el chasis oscuro y el badge.
+
+**Máquina de 4 estados** (una sola superficie, nunca dos a la vez):
+| estado | qué muestra | piel |
+|---|---|---|
+| `entry` | CTA "Genera tu career site con IA" + subcopy + "Empezar con IA" | tinta, fila compacta con tile lima |
+| `setup` | el **intake** (import + campos) + "Generar career site" | tinta, panel completo |
+| `generating` | spinner lima + "Generando tu career site…" | tinta, fila |
+| `done` | **barra fina** "Career site generado" + `AgentBadge` + "Rehacer con otros datos ↻" | = barra colapsada B-5b |
+
+Estado inicial: `done` si el site ya tiene contenido (`hasContent`), si no `entry`. Tras generar → `done` (se recede). "Rehacer" y "Empezar" reabren `setup`. **Guarda:** si ya hay contenido, nunca se muestra `entry` a pantalla completa — respeta §4.1 (no re-mostrar lo que la pantalla ya tiene).
+
+**El intake = un objeto de contexto editable (§2.1 del brief, Opción B).** No es "elige web _o_ preguntas": es **un** objeto (`Intake`: about, values[], benefits[], metrics[], tone) que el usuario rellena **y** que "Importar de tu web" **puebla** sin pisar lo ya escrito. Anatomía del `setup`, de arriba abajo:
+1. **Importar de tu web** — input URL + botón "Importar" → `POST /api/agents/company-parser`. Al volver, puebla los campos 🟢 vacíos (`about`/`values`/`benefits`/`metrics`) y manda las 🟡 (redes) directas al borrador (`onApply({ socialLinks })`). Estados `idle → loading ("Leyendo…") → done ("Importado ✓")`; error en `warning`.
+2. **Campos del intake:** "¿A qué os dedicáis?" (textarea), Valores + Beneficios (`ChipList`, dos columnas), **Métricas** (pares valor/label, con recordatorio "cifras reales, no las inventamos" — la arista 🟢-pero-no-fabricable de §3.6).
+3. **Tono** → **`ToneSelector` (§2.12), piel `onDark`**. Etiquetado "· componente compartido con ofertas" en la propia UI.
+4. **Generar** → `POST /api/agents/career-writer` `{ intake }` → `onApply(proposal)` (escribe el borrador) + `onGenerated(intake)` (el editor lo guarda para los regenerar-bloque de B-9). Procedencia del resultado: `ia` o `heurística` según `status` — **nunca oculta** (§4.4).
+
+**§4.1 anti-redundancia.** El intake **pide contexto**, no relata lo que el preview ya muestra. El preview (420px, siempre visible) es el bucle de revisión — **no hay chat**. Tras `done`, la barra fina remite al preview ("Revísalo en el preview y edita cualquier bloque"), no re-lista lo generado.
+
+**§4.6 ciclo de vida.** `done` = la barra fina de B-5b (se recede, persiste, no se cierra). Reabrir `setup` desde "Rehacer" **re-invoca** (expandir ≠ re-invocar sigue valiendo: aquí el usuario pide explícitamente rehacer). Una sola superficie de agente en el editor a la vez: cuando `CareerAIPanel` está en `setup`/`generating`, ningún regenerar-bloque (B-9) está abierto.
+
+**Contrato de datos.** Opera sobre `draft_content` vía `onApply` — **nunca publica**. La generación es whole-site (bloques 🟢); las 🟡 se pueblan solo por extracción; las 🔴 (imágenes, equipo, testimonios, cifras) **nunca se fabrican** — el mapa de §3.6 gobierna qué toca la IA.
+
+```tsx
+// Variante surface-entry de la familia AgentPanelShell (B-5b). El estado `done`
+// reutiliza la barra fina colapsada. Intake = objeto de contexto único (§2.1 brief).
+type Phase = "entry" | "setup" | "generating" | "done";
+export type Intake = { about: string; values: string[]; benefits: string[];
+  metrics: { value: string; label: string }[]; tone: Tone };
+
+export function CareerAIPanel({ onApply, onGenerated, hasContent }: {
+  onApply: (p: CareerAIProposal) => void; onGenerated?: (i: Intake) => void; hasContent: boolean;
+}) {
+  const [phase, setPhase] = useState<Phase>(hasContent ? "done" : "entry");
+  const [intake, setIntake] = useState<Intake>(EMPTY);
+  // entry → CTA · setup → intake+import+ToneSelector · generating → spinner · done → barra fina B-5b
+  // generate(): POST /api/agents/career-writer {intake} → onApply(proposal) + onGenerated(intake)
+  // importSource(): POST /api/agents/company-parser {url} → puebla 🟢 sin pisar, 🟡 → onApply
+  …
+}
+```
+> **Deuda a formalizar (honesta, de la nota de pista A):** el shipped redefine la escala oscura en un `const T` local (`career-ai-panel.tsx:14`) en vez de importar `agent-*` (patrón A-7); el `ToneSelector` y los badges IA/Heurística están inline (migran a §2.12 y B-1). Al canonizar la variante en `AgentPanelShell`, el `done` debe **ser** el `CollapsedAgentBar`, no una barra paralela. Ninguna de estas es bloqueante — funciona en prod; es limpieza de tokens. **Cuando se apruebe, pista A promueve y sustituye los inline.**
 
 ---
 
