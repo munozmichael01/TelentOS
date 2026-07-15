@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireUser, jsonError } from "@/lib/api";
+import { getCompanyId } from "@/lib/workspace";
 
 export async function GET(req: Request) {
   const { supabase, error } = await requireUser();
   if (error) return error;
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
   const url = new URL(req.url);
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
   const { supabase, error } = await requireUser();
   if (error) return error;
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
   const body = await req.json().catch(() => null);

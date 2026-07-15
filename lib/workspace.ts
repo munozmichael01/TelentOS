@@ -6,7 +6,8 @@ import type { Company } from "@/lib/types";
  * Un usuario sin membresía → `null` (nunca cae en otra empresa: aislamiento
  * multi-tenant). El gate del layout redirige a `/onboarding` cuando es null.
  */
-export async function getCompany(): Promise<Company | null> {
+/** ID de la empresa del usuario, desde su membresía. `null` si no tiene (multi-tenant). */
+export async function getCompanyId(): Promise<string | null> {
   const supabase = createClient();
   const {
     data: { user },
@@ -20,8 +21,13 @@ export async function getCompany(): Promise<Company | null> {
     .select("company_id")
     .eq("user_id", user.id)
     .maybeSingle();
-  if (!member?.company_id) return null;
+  return (member?.company_id as string) ?? null;
+}
 
-  const { data } = await admin.from("companies").select("*").eq("id", member.company_id).maybeSingle();
+export async function getCompany(): Promise<Company | null> {
+  const companyId = await getCompanyId();
+  if (!companyId) return null;
+  const admin = createAdminClient();
+  const { data } = await admin.from("companies").select("*").eq("id", companyId).maybeSingle();
   return (data as Company) ?? null;
 }

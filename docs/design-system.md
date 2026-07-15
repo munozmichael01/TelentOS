@@ -386,7 +386,9 @@ export function EmptyState({
 //   description="Llegan desde el career site y los canales activos."
 //   action={<Button asChild><Link href="/career-site">Configurar career site</Link></Button>} />
 ```
-> Sustituye el `empty-state.tsx` shadcn actual y absorbe los inline de `absence-panel.tsx:569`, `pay-profile.tsx:403`, `interview-panel.tsx:302`, `channels-view.tsx:348`, `compensation-panel.tsx:472` (Anexo A-6). El icono es **prop** (cada vacío el suyo, del set `ui/icons`). Un solo CTA como máximo: el que desbloquea el estado. Ver §3.3.
+> Sustituye el `empty-state.tsx` shadcn actual y absorbe los inline de `absence-panel.tsx:569`, `pay-profile.tsx:403`, `channels-view.tsx:348`, `compensation-panel.tsx:472` (Anexo A-6). El icono es **prop** (cada vacío el suyo, del set `ui/icons`). Un solo CTA como máximo: el que desbloquea el estado. Ver §3.3.
+
+**Decisión — `interview-panel.tsx:302` sale del patrón (no es un vacío).** Pista B lo dejó fuera del `EmptyState` y **hace bien**: es una **confirmación de éxito** («Entrevista enviada», tile lima + CTA con sombra dura), semánticamente **opuesta** a un vacío. El `EmptyState` significa **ausencia** — contenedor `dashed`, tile `brand-soft`, **sin sombra dura** (el vacío no es accionable). Una confirmación significa **algo acaba de pasar** — superficie sólida, tile lima de éxito, CTA con sombra dura que **sí** es la acción principal («Ver entrevistas»). Meterle un `tone="success"` al `EmptyState` sobrecargaría un componente con dos sentidos contrarios y rompería su invariante «vacío = sin sombra». **Queda como micro-patrón hermano `ResultState`** (confirmación efímera tras una acción): tile 54px `r-lg` sobre lima de éxito (`#EAF7C4` / stroke `#46540F`), título `card-title` grande, cuerpo `body` soft, **un** CTA (botón sólido con sombra dura del sistema) que devuelve al listado. Se retira de la lista A-6. No lo consolido como blueprint hasta que aparezca un 2º caso real (hoy solo `interview-panel`); mientras, queda **documentado como fuera de `EmptyState` a propósito**, no como deuda.
 
 ## 2.9 AgentPanel — _consolidado_ (voz narrativa del agente)
 
@@ -630,6 +632,23 @@ Los 5 fit-gaps del addendum están todos, fieles: `disabled` separado de `busy` 
 
 **Cierre del gate:** las 4 quedan **aprobadas para uso**. Lo único pendiente de la familia es migrar `candidate-analyzer-panel.tsx` para que **consuma** `FitBreakdown` (hoy sigue con las barras viejas — §6.3), y envolver P3/P5/P6 en `AgentPanelShell` (B-5b) para el ciclo de vida §4.6.
 
+## 7.5 Gate de la segunda tanda de pista B — ❌ no pasa (no entregada)
+
+Se pidió gate de los tres pendientes de la lista de cierre (§7.4): **B-7b/B-7c** (Range/Multi), **B-5b `AgentPanelShell`** y la **reescritura de `EmptyState`** (§2.8/A-6). Un gate valida contra el árbol de trabajo, no contra el reporte. **En el árbol actual no está ninguno de los tres** — no hay nada aprobable todavía:
+
+1. **B-7b/B-7c — ausentes.** `components/ui/field-proposal.tsx` contiene **solo** el `FieldProposal` escalar base (50 líneas, sin cambios desde el gate anterior). No existen `FieldProposalRange` ni `FieldProposalMulti` en el árbol (grep vacío fuera de la doc). El rail de ofertas sigue sin banda salarial ni requisitos.
+2. **B-5b `AgentPanelShell` / `CollapsedAgentBar` — ausente.** No hay archivo fuente en `components/ui/` ni en ningún sitio (grep solo golpea la doc). El ciclo de vida §4.6 sigue sin chasis; P3/P5/P6 no están envueltos.
+3. **`EmptyState` — sin reescribir.** `components/empty-state.tsx` sigue siendo el shadcn genérico de 18 líneas (`rounded-xl border-dashed text-muted-foreground`, sin tile de icono, sin `brand-soft`, **sin prop `icon`**) — idéntico al que A-6 marcó. Lo consumen 7 páginas + el `EmptyState` local duplicado de `absence-panel.tsx:561` sigue vivo. El blueprint de §2.8 no está adoptado.
+
+**Veredicto:** no es un rechazo de calidad — es que **no hay entrega que revisar**. Criterios de aceptación para el reintento:
+- B-7b: `FieldProposalRange` con un solo `differs`/«usar sugerencia» gobernando ambos extremos, validación `max ≥ min` (`aria-invalid`, §2.7), `rationale` para el percentil. B-7c: `FieldProposalMulti` con chip `brand-soft` (§2.6), alta por Enter/blur, sin duplicados.
+- B-5b: `AgentPanelShell` fiel al código de §B-5b (toggle único «Ver menos/Ver más», `count` solo colapsado, contenido persistente, expandir ≠ re-invocar). Al menos **un** consumidor real envuelto (el generador o el copilot) para probar el contrato.
+- `EmptyState`: reescrito al blueprint de §2.8 (contenedor dashed `line` `r-lg`, tile `r-lg` 48px `brand-soft` con icono de línea, título/cuerpo/CTA), prop `icon` obligatoria, y **las 7 llamadas migradas** pasándole su icono; retirar el duplicado de `absence-panel.tsx`.
+
+> **Bloqueo aguas abajo:** B-5b es dependencia dura de la superficie de Ola 3 (B-9, abajo). Priorizar su entrega desbloquea el Career Site por secciones.
+>
+> **Actualización (13 jul):** B ya entregó **B-5b** — `components/ui/agent-panel-shell.tsx`, verificado y consumido por 3 features (`generator-block`, `pay-run-detail`, `candidate-analyzer-panel`); `provenance`/`count` opcionales (desviación documentada en el propio archivo). **B-9 desbloqueado** (spec reconciliado, abajo). Siguen **pendientes** de este gate: **B-7b/B-7c** y la reescritura de **`EmptyState`** — re-verificar cuando B avise.
+
 ---
 
 # Anexo A · Inventario de inconsistencias (backlog de migración)
@@ -699,6 +718,7 @@ Listos para que A/B los implementen literal. Código de referencia en TSX (stack
 | B-6 | GeneratorBlock | P3 · Generador | nuevo |
 | B-7 | FieldProposal | P4 · Propuesta granular | nuevo |
 | B-8 | ModuleAssistantEntry | entrada de módulo → drawer | nuevo (Ola 2) |
+| B-9 | CareerSectionGenerator | P3 · Career Site por secciones | nuevo (Ola 3) |
 
 ## B-1 · AgentBadge — procedencia
 
@@ -1267,6 +1287,62 @@ export function ModuleAssistantEntry({
 Uso (Canales): `<ModuleAssistantEntry context="Canales" prompt="Pregunta sobre tus canales…" suggestions={["¿Qué canal trae mejor fit este trimestre?","Compara coste por canal","Canales con más abandono"]} onOpen={(seed) => openAssistant({ context: "Canales", seed })} />`.
 
 > Retiro del chat de `channels-view.tsx`: hacerlo **solo cuando el drawer esté estable** (B-4, Ola 2). Los chips de sugerencia son los que hoy ya existen bajo el input del chat embebido (`thread.png`) — se conservan, cambian de destino. El chip de contexto es **descartable** en el drawer (el usuario ve qué sabe el asistente y puede soltarlo). Ningún módulo abre su propio chat: todos entran por aquí al drawer único.
+
+## B-9 · CareerSectionGenerator — B-6 aplicado por secciones (P3, primera pieza Ola 3)
+
+**Qué es:** el generador del editor del Career Site (`career-site-editor.tsx`) — el agente redacta **una sección** de la página pública (Quiénes somos, Cultura y valores, Beneficios) y su salida aterriza como **propuesta de sección con aplicar/descartar**. **No es un patrón nuevo:** es **B-6 (`GeneratorBlock`, P3) aplicado tres veces** con una envoltura de propuesta. Clasificación (§4.2): `invocada · entidad` (la sección es la entidad) `· generación · efímera`.
+
+**Por qué merece spec propio (la desviación de B-6 vanilla — y su justificación).** El B-6 canónico (`job-form.tsx`) rellena campos **vacíos**: el borrador *se convierte* en el valor del campo. El Career Site casi siempre se **edita sobre contenido vivo** (la página ya está publicada). Por eso el borrador **no puede pisar** lo que hay al aterrizar: aterriza como **propuesta** en papel claro, editable, **gated por "Aplicar a la sección"** con "Descartar" de igual peso (§4.6 efímera · invariante + AI Act). Discard restaura el snapshot previo. La regla B-6 "la tinta es el taller, el papel el entregable" se mantiene; lo que cambia es que el papel guarda su estado anterior hasta la confirmación explícita.
+
+**Invariante de una-superficie-por-pantalla — resuelta por el acordeón.** El editor abre **una sola sección a la vez** (`open={openSection === id}`). El generador vive **al principio del cuerpo de la sección abierta**; como solo una sección está expandida, **solo un generador es visible** → §4 ("máximo una superficie de agente por pantalla") se cumple estructuralmente. **Regla dura:** nunca renderizar generadores en secciones cerradas, ni permitir dos propuestas pendientes simultáneas.
+
+**Anatomía (dentro de la sección abierta):**
+1. `GeneratorBlock` (B-6) — **ya trae el `AgentPanelShell` (B-5b) dentro** en la versión entregada, con paso de `title`/`provenance`/`count`. **No lo envuelvas otra vez** (sería doble chasis/doble título). El ciclo §4.6 (colapsa a barra fina, no cierra) sale gratis; `count` colapsado = estado de la propuesta: `"propuesta lista"` / `"aplicado"`. `provenance`/`count` son opcionales (P3 no tiene ninguno **antes** de generar → se pasan solo cuando hay borrador).
+2. Dentro del `GeneratorBlock` (tinta): **controles de intención** (chips + textarea corta) como `children`; el sparkle + título + `AgentBadge` + disparador `AgentActionButton` (`variant="brand"`) los pone el propio bloque.
+3. Al responder → **`ProposalFrame` (B-3)** que envuelve los **campos claros de esa sección**, poblados con el borrador y **editables**. Confirmar global = "Aplicar a la sección"; "Descartar" = igual peso. Antes de aplicar, snapshot de los valores actuales; aplicar escribe en las claves de `CareerSiteContent` vía `upd`/`updArr`; descartar restaura el snapshot.
+
+**Los tres configs de sección:**
+- **Sobre nosotros** (`aboutTitle`, `aboutDescription`) — intención: tono (Cercano · Formal · Ambicioso) + textarea "qué destacar" + chip opcional "partir de lo actual". Salida: título + 1 párrafo.
+- **Cultura y valores** (`cultureTitle`, `cultureDescription`, `cultureValues: CSCultureValue[]`) — intención: nº de valores (3/4/5) + de qué partir (misión / notas). Salida: título + descripción + set de valores. El array se propone como set; edición fina posterior con los `ArrayItemCard` del editor (o `FieldProposalMulti` sobre los nombres una vez exista B-7c). El `icon` es **emoji** porque el sitio público lo renderiza así (`CSCultureValue.icon`) — es **dato de usuario**, no iconografía de producto; la regla "nunca emoji" (§2.8) rige el chrome de TalentOS, no el contenido del career site del cliente.
+- **Beneficios** (`benefitsTitle`, `benefits: CSBenefit[]`) — intención: categorías a cubrir (chips: Salud · Flexibilidad · Desarrollo · Compensación). Salida: título + set de `CSBenefit`.
+
+**§4.1 anti-redundancia.** La tinta del generador **no re-muestra** el contenido actual de la sección. "Partir de lo actual" es un **input** (chip activado que se manda al modelo), nunca un bloque espejo en tinta — el papel de abajo ya muestra lo que hay. El agente añade borrador nuevo; no relata lo que la pantalla ya enseña.
+
+**§4.6 ciclo de vida.** Propuesta pendiente **persiste** al colapsar el shell o la sección mientras el usuario siga en el editor; no se recomputa al re-expandir. **Re-invocar** ("Regenerar") relanza el modelo y **reemplaza** el borrador (expandir ≠ re-invocar). Salir del editor sin aplicar → se descarta (§4.6.5). Una sola propuesta pendiente a la vez (garantizado por el acordeón).
+
+**Contrato de datos.** Opera sobre `draft_content` a través de `upd`/`updArr` existentes — **nunca publica** (publicar es acción aparte, ya existe). Procedencia `ia` (hubo LLM) o `heurística` si el endpoint cae a fallback — nunca oculta (§4.4). Endpoint sugerido: `POST /api/career-site/generate` `{ section, intent }` → borrador tipado por sección (paralelo al ya existente `/translate`).
+
+```tsx
+// Composición fina, NO primitivo nuevo. Un config por sección.
+// GeneratorBlock YA incluye AgentPanelShell (B-5b) — no re-envolver.
+export function CareerSectionGenerator({ cfg, prov, busy, draft, onGenerate, onApply, onDiscard, onEdit }: …) {
+  return (
+    <>
+      <GeneratorBlock
+        title={cfg.title}
+        provenance={draft ? prov : undefined}
+        count={draft ? (draft.applied ? "aplicado" : "propuesta lista") : undefined}
+        busy={busy}
+        hint={cfg.hint}
+        idleLabel={draft ? "Regenerar" : "Redactar con IA"}
+        onGenerate={onGenerate}
+      >
+        {cfg.intent /* chips de tono/nº + textarea de intención */}
+      </GeneratorBlock>
+      {draft && !draft.applied && (
+        <ProposalFrame provenance={prov} onConfirm={onApply} onDiscard={onDiscard}
+          confirmLabel="Aplicar a la sección">
+          {cfg.fields(draft, onEdit) /* los campos claros de la sección, poblados y editables */}
+        </ProposalFrame>
+      )}
+    </>
+  );
+}
+```
+
+**Guardas (qué NO hace):** no auto-aplica (el borrador nunca toca `draft_content` sin "Aplicar"); no abre generador en más de una sección a la vez; no republica; no re-lista el contenido actual en tinta.
+
+> **Dependencias:** `GeneratorBlock` (B-6, que ya incorpora `AgentPanelShell` B-5b) y `ProposalFrame` (B-3) — **las tres entregadas y en `components/ui/`**. B-9 queda **desbloqueado**. Reutiliza `GeneratorBlock` y el `SectionPanel`/`upd`/`updArr` del editor sin tocarlos. Coherencia verificada contra la impl de B: `provenance`/`count` son opcionales (superset seguro) y el chasis lo da el propio `GeneratorBlock` — el spec ya no lo re-envuelve.
 
 ---
 

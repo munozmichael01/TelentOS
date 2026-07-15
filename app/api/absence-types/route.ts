@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireUser, jsonError } from "@/lib/api";
+import { getCompanyId } from "@/lib/workspace";
 
 export async function GET() {
   const { supabase, error } = await requireUser();
   if (error) return error;
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Empresa no configurada", 412);
 
   const { data, error: dbError } = await supabase
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   if (!body?.name?.trim()) return jsonError("El campo 'name' es obligatorio");
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Empresa no configurada", 412);
 
   const { data, error: dbError } = await supabase

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser, jsonError } from "@/lib/api";
+import { getCompanyId } from "@/lib/workspace";
 
 /**
  * Continuidad ATS → HRIS: promueve al candidato a empleado sin reintroducir
@@ -27,7 +28,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     .maybeSingle();
   if (existing) return NextResponse.json({ employee_id: existing.id, already: true });
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
   const candidate = app.candidates as unknown as { id: string; name: string; email: string };

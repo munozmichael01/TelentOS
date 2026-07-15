@@ -6,6 +6,7 @@ import {
   type NormalizedJob,
 } from "@/lib/import";
 import { DEFAULT_STAGES } from "@/lib/types";
+import { getCompanyId } from "@/lib/workspace";
 
 function isPrivateAddress(addr: string): boolean {
   if (addr === "localhost" || addr === "127.0.0.1" || addr === "::1") return true;
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
       const rows: NormalizedJob[] = body.rows ?? [];
       if (!rows.length) return jsonError("Nada que importar");
 
-      const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+      const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
       if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
       let inserted = 0;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser, jsonError } from "@/lib/api";
 import { slugify } from "@/lib/utils";
 import { seedHrisDefaults } from "@/lib/hris-seed";
+import { getCompany, getCompanyId } from "@/lib/workspace";
 
 /** Crea o actualiza el workspace (empresa única). */
 export async function POST(req: Request) {
@@ -22,7 +23,8 @@ export async function POST(req: Request) {
     rif: body.rif ?? null,
   };
 
-  const { data: existing } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId();
+  const existing = _cid ? { id: _cid } : null;
 
   const { data, error: dbError } = existing
     ? await supabase.from("companies").update(values).eq("id", existing.id).select().single()
@@ -41,7 +43,7 @@ export async function GET() {
   const { supabase, error } = await requireUser();
   if (error) return error;
 
-  const { data: company } = await supabase.from("companies").select("*").limit(1).maybeSingle();
+  const company = await getCompany();
   if (!company) return NextResponse.json({ company: null });
 
   // Retroactive seed for companies created before HRIS was added

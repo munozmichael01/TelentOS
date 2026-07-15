@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireApiRole, jsonError } from "@/lib/api";
+import { getCompanyId } from "@/lib/workspace";
 
 export async function POST(req: Request) {
   const { supabase, error } = await requireApiRole(["owner", "hr_admin"]);
@@ -8,7 +9,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   if (!body?.name?.trim()) return jsonError("El nombre es obligatorio");
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
   const { data: employee, error: dbError } = await supabase

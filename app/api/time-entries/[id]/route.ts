@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireUser, jsonError } from "@/lib/api";
+import { getCompanyId } from "@/lib/workspace";
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const { supabase, error } = await requireUser();
   if (error) return error;
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
   const { data, error: dbError } = await supabase
@@ -24,7 +25,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   const { supabase, error } = await requireUser();
   if (error) return error;
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
   const { data: existing } = await supabase
@@ -71,7 +72,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   const { supabase, error } = await requireUser();
   if (error) return error;
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
   const { data: existing } = await supabase

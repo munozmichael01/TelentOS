@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser, jsonError } from "@/lib/api";
+import { getCompanyId } from "@/lib/workspace";
 
 export async function PUT(
   req: Request,
@@ -11,7 +12,7 @@ export async function PUT(
   const body = await req.json().catch(() => null);
   if (!body || Object.keys(body).length === 0) return jsonError("No hay campos para actualizar");
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Empresa no configurada", 412);
 
   if (body.date && !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
@@ -49,7 +50,7 @@ export async function DELETE(
   const { supabase, error } = await requireUser();
   if (error) return error;
 
-  const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
+  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
   if (!company) return jsonError("Empresa no configurada", 412);
 
   // Verify ownership before deleting
