@@ -26,7 +26,7 @@ const { companyId, error } = await requireApiRole(["owner", "hr_admin"]);
 const { data: company } = await supabase.from("companies").select("id").limit(1).maybeSingle();
 ```
 
-`requireApiRole` (en `lib/api.ts`) busca `company_members` por `user_id`, no por LIMIT 1. Hay ~57 ocurrencias de `.limit(1)` en companies repartidas por el código — esto es deuda técnica conocida. Al tocar un handler, corrígelo.
+`requireApiRole` (en `lib/api.ts`) busca `company_members` por `user_id`, no por LIMIT 1. Para rutas que solo necesitan la empresa (sin gating de rol nuevo), usa **`getCompanyId()`** de `@/lib/workspace` (resuelve por membresía). El barrido de `.limit(1)` en companies está **resuelto** (2026-07-14) — no reintroducir el patrón.
 
 ### Pages (server components) — usa `getCompany()` o el cliente RLS
 
@@ -176,7 +176,7 @@ Tipografía: Archivo 900 (headings/eyebrow) · Space Mono (labels/números/monos
 
 **Registro completo y vivo en [`docs/deuda-tecnica.md`](docs/deuda-tecnica.md)** — todo hallazgo que se decida no arreglar en el momento se anota ahí en el mismo commit que lo descubre (con severidad y puerta PR/ER). Al resolver un ítem, moverlo a "Resuelto" con el commit. Lo de abajo es solo el resumen de los patrones que no hay que propagar:
 
-1. **`LIMIT 1` en companies** (~57 ocurrencias): muchas pages y API routes hacen `supabase.from("companies").select().limit(1)` en vez de resolverlo desde el membership. Corrígelo cuando toques el archivo; no propagarlo a código nuevo.
+1. **`LIMIT 1` en companies** — ✅ **RESUELTO (2026-07-14)**: barrido de las 40 ocurrencias en 23 rutas API → `getCompanyId()` (resuelve por membresía). Pages ya usaban `getCompany()` (también corregido a membresía). **Regla para código nuevo:** nunca `companies.limit(1)`; usa `requireApiRole().companyId` (rutas con rol), `getCompanyId()` (rutas sin rol) o `getCompany()` (pages).
 2. **`company_members` asume un membership por usuario**: el código asume que un usuario pertenece a una sola empresa (`.maybeSingle()`). La dirección es multi-tenant real; en código nuevo, siempre filtra por `company_id` explícito.
 3. **Tipos Supabase desactualizados**: después de las migraciones 0017–0019, los tipos auto-generados de Supabase no están regenerados. Usa `as unknown as Record<string, unknown>` para campos nuevos hasta regenerar con `supabase gen types`.
 
