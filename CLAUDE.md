@@ -43,6 +43,10 @@ const company = await getCompany(); // RLS-scoped por sesión del usuario
 | `createAdminClient()` | Servidor: queries que necesitan bypasear RLS post-auth (leer roles, usuarios admin) |
 | `createClient()` de `@/lib/supabase/client` | Client components |
 
+### Aislamiento multi-tenant en RLS (migr. 0031–0032)
+
+La RLS **impone el aislamiento por empresa a nivel de base de datos**: cada tabla con datos de empresa se scopea por la ruta FK a `companies` vía el helper `auth_company_ids()` (las empresas del usuario según `company_members`). Las tablas sensibles (nómina, compensación, compliance) exigen además rol owner/hr_admin. La referencia global sin `company_id` (channels, evaluation_templates, skills) es de solo lectura para autenticados; los accesos anónimos del career site (ofertas activas, aplicar) se preservan. **No añadas políticas `using(true)` para `authenticated`** ni tablas sin RLS: rompe el aislamiento. Toda tabla nueva con datos de empresa necesita su política de scope en una migración.
+
 ### RBAC — roles
 
 `owner · hr_admin · recruiter · manager · employee`

@@ -11,7 +11,6 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 | ID | Qué | Dónde | Puerta | Notas |
 |---|---|---|---|---|
 | AUD-H6b | `notifyError` usa `window.alert` — falta sistema de toasts real | `lib/api-client.ts:35` | PR | El punto único ya existe; es cambiar la implementación |
-| AUD-limit1 | `.limit(1)` sobre `companies` en vez de membership (~40 archivos) | `app/**`, `lib/**` (patrón correcto: `lib/api.ts`) | PR | Correctitud multi-tenant; ver CLAUDE.md "Deuda técnica" |
 | AUD-H5 | Design system inline: ~2.100 `style={{}}`, hex hardcodeados, componentes DS sin tokens | toda la UI; peores: `employees/[id]`, `pay-run-detail`, `team-panel` | ER | Fase 3 del plan de auditoría; pantallas payroll desbloqueadas desde paso 6 |
 | AUD-M6 | Accesibilidad: 0 `aria-*`, 0 `htmlFor`, hit targets <40px | toda la UI | ER | Se resuelve en gran parte con AUD-H5 (EN 301 549 si se vende en Europa) |
 | AUD-M7b | `select("*")` fuera de rutas payroll (~40 restantes) | `app/**`, `agents/**` | ER | Las rutas de nómina/empleados ya se corrigieron en pasos 4-5 |
@@ -43,3 +42,5 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 | AUD-H6b | `notifyError` → sistema de toasts real (bus + `<Toaster/>`), fin del `window.alert` | `8d6b117` |
 | P6-b | Inserts de payslips/exports sin comprobar error → 500 + payslips antes del flip a approved | `493ef69` (pista B) |
 | DS-emojis | Barrido de emojis genéricos del chrome → iconos SVG del DS + regla en CLAUDE.md | `653f6cd`, `159de2` (pista B), `77bc08e` |
+| AUD-limit1 | Barrido de `.limit(1)` en `companies` → `getCompanyId()`/`getCompany()` por membresía (40 usos, 23 rutas) | 2026-07-14 |
+| MT-rls | **Fuga multi-tenant en RLS**: `distribution_plans` sin RLS + ~27 tablas con `authenticated_all → using(true)` + tablas por-rol sin scope de empresa. Un owner veía datos de otra empresa. → migr. `0031` (helper `auth_company_ids()` + scope por empresa vía ruta FK en ~50 tablas; nómina/compensación/compliance además exigen owner/hr_admin; accesos anónimos del career site preservados) + `0032` (lock de helpers SECURITY DEFINER). Verificado E2E: empresa nueva ve 0, empresa existente intacta. Linter de seguridad: 0 errores. | `0031`, `0032` |
