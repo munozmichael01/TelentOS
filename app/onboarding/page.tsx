@@ -12,5 +12,5 @@ export default async function OnboardingPage() {
   if (!user) redirect("/login");
   const company = await getCompany();
   if (company) redirect("/dashboard"); // ya tiene workspace
-  return <OnboardingForm />;
+  return <OnboardingForm email={user.email ?? ""} />;
 }

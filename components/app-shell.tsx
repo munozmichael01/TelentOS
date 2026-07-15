@@ -214,9 +214,9 @@ function buildNav(role: Role | null) {
   });
 }
 
-function initials(email: string) {
-  const parts = email.split("@")[0].split(/[._-]/);
-  return parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("") || email[0]?.toUpperCase() || "?";
+function initials(nameOrEmail: string) {
+  const parts = nameOrEmail.split("@")[0].split(/[._\-\s]+/).filter(Boolean);
+  return parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("") || nameOrEmail[0]?.toUpperCase() || "?";
 }
 
 export function AppShell({
@@ -229,6 +229,7 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -244,6 +245,8 @@ export function AppShell({
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
       setUserEmail(data.user?.email ?? "");
+      const meta = data.user?.user_metadata ?? {};
+      setUserName((meta.full_name as string) || (meta.name as string) || "");
     });
   }, []);
 
@@ -415,10 +418,10 @@ export function AppShell({
             {/* user footer */}
             <div className="sb-footer" style={{ padding: "12px", borderTop: "1px solid #E7E1D4", display: "flex", alignItems: "center", gap: "10px" }}>
               <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", color: "#063D31", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "12px", flexShrink: 0 }}>
-                {initials(userEmail)}
+                {initials(userName || userEmail)}
               </div>
               <div className="nav-label" style={{ minWidth: 0 }}>
-                <div style={{ fontSize: "13px", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail || "…"}</div>
+                <div style={{ fontSize: "13px", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userName || userEmail || "…"}</div>
                 <button
                   onClick={signOut}
                   style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "#79746B", background: "none", border: "none", padding: 0, cursor: "pointer" }}
@@ -458,7 +461,7 @@ export function AppShell({
                   <IconHelp />
                 </button>
                 <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "12px", color: "#063D31", marginLeft: "4px" }}>
-                  {initials(userEmail)}
+                  {initials(userName || userEmail)}
                 </div>
               </div>
             </div>

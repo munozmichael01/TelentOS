@@ -15,9 +15,20 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim().slice(0, 80) : "";
+  const firstName = typeof body?.firstName === "string" ? body.firstName.trim().slice(0, 60) : "";
+  const lastName = typeof body?.lastName === "string" ? body.lastName.trim().slice(0, 60) : "";
   if (!name) return jsonError("Falta el nombre de la empresa");
 
   const admin = createAdminClient();
+
+  // Nombre del perfil → metadata del auth user (para el saludo). NO crea empleado:
+  // en TalentOS user ≠ employee; la ficha del HRIS es opcional y aparte.
+  if (firstName || lastName) {
+    const fullName = [firstName, lastName].filter(Boolean).join(" ");
+    await admin.auth.admin.updateUserById(user.id, {
+      user_metadata: { first_name: firstName, last_name: lastName, full_name: fullName },
+    });
+  }
 
   // Idempotente: si ya es miembro de una empresa, no se crea otra.
   const { data: existing } = await admin
