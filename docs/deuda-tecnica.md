@@ -12,7 +12,7 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 |---|---|---|---|---|
 | AUD-H5 | Design system inline: ~2.100 `style={{}}`, hex hardcodeados, componentes DS sin tokens | toda la UI; peores: `employees/[id]`, `pay-run-detail`, `team-panel` | ER | Fase 3 del plan de auditoría; pantallas payroll desbloqueadas desde paso 6 |
 | AUD-M6 | Accesibilidad: 0 `aria-*`, 0 `htmlFor`, hit targets <40px | toda la UI | ER | Se resuelve en gran parte con AUD-H5 (EN 301 549 si se vende en Europa) |
-| AUD-M7b | `select("*")` fuera de rutas payroll (~40 restantes) | `app/**`, `agents/**` | ER | Las rutas de nómina/empleados ya se corrigieron en pasos 4-5 |
+| AUD-M7b | `select("*")` fuera de rutas payroll (~40 restantes) | `app/**`, `agents/**` | ER | **Dueño: pista A. Cuándo: pase ER** (con AUD-H5/M6 o sweep dedicado), no en hardening rápido — barrido mecánico de ~40 sitios con riesgo de regresión. Nómina/empleados ya corregidos |
 | AUD-L3 | Naming mixto ES/EN en rutas (`/horas` vs `/timeoff`) | `app/(dashboard)/**` | V1-OK | Decisión de producto pendiente |
 | RL-redis | Rate-limit: **código listo** (env-gated Upstash + fallback en memoria) | `lib/rate-limit.ts` | PR | Falta **añadir Vercel KV / Upstash** en prod (env `UPSTASH_REDIS_REST_URL/_TOKEN`, paso de Michael) para activarlo; hasta entonces sigue in-memory |
 | IA-coste | Sin `max_tokens` por agente, modelo no configurable, sin presupuesto por empresa | `agents/core.ts`, `agent_runs` | PR | Backlog pista A #4; migración 0025 ya aplicada |

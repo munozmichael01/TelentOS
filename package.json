@@ -11,7 +11,11 @@
     "test": "vitest run",
     "eval:cv": "node scripts/eval-cv-parser.mjs",
     "eval:assistant": "node scripts/eval-assistant.mjs",
-    "eval:payroll": "node scripts/eval-payroll-copilot.mjs"
+    "eval:payroll": "node scripts/eval-payroll-copilot.mjs",
+    "eval:candidate": "node scripts/eval-candidate-analyzer.mjs",
+    "eval:jobwriter": "node scripts/eval-job-writer.mjs",
+    "eval:channel": "node scripts/eval-channel-optimizer.mjs",
+    "eval:onboarding": "node scripts/eval-onboarding-builder.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.1",
