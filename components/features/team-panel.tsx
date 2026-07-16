@@ -11,7 +11,7 @@ import {
   unlinkEmployee,
   cancelInvite,
   resendInvite,
-} from "@/app/(dashboard)/settings/team/actions";
+} from "@/app/[locale]/(dashboard)/settings/team/actions";
 
 /* ── Types ── */
 export type MemberRow = {
