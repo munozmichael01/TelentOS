@@ -10,7 +10,6 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 
 | ID | Qué | Dónde | Puerta | Notas |
 |---|---|---|---|---|
-| AUD-H6b | `notifyError` usa `window.alert` — falta sistema de toasts real | `lib/api-client.ts:35` | PR | El punto único ya existe; es cambiar la implementación |
 | AUD-H5 | Design system inline: ~2.100 `style={{}}`, hex hardcodeados, componentes DS sin tokens | toda la UI; peores: `employees/[id]`, `pay-run-detail`, `team-panel` | ER | Fase 3 del plan de auditoría; pantallas payroll desbloqueadas desde paso 6 |
 | AUD-M6 | Accesibilidad: 0 `aria-*`, 0 `htmlFor`, hit targets <40px | toda la UI | ER | Se resuelve en gran parte con AUD-H5 (EN 301 549 si se vende en Europa) |
 | AUD-M7b | `select("*")` fuera de rutas payroll (~40 restantes) | `app/**`, `agents/**` | ER | Las rutas de nómina/empleados ya se corrigieron en pasos 4-5 |
