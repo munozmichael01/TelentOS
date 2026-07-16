@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
 import { AgentActionButton } from "@/components/ui/agent-action-button";
 import { GeneratorBlock } from "@/components/ui/generator-block";
+import { ToneSelector, type Tone } from "@/components/ui/tone-selector";
 import { FieldProposal } from "@/components/ui/field-proposal";
 import { FieldProposalRange } from "@/components/ui/field-proposal-range";
 import { FieldProposalMulti } from "@/components/ui/field-proposal-multi";
@@ -55,6 +56,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
       : EMPTY
   );
   const [brief, setBrief] = useState("");
+  const [tone, setTone] = useState<Tone>("cercano");
   const [skillInput, setSkillInput] = useState("");
   const [suggestion, setSuggestion] = useState<JobDraft | null>(null);
   const [drafted, setDrafted] = useState(source === "ai");
@@ -75,7 +77,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
           mode === "draft"
-            ? { brief }
+            ? { brief, tone }
             : {
                 draft: {
                   title: form.title || undefined,
@@ -86,6 +88,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
                   salary_max: form.salary_max ? Number(form.salary_max) : undefined,
                   sector: form.sector || undefined,
                 },
+                tone,
               }
         ),
       });
@@ -211,6 +214,12 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
             onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
           />
         </GeneratorBlock>
+
+        {/* Tono de redacción — ToneSelector compartido (DS §2.12, piel clara sobre papel) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "11px", padding: "0 2px" }}>
+          <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B" }}>Tono</span>
+          <ToneSelector value={tone} onChange={setTone} />
+        </div>
 
         {/* form card */}
         <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "22px" }}>

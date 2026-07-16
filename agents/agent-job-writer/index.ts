@@ -22,6 +22,8 @@ export type JobWriterInput = {
   companyId?: string;
   /** Brief libre ("necesito un SDR junior para Barcelona") o vacío si hay draft */
   brief?: string;
+  /** Tono de redacción (ToneSelector compartido): cercano | profesional | creativo */
+  tone?: string;
   /** Estado actual del formulario para el modo asistencia */
   draft?: Partial<{
     title: string;
@@ -58,10 +60,21 @@ function fallbackDraft(input: JobWriterInput): JobDraft {
   };
 }
 
+const TONE_GUIDANCE: Record<string, string> = {
+  cercano: "cálido y en primera persona plural (nosotros), tuteando al candidato; cercano pero profesional",
+  profesional: "sobrio e institucional, en tercera persona; formal y preciso",
+  creativo: "enérgico y con personalidad, frases cortas; con chispa pero sin clichés",
+};
+
 export async function runJobWriter(input: JobWriterInput): Promise<AgentResult<JobDraft>> {
-  const user = input.brief
+  const toneLine =
+    input.tone && TONE_GUIDANCE[input.tone]
+      ? `\n\nTono de redacción pedido: ${input.tone} — ${TONE_GUIDANCE[input.tone]}.`
+      : "";
+
+  const user = (input.brief
     ? `Brief del recruiter: "${input.brief}"\n\nGenera un borrador completo de la oferta.`
-    : `Estado actual del borrador del recruiter:\n${JSON.stringify(input.draft ?? {}, null, 2)}\n\nCompleta y mejora la oferta manteniendo la intención del usuario. Sugiere salario de mercado y skills.`;
+    : `Estado actual del borrador del recruiter:\n${JSON.stringify(input.draft ?? {}, null, 2)}\n\nCompleta y mejora la oferta manteniendo la intención del usuario. Sugiere salario de mercado y skills.`) + toneLine;
 
   return runAgent<JobDraft>({
     agent: "job-writer",

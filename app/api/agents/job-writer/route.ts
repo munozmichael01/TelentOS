@@ -10,6 +10,6 @@ export async function POST(req: Request) {
   if (!body || (!body.brief && !body.draft)) {
     return jsonError("Se requiere 'brief' o 'draft'");
   }
-  const result = await runJobWriter({ companyId: companyId!, brief: body.brief, draft: body.draft });
+  const result = await runJobWriter({ companyId: companyId!, brief: body.brief, draft: body.draft, tone: body.tone });
   return NextResponse.json(result);
 }

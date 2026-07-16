@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ToneSelector, type Tone } from "@/components/ui/tone-selector";
 
 /**
  * Panel de generación con IA del career site (rework B-9, 2026-07-14).
@@ -14,12 +15,6 @@ const T = {
   ink: "#1A1A17", soft: "#8C877E", lime: "#C6F24E", limeText: "#1A1A17",
   paper: "#F4F0E8", line: "rgba(244,240,232,0.16)", brand: "#0E5C4A",
 };
-
-const TONES = [
-  { id: "cercano", label: "Cercano" },
-  { id: "profesional", label: "Profesional" },
-  { id: "creativo", label: "Creativo" },
-] as const;
 
 export type CareerAIProposal = Record<string, unknown>;
 
@@ -206,14 +201,7 @@ export function CareerAIPanel({ onApply, onGenerated, hasContent }: { onApply: (
 
       <div style={{ marginBottom: "18px" }}>
         <label style={monoLabel}>Tono <span style={{ textTransform: "none", letterSpacing: 0, color: "#6C675F" }}>· componente compartido con ofertas</span></label>
-        <div style={{ display: "flex", gap: "7px" }}>
-          {TONES.map((t) => {
-            const on = intake.tone === t.id;
-            return (
-              <button key={t.id} onClick={() => upd({ tone: t.id })} style={{ fontFamily: "'Space Mono',monospace", fontSize: "11.5px", fontWeight: 700, padding: "7px 13px", borderRadius: "9px", cursor: "pointer", background: on ? T.lime : "transparent", color: on ? "#1A1A17" : "#C9C4BA", border: `1px solid ${on ? T.lime : "rgba(244,240,232,.2)"}` }}>{t.label}</button>
-            );
-          })}
-        </div>
+        <ToneSelector value={intake.tone as Tone} onChange={(tone) => upd({ tone })} onDark />
       </div>
 
       {error && <p style={{ fontSize: "12px", color: "#E0A23C", margin: "0 0 12px" }}>{error}</p>}
