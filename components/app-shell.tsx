@@ -104,18 +104,6 @@ const IconGlobe = () => (
     <path d="M12 3a15 15 0 010 18M3 12h18M3.5 8h17M3.5 16h17" stroke="currentColor" strokeWidth="2"/>
   </svg>
 );
-const IconBell = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-    <path d="M10 19a2 2 0 004 0" stroke="currentColor" strokeWidth="2"/>
-  </svg>
-);
-const IconHelp = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
-    <path d="M9.5 9.5a2.5 2.5 0 114 2c-1 .7-1.5 1.2-1.5 2.5M12 17.5h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
 const IconPanel = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
     <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
@@ -444,22 +432,11 @@ export function AppShell({
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
               </button>
-              <div className="app-topbar-search" style={{ display: "flex", alignItems: "center", gap: "9px", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "11px", padding: "8px 13px", width: "300px", maxWidth: "40%" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                  <circle cx="11" cy="11" r="7" stroke="#79746B" strokeWidth="2"/>
-                  <path d="M20 20l-3.5-3.5" stroke="#79746B" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                <span style={{ fontSize: "13px", color: "#79746B" }}>Buscar…</span>
-                <span style={{ marginLeft: "auto", fontFamily: "'Space Mono',monospace", fontSize: "10px", color: "#79746B", border: "1px solid #E7E1D4", borderRadius: "5px", padding: "1px 5px" }}>⌘K</span>
-              </div>
+              {/* Buscador ⌘K + Campana + Ayuda ocultos (auditoría de botones): input falso
+                  y sin destino definido. Se recablean cuando exista búsqueda real / feed de
+                  notificaciones / ayuda (decisión de producto de pista A). */}
               <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
                 <AssistantTrigger />
-                <button style={{ width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", color: "#79746B", background: "none", border: "none", cursor: "pointer" }}>
-                  <IconBell />
-                </button>
-                <button style={{ width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", color: "#79746B", background: "none", border: "none", cursor: "pointer" }}>
-                  <IconHelp />
-                </button>
                 <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "12px", color: "#063D31", marginLeft: "4px" }}>
                   {initials(userName || userEmail)}
                 </div>

@@ -321,9 +321,11 @@ export default async function EmployeePage({ params }: { params: { id: string } 
             </div>
           </div>
         </div>
+        {/* Abre el diálogo de editar directamente: es «Editar» (outline, sin caret), no un menú. */}
         <EmployeeForm employee={emp} managers={(all ?? []).map((e) => ({ id: e.id, name: e.name }))} trigger={
-          <button style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "9px 15px", boxShadow: "3px 3px 0 #1A1A17", cursor: "pointer" }}>
-            Acciones ▾
+          <button style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#1A1A17", background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: "11px", padding: "9px 15px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Editar
           </button>
         } />
       </div>

@@ -120,7 +120,8 @@ export function InboxItem({
         borderLeft: `4px solid ${meta.accent}`,
         borderRadius: "14px",
         padding: "13px 15px",
-        cursor: "pointer",
+        /* La fila no es accionable: las acciones viven en sus botones (Aprobar/Rechazar).
+           Sin cursor:pointer para no prometer un clic que no existe (auditoría de botones). */
       }}
     >
       {/* Avatar */}

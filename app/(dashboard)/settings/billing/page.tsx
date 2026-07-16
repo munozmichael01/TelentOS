@@ -54,9 +54,11 @@ export default async function BillingPage() {
               Facturación anual · próxima factura 1 ago 2025
             </div>
             <button
-              style={{ marginTop: "18px", fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "12.5px", color: S.ink, background: "#C6F24E", border: "none", borderRadius: "9px", padding: "9px 15px", cursor: "pointer" }}
+              disabled
+              title="La facturación estará disponible próximamente"
+              style={{ marginTop: "18px", fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "12.5px", color: S.soft, background: "#EFEBE1", border: "none", borderRadius: "9px", padding: "9px 15px", cursor: "not-allowed" }}
             >
-              Cambiar plan
+              Cambiar plan · Próximamente
             </button>
           </div>
 
@@ -73,10 +75,11 @@ export default async function BillingPage() {
               </div>
             </div>
             <button
-              className="di-hard"
-              style={{ marginTop: "auto", alignSelf: "flex-start", fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "12px", color: S.ink, background: S.surface, border: "1.5px solid " + S.ink, borderRadius: "9px", padding: "8px 13px", boxShadow: "2px 2px 0 " + S.ink, cursor: "pointer" }}
+              disabled
+              title="La facturación estará disponible próximamente"
+              style={{ marginTop: "auto", alignSelf: "flex-start", fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "12px", color: S.soft, background: S.surface, border: "1.5px dashed " + S.line, borderRadius: "9px", padding: "8px 13px", cursor: "not-allowed", opacity: 0.8 }}
             >
-              Actualizar método de pago
+              Actualizar pago · Próximamente
             </button>
           </div>
         </div>
@@ -117,7 +120,7 @@ export default async function BillingPage() {
                   </span>
                 </span>
                 <span style={{ textAlign: "right" }}>
-                  <button style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontWeight: 600, fontSize: "12px", color: S.brand, background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                  <button disabled title="La descarga de facturas estará disponible próximamente" style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontWeight: 600, fontSize: "12px", color: S.soft, background: "none", border: "none", cursor: "not-allowed", display: "inline-flex", alignItems: "center", gap: "5px", opacity: 0.7 }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                       <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>

@@ -29,14 +29,14 @@ import {
 type ScheduleDay = {
   id: string;
   day_of_week: number;
-  is_working: boolean;
+  is_working_day: boolean;
   total_minutes: number;
-  time_slots?: { start_time: string; end_time: string }[];
+  slots?: { start: string; end: string }[];
 };
 
 type ScheduleWeek = {
   id: string;
-  week_number: number;
+  week_index: number;
   days: ScheduleDay[];
 };
 
@@ -138,7 +138,7 @@ function timeToMinutes(t: string) {
 
 function WeekPreview({ week }: { week: ScheduleWeek }) {
   const totalMinutes = week.days
-    .filter((d) => d.is_working)
+    .filter((d) => d.is_working_day)
     .reduce((sum, d) => sum + d.total_minutes, 0);
 
   return (
@@ -153,7 +153,7 @@ function WeekPreview({ week }: { week: ScheduleWeek }) {
       >
         {DAYS_ES.map((label, i) => {
           const day = week.days.find((d) => d.day_of_week === i);
-          const active = day?.is_working ?? false;
+          const active = day?.is_working_day ?? false;
           return (
             <div key={label} style={{ textAlign: "center" }}>
               <div
@@ -347,6 +347,8 @@ export function ScheduleSettingsPanel({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Edición: null = crear (POST); id = editar (PUT, reemplaza semanas). Reusa el mismo diálogo.
+  const [editId, setEditId] = useState<string | null>(null);
 
   // form state
   const [name, setName] = useState("");
@@ -357,12 +359,39 @@ export function ScheduleSettingsPanel({
   const [weekB, setWeekB] = useState<WeekForm>(buildEmptyWeek());
 
   function openCreate() {
+    setEditId(null);
     setName("");
     setWeekType("single");
     setIsDefault(false);
     setActiveWeekTab("A");
     setWeekA(buildEmptyWeek());
     setWeekB(buildEmptyWeek());
+    setError("");
+    setOpen(true);
+  }
+
+  // Reconstruye una semana del form (DayForm[]) desde los días guardados de la plantilla.
+  function weekToForm(week?: ScheduleWeek): WeekForm {
+    return DAY_FULL.map((_, i) => {
+      const day = week?.days.find((d) => d.day_of_week === i);
+      const slot = day?.slots?.[0];
+      return {
+        is_working: day?.is_working_day ?? false,
+        start: slot?.start ?? "09:00",
+        end: slot?.end ?? "18:00",
+      };
+    });
+  }
+
+  function openEdit(t: ScheduleTemplate) {
+    setEditId(t.id);
+    setName(t.name);
+    setWeekType(t.week_type);
+    setIsDefault(t.is_default);
+    setActiveWeekTab("A");
+    const sorted = [...(t.weeks ?? [])].sort((a, b) => a.week_index - b.week_index);
+    setWeekA(weekToForm(sorted[0]));
+    setWeekB(weekToForm(sorted[1]));
     setError("");
     setOpen(true);
   }
@@ -389,20 +418,24 @@ export function ScheduleSettingsPanel({
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/schedule-templates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          week_type: weekType,
-          is_default: isDefault,
-          is_active: true,
-          weeks: buildWeeksPayload(),
-        }),
-      });
+      const res = await fetch(
+        editId ? `/api/schedule-templates/${editId}` : "/api/schedule-templates",
+        {
+          method: editId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            week_type: weekType,
+            is_default: isDefault,
+            is_active: true,
+            weeks: buildWeeksPayload(),
+          }),
+        },
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al guardar");
       setOpen(false);
+      setEditId(null);
       router.refresh();
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));
@@ -504,7 +537,7 @@ export function ScheduleSettingsPanel({
             const primaryWeek = t.weeks?.[0];
             const totalMinutes =
               primaryWeek?.days
-                .filter((d) => d.is_working)
+                .filter((d) => d.is_working_day)
                 .reduce((sum, d) => sum + d.total_minutes, 0) ?? 0;
 
             return (
@@ -545,7 +578,7 @@ export function ScheduleSettingsPanel({
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "4px" }}>
-                    <Button size="icon" variant="ghost">
+                    <Button size="icon" variant="ghost" aria-label={`Editar ${t.name}`} onClick={() => openEdit(t)}>
                       <Pencil />
                     </Button>
                     <Button
@@ -583,13 +616,13 @@ export function ScheduleSettingsPanel({
         </div>
       )}
 
-      {/* Create dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      {/* Template dialog (crear / editar) */}
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditId(null); }}>
         <DialogContent
           style={{ maxWidth: "560px", maxHeight: "85vh", overflowY: "auto" }}
         >
           <DialogHeader>
-            <DialogTitle>Nueva plantilla de horario</DialogTitle>
+            <DialogTitle>{editId ? "Editar plantilla de horario" : "Nueva plantilla de horario"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-5">
             <div className="space-y-1.5">
@@ -682,7 +715,7 @@ export function ScheduleSettingsPanel({
             </Button>
             <Button onClick={save} disabled={!name.trim() || saving}>
               {saving && <Loader2 className="animate-spin" />}
-              Crear plantilla
+              {editId ? "Guardar cambios" : "Crear plantilla"}
             </Button>
           </DialogFooter>
         </DialogContent>

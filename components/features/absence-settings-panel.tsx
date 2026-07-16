@@ -51,10 +51,11 @@ type AllowanceType = {
 
 type AllowancePolicy = {
   id: string;
+  allowance_type_id: string;
   name: string;
   amount: number;
-  cycle: string;
-  carryover: number;
+  cycle_type: string;
+  carryover_limit: number | null;
   is_default: boolean;
   allowance_types?: { name: string } | null;
 };
@@ -571,40 +572,71 @@ function AllowancePoliciesTab({
   const [error, setError] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // Edición: null = crear; id = editar (PUT). El diálogo de crear se reusa precargado.
+  const [editTypeId, setEditTypeId] = useState<string | null>(null);
+  const [editPolicyId, setEditPolicyId] = useState<string | null>(null);
 
-  const [typeForm, setTypeForm] = useState({
-    name: "",
-    unit: "days",
-    is_active: true,
-  });
-  const [policyForm, setPolicyForm] = useState({
+  const EMPTY_TYPE = { name: "", unit: "days", is_active: true };
+  const EMPTY_POLICY = {
     name: "",
     allowance_type_id: "",
     amount: "20",
-    cycle: "year",
-    carryover: "0",
+    cycle_type: "annual",
+    carryover_limit: "0",
     is_default: false,
-  });
-
-  const CYCLE_LABELS: Record<string, string> = {
-    year: "Anual",
-    month: "Mensual",
-    quarter: "Trimestral",
   };
+  const [typeForm, setTypeForm] = useState(EMPTY_TYPE);
+  const [policyForm, setPolicyForm] = useState(EMPTY_POLICY);
+
+  // cycle_type real (migr. 0033): solo annual|monthly.
+  const CYCLE_LABELS: Record<string, string> = {
+    annual: "Anual",
+    monthly: "Mensual",
+  };
+
+  function openCreateType() {
+    setError(""); setEditTypeId(null); setTypeForm(EMPTY_TYPE); setTypeOpen(true);
+  }
+  function openEditType(t: AllowanceType) {
+    setError("");
+    setEditTypeId(t.id);
+    setTypeForm({ name: t.name, unit: t.unit, is_active: t.is_active });
+    setTypeOpen(true);
+  }
+  function openCreatePolicy() {
+    setError(""); setEditPolicyId(null); setPolicyForm(EMPTY_POLICY); setPolicyOpen(true);
+  }
+  function openEditPolicy(p: AllowancePolicy) {
+    setError("");
+    setEditPolicyId(p.id);
+    setPolicyForm({
+      name: p.name,
+      allowance_type_id: p.allowance_type_id,
+      amount: String(p.amount),
+      cycle_type: p.cycle_type ?? "annual",
+      carryover_limit: String(p.carryover_limit ?? 0),
+      is_default: p.is_default,
+    });
+    setPolicyOpen(true);
+  }
 
   async function saveType() {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/allowance-types", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(typeForm),
-      });
+      const res = await fetch(
+        editTypeId ? `/api/allowance-types/${editTypeId}` : "/api/allowance-types",
+        {
+          method: editTypeId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(typeForm),
+        },
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error");
       setTypeOpen(false);
-      setTypeForm({ name: "", unit: "days", is_active: true });
+      setEditTypeId(null);
+      setTypeForm(EMPTY_TYPE);
       router.refresh();
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));
@@ -617,26 +649,26 @@ function AllowancePoliciesTab({
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/allowance-policies", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...policyForm,
-          amount: Number(policyForm.amount),
-          carryover: Number(policyForm.carryover),
-        }),
-      });
+      const res = await fetch(
+        editPolicyId ? `/api/allowance-policies/${editPolicyId}` : "/api/allowance-policies",
+        {
+          method: editPolicyId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: policyForm.name,
+            allowance_type_id: policyForm.allowance_type_id,
+            amount: Number(policyForm.amount),
+            cycle_type: policyForm.cycle_type,
+            carryover_limit: Number(policyForm.carryover_limit),
+            is_default: policyForm.is_default,
+          }),
+        },
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error");
       setPolicyOpen(false);
-      setPolicyForm({
-        name: "",
-        allowance_type_id: "",
-        amount: "20",
-        cycle: "year",
-        carryover: "0",
-        is_default: false,
-      });
+      setEditPolicyId(null);
+      setPolicyForm(EMPTY_POLICY);
       router.refresh();
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));
@@ -674,14 +706,7 @@ function AllowancePoliciesTab({
           >
             Tipos de saldo
           </h3>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setError("");
-              setTypeOpen(true);
-            }}
-          >
+          <Button size="sm" variant="outline" onClick={openCreateType}>
             <Plus />
             Nuevo tipo de saldo
           </Button>
@@ -712,7 +737,7 @@ function AllowancePoliciesTab({
                 <Badge variant={t.is_active ? "success" : "outline"}>
                   {t.is_active ? "Activo" : "Inactivo"}
                 </Badge>
-                <Button size="icon" variant="ghost">
+                <Button size="icon" variant="ghost" aria-label={`Editar ${t.name}`} onClick={() => openEditType(t)}>
                   <Pencil />
                 </Button>
               </HairlineRow>
@@ -734,13 +759,7 @@ function AllowancePoliciesTab({
           >
             Políticas
           </h3>
-          <Button
-            size="sm"
-            onClick={() => {
-              setError("");
-              setPolicyOpen(true);
-            }}
-          >
+          <Button size="sm" onClick={openCreatePolicy}>
             <Plus />
             Nueva política
           </Button>
@@ -769,11 +788,11 @@ function AllowancePoliciesTab({
                 <span style={{ fontWeight: 600, fontSize: "14px" }}>{p.name}</span>
                 <span style={{ fontSize: "13px" }}>{p.allowance_types?.name ?? "—"}</span>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px" }}>{p.amount}</span>
-                <span style={{ fontSize: "13px" }}>{CYCLE_LABELS[p.cycle] ?? p.cycle}</span>
-                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px" }}>{p.carryover}</span>
+                <span style={{ fontSize: "13px" }}>{CYCLE_LABELS[p.cycle_type] ?? p.cycle_type}</span>
+                <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px" }}>{p.carryover_limit ?? 0}</span>
                 <span>{p.is_default && <Badge variant="lime">Por defecto</Badge>}</span>
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: "4px" }}>
-                  <Button size="icon" variant="ghost">
+                  <Button size="icon" variant="ghost" aria-label={`Editar ${p.name}`} onClick={() => openEditPolicy(p)}>
                     <Pencil />
                   </Button>
                   <Button
@@ -792,10 +811,10 @@ function AllowancePoliciesTab({
       </div>
 
       {/* New allowance type dialog */}
-      <Dialog open={typeOpen} onOpenChange={setTypeOpen}>
+      <Dialog open={typeOpen} onOpenChange={(v) => { setTypeOpen(v); if (!v) setEditTypeId(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuevo tipo de saldo</DialogTitle>
+            <DialogTitle>{editTypeId ? "Editar tipo de saldo" : "Nuevo tipo de saldo"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -843,17 +862,17 @@ function AllowancePoliciesTab({
               disabled={!typeForm.name.trim() || saving}
             >
               {saving && <Loader2 className="animate-spin" />}
-              Crear tipo
+              {editTypeId ? "Guardar cambios" : "Crear tipo"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* New policy dialog */}
-      <Dialog open={policyOpen} onOpenChange={setPolicyOpen}>
+      {/* Policy dialog (crear / editar) */}
+      <Dialog open={policyOpen} onOpenChange={(v) => { setPolicyOpen(v); if (!v) setEditPolicyId(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nueva política de permiso</DialogTitle>
+            <DialogTitle>{editPolicyId ? "Editar política" : "Nueva política de permiso"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -901,18 +920,17 @@ function AllowancePoliciesTab({
               <div className="space-y-1.5">
                 <Label>Ciclo</Label>
                 <Select
-                  value={policyForm.cycle}
+                  value={policyForm.cycle_type}
                   onValueChange={(v) =>
-                    setPolicyForm((f) => ({ ...f, cycle: v }))
+                    setPolicyForm((f) => ({ ...f, cycle_type: v }))
                   }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="year">Anual</SelectItem>
-                    <SelectItem value="month">Mensual</SelectItem>
-                    <SelectItem value="quarter">Trimestral</SelectItem>
+                    <SelectItem value="annual">Anual</SelectItem>
+                    <SelectItem value="monthly">Mensual</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -920,11 +938,11 @@ function AllowancePoliciesTab({
                 <Label>Arrastre máx.</Label>
                 <Input
                   type="number"
-                  value={policyForm.carryover}
+                  value={policyForm.carryover_limit}
                   onChange={(e) =>
                     setPolicyForm((f) => ({
                       ...f,
-                      carryover: e.target.value,
+                      carryover_limit: e.target.value,
                     }))
                   }
                   min={0}
@@ -951,7 +969,7 @@ function AllowancePoliciesTab({
               disabled={!policyForm.name.trim() || saving}
             >
               {saving && <Loader2 className="animate-spin" />}
-              Crear política
+              {editPolicyId ? "Guardar cambios" : "Crear política"}
             </Button>
           </DialogFooter>
         </DialogContent>

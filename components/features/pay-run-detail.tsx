@@ -391,6 +391,34 @@ function PayslipModal({
 }) {
   const earnings = items.filter((i) => i.category === "earning").sort((a, b) => a.order_index - b.order_index);
   const deductions = items.filter((i) => i.category === "deduction").sort((a, b) => a.order_index - b.order_index);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // Descarga del recibo con EL MISMO formato del modal: clona el nodo (estilos inline
+  // incluidos), lo abre en una ventana con las fuentes del DS y lanza imprimir → el
+  // usuario guarda como PDF. Sin backend ni dependencias nuevas.
+  function downloadPdf() {
+    const node = printRef.current;
+    if (!node) return;
+    const clone = node.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll("[data-no-print]").forEach((el) => el.remove());
+    clone.style.maxHeight = "none";
+    clone.style.overflow = "visible";
+    clone.style.boxShadow = "none";
+    const w = window.open("", "_blank", "width=820,height=1040");
+    if (!w) return;
+    const title = `Recibo ${employee?.name ?? "empleado"}`;
+    w.document.write(
+      `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${title}</title>` +
+        `<link rel="preconnect" href="https://fonts.googleapis.com">` +
+        `<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800;900&family=Hanken+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">` +
+        `<style>@page{margin:14mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}body{margin:0;background:#fff;font-family:'Hanken Grotesk',system-ui,sans-serif}</style>` +
+        `</head><body>${clone.outerHTML}` +
+        `<script>function go(){setTimeout(function(){window.focus();window.print();},250);}` +
+        `if(document.fonts&&document.fonts.ready){document.fonts.ready.then(go);}else{window.onload=go;}<\/script>` +
+        `</body></html>`,
+    );
+    w.document.close();
+  }
 
   return (
     <div
@@ -398,6 +426,7 @@ function PayslipModal({
       style={{ position: "fixed", inset: 0, zIndex: 80, background: "rgba(26,26,23,.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "26px" }}
     >
       <div
+        ref={printRef}
         onClick={(e) => e.stopPropagation()}
         style={{ width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", background: "#fff", border: `1.5px solid ${T.ink}`, borderRadius: "16px", boxShadow: "10px 10px 0 rgba(26,26,23,.25)" }}
       >
@@ -481,15 +510,22 @@ function PayslipModal({
           ))}
         </div>
 
-        {/* Actions bar */}
-        <div style={{ position: "sticky", bottom: 0, background: T.surface, borderTop: `1px solid ${T.line}`, padding: "14px 30px", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+        {/* Actions bar (data-no-print: no entra en la descarga del recibo) */}
+        <div data-no-print style={{ position: "sticky", bottom: 0, background: T.surface, borderTop: `1px solid ${T.line}`, padding: "14px 30px", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: "13px", color: T.soft, background: "transparent", border: "none", padding: "10px 14px", cursor: "pointer" }}>
             Cerrar
           </button>
-          <button style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "13px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px 15px", cursor: "pointer" }}>
-            Enviar al empleado
+          {/* Envío por email: sin backend transaccional aún (ver evidencia para pista A).
+              Visible pero deshabilitado — no promete un clic que no existe. */}
+          <button
+            disabled
+            title="El envío del recibo por email estará disponible próximamente"
+            style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "13px", color: T.soft, background: "transparent", border: `1.5px dashed ${T.line}`, borderRadius: "11px", padding: "10px 15px", cursor: "not-allowed", opacity: 0.75 }}
+          >
+            Enviar al empleado · próximamente
           </button>
-          <button style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: T.brand, border: `2px solid ${T.ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: `3px 3px 0 ${T.ink}`, cursor: "pointer" }}>
+          {/* Descargar PDF: funcional — imprime el recibo con el mismo formato del modal. */}
+          <button onClick={downloadPdf} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: T.brand, border: `2px solid ${T.ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: `3px 3px 0 ${T.ink}`, cursor: "pointer" }}>
             Descargar PDF
           </button>
         </div>
