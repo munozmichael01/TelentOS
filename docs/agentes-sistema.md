@@ -21,19 +21,21 @@ Todo agente pasa por `runAgent<T>(opts)`. Lo que el core garantiza, agente por a
 
 ## 2. Inventario de agentes
 
-| Agente | Modelo | Qué hace | Superficie | Eval |
-|---|---|---|---|---|
-| `cv-parser` | mini | Extrae perfil estructurado del CV (skills→catálogo, experiencias, idiomas CEFR, educación) | Modal del candidato en inscripción + "Extraer del CV" admin | ✅ `npm run eval:cv` (5/6) |
-| `assistant` | 4o | **Punto central conversacional** — packs de tools por vertical con RBAC | Drawer global (sparkle topbar + ⌘J + `assistant:ask` desde módulos), chip de contexto | ✅ `npm run eval:assistant` (6/6, 3 roles) |
-| `payroll-copilot` | mini | Redacta el resumen de la revisión pre-aprobación (detectores en `lib/payroll/copilot.ts`) | "Revisión de la corrida" en pay-run-detail (B-5: solo comparativo + colapso a tabla; colapsable, no cerrable) | ✅ 13 vitest + `npm run eval:payroll` (3/3) |
-| `candidate-analyzer` | 4o | Lectura cualitativa del candidato explicando el fit determinista (`lib/fit-explain.ts`) | Panel de análisis en la ficha | ❌ pendiente |
-| `job-writer` | 4o | Borrador de oferta desde una frase + mejora de campos | "Redacción asistida" en Nueva oferta (B-6/B-7); **banda salarial → `FieldProposal.Range` (B-7b), skills → `FieldProposal.Multi` (B-7c)** — verificados en vivo (`bcbf52a`) | ❌ |
-| `channel-optimizer` | 4o | Plan de distribución (canales, presupuesto, copy) | Pestaña Distribución de la oferta | ❌ |
-| `channel-analyst` | — | **RETIRADO como superficie** (2026-07-13): Canales abre el drawer del assistant con chip precargado; su `queryChannelData` vive como tool del assistant. Endpoint `/api/agents/channel-analyst` deprecado sin consumidores — eliminar en próxima limpieza | — | — |
-| `onboarding-builder` | 4o | Checklist de incorporación por rol/departamento | Ficha del empleado | ❌ |
-| `career-writer` | mini | Genera TODO el contenido redactable del career site de una vez desde el intake (hero, about, métricas, cultura, beneficios, qué buscamos, FAQs) — bloques 🟢, fiel al intake (no inventa) | `CareerAIPanel` (entrada única del Editor); intake → `POST /api/agents/career-writer` | ✅ verificado E2E (12 claves, valores/métricas fieles) |
-| `company-parser` | mini | "Autorrellenar el career site" desde **web o documento** (PDF/Word): extrae perfil (about/valores/beneficios/métricas) del texto para poblar el intake — patrón cv-parser, EXTRAE no inventa | Import del `CareerAIPanel` (URL + adjuntar PDF/Word) → `POST /api/agents/company-parser` (Node runtime). **Seguridad**: fetch anti-SSRF con **IP fijada** (anti-rebinding) en `lib/safe-fetch.ts` + rate-limit 20/10min por empresa; docs vía `lib/doc-text.ts` (unpdf/mammoth) | ✅ verificado E2E (SSRF+IP fijada, PDF, rate-limit, extracción fiel) |
-| `dashboard-insights` | mini | Redactor del motor de señales (determinista calcula) | "Sugerencias del agente" en dashboard **+ cron diario** (plano proactivo) | ❌ |
+**Tipo** (ver la guía funcional en Notion → 🤖 Agentes IA): **A** = operativo, *produce trabajo* (sub-formas: generador · extractor · analizador · revisor); **B** = consulta, *solo responde*. Anexos: *proactivo* = salta solo (cron); *det+redactor* = las reglas calculan el hecho, la IA solo redacta. **Regla: solo un tipo A cuenta como "cubrir" un flujo** — una consulta (B) da acceso, no hace el trabajo.
+
+| Agente | Tipo | Modelo | Qué hace | Superficie | Eval |
+|---|---|---|---|---|---|
+| `cv-parser` | A · extractor | mini | Extrae perfil estructurado del CV (skills→catálogo, experiencias, idiomas CEFR, educación) | Modal del candidato en inscripción + "Extraer del CV" admin | ✅ `npm run eval:cv` (5/6) |
+| `assistant` | **B · consulta** | 4o | **Punto central conversacional** — packs de tools por vertical con RBAC | Drawer global (sparkle topbar + ⌘J + `assistant:ask` desde módulos), chip de contexto | ✅ `npm run eval:assistant` (6/6, 3 roles) |
+| `payroll-copilot` | A · revisor (det+redactor) | mini | Redacta el resumen de la revisión pre-aprobación (detectores en `lib/payroll/copilot.ts`) | "Revisión de la corrida" en pay-run-detail (B-5: solo comparativo + colapso a tabla; colapsable, no cerrable) | ✅ 13 vitest + `npm run eval:payroll` (3/3) |
+| `candidate-analyzer` | A · analizador | 4o | Lectura cualitativa del candidato explicando el fit determinista (`lib/fit-explain.ts`) | Panel de análisis en la ficha | ❌ pendiente |
+| `job-writer` | A · generador | 4o | Borrador de oferta desde una frase + mejora de campos | "Redacción asistida" en Nueva oferta (B-6/B-7); **banda salarial → `FieldProposal.Range` (B-7b), skills → `FieldProposal.Multi` (B-7c)** — verificados en vivo (`bcbf52a`) | ❌ |
+| `channel-optimizer` | A · generador | 4o | Plan de distribución (canales, presupuesto, copy) | Pestaña Distribución de la oferta | ❌ |
+| `channel-analyst` | — (retirado) | — | **RETIRADO como superficie** (2026-07-13): Canales abre el drawer del assistant con chip precargado; su `queryChannelData` vive como tool del assistant. Endpoint `/api/agents/channel-analyst` deprecado sin consumidores — eliminar en próxima limpieza | — | — |
+| `onboarding-builder` | A · generador | 4o | Checklist de incorporación por rol/departamento | Ficha del empleado | ❌ |
+| `career-writer` | A · generador | mini | Genera TODO el contenido redactable del career site de una vez desde el intake (hero, about, métricas, cultura, beneficios, qué buscamos, FAQs) — bloques 🟢, fiel al intake (no inventa) | `CareerAIPanel` (entrada única del Editor); intake → `POST /api/agents/career-writer` | ✅ verificado E2E (12 claves, valores/métricas fieles) |
+| `company-parser` | A · extractor | mini | "Autorrellenar el career site" desde **web o documento** (PDF/Word): extrae perfil (about/valores/beneficios/métricas) del texto para poblar el intake — patrón cv-parser, EXTRAE no inventa | Import del `CareerAIPanel` (URL + adjuntar PDF/Word) → `POST /api/agents/company-parser` (Node runtime). **Seguridad**: fetch anti-SSRF con `assertPublicHost` en `lib/safe-fetch.ts` + rate-limit 20/10min por empresa; docs vía `lib/doc-text.ts` (unpdf/mammoth) | ✅ verificado E2E (SSRF, PDF, rate-limit, extracción fiel) |
+| `dashboard-insights` | A · proactivo (det+redactor) | mini | Redactor del motor de señales (determinista calcula) | "Sugerencias del agente" en dashboard **+ cron diario** (plano proactivo) | ❌ |
 
 Fuera del framework (deuda): `career-site/translate` (gpt-4o directo, sin auditoría) — meter a `runAgent`.
 
