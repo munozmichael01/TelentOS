@@ -65,7 +65,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 export async function POST(req: Request) {
   // Público y sin auth: límite por IP contra spam/scripts (auditoría H3)
-  if (!rateLimit(`careers-apply:${clientIp(req)}`, 5, 10 * 60_000)) {
+  if (!(await rateLimit(`careers-apply:${clientIp(req)}`, 5, 10 * 60_000))) {
     return jsonError("Demasiadas solicitudes. Inténtalo de nuevo en unos minutos.", 429);
   }
 

@@ -17,7 +17,7 @@ const MIME_ALLOWED = ["application/pdf", "text/plain"];
 const MAX_BYTES = 8 * 1024 * 1024;
 
 export async function POST(req: Request) {
-  if (!rateLimit(`careers-parse-cv:${clientIp(req)}`, 8, 10 * 60_000)) {
+  if (!(await rateLimit(`careers-parse-cv:${clientIp(req)}`, 8, 10 * 60_000))) {
     return jsonError("Demasiadas solicitudes. Inténtalo de nuevo en unos minutos.", 429);
   }
 

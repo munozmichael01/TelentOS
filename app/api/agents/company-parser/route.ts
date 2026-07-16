@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   if (error) return error;
 
   // Rate-limit estándar: 20 peticiones / 10 min por empresa (fetch + LLM).
-  if (!rateLimit(`company-parser:${companyId}`, 20, 10 * 60_000)) {
+  if (!(await rateLimit(`company-parser:${companyId}`, 20, 10 * 60_000))) {
     return jsonError("Demasiadas peticiones. Prueba de nuevo en unos minutos.", 429);
   }
 

@@ -33,14 +33,18 @@ export async function inviteMember(formData: FormData): Promise<ActionResult> {
   const existingUser = allUsers.find((u) => u.email?.toLowerCase() === email);
 
   if (existingUser) {
-    const { data: activeMember } = await admin
+    // Un user pertenece a UNA sola empresa (modelo desacoplado). Si ya tiene membresía
+    // en cualquier empresa, no puede unirse a otra con estas credenciales.
+    const { data: membership } = await admin
       .from("company_members")
-      .select("id, joined_at")
-      .eq("company_id", company.id)
+      .select("company_id")
       .eq("user_id", existingUser.id)
-      .not("joined_at", "is", null)
       .maybeSingle();
-    if (activeMember) return { success: false, error: "Este usuario ya es miembro activo del equipo." };
+    if (membership) {
+      return membership.company_id === company.id
+        ? { success: false, error: "Este usuario ya está en tu equipo." }
+        : { success: false, error: "Este email ya pertenece a otra empresa. Para unirse a la tuya debe registrarse con otras credenciales." };
+    }
   }
 
   // Create or re-invite user
