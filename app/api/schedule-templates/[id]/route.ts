@@ -57,6 +57,27 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     return jsonError("week_type debe ser 'single' o 'rotating'");
   }
 
+  // Validación del payload de semanas ANTES de cualquier mutación (auditoría de botones):
+  // el reemplazo borra las semanas actuales, así que un input malformado NO debe llegar a
+  // tocar la BD — si no, se perderían los datos sin posibilidad de rollback.
+  const replaceWeeks = "weeks" in body;
+  if (replaceWeeks) {
+    if (!Array.isArray(body.weeks)) return jsonError("'weeks' debe ser un array");
+    for (const week of body.weeks) {
+      if (!week || typeof week.week_index !== "number") {
+        return jsonError("Cada semana debe tener un week_index numérico");
+      }
+      if (week.days != null && !Array.isArray(week.days)) {
+        return jsonError("'week.days' debe ser un array");
+      }
+      for (const d of week.days ?? []) {
+        if (!d || typeof d.day_of_week !== "number") {
+          return jsonError("Cada día debe tener un day_of_week numérico");
+        }
+      }
+    }
+  }
+
   const { data, error: dbError } = await supabase
     .from("work_schedule_templates")
     .update({ ...updates, updated_at: new Date().toISOString() })
@@ -67,48 +88,16 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
   if (dbError) return jsonError("Plantilla no encontrada", 404);
 
-  // Reemplazo de semanas/días si llegan (edición completa desde el builder): se borran
-  // las semanas actuales (cascade a días) y se reinsertan, igual que en POST. La plantilla
-  // ya quedó verificada por empresa en el update de arriba.
-  if (Array.isArray(body.weeks)) {
-    const { error: delErr } = await supabase
-      .from("work_schedule_weeks")
-      .delete()
-      .eq("template_id", params.id);
-    if (delErr) return jsonError(delErr.message, 500);
-
-    for (const week of body.weeks) {
-      if (week.week_index === undefined || week.week_index === null) {
-        return jsonError("Cada semana debe tener week_index");
-      }
-      const { data: insertedWeek, error: wkErr } = await supabase
-        .from("work_schedule_weeks")
-        .insert({
-          template_id: params.id,
-          week_label: week.week_label ?? `Semana ${week.week_index + 1}`,
-          week_index: week.week_index,
-        })
-        .select()
-        .single();
-      if (wkErr) return jsonError(wkErr.message, 500);
-
-      if (Array.isArray(week.days) && week.days.length > 0) {
-        const days = week.days.map((d: {
-          day_of_week: number;
-          is_working_day: boolean;
-          slots: { start: string; end: string }[];
-          total_minutes: number;
-        }) => ({
-          week_id: insertedWeek.id,
-          day_of_week: d.day_of_week,
-          is_working_day: d.is_working_day ?? false,
-          slots: d.slots ?? [],
-          total_minutes: d.total_minutes ?? 0,
-        }));
-        const { error: dayErr } = await supabase.from("work_schedule_days").insert(days);
-        if (dayErr) return jsonError(dayErr.message, 500);
-      }
-    }
+  // Reemplazo ATÓMICO de semanas/días (migr. 0036): la función borra+reinserta en una
+  // sola transacción — si algún insert falla, hace rollback y la plantilla no queda
+  // corrupta. La RLS de work_schedule_weeks/days scopea el acceso a la empresa del caller
+  // (security invoker), y la plantilla ya quedó verificada por empresa en el update de arriba.
+  if (replaceWeeks) {
+    const { error: rpcErr } = await supabase.rpc("replace_schedule_template_weeks", {
+      p_template_id: params.id,
+      p_weeks: body.weeks,
+    });
+    if (rpcErr) return jsonError(rpcErr.message, 500);
   }
 
   return NextResponse.json({ template: data });
