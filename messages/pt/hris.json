@@ -1,0 +1,112 @@
+{
+  "breadcrumb": { "products": "Produtos", "current": "HRIS" },
+  "hero": {
+    "badge": "Pessoas · HRIS",
+    "title1": "Todo o ciclo do colaborador, ",
+    "titleAccent": "em uma ficha viva",
+    "title2": ".",
+    "subtitle": "Diretório, organograma, onboarding, ausências, horas e horários sobre a mesma base do recrutamento. A ficha que você abriu ao contratar é a que você gerencia — e a que paga a folha.",
+    "ctaPrimary": "Comece grátis →",
+    "ctaSecondary": "Ver a ficha"
+  },
+  "demo": {
+    "header": "Colaboradores",
+    "meta": "24 pessoas",
+    "hint": "Clique em uma pessoa para ver sua ficha →",
+    "back": "← Diretório",
+    "note": "Esta mesma ficha alimenta a folha — sem redigitar",
+    "people": [
+      {
+        "role": "Product Designer · Produto",
+        "tag": "Owner",
+        "fields": [
+          { "g": "Cargo e organização", "v": "Product Designer · Sr II · reporta a Carla Ruiz" },
+          { "g": "Local e modalidade", "v": "Espanha · Madri · híbrido" },
+          { "g": "Pessoais", "v": "Contato e emergência · admissão 1 jul 2026" },
+          { "g": "Legal e remuneração", "v": "TalentOS SL · plano de saúde · 68.000 €" }
+        ]
+      },
+      {
+        "role": "Head of Product",
+        "tag": "Gestora",
+        "fields": [
+          { "g": "Cargo e organização", "v": "Head of Product · reporta ao CEO · 2 pessoas" },
+          { "g": "Local e modalidade", "v": "Espanha · Madri · híbrido" },
+          { "g": "Pessoais", "v": "Contato e emergência · admissão 2024" },
+          { "g": "Legal e remuneração", "v": "TalentOS SL · plano de saúde · confidencial" }
+        ]
+      },
+      {
+        "role": "Backend Engineer",
+        "tag": "Colaborador",
+        "fields": [
+          { "g": "Cargo e organização", "v": "Backend Engineer · reporta a Carla Ruiz" },
+          { "g": "Local e modalidade", "v": "Espanha · remoto" },
+          { "g": "Pessoais", "v": "Contato e emergência · admissão 2025" },
+          { "g": "Legal e remuneração", "v": "TalentOS SL · conta bancária pendente" }
+        ]
+      },
+      {
+        "role": "Recruiter · Talento",
+        "tag": "Colaboradora",
+        "fields": [
+          { "g": "Cargo e organização", "v": "Recruiter · reporta a People Lead" },
+          { "g": "Local e modalidade", "v": "Espanha · Barcelona · híbrido" },
+          { "g": "Pessoais", "v": "Contato e emergência · admissão 2025" },
+          { "g": "Legal e remuneração", "v": "TalentOS SL · plano de saúde" }
+        ]
+      }
+    ]
+  },
+  "ficha": {
+    "kicker": "Ficha do colaborador",
+    "title1": "Uma ficha que ",
+    "titleAccent": "sabe tudo",
+    "title2": ".",
+    "body": "Dados pessoais e de contato, contato de emergência, senioridade, país, cidade, modalidade de trabalho, entidade legal e benefícios. Agrupada por seções, com permissões por papel: cada um vê o que deve ver.",
+    "badge": "Remuneração e dados sensíveis, só para quem deve ver",
+    "cardRole": "Product Designer · Produto",
+    "groups": [
+      { "name": "Pessoais", "fields": "Contato · emergência · nascimento" },
+      { "name": "Cargo e organização", "fields": "Cargo · nível · reporta a" },
+      { "name": "Local e modalidade", "fields": "País · cidade · híbrido" },
+      { "name": "Legal e remuneração", "fields": "Entidade legal · benefícios" }
+    ]
+  },
+  "onb": {
+    "title": "Onboarding por cargo",
+    "body": "O candidato vira colaborador com um checklist de integração gerado conforme o cargo e o time. Nada é redigitado: nome, e-mail e cargo já vêm do ATS.",
+    "chips": ["Checklist por cargo", "Adicionar-me como colaborador"]
+  },
+  "org": {
+    "title": "Diretório e organograma",
+    "body": "Toda a empresa em um diretório pesquisável e um organograma vivo por linha de reporte. Cada gestor alcança só o seu ramo; o resto vê o que o seu papel permite.",
+    "chips": ["Organograma por reporte", "Documentos"],
+    "rootMeta": "Head of Product · 2 reportes",
+    "reports": [{ "role": "Product Designer" }, { "role": "Backend Engineer" }]
+  },
+  "tiempo": {
+    "kicker": "Ausências · Horas · Horários",
+    "title1": "O tempo do time, ",
+    "titleAccent": "sob controle",
+    "title2": ".",
+    "body": "Tipos de ausência e políticas configuráveis, controle de horas e modelos de jornada. Tudo o que está pendente de aprovação aparece antes do fechamento da folha — e alimenta o processamento diretamente.",
+    "stats": [
+      { "big": "Configurável", "small": "tipos e políticas de ausência" },
+      { "big": "→ folha", "small": "as novidades alimentam o processamento" }
+    ],
+    "rows": [
+      { "name": "Ausências", "desc": "tipos e políticas configuráveis", "status": "Configurável" },
+      { "name": "Controle de horas", "desc": "registro de jornada e timesheets", "status": "Ativo" },
+      { "name": "Horários", "desc": "modelos de jornada", "status": "Ativo" }
+    ]
+  },
+  "cta": {
+    "title1": "Uma única base, ",
+    "titleAccent": "da contratação ao holerite",
+    "title2": ".",
+    "body": "O que você gerencia do colaborador alimenta a folha sem redigitar. Direto assim.",
+    "primary": "Comece grátis →",
+    "secondary": "Ver a Folha →"
+  }
+}

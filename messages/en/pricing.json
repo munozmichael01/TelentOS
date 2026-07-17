@@ -1,0 +1,32 @@
+{
+  "hero": {
+    "badge": "Coming soon · being shaped with our first teams",
+    "title1": "Honest ",
+    "titleAccent": "pricing",
+    "title2": ", still in the oven.",
+    "subtitle": "We're in early access. We'd rather set the plans <b>with</b> the first teams than publish numbers we'd have to walk back later. Leave your email and you'll be among the first to see them."
+  },
+  "form": {
+    "title": "Tell me when pricing is live",
+    "sub": "No spam · just the launch announcement",
+    "placeholder": "you@company.com",
+    "submit": "Notify me →",
+    "sentTitle": "Noted",
+    "sentBody": "We'll email {email} as soon as the plans are published."
+  },
+  "promises": {
+    "label": "What we can already promise",
+    "cards": [
+      { "title": "Free to start", "desc": "An entry plan at no cost so you can try the full cycle before deciding." },
+      { "title": "No surprises", "desc": "Pay for what you use — no hidden modules, no integration fees. What you see is what you pay." },
+      { "title": "One single platform", "desc": "ATS, HRIS and payroll in one price, not five separate licenses to add up every month." }
+    ]
+  },
+  "meanwhile": {
+    "kicker": "In the meantime",
+    "title": "Explore the product that's already in production.",
+    "body": "ATS, HRIS and the payroll engine, with agentic AI inside every task. See it working — not in slides.",
+    "primary": "See the platform →",
+    "secondary": "See the agentic AI live"
+  }
+}

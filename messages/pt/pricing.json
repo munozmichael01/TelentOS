@@ -1,0 +1,32 @@
+{
+  "hero": {
+    "badge": "Em breve · em definição com os primeiros times",
+    "title1": "Preços ",
+    "titleAccent": "honestos",
+    "title2": ", ainda no forno.",
+    "subtitle": "Estamos em acesso antecipado. Preferimos definir os planos <b>com</b> os primeiros times a publicar números que depois teríamos que mudar. Deixe seu e-mail e você será dos primeiros a vê-los."
+  },
+  "form": {
+    "title": "Me avise quando houver preços",
+    "sub": "Sem spam · só o aviso de lançamento",
+    "placeholder": "voce@empresa.com",
+    "submit": "Me avise →",
+    "sentTitle": "Anotado",
+    "sentBody": "Avisaremos em {email} assim que publicarmos os planos."
+  },
+  "promises": {
+    "label": "O que já podemos prometer",
+    "cards": [
+      { "title": "Grátis para começar", "desc": "Um plano de entrada sem custo para você testar o ciclo completo antes de decidir." },
+      { "title": "Sem surpresas", "desc": "Preço pelo que você usa, sem módulos ocultos nem taxas de integração. O que você vê é o que paga." },
+      { "title": "Uma única plataforma", "desc": "ATS, HRIS e folha em um preço só, não cinco licenças avulsas para somar todo mês." }
+    ]
+  },
+  "meanwhile": {
+    "kicker": "Enquanto isso",
+    "title": "Explore o produto que já está em produção.",
+    "body": "ATS, HRIS e o motor de folha, com a IA agêntica dentro de cada tarefa. Veja funcionando, não em slides.",
+    "primary": "Ver a plataforma →",
+    "secondary": "Ver a IA agêntica ao vivo"
+  }
+}

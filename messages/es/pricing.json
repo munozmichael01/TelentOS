@@ -1,0 +1,32 @@
+{
+  "hero": {
+    "badge": "Próximamente · en definición con los primeros equipos",
+    "title1": "Precios ",
+    "titleAccent": "honestos",
+    "title2": ", todavía en el horno.",
+    "subtitle": "Estamos en acceso anticipado. Preferimos fijar los planes <b>con</b> los primeros equipos antes que publicar cifras que luego tengamos que cambiar. Déjanos tu correo y serás de los primeros en verlos."
+  },
+  "form": {
+    "title": "Avísame cuando haya precios",
+    "sub": "Sin spam · solo el aviso de lanzamiento",
+    "placeholder": "tu@empresa.com",
+    "submit": "Avisarme →",
+    "sentTitle": "Anotado",
+    "sentBody": "Te avisamos en {email} en cuanto publiquemos los planes."
+  },
+  "promises": {
+    "label": "Lo que sí podemos prometer desde ya",
+    "cards": [
+      { "title": "Gratis para empezar", "desc": "Un plan de entrada sin coste para que pruebes el ciclo completo antes de decidir." },
+      { "title": "Sin sorpresas", "desc": "Precio por lo que usas, sin módulos ocultos ni cargos por integración. Lo que ves es lo que pagas." },
+      { "title": "Una sola plataforma", "desc": "ATS, HRIS y nómina en un precio, no cinco licencias sueltas que sumar cada mes." }
+    ]
+  },
+  "meanwhile": {
+    "kicker": "Mientras tanto",
+    "title": "Explora el producto que ya está en producción.",
+    "body": "ATS, HRIS y el motor de nómina, con la IA agéntica dentro de cada tarea. Míralo funcionando, no en diapositivas.",
+    "primary": "Ver la plataforma →",
+    "secondary": "Ver la IA agéntica en vivo"
+  }
+}

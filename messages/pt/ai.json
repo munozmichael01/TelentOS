@@ -1,0 +1,107 @@
+{
+  "breadcrumb": { "products": "Produtos", "current": "AI Agents" },
+  "hero": {
+    "badge": "AI Agents · em cada fluxo",
+    "title1": "Agentes em cada fluxo. ",
+    "titleAccent": "Você decide sempre",
+    "title2": ".",
+    "subtitle": "A IA não é uma aba à parte: vive dentro do recrutamento, de pessoas e da folha. Prepara e propõe o trabalho operacional — redigir, extrair, calcular, resumir — e a escrita e a decisão finais são sempre suas.",
+    "ctaPrimary": "Comece grátis →",
+    "ctaSecondary": "Ver os agentes"
+  },
+  "demo": {
+    "kicker": "Demo ao vivo",
+    "title1": "Veja-o ",
+    "titleAccent": "preparar e propor",
+    "title2": ".",
+    "liveBadge": "Interativo · escolha tarefa e tom",
+    "taskLabel": "Escolha a tarefa",
+    "toneLabel": "Tom · ToneSelector",
+    "regenerate": "Regenerar",
+    "disclaimerPre": "O agente ",
+    "disclaimerAccent": "prepara e propõe",
+    "disclaimerPost": ". A escrita e a decisão finais são suas — ele nunca publica nem contrata sozinho.",
+    "generating": "gerando…",
+    "iaBadge": "IA",
+    "toneMeta": "tom {tone} · sobre os seus dados",
+    "use": "Usar",
+    "discard": "Descartar",
+    "tasks": [
+      { "key": "oferta", "label": "Redigir vaga" },
+      { "key": "cv", "label": "Analisar CV" },
+      { "key": "canales", "label": "Dividir orçamento" }
+    ],
+    "tones": [
+      { "key": "directo", "label": "Direto" },
+      { "key": "calido", "label": "Caloroso" },
+      { "key": "formal", "label": "Formal" }
+    ],
+    "streams": {
+      "oferta": {
+        "name": "Redator de vagas",
+        "where": "Em: criar vaga",
+        "texts": {
+          "directo": "Buscamos Product Designer Sênior em Madri. Você vai desenhar fluxos de ponta a ponta para RH. Precisa de 5+ anos, domínio de Figma e visão de sistema. Faixa 55–75k €. Híbrido, 2 dias de escritório.",
+          "calido": "Apaixonado por design com propósito? Junte-se como Product Designer Sênior em Madri e dê forma à experiência de milhares de times de RH. Buscamos 5+ anos e amor por sistemas. 55–75k €, híbrido e um time que cuida.",
+          "formal": "A TalentOS busca incorporar um(a) Product Designer Sênior em Madri. Responsabilidade: design de fluxos integrais para RH. Requisitos: 5+ anos de experiência e domínio de Figma. Remuneração: 55.000–75.000 €. Modalidade híbrida."
+        }
+      },
+      "cv": {
+        "name": "Análise de candidato",
+        "where": "Em: ficha do candidato",
+        "texts": {
+          "directo": "Elena Vidal tem fit 95/100. 6 anos em produto B2B, liderou o redesign de um HRIS. Ponto forte: design systems. A validar: gestão de stakeholders. Na entrevista, pergunte sobre o processo de research dela.",
+          "calido": "Grande perfil! Elena Vidal tem fit de 95/100. Traz 6 anos em produto B2B e um redesign de HRIS para se orgulhar. Brilha em design systems; vale explorar como lida com stakeholders. Uma conversa sobre o research dela vai esclarecer.",
+          "formal": "Candidata: Elena Vidal. Nível de fit: 95/100. Experiência: 6 anos em produto B2B, incluindo a liderança do redesign de um HRIS. Ponto forte principal: design systems. Aspecto a verificar: gestão de stakeholders."
+        }
+      },
+      "canales": {
+        "name": "Otimizador de canais",
+        "where": "Em: distribuição",
+        "texts": {
+          "directo": "Com 1.500 € para Backend Sr, coloque 60% no LinkedIn: fit médio 78 vs 61 e o melhor custo por contratação. Deixe 25% no InfoJobs para volume e 15% de reserva. Revise em 7 dias.",
+          "calido": "Com os seus 1.500 € para Backend Sr, eu apostaria forte no LinkedIn (60%): traz o melhor fit, 78 contra 61. 25% no InfoJobs soma volume e eu guardaria 15% por precaução. Olhamos juntos em uma semana.",
+          "formal": "Orçamento: 1.500 € para a vaga Backend Sr. Alocação recomendada: LinkedIn 60% (fit médio 78 vs 61), InfoJobs 25% (volume), reserva 15%. Revisão sugerida em 7 dias."
+        }
+      }
+    }
+  },
+  "invariante": {
+    "kicker": "O invariante · em todo o produto",
+    "rows": [
+      { "tag": "PREPARA", "text": "Redige, extrai, calcula e resume — o trabalho mecânico que consome horas." },
+      { "tag": "PROPÕE", "text": "Com escopo, evidência e uma ação concreta — nunca um «talvez você devesse»." },
+      { "tag": "VOCÊ DECIDE", "text": "Você confirma ou descarta com o mesmo peso. A escrita final é humana. Nunca age sozinho." }
+    ],
+    "procTitle": "Procedência, sempre visível",
+    "procBody": "Cada resultado diz de onde veio. Sem caixas-pretas: você sabe se houve modelo, heurística ou estimativa.",
+    "procRows": [
+      { "tag": "IA", "text": "Houve um modelo de linguagem por trás." },
+      { "tag": "Heurística", "text": "Regra determinística de fallback — nunca escondida." },
+      { "tag": "Estimativa", "text": "Valor aproximado, marcado como tal." }
+    ]
+  },
+  "agents": {
+    "kicker": "Os agentes",
+    "title1": "Um para cada trabalho que ",
+    "titleAccent": "não deveria ser manual",
+    "title2": ".",
+    "cards": [
+      { "name": "Redator de vagas", "where": "Em: criar vaga", "desc": "Escreve a descrição e define o perfil a partir de quatro dados, com seletor de tom.", "badge": "IA" },
+      { "name": "Career site com IA", "where": "Em: career site", "desc": "Gera sua página pública inteira a partir de um intake — hero, cultura, benefícios e FAQ.", "badge": "IA" },
+      { "name": "Perfil da empresa", "where": "Em: onboarding da conta", "desc": "Extrai o perfil da sua empresa a partir do seu site para você não começar do zero.", "badge": "IA" },
+      { "name": "Análise de candidato", "where": "Em: ficha do candidato", "desc": "Resume o CV, calcula o fit explicável e sugere o que perguntar na entrevista.", "badge": "IA · Heurística" },
+      { "name": "Otimizador de canais", "where": "Em: distribuição", "desc": "Recomenda onde investir conforme orçamento, volume ou qualidade — e conversa sobre isso.", "badge": "IA · Heurística" },
+      { "name": "Insights do dashboard", "where": "Em: início", "desc": "Aponta o urgente com escopo, evidência e ação. Você marca como feito ou ignora.", "badge": "IA · Heurística" },
+      { "name": "Checklist de onboarding", "where": "Em: admissão de colaborador", "desc": "Monta a integração adaptada ao cargo e ao time da pessoa.", "badge": "IA" }
+    ]
+  },
+  "cta": {
+    "title1": "Deixe o mecânico para os agentes. ",
+    "titleAccent": "Fique com as decisões",
+    "title2": ".",
+    "body": "Eles já vêm dentro de cada fluxo — não há nada para «ativar». Comece grátis e comprove.",
+    "primary": "Comece grátis →",
+    "secondary": "Ver toda a plataforma"
+  }
+}

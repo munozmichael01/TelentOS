@@ -1,0 +1,84 @@
+{
+  "breadcrumb": { "products": "Produtos", "current": "ATS" },
+  "hero": {
+    "badge": "ATS · Recrutamento",
+    "title1": "Do anúncio à contratação, ",
+    "titleAccent": "um único pipeline",
+    "title2": ".",
+    "subtitle": "Publique nos seus canais, deixe cada candidatura entrar no pipeline com o fit já calculado e leve-a até a oferta. E quando você contrata, a pessoa vira colaborador sem redigitar nenhum dado.",
+    "ctaPrimary": "Comece grátis →",
+    "ctaSecondary": "Ver o career site"
+  },
+  "demo": {
+    "jobTitle": "Backend Engineer",
+    "jobMeta": "34 candidatos",
+    "stages": ["Novos", "Entrevista", "Oferta"],
+    "fitPrefix": "fit ",
+    "hiredLabel": "contratado",
+    "hint": "Clique em um candidato para avançá-lo →",
+    "reset": "↺ Reiniciar",
+    "hiredBanner": "Contratado → já é colaborador no HRIS, sem redigitar"
+  },
+  "distribucion": {
+    "kicker": "Vagas e distribuição",
+    "title1": "Publique uma vez, ",
+    "titleAccent": "distribua por canal",
+    "title2": ".",
+    "body": "Importe vagas de XML, CSV ou de uma URL, ou redija com IA. Distribua para cada canal conforme o seu orçamento e objetivo, e meça o custo por candidatura de cada fonte.",
+    "checks": [
+      "Importe XML · CSV · URL, ou redija com IA",
+      "Distribuição multicanal com CPA por fonte",
+      "O otimizador de canais sugere onde investir"
+    ],
+    "panelTitle": "Distribuição · Backend Engineer",
+    "channels": [
+      { "name": "LinkedIn", "cpa": "12 €" },
+      { "name": "InfoJobs", "cpa": "18 €" },
+      { "name": "Career site", "cpa": "0 €" },
+      { "name": "Indeed", "cpa": "31 €" }
+    ],
+    "panelFoot": "Barra = candidaturas · à direita = custo por candidatura"
+  },
+  "pipeline": {
+    "kicker": "Pipeline · ATS",
+    "title1": "Cada candidato entra ",
+    "titleAccent": "com seu fit e seu histórico",
+    "title2": ".",
+    "body": "O fit é calculado contra o perfil da vaga; o detalhamento (skills, experiência) é explicável, nunca uma caixa-preta. Cada mudança de etapa fica registrada com quem e quando.",
+    "badge": "Fit explicável + rastreabilidade de cada passo",
+    "breakdownLabel": "Detalhamento do fit · explicável",
+    "rows": [
+      { "stage": "Entrevista técnica", "breakdown": ["Skills técnicas", "Experiência", "Fit cultural"] },
+      { "stage": "Triagem", "breakdown": ["Skills técnicas", "Experiência", "Fit cultural"] },
+      { "stage": "Novo", "breakdown": ["Skills técnicas", "Experiência", "Fit cultural"] }
+    ]
+  },
+  "career": {
+    "kicker": "Career site",
+    "title1": "Sua página de vagas pública, ",
+    "titleAccent": "gerada com IA",
+    "title2": ".",
+    "bodyPre": "Cada empresa tem sua página em ",
+    "bodyCode": "/careers/sua-empresa",
+    "bodyPost": ". A IA redige tudo a partir de um intake, com seletor de tom; você edita e publica. Cada candidatura chega com sua origem.",
+    "chips": ["Geração com IA", "Seletor de tom", "UTM de origem"],
+    "browser": {
+      "url": "vertice.com/careers",
+      "title": "Trabalhe na Vértice",
+      "sub": "6 vagas abertas · Barcelona e remoto",
+      "jobs": [
+        { "title": "Senior Product Designer", "meta": "Produto · Madri · 55–75k €" },
+        { "title": "Growth Marketing Lead", "meta": "Marketing · Remoto · 48–62k €" }
+      ],
+      "apply": "Candidatar-se"
+    }
+  },
+  "cta": {
+    "title1": "Recrute aqui. Gerencie ",
+    "titleAccent": "no mesmo lugar",
+    "title2": ".",
+    "body": "Quando você contrata, o candidato vira colaborador sem redigitar nada. Siga o fio até o HRIS.",
+    "primary": "Comece grátis →",
+    "secondary": "Ver o HRIS →"
+  }
+}

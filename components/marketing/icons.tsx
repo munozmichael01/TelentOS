@@ -131,6 +131,36 @@ const PATHS: Record<string, ReactNode> = {
   check: <path d="M5 12l5 5 9-11" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />,
   chevron: <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />,
   sliders: <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />,
+  alert: (
+    <>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 8v5M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </>
+  ),
+  mail: <path d="M4 6h16v12H4zM4 8l8 5 8-5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />,
+  heart: <path d="M12 20s-7-4.5-9.2-9C1.2 8 3 4.5 6.5 4.5c2 0 3.4 1.2 4.5 2.8 1.1-1.6 2.5-2.8 4.5-2.8 3.5 0 5.3 3.5 3.7 6.5C19 15.5 12 20 12 20Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />,
+  shieldcheck: (
+    <>
+      <path d="M12 3l8 4v5c0 4.5-3 7.5-8 9-5-1.5-8-4.5-8-9V7l8-4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M8.5 12l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </>
+  ),
+  layers: <path d="M12 3l9 5-9 5-9-5 9-5ZM3 13l9 5 9-5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />,
+  clipcheck: (
+    <>
+      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="currentColor" strokeWidth="2" />
+      <rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="2" />
+      <path d="M8.5 13l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </>
+  ),
+  extract: (
+    <>
+      <path d="M4 4h16v6H4zM4 14h10v6H4z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M18 17h3M18 20h3M19.5 14v9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </>
+  ),
+  spark: <path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />,
+  refresh: <path d="M4 12a8 8 0 018-8 8 8 0 016.9 4M20 12a8 8 0 01-8 8 8 8 0 01-6.9-4M18 3v4h-4M6 21v-4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />,
 };
 
 export type IconName = keyof typeof PATHS;

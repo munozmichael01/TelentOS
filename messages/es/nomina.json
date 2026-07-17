@@ -1,0 +1,109 @@
+{
+  "breadcrumb": { "products": "Productos", "current": "Payroll" },
+  "hero": {
+    "badge": "Payroll · Nómina",
+    "title1": "Del bruto al recibo, ",
+    "titleAccent": "en el mismo sistema",
+    "title2": ".",
+    "subtitle": "La nómina bebe directo del HRIS: perfiles de compensación, horas y ausencias ya están dentro. Preparas la corrida, la revisas, se aprueba y salen los recibos — con separación de funciones y compliance por país.",
+    "ctaPrimary": "Empezar gratis →",
+    "ctaSecondary": "Ver compliance por país",
+    "runKicker": "Corrida · Junio 2026",
+    "runCompany": "Acme España S.L.",
+    "runStatus": "En revisión",
+    "runLines": [
+      { "ini": "IM", "name": "Isabel Moreno", "detail": "Product Designer · indefinido", "gross": "3.725 €" },
+      { "ini": "DS", "name": "Diego Salas", "detail": "Backend Engineer · indefinido", "gross": "4.100 €" },
+      { "ini": "NV", "name": "Nora Vidal", "detail": "Recruiter · indefinido", "gross": "4.075 €" }
+    ],
+    "runTotalLabel": "Total bruto · 3 de 24",
+    "runTotal": "11.900 €"
+  },
+  "honesty": {
+    "doesLabel": "Lo que hace hoy",
+    "does": "Motor de <b>cálculo de gestión</b> (bruto = base + componentes + novedades), <b>corridas</b> con ciclo de estados y aprobación, <b>recibos</b> generados y <b>exports contables</b> en CSV.",
+    "notLabel": "Lo que aún no",
+    "not": "Sin <b>integración bancaria</b> ni envío de ficheros a bancos. Las <b>retenciones legales</b> por país están en vista previa (ver packs). Contamos solo lo que ya funciona."
+  },
+  "motor": {
+    "kicker": "Motor de cálculo",
+    "title1": "Genera las líneas ",
+    "titleAccent": "desde el dato que ya tienes",
+    "title2": ".",
+    "body": "Creas la corrida con período y entidad, y el motor arma cada línea: el perfil salarial vigente, los componentes fijos y las novedades del mes — pagos del banco de horas, ajustes puntuales y ausencias no retribuidas. Aritmética de gestión, transparente y explicable.",
+    "checks": [
+      "Bruto = base + componentes + novedades",
+      "El banco de horas «pago» entra como novedad",
+      "Una corrida = una entidad = un país"
+    ],
+    "breakdown": {
+      "kicker": "Desglose · Isabel Moreno · junio",
+      "baseLabel": "Salario base",
+      "baseAmount": "3.400,00 €",
+      "plusLabel": "Plus responsabilidad",
+      "plusAmount": "300,00 €",
+      "otLabel": "Horas extra",
+      "otBadge": "banco de horas",
+      "otAmount": "+180,00 €",
+      "absLabel": "Ausencia no retribuida (1d)",
+      "absAmount": "−154,55 €",
+      "grossLabel": "Bruto del período",
+      "grossAmount": "3.725,45 €",
+      "dedLabel": "Retenciones",
+      "netLabel": "Neto a percibir",
+      "countries": [
+        { "key": "generic", "kind": "active", "label": "Genérico", "status": "Activo", "deductions": [], "net": "3.725,45 €", "note": "Pack genérico · neto = bruto, sin retenciones legales." },
+        { "key": "es", "kind": "preview", "label": "España", "status": "Vista previa", "deductions": [ { "label": "IRPF (15%)", "amount": "−558,82 €" }, { "label": "Cotización SS (6,35%)", "amount": "−236,57 €" } ], "net": "2.930,06 €", "note": "Pack España · vista previa · retenciones estimadas." },
+        { "key": "mx", "kind": "soon", "label": "México", "status": "Próximamente", "deductions": [ { "label": "ISR", "amount": "−450,00 €" }, { "label": "IMSS", "amount": "−95,00 €" } ], "net": "3.180,45 €", "note": "Pack México · próximamente." },
+        { "key": "co", "kind": "soon", "label": "Colombia", "status": "Próximamente", "deductions": [ { "label": "Salud (4%)", "amount": "−149,02 €" }, { "label": "Pensión (4%)", "amount": "−149,02 €" } ], "net": "3.427,41 €", "note": "Pack Colombia · próximamente." }
+      ]
+    }
+  },
+  "corridas": {
+    "kicker": "Corridas · pay runs",
+    "title1": "Quien prepara ",
+    "titleAccent": "no aprueba",
+    "title2": ".",
+    "body": "Cada corrida recorre un ciclo de estados con separación de funciones: hr_admin prepara y revisa; solo el owner aprueba y marca pagada. Toda transición queda en el registro de auditoría, con actor y fecha.",
+    "badge": "Auditoría de cada cambio de estado",
+    "states": ["Borrador", "En revisión", "Aprobada", "Exportada", "Pagada"],
+    "roles": [
+      { "name": "OWNER", "scope": "Aprueba la corrida · marca pagada" },
+      { "name": "HR ADMIN", "scope": "Crea, genera líneas, revisa y ajusta" },
+      { "name": "EMPLOYEE", "scope": "Verá sus recibos", "note": "(futuro)" }
+    ]
+  },
+  "modulos": {
+    "receiptsTitle": "Recibos al aprobar",
+    "receiptsDesc": "Al aprobar la corrida se generan los recibos de cada persona. Se consultan desde el perfil o desde la corrida — no hay que rehacerlos a mano.",
+    "receiptsChips": ["Recibo por período", "Historial por empleado"],
+    "compTitle": "Compensación en el empleado",
+    "compDesc": "Salario, componentes e historial <b>effective-dated</b> viven en la ficha. La nómina lee siempre el perfil vigente; el roster de payroll muestra quién lo tiene configurado.",
+    "compChips": ["Historial salarial", "Banco de horas → nómina"]
+  },
+  "packs": {
+    "kicker": "Compliance por país",
+    "title1": "Packs legales modulares. ",
+    "titleAccent": "Sin promesas que no cumplimos",
+    "title2": ".",
+    "intro": "El país base de tu empresa da moneda, festivos y reglas. El pack genérico ya funciona; los legales van llegando — y mientras, lo decimos claro.",
+    "previewNote": "Cálculos no operativos todavía",
+    "cards": [
+      { "key": "generic", "kind": "active", "name": "Genérico", "status": "Activo", "desc": "Gestión pura: bruto = base + componentes + novedades. Neto = bruto, sin retenciones.", "tags": ["Cálculo", "Corridas", "Recibos", "Exports CSV"] },
+      { "key": "es", "kind": "preview", "name": "España", "status": "Vista previa", "desc": "Retenciones legales del país base España.", "tags": ["IRPF por tramos", "Cotización SS", "Pagas 12/14", "SMI", "Finiquito"] },
+      { "key": "ve", "kind": "preview", "name": "Venezuela", "status": "Vista previa", "desc": "Aportes y beneficios con doble moneda VES/USD.", "tags": ["SSO · RPE", "FAOV · INCES", "Utilidades", "Prestaciones", "Bono alimentación"] },
+      { "key": "br", "kind": "preview", "name": "Brasil", "status": "Vista previa", "desc": "Encargos y provisiones del régimen brasileño.", "tags": ["INSS · FGTS", "IRRF", "13º salário", "Férias + 1/3", "Vale-refeição"] },
+      { "key": "co", "kind": "soon", "name": "Colombia", "status": "Próximamente", "desc": "En el catálogo de packs legales.", "tags": ["En el roadmap"] },
+      { "key": "mx", "kind": "soon", "name": "México", "status": "Próximamente", "desc": "En el catálogo de packs legales.", "tags": ["En el roadmap"] }
+    ],
+    "exports": "<b>Exports reales:</b> Resumen de nómina y asiento contable en CSV, disponibles tras la aprobación. El fichero bancario y el compliance local quedan detrás del pack de país (mock con badge mientras no esté activo)."
+  },
+  "cta": {
+    "title1": "Lleva tu nómina al ",
+    "titleAccent": "mismo sitio",
+    "title2": " que el resto.",
+    "body": "Empieza gratis con el pack genérico. Activa tu país cuando su compliance legal esté disponible — sin migrar nada.",
+    "primary": "Empezar gratis →",
+    "secondary": "Ver toda la plataforma"
+  }
+}

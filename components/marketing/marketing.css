@@ -71,6 +71,16 @@
 .hero-chip.on { background:var(--ink); color:#fff; border-color:var(--ink); }
 .hero-hint { animation:ld-float 3.4s ease-in-out infinite; }
 
+/* ── nómina · desglose por país ── */
+@keyframes ld-pop { from{opacity:0; transform:translateY(-3px);} to{opacity:1; transform:none;} }
+.ld-pop { animation:ld-pop .2s ease both; }
+.ld-ctychip { transition: background .12s ease, color .12s ease, border-color .12s ease; cursor:pointer; }
+
+/* ── pricing · sheen de la card de aviso ── */
+@keyframes ld-sheen { 0%{background-position:-160% 0;} 100%{background-position:260% 0;} }
+.ld-sheen { background:linear-gradient(100deg,transparent 20%,rgba(198,242,78,.55) 50%,transparent 80%); background-size:200% 100%; animation:ld-sheen 3.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce){ .ld-pop,.ld-sheen{animation:none!important;} }
+
 /* ── language selector ── */
 .ld-langbtn { display:inline-flex; align-items:center; gap:6px; font-family:'Space Mono',monospace; font-size:11.5px; font-weight:700; letter-spacing:.5px; color:#79746B; background:transparent; border:1.5px solid #E7E1D4; border-radius:10px; padding:7px 10px; cursor:pointer; transition:border-color .12s ease, color .12s ease; }
 .ld-langbtn:hover { border-color:#1A1A17; color:#1A1A17; }
@@ -89,3 +99,25 @@
   .site-navlinks { display:none !important; }
 }
 @media (max-width:520px){ .ld-h1-title { font-size:34px !important; } .hero-pulse { grid-template-columns:1fr 1fr !important; } }
+
+/* ── páginas de producto (ATS · HRIS · AI Agents) ── */
+.ld-kan { transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; cursor:pointer; }
+.ld-kan:hover { transform:translate(-1px,-1px); border-color:#1A1A17; box-shadow:3px 3px 0 #1A1A17; }
+.ld-kan:active { transform:translate(1px,1px); box-shadow:1px 1px 0 #1A1A17; }
+.ld-fitrow { transition:border-color .12s ease, box-shadow .12s ease; cursor:pointer; }
+.ld-fitrow:hover { border-color:#D2C9B6; box-shadow:0 6px 16px -10px rgba(26,26,23,.4); }
+.ld-hrrow { transition:background .12s ease; cursor:pointer; }
+.ld-hrrow:hover { background:#F4F0E8; }
+.ld-orgnode { transition:background .12s ease, border-color .12s ease; cursor:pointer; }
+.ld-orgnode:hover { background:#F4F0E8; border-color:#D2C9B6; }
+.ld-agent { transition:transform .14s ease, border-color .14s ease, background .14s ease, box-shadow .14s ease; }
+.ld-agent:hover { transform:translate(-2px,-2px); border-color:rgba(198,242,78,.55); background:#26241F; box-shadow:6px 6px 0 rgba(0,0,0,.55); }
+.ld-agent:active { transform:translate(1px,1px); box-shadow:2px 2px 0 rgba(0,0,0,.55); }
+.ld-tchip { transition:background .12s ease, color .12s ease, border-color .12s ease; }
+@keyframes ld-cursorblink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+.ld-cursor { display:inline-block; width:8px; height:1.02em; vertical-align:-2px; background:#C6F24E; margin-left:2px; border-radius:1px; animation:ld-cursorblink 1s step-end infinite; }
+@media (max-width:860px){
+  .ld-ph1 { font-size:40px !important; letter-spacing:-1.5px !important; }
+}
+@media (max-width:520px){ .ld-ph1 { font-size:32px !important; } }
+@media (prefers-reduced-motion: reduce){ .ld-cursor,.ld-kan,.ld-agent{animation:none!important;transition:none!important;} }

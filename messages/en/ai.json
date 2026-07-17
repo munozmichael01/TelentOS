@@ -1,0 +1,107 @@
+{
+  "breadcrumb": { "products": "Products", "current": "AI Agents" },
+  "hero": {
+    "badge": "AI Agents · in every flow",
+    "title1": "Agents in every flow. ",
+    "titleAccent": "You always decide",
+    "title2": ".",
+    "subtitle": "AI isn't a separate tab: it lives inside recruiting, people and payroll. It prepares and proposes the operational work — drafting, extracting, calculating, summarizing — and the final wording and the final decision are always yours.",
+    "ctaPrimary": "Start for free →",
+    "ctaSecondary": "Meet the agents"
+  },
+  "demo": {
+    "kicker": "Live demo",
+    "title1": "Watch it ",
+    "titleAccent": "prepare and propose",
+    "title2": ".",
+    "liveBadge": "Interactive · pick a task and a tone",
+    "taskLabel": "Pick the task",
+    "toneLabel": "Tone · ToneSelector",
+    "regenerate": "Regenerate",
+    "disclaimerPre": "The agent ",
+    "disclaimerAccent": "prepares and proposes",
+    "disclaimerPost": ". The final wording and the final decision are yours — it never publishes or hires on its own.",
+    "generating": "generating…",
+    "iaBadge": "AI",
+    "toneMeta": "tone {tone} · on your data",
+    "use": "Use",
+    "discard": "Discard",
+    "tasks": [
+      { "key": "oferta", "label": "Write a job post" },
+      { "key": "cv", "label": "Analyze a CV" },
+      { "key": "canales", "label": "Split the budget" }
+    ],
+    "tones": [
+      { "key": "directo", "label": "Direct" },
+      { "key": "calido", "label": "Warm" },
+      { "key": "formal", "label": "Formal" }
+    ],
+    "streams": {
+      "oferta": {
+        "name": "Job post writer",
+        "where": "In: create job",
+        "texts": {
+          "directo": "We're hiring a Senior Product Designer in Madrid. You'll design end-to-end flows for HR teams. You need 5+ years, strong Figma and systems thinking. Range €55–75k. Hybrid, 2 office days.",
+          "calido": "Passionate about design with purpose? Join us as a Senior Product Designer in Madrid and shape the experience of thousands of HR teams. We're looking for 5+ years and a love of systems. €55–75k, hybrid, and a team that cares.",
+          "formal": "TalentOS seeks to appoint a Senior Product Designer in Madrid. Responsibility: design of end-to-end HR workflows. Requirements: 5+ years of experience and proficiency in Figma. Compensation: €55,000–75,000. Hybrid arrangement."
+        }
+      },
+      "cv": {
+        "name": "Candidate analysis",
+        "where": "In: candidate record",
+        "texts": {
+          "directo": "Elena Vidal scores 95/100. 6 years in B2B product, led an HRIS redesign. Strength: design systems. To validate: stakeholder management. In the interview, ask about her research process.",
+          "calido": "Great profile! Elena Vidal fits at 95/100. She brings 6 years in B2B product and an HRIS redesign to be proud of. She shines at design systems; worth exploring how she handles stakeholders. A chat about her research will clear it up.",
+          "formal": "Candidate: Elena Vidal. Fit score: 95/100. Experience: 6 years in B2B product, including leading an HRIS redesign. Key strength: design systems. To verify: stakeholder management."
+        }
+      },
+      "canales": {
+        "name": "Channel optimizer",
+        "where": "In: distribution",
+        "texts": {
+          "directo": "With €1,500 for Backend Sr, put 60% into LinkedIn: average fit 78 vs 61 and the best cost per hire. Keep 25% on InfoJobs for volume and hold 15% in reserve. Review in 7 days.",
+          "calido": "With your €1,500 for Backend Sr, I'd bet big on LinkedIn (60%): it brings the best fit, 78 versus 61. 25% on InfoJobs adds volume, and I'd keep 15% just in case. Let's look at it together in a week.",
+          "formal": "Budget: €1,500 for the Backend Sr opening. Recommended allocation: LinkedIn 60% (average fit 78 vs 61), InfoJobs 25% (volume), reserve 15%. Suggested review in 7 days."
+        }
+      }
+    }
+  },
+  "invariante": {
+    "kicker": "The invariant · across the product",
+    "rows": [
+      { "tag": "PREPARES", "text": "It drafts, extracts, calculates and summarizes — the mechanical work that eats hours." },
+      { "tag": "PROPOSES", "text": "With scope, evidence and one concrete action — never a \"maybe you should\"." },
+      { "tag": "YOU DECIDE", "text": "You confirm or discard with equal weight. The final wording is human. It never acts alone." }
+    ],
+    "procTitle": "Provenance, always visible",
+    "procBody": "Every result says where it came from. No black boxes: you know whether it was a model, a heuristic or an estimate.",
+    "procRows": [
+      { "tag": "AI", "text": "A language model was behind it." },
+      { "tag": "Heuristic", "text": "A deterministic fallback rule — never hidden." },
+      { "tag": "Estimate", "text": "An approximate value, labeled as such." }
+    ]
+  },
+  "agents": {
+    "kicker": "The agents",
+    "title1": "One for every job that ",
+    "titleAccent": "shouldn't be manual",
+    "title2": ".",
+    "cards": [
+      { "name": "Job post writer", "where": "In: create job", "desc": "Writes the description and defines the profile from four inputs, with a tone selector.", "badge": "AI" },
+      { "name": "AI career site", "where": "In: career site", "desc": "Generates your entire public page from an intake — hero, culture, benefits and FAQ.", "badge": "AI" },
+      { "name": "Company profile", "where": "In: account onboarding", "desc": "Extracts your company profile from your website so you never start from scratch.", "badge": "AI" },
+      { "name": "Candidate analysis", "where": "In: candidate record", "desc": "Summarizes the CV, computes an explainable fit and suggests what to ask in the interview.", "badge": "AI · Heuristic" },
+      { "name": "Channel optimizer", "where": "In: distribution", "desc": "Recommends where to invest based on budget, volume or quality — and discusses it with you.", "badge": "AI · Heuristic" },
+      { "name": "Dashboard insights", "where": "In: home", "desc": "Flags what's urgent with scope, evidence and an action. You mark it done or ignore it.", "badge": "AI · Heuristic" },
+      { "name": "Onboarding checklist", "where": "In: employee onboarding", "desc": "Builds the onboarding plan tailored to the person's role and team.", "badge": "AI" }
+    ]
+  },
+  "cta": {
+    "title1": "Leave the mechanical work to the agents. ",
+    "titleAccent": "Keep the decisions",
+    "title2": ".",
+    "body": "They already live inside every flow — there's nothing to \"switch on\". Start for free and see for yourself.",
+    "primary": "Start for free →",
+    "secondary": "See the whole platform"
+  }
+}

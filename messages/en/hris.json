@@ -1,0 +1,112 @@
+{
+  "breadcrumb": { "products": "Products", "current": "HRIS" },
+  "hero": {
+    "badge": "People · HRIS",
+    "title1": "The whole employee lifecycle, ",
+    "titleAccent": "in one living record",
+    "title2": ".",
+    "subtitle": "Directory, org chart, onboarding, time off, hours and schedules on the same foundation as recruiting. The record you opened when hiring is the one you manage — and the one payroll pays.",
+    "ctaPrimary": "Start for free →",
+    "ctaSecondary": "See the record"
+  },
+  "demo": {
+    "header": "Employees",
+    "meta": "24 people",
+    "hint": "Click a person to open their record →",
+    "back": "← Directory",
+    "note": "This same record feeds payroll — nothing re-entered",
+    "people": [
+      {
+        "role": "Product Designer · Product",
+        "tag": "Owner",
+        "fields": [
+          { "g": "Role & organization", "v": "Product Designer · Sr II · reports to Carla Ruiz" },
+          { "g": "Location & modality", "v": "Spain · Madrid · hybrid" },
+          { "g": "Personal", "v": "Contact & emergency · joined Jul 1, 2026" },
+          { "g": "Legal & compensation", "v": "TalentOS SL · health plan · €68,000" }
+        ]
+      },
+      {
+        "role": "Head of Product",
+        "tag": "Manager",
+        "fields": [
+          { "g": "Role & organization", "v": "Head of Product · reports to CEO · 2 people" },
+          { "g": "Location & modality", "v": "Spain · Madrid · hybrid" },
+          { "g": "Personal", "v": "Contact & emergency · joined 2024" },
+          { "g": "Legal & compensation", "v": "TalentOS SL · health plan · confidential" }
+        ]
+      },
+      {
+        "role": "Backend Engineer",
+        "tag": "Employee",
+        "fields": [
+          { "g": "Role & organization", "v": "Backend Engineer · reports to Carla Ruiz" },
+          { "g": "Location & modality", "v": "Spain · remote" },
+          { "g": "Personal", "v": "Contact & emergency · joined 2025" },
+          { "g": "Legal & compensation", "v": "TalentOS SL · bank account pending" }
+        ]
+      },
+      {
+        "role": "Recruiter · Talent",
+        "tag": "Employee",
+        "fields": [
+          { "g": "Role & organization", "v": "Recruiter · reports to People Lead" },
+          { "g": "Location & modality", "v": "Spain · Barcelona · hybrid" },
+          { "g": "Personal", "v": "Contact & emergency · joined 2025" },
+          { "g": "Legal & compensation", "v": "TalentOS SL · health plan" }
+        ]
+      }
+    ]
+  },
+  "ficha": {
+    "kicker": "Employee record",
+    "title1": "One record that ",
+    "titleAccent": "knows everything",
+    "title2": ".",
+    "body": "Personal and contact details, emergency contact, seniority, country, city, work modality, legal entity and benefits. Grouped by section, with role-based permissions: everyone sees exactly what they should.",
+    "badge": "Compensation and sensitive data, only for those who should see it",
+    "cardRole": "Product Designer · Product",
+    "groups": [
+      { "name": "Personal", "fields": "Contact · emergency · birth date" },
+      { "name": "Role & organization", "fields": "Title · level · reports to" },
+      { "name": "Location & modality", "fields": "Country · city · hybrid" },
+      { "name": "Legal & compensation", "fields": "Legal entity · benefits" }
+    ]
+  },
+  "onb": {
+    "title": "Onboarding by role",
+    "body": "The candidate becomes an employee with an onboarding checklist generated for their role and team. Nothing is re-entered: their name, email and title already come from the ATS.",
+    "chips": ["Checklist by role", "Add myself as employee"]
+  },
+  "org": {
+    "title": "Directory & org chart",
+    "body": "Your whole company in a searchable directory and a living org chart by reporting line. Each manager reaches only their branch; everyone else sees what their role allows.",
+    "chips": ["Org chart by reporting line", "Documents"],
+    "rootMeta": "Head of Product · 2 reports",
+    "reports": [{ "role": "Product Designer" }, { "role": "Backend Engineer" }]
+  },
+  "tiempo": {
+    "kicker": "Time off · Hours · Schedules",
+    "title1": "Your team's time, ",
+    "titleAccent": "under control",
+    "title2": ".",
+    "body": "Configurable absence types and policies, time tracking and schedule templates. Everything pending approval surfaces before payroll closes — and feeds the run directly.",
+    "stats": [
+      { "big": "Configurable", "small": "absence types and policies" },
+      { "big": "→ payroll", "small": "changes feed the pay run" }
+    ],
+    "rows": [
+      { "name": "Time off", "desc": "configurable types and policies", "status": "Configurable" },
+      { "name": "Time tracking", "desc": "workday log and timesheets", "status": "Active" },
+      { "name": "Schedules", "desc": "workday templates", "status": "Active" }
+    ]
+  },
+  "cta": {
+    "title1": "One single foundation, ",
+    "titleAccent": "from hire to payslip",
+    "title2": ".",
+    "body": "What you manage about the employee feeds payroll with nothing re-entered. It's that direct.",
+    "primary": "Start for free →",
+    "secondary": "See Payroll →"
+  }
+}

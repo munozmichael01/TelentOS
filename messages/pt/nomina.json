@@ -1,0 +1,109 @@
+{
+  "breadcrumb": { "products": "Produtos", "current": "Payroll" },
+  "hero": {
+    "badge": "Payroll · Folha",
+    "title1": "Do bruto ao holerite, ",
+    "titleAccent": "no mesmo sistema",
+    "title2": ".",
+    "subtitle": "A folha bebe direto do HRIS: perfis de remuneração, horas e ausências já estão lá dentro. Você prepara a folha, revisa, ela é aprovada e os holerites saem — com separação de funções e compliance por país.",
+    "ctaPrimary": "Comece grátis →",
+    "ctaSecondary": "Ver compliance por país",
+    "runKicker": "Folha · Junho 2026",
+    "runCompany": "Acme España S.L.",
+    "runStatus": "Em revisão",
+    "runLines": [
+      { "ini": "IM", "name": "Isabel Moreno", "detail": "Product Designer · efetivo", "gross": "3.725 €" },
+      { "ini": "DS", "name": "Diego Salas", "detail": "Backend Engineer · efetivo", "gross": "4.100 €" },
+      { "ini": "NV", "name": "Nora Vidal", "detail": "Recruiter · efetivo", "gross": "4.075 €" }
+    ],
+    "runTotalLabel": "Total bruto · 3 de 24",
+    "runTotal": "11.900 €"
+  },
+  "honesty": {
+    "doesLabel": "O que faz hoje",
+    "does": "Motor de <b>cálculo gerencial</b> (bruto = base + componentes + ajustes), <b>folhas</b> com ciclo de estados e aprovação, <b>holerites</b> gerados e <b>exports contábeis</b> em CSV.",
+    "notLabel": "O que ainda não",
+    "not": "Sem <b>integração bancária</b> nem envio de arquivos a bancos. As <b>retenções legais</b> por país estão em prévia (ver packs). Contamos só o que já funciona."
+  },
+  "motor": {
+    "kicker": "Motor de cálculo",
+    "title1": "Gere as linhas ",
+    "titleAccent": "a partir do dado que você já tem",
+    "title2": ".",
+    "body": "Você cria a folha com período e entidade, e o motor monta cada linha: o perfil salarial vigente, os componentes fixos e os ajustes do mês — pagamentos do banco de horas, acertos pontuais e ausências não remuneradas. Aritmética gerencial, transparente e explicável.",
+    "checks": [
+      "Bruto = base + componentes + ajustes",
+      "O banco de horas «pagamento» entra como ajuste",
+      "Uma folha = uma entidade = um país"
+    ],
+    "breakdown": {
+      "kicker": "Detalhamento · Isabel Moreno · junho",
+      "baseLabel": "Salário base",
+      "baseAmount": "3.400,00 €",
+      "plusLabel": "Adicional de responsabilidade",
+      "plusAmount": "300,00 €",
+      "otLabel": "Horas extras",
+      "otBadge": "banco de horas",
+      "otAmount": "+180,00 €",
+      "absLabel": "Ausência não remunerada (1d)",
+      "absAmount": "−154,55 €",
+      "grossLabel": "Bruto do período",
+      "grossAmount": "3.725,45 €",
+      "dedLabel": "Retenções",
+      "netLabel": "Líquido a receber",
+      "countries": [
+        { "key": "generic", "kind": "active", "label": "Genérico", "status": "Ativo", "deductions": [], "net": "3.725,45 €", "note": "Pack genérico · líquido = bruto, sem retenções legais." },
+        { "key": "es", "kind": "preview", "label": "Espanha", "status": "Prévia", "deductions": [ { "label": "IRPF (15%)", "amount": "−558,82 €" }, { "label": "Contribuição SS (6,35%)", "amount": "−236,57 €" } ], "net": "2.930,06 €", "note": "Pack Espanha · prévia · retenções estimadas." },
+        { "key": "mx", "kind": "soon", "label": "México", "status": "Em breve", "deductions": [ { "label": "ISR", "amount": "−450,00 €" }, { "label": "IMSS", "amount": "−95,00 €" } ], "net": "3.180,45 €", "note": "Pack México · em breve." },
+        { "key": "co", "kind": "soon", "label": "Colômbia", "status": "Em breve", "deductions": [ { "label": "Saúde (4%)", "amount": "−149,02 €" }, { "label": "Pensão (4%)", "amount": "−149,02 €" } ], "net": "3.427,41 €", "note": "Pack Colômbia · em breve." }
+      ]
+    }
+  },
+  "corridas": {
+    "kicker": "Folhas · pay runs",
+    "title1": "Quem prepara ",
+    "titleAccent": "não aprova",
+    "title2": ".",
+    "body": "Cada folha percorre um ciclo de estados com separação de funções: hr_admin prepara e revisa; só o owner aprova e marca como paga. Toda transição fica no registro de auditoria, com autor e data.",
+    "badge": "Auditoria de cada mudança de estado",
+    "states": ["Rascunho", "Em revisão", "Aprovada", "Exportada", "Paga"],
+    "roles": [
+      { "name": "OWNER", "scope": "Aprova a folha · marca como paga" },
+      { "name": "HR ADMIN", "scope": "Cria, gera linhas, revisa e ajusta" },
+      { "name": "EMPLOYEE", "scope": "Verá seus holerites", "note": "(futuro)" }
+    ]
+  },
+  "modulos": {
+    "receiptsTitle": "Holerites ao aprovar",
+    "receiptsDesc": "Ao aprovar a folha, os holerites de cada pessoa são gerados. Consulte no perfil ou na própria folha — sem refazer nada à mão.",
+    "receiptsChips": ["Holerite por período", "Histórico por funcionário"],
+    "compTitle": "Remuneração no funcionário",
+    "compDesc": "Salário, componentes e histórico <b>effective-dated</b> vivem na ficha. A folha sempre lê o perfil vigente; o roster de payroll mostra quem já está configurado.",
+    "compChips": ["Histórico salarial", "Banco de horas → folha"]
+  },
+  "packs": {
+    "kicker": "Compliance por país",
+    "title1": "Packs legais modulares. ",
+    "titleAccent": "Sem promessas que não cumprimos",
+    "title2": ".",
+    "intro": "O país base da sua empresa define moeda, feriados e regras. O pack genérico já funciona; os legais vão chegando — e enquanto isso, falamos claro.",
+    "previewNote": "Cálculos ainda não operacionais",
+    "cards": [
+      { "key": "generic", "kind": "active", "name": "Genérico", "status": "Ativo", "desc": "Gestão pura: bruto = base + componentes + ajustes. Líquido = bruto, sem retenções.", "tags": ["Cálculo", "Folhas", "Holerites", "Exports CSV"] },
+      { "key": "es", "kind": "preview", "name": "Espanha", "status": "Prévia", "desc": "Retenções legais do país base Espanha.", "tags": ["IRPF por faixas", "Contribuição SS", "Pagamentos 12/14", "Salário mínimo", "Rescisão"] },
+      { "key": "ve", "kind": "preview", "name": "Venezuela", "status": "Prévia", "desc": "Contribuições e benefícios com moeda dupla VES/USD.", "tags": ["SSO · RPE", "FAOV · INCES", "Utilidades", "Prestações", "Bônus alimentação"] },
+      { "key": "br", "kind": "preview", "name": "Brasil", "status": "Prévia", "desc": "Encargos e provisões do regime brasileiro.", "tags": ["INSS · FGTS", "IRRF", "13º salário", "Férias + 1/3", "Vale-refeição"] },
+      { "key": "co", "kind": "soon", "name": "Colômbia", "status": "Em breve", "desc": "No catálogo de packs legais.", "tags": ["No roadmap"] },
+      { "key": "mx", "kind": "soon", "name": "México", "status": "Em breve", "desc": "No catálogo de packs legais.", "tags": ["No roadmap"] }
+    ],
+    "exports": "<b>Exports reais:</b> resumo da folha e lançamento contábil em CSV, disponíveis após a aprovação. O arquivo bancário e o compliance local ficam atrás do pack de país (mock com badge enquanto não estiver ativo)."
+  },
+  "cta": {
+    "title1": "Leve sua folha para o ",
+    "titleAccent": "mesmo lugar",
+    "title2": " que o resto.",
+    "body": "Comece grátis com o pack genérico. Ative seu país quando o compliance legal estiver disponível — sem migrar nada.",
+    "primary": "Comece grátis →",
+    "secondary": "Ver toda a plataforma"
+  }
+}

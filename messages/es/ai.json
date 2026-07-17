@@ -1,0 +1,107 @@
+{
+  "breadcrumb": { "products": "Productos", "current": "AI Agents" },
+  "hero": {
+    "badge": "AI Agents · en cada flujo",
+    "title1": "Agentes en cada flujo. ",
+    "titleAccent": "Tú decides siempre",
+    "title2": ".",
+    "subtitle": "La IA no es una pestaña aparte: vive dentro de reclutamiento, personas y nómina. Prepara y propone el trabajo operativo — redactar, extraer, calcular, resumir — y la escritura y la decisión finales son siempre tuyas.",
+    "ctaPrimary": "Empezar gratis →",
+    "ctaSecondary": "Ver los agentes"
+  },
+  "demo": {
+    "kicker": "Demo en vivo",
+    "title1": "Míralo ",
+    "titleAccent": "preparar y proponer",
+    "title2": ".",
+    "liveBadge": "Interactivo · elige tarea y tono",
+    "taskLabel": "Elige la tarea",
+    "toneLabel": "Tono · ToneSelector",
+    "regenerate": "Regenerar",
+    "disclaimerPre": "El agente ",
+    "disclaimerAccent": "prepara y propone",
+    "disclaimerPost": ". La escritura y la decisión finales son tuyas — nunca publica ni contrata solo.",
+    "generating": "generando…",
+    "iaBadge": "IA",
+    "toneMeta": "tono {tone} · sobre tus datos",
+    "use": "Usar",
+    "discard": "Descartar",
+    "tasks": [
+      { "key": "oferta", "label": "Redactar oferta" },
+      { "key": "cv", "label": "Analizar CV" },
+      { "key": "canales", "label": "Repartir presupuesto" }
+    ],
+    "tones": [
+      { "key": "directo", "label": "Directo" },
+      { "key": "calido", "label": "Cálido" },
+      { "key": "formal", "label": "Formal" }
+    ],
+    "streams": {
+      "oferta": {
+        "name": "Redactor de ofertas",
+        "where": "En: crear oferta",
+        "texts": {
+          "directo": "Buscamos Product Designer Senior en Madrid. Diseñarás flujos de extremo a extremo para RR. HH. Necesitas 5+ años, dominio de Figma y criterio de sistema. Banda 55–75k €. Híbrido, 2 días de oficina.",
+          "calido": "¿Te apasiona el diseño con propósito? Únete como Product Designer Senior en Madrid y da forma a la experiencia de miles de equipos de RR. HH. Buscamos 5+ años y amor por los sistemas. 55–75k €, híbrido y un equipo que cuida.",
+          "formal": "TalentOS precisa incorporar un/a Product Designer Senior en Madrid. Responsabilidad: diseño de flujos integrales para RR. HH. Requisitos: 5+ años de experiencia y dominio de Figma. Retribución: 55.000–75.000 €. Modalidad híbrida."
+        }
+      },
+      "cv": {
+        "name": "Análisis de candidato",
+        "where": "En: ficha de candidato",
+        "texts": {
+          "directo": "Elena Vidal encaja 95/100. 6 años en producto B2B, lideró el rediseño de un HRIS. Fortaleza: sistemas de diseño. A validar: gestión de stakeholders. Pregunta en entrevista por su proceso de research.",
+          "calido": "¡Gran perfil! Elena Vidal encaja al 95/100. Trae 6 años en producto B2B y un rediseño de HRIS del que estar orgullosa. Brilla en sistemas de diseño; conviene explorar cómo maneja stakeholders. Una charla sobre su research lo aclarará.",
+          "formal": "Candidata: Elena Vidal. Nivel de encaje: 95/100. Experiencia: 6 años en producto B2B, incluida la dirección de un rediseño de HRIS. Fortaleza principal: sistemas de diseño. Aspecto a verificar: gestión de stakeholders."
+        }
+      },
+      "canales": {
+        "name": "Optimizador de canales",
+        "where": "En: distribución",
+        "texts": {
+          "directo": "Con 1.500 € para Backend Sr, mete 60% en LinkedIn: fit medio 78 vs 61 y mejor coste por contratación. Deja 25% en InfoJobs para volumen y 15% de reserva. Revisa a los 7 días.",
+          "calido": "Con tus 1.500 € para Backend Sr, yo apostaría fuerte por LinkedIn (60%): trae el mejor fit, 78 frente a 61. Un 25% en InfoJobs suma volumen y guardaría un 15% por si acaso. Lo miramos juntos en una semana.",
+          "formal": "Presupuesto: 1.500 € para la vacante Backend Sr. Asignación recomendada: LinkedIn 60% (fit medio 78 vs 61), InfoJobs 25% (volumen), reserva 15%. Revisión sugerida a los 7 días."
+        }
+      }
+    }
+  },
+  "invariante": {
+    "kicker": "El invariante · en todo el producto",
+    "rows": [
+      { "tag": "PREPARA", "text": "Redacta, extrae, calcula y resume — el trabajo mecánico que consume horas." },
+      { "tag": "PROPONE", "text": "Con alcance, evidencia y una acción concreta — nunca un «quizás deberías»." },
+      { "tag": "DECIDES", "text": "Confirmas o descartas con igual peso. La escritura final es humana. Nunca actúa solo." }
+    ],
+    "procTitle": "Procedencia, siempre visible",
+    "procBody": "Cada resultado dice de dónde viene. Sin cajas negras: sabes si hubo modelo, heurística o estimación.",
+    "procRows": [
+      { "tag": "IA", "text": "Hubo un modelo de lenguaje detrás." },
+      { "tag": "Heurística", "text": "Regla determinista de respaldo — nunca se oculta." },
+      { "tag": "Estimación", "text": "Valor aproximado, marcado como tal." }
+    ]
+  },
+  "agents": {
+    "kicker": "Los agentes",
+    "title1": "Uno por cada trabajo que ",
+    "titleAccent": "no debería ser manual",
+    "title2": ".",
+    "cards": [
+      { "name": "Redactor de ofertas", "where": "En: crear oferta", "desc": "Escribe la descripción y define el perfil desde cuatro datos, con selector de tono.", "badge": "IA" },
+      { "name": "Career site con IA", "where": "En: career site", "desc": "Genera tu página pública entera desde un intake — hero, cultura, beneficios y FAQ.", "badge": "IA" },
+      { "name": "Perfil de empresa", "where": "En: onboarding de cuenta", "desc": "Extrae el perfil de tu empresa desde tu web para arrancar sin partir de cero.", "badge": "IA" },
+      { "name": "Análisis de candidato", "where": "En: ficha de candidato", "desc": "Resume el CV, calcula el fit explicable y sugiere qué preguntar en la entrevista.", "badge": "IA · Heurística" },
+      { "name": "Optimizador de canales", "where": "En: distribución", "desc": "Recomienda dónde invertir según presupuesto, volumen o calidad — y conversa sobre ello.", "badge": "IA · Heurística" },
+      { "name": "Insights del dashboard", "where": "En: inicio", "desc": "Señala lo urgente con alcance, evidencia y acción. Tú lo marcas hecho o lo ignoras.", "badge": "IA · Heurística" },
+      { "name": "Checklist de onboarding", "where": "En: alta de empleado", "desc": "Arma la incorporación adaptada al rol y al equipo de la persona.", "badge": "IA" }
+    ]
+  },
+  "cta": {
+    "title1": "Deja lo mecánico a los agentes. ",
+    "titleAccent": "Quédate con las decisiones",
+    "title2": ".",
+    "body": "Ya vienen dentro de cada flujo — no hay nada que «activar». Empieza gratis y compruébalo.",
+    "primary": "Empezar gratis →",
+    "secondary": "Ver toda la plataforma"
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "breadcrumb": { "products": "Products", "current": "ATS" },
+  "hero": {
+    "badge": "ATS · Recruiting",
+    "title1": "From job post to hire, ",
+    "titleAccent": "one single pipeline",
+    "title2": ".",
+    "subtitle": "Post to your channels, let every application enter the pipeline with its fit already scored, and move it through to offer. And when you hire, the candidate becomes an employee without re-entering a single field.",
+    "ctaPrimary": "Start for free →",
+    "ctaSecondary": "See the career site"
+  },
+  "demo": {
+    "jobTitle": "Backend Engineer",
+    "jobMeta": "34 candidates",
+    "stages": ["New", "Interview", "Offer"],
+    "fitPrefix": "fit ",
+    "hiredLabel": "hired",
+    "hint": "Click a candidate to advance them →",
+    "reset": "↺ Reset",
+    "hiredBanner": "Hired → already an employee in HRIS, nothing re-entered"
+  },
+  "distribucion": {
+    "kicker": "Job posting & distribution",
+    "title1": "Post once, ",
+    "titleAccent": "distribute per channel",
+    "title2": ".",
+    "body": "Import jobs from XML, CSV or a URL, or write them with AI. Distribute to each channel based on your budget and goal, and measure cost per application by source.",
+    "checks": [
+      "Import XML · CSV · URL, or write with AI",
+      "Multichannel distribution with CPA per source",
+      "The channel optimizer suggests where to invest"
+    ],
+    "panelTitle": "Distribution · Backend Engineer",
+    "channels": [
+      { "name": "LinkedIn", "cpa": "€12" },
+      { "name": "InfoJobs", "cpa": "€18" },
+      { "name": "Career site", "cpa": "€0" },
+      { "name": "Indeed", "cpa": "€31" }
+    ],
+    "panelFoot": "Bar = applications · right = cost per application"
+  },
+  "pipeline": {
+    "kicker": "Pipeline · ATS",
+    "title1": "Every candidate arrives ",
+    "titleAccent": "with their fit and their trail",
+    "title2": ".",
+    "body": "Fit is scored against the job profile; the breakdown (skills, experience) is explainable, never a black box. Every stage move is logged with who and when.",
+    "badge": "Explainable fit + traceability of every step",
+    "breakdownLabel": "Fit breakdown · explainable",
+    "rows": [
+      { "stage": "Technical interview", "breakdown": ["Technical skills", "Experience", "Culture fit"] },
+      { "stage": "Screening", "breakdown": ["Technical skills", "Experience", "Culture fit"] },
+      { "stage": "New", "breakdown": ["Technical skills", "Experience", "Culture fit"] }
+    ]
+  },
+  "career": {
+    "kicker": "Career site",
+    "title1": "Your public jobs page, ",
+    "titleAccent": "generated with AI",
+    "title2": ".",
+    "bodyPre": "Every company gets its own page at ",
+    "bodyCode": "/careers/your-company",
+    "bodyPost": ". AI writes the whole thing from an intake, with a tone selector; you edit and publish. Every application arrives tagged with its source.",
+    "chips": ["AI generation", "Tone selector", "Source UTM"],
+    "browser": {
+      "url": "vertice.com/careers",
+      "title": "Work at Vértice",
+      "sub": "6 open roles · Barcelona & remote",
+      "jobs": [
+        { "title": "Senior Product Designer", "meta": "Product · Madrid · €55–75k" },
+        { "title": "Growth Marketing Lead", "meta": "Marketing · Remote · €48–62k" }
+      ],
+      "apply": "Apply"
+    }
+  },
+  "cta": {
+    "title1": "Recruit here. Manage ",
+    "titleAccent": "in the same place",
+    "title2": ".",
+    "body": "When you hire, the candidate becomes an employee with nothing re-entered. Follow the thread into the HRIS.",
+    "primary": "Start for free →",
+    "secondary": "See the HRIS →"
+  }
+}
