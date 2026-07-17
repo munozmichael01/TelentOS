@@ -1,0 +1,340 @@
+{
+  "nav": {
+    "product": "Producto",
+    "ai": "La IA",
+    "security": "Seguridad",
+    "pricing": "Precios",
+    "login": "Iniciar sesión",
+    "cta": "Acceso anticipado",
+    "menu": {
+      "ats": { "title": "ATS", "tag": "Disponible", "items": ["Pipeline · ATS", "Ofertas y distribución", "Career site", "Canales"] },
+      "hris": { "title": "HRIS", "tag": "Disponible", "items": ["Directorio y organigrama", "Ficha de empleado", "Onboarding", "Ausencias · Horas · Horarios"] },
+      "nomina": { "title": "Nómina", "tag": "Disponible", "items": ["Motor de cálculo", "Recibos", "Corridas", "Compliance por país"] },
+      "aiAgents": { "title": "AI Agents", "tag": "Disponible", "items": ["Redactor de ofertas", "Análisis de candidato", "Optimizador de canales", "Career site con IA"] }
+    }
+  },
+  "hero": {
+    "badge": "ATS + HRIS + Nómina · con IA agéntica",
+    "title1": "El sistema operativo ",
+    "titleAccent": "del talento",
+    "title2": ".",
+    "subtitle": "De la oferta al recibo de nómina en una sola plataforma. Un dato que viaja contigo, sin recapturar. La IA hace el trabajo operativo; tu equipo decide.",
+    "ctaPrimary": "Solicitar acceso anticipado →",
+    "ctaSecondary": "Ver cómo funciona",
+    "tagline": "Un dato · todo el ciclo · sin recapturar",
+    "hint": "Demo real · navega por el menú"
+  },
+  "demo": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "groupRecruiting": "Reclutamiento",
+      "ofertas": "Ofertas",
+      "candidatos": "Candidatos",
+      "groupPeople": "Personas",
+      "empleados": "Empleados",
+      "organigrama": "Organigrama",
+      "ausencias": "Ausencias",
+      "horas": "Horas",
+      "groupPayroll": "Nómina",
+      "nomina": "Payroll",
+      "payruns": "Pay Runs",
+      "perfiles": "Perfiles salariales",
+      "groupWorkspace": "Workspace",
+      "ajustes": "Ajustes",
+      "logout": "Cerrar sesión"
+    },
+    "search": "Buscar…",
+    "dash": {
+      "date": "Lunes · 2 jul 2026",
+      "greeting": "Buenos días, Michael",
+      "personalize": "Personalizar",
+      "personalizeHint": "Elige qué métricas ver en tu pulso",
+      "metrics": [
+        { "label": "Pipeline abierto", "value": "41", "delta": "↑ 12 esta semana", "up": true },
+        { "label": "Contrat. · mes", "value": "3", "delta": "objetivo 5", "up": false },
+        { "label": "Ausentes hoy", "value": "2", "delta": "de 24 activos", "up": false },
+        { "label": "Balance horas", "value": "+12h", "delta": "↑ vs previa", "up": true },
+        { "label": "CPA mejor canal", "value": "34€", "delta": "LinkedIn", "up": false }
+      ],
+      "attentionTitle": "Requiere tu atención",
+      "attentionSub": "Acciones asignadas a ti · señales precisas, no estimaciones",
+      "filters": [
+        { "label": "Todo", "count": "6" },
+        { "label": "Ausencias", "count": "1" },
+        { "label": "Candidatos", "count": "2" },
+        { "label": "Compliance", "count": "1" }
+      ],
+      "rows": [
+        { "ini": "MO", "name": "Marco Ortiz", "tag": "Compliance", "meta": "Exceso de horas · 12 jun · descanso insuficiente", "actions": ["Revisar"] },
+        { "ini": "LF", "name": "Lucía Fernández", "tag": "Ausencia", "meta": "Vacaciones · 23–30 jun · 6 días", "actions": ["Rechazar", "Aprobar"] },
+        { "ini": "EV", "name": "Elena Vidal · Backend Sr", "tag": "Candidato", "meta": "Fit 95 · 6 días en Entrevista sin movimiento", "actions": ["Mover"] }
+      ],
+      "viewAll": "Ver toda la bandeja (6) →",
+      "agentTitle": "Sugerencias del agente",
+      "agentUpdated": "Actualizado hace 2h ·",
+      "agentRefresh": "Actualizar",
+      "agentBody": "En <b>Backend Sr</b> y <b>Product Designer</b>, LinkedIn convierte 2× mejor (fit medio 78 vs 61 · 34 candidaturas).",
+      "agentAction": "Subir presupuesto",
+      "agentDone": "Hecho",
+      "agentIgnore": "Ignorar",
+      "agentFoot": "El agente propone · tú decides",
+      "activityTitle": "Actividad reciente",
+      "activity": [
+        { "text": "Nadia Cortés · nueva candidatura", "time": "12m" },
+        { "text": "Oferta 'Backend Sr' publicada", "time": "1h" },
+        { "text": "Lucía F. solicitó vacaciones", "time": "2h" }
+      ]
+    },
+    "ofertas": {
+      "kicker": "Reclutamiento · ATS",
+      "title": "Ofertas",
+      "newBtn": "＋ Nueva oferta",
+      "filters": ["Todas 6", "Activas 4", "Borradores 2", "Tecnología"],
+      "iaBadge": "IA",
+      "jobs": [
+        { "ini": "PD", "title": "Senior Product Designer", "ia": true, "meta": "Madrid · Producto · activa", "salary": "55–75k €", "cands": "41 cand." },
+        { "ini": "AE", "title": "Account Executive", "ia": false, "meta": "Barcelona · Ventas · activa", "salary": "32–45k €", "cands": "28 cand." },
+        { "ini": "BS", "title": "Backend Senior", "ia": true, "meta": "Remoto · Ingeniería · activa", "salary": "60–80k €", "cands": "34 cand." },
+        { "ini": "DA", "title": "Data Analyst", "ia": false, "meta": "Madrid · Datos · borrador", "salary": "40–52k €", "cands": "—" }
+      ]
+    },
+    "empleados": {
+      "kicker": "Personas · HRIS",
+      "title": "Directorio · 24 personas",
+      "bannerTitle": "Onboarding de 3 personas esta semana",
+      "bannerSub": "Asigna el flujo por rol a quien se incorpora",
+      "bannerCta": "Ver plan",
+      "reportsTo": "Reporta a",
+      "people": [
+        { "ini": "AR", "name": "Abernathy, Rex", "meta": "Account Manager · Boston", "boss": "Greenholt, E." },
+        { "ini": "AO", "name": "Adams, Okey", "meta": "Data Analyst · Madrid", "boss": "Ríos, Clara" },
+        { "ini": "AM", "name": "Aguilar, Marta", "meta": "Product Designer · Madrid", "boss": "Ríos, Clara" }
+      ]
+    },
+    "nomina": {
+      "kicker": "Nómina · Payroll",
+      "title": "Corrida de Junio",
+      "status": "● Cerrada",
+      "costLabel": "Coste total empresa",
+      "cost": "148.200 €",
+      "receipts": "24 recibos",
+      "pack": "pack genérico · UE",
+      "receiptBadge": "Recibo ✓",
+      "rows": [
+        { "ini": "AM", "name": "Aguilar, Marta", "net": "Neto 2.140 €" },
+        { "ini": "AO", "name": "Adams, Okey", "net": "Neto 2.480 €" },
+        { "ini": "AR", "name": "Abernathy, Rex", "net": "Neto 2.910 €" }
+      ]
+    },
+    "locked": {
+      "labels": {
+        "candidatos": "Candidatos",
+        "organigrama": "Organigrama",
+        "ausencias": "Ausencias",
+        "horas": "Horas",
+        "payruns": "Pay Runs",
+        "perfiles": "Perfiles salariales",
+        "ajustes": "Ajustes"
+      },
+      "body": "Esta sección está en la demo completa. Regístrate y la exploras con datos de prueba, junto al resto del producto.",
+      "cta": "Regístrate para verla →",
+      "foot": "Dashboard · Ofertas · Empleados · Nómina abiertos en esta demo"
+    }
+  },
+  "trust": {
+    "label": "Abrimos acceso anticipado a equipos de RR. HH. de empresas medianas",
+    "note": "· logos de muestra"
+  },
+  "problema": {
+    "title1": "Hoy gestionar talento es saltar entre ",
+    "titleAccent": "siete herramientas",
+    "title2": ".",
+    "subtitle": "Un portal para publicar, un Excel para candidatos, un chat para decidir, un HRIS para el empleado, una gestoría para la nómina. Y una IA de moda pegada al lado, fuera del flujo.",
+    "stackLabel": "El stack roto de siempre",
+    "tools": ["Portal de empleo", "Excel de candidatos", "Chat para decidir", "HRIS del empleado", "Gestoría de nómina", "Hoja de ausencias", "IA de moda, al lado"],
+    "costKicker": "El coste real",
+    "cost1": "No son las licencias. Es que el dato ",
+    "costAccent": "se recaptura en cada salto",
+    "cost2": ": el candidato que contratas se vuelve a teclear como empleado, y otra vez como línea de nómina.",
+    "costFoot": "Se pierde tiempo, contexto y trazabilidad."
+  },
+  "plataforma": {
+    "kicker": "La propuesta",
+    "title1": "Una plataforma. Un dato. ",
+    "titleAccent": "Todo el ciclo",
+    "title2": ".",
+    "subtitle": "TalentOS unifica el ciclo completo del talento en un sistema donde las piezas ya hablan entre sí. El candidato se convierte en empleado y luego en recibo de nómina sin recapturar un solo dato.",
+    "boardTitle": "El dato viaja por el ciclo — no se vuelve a teclear",
+    "boardBadge": "una sola base de datos",
+    "detailKicker": "Ficha de {title}",
+    "inheritedBadge": "Datos heredados, no recapturados",
+    "foot": "Pulsa cada etapa del ciclo — el dato viaja y solo se teclea una vez.",
+    "stages": [
+      {
+        "kicker": "Atraer", "title": "Oferta", "chip": "IA redacta", "subtitle": "Senior Product Designer",
+        "fields": [
+          { "label": "Puesto", "value": "Senior Product Designer", "tag": "nuevo aquí", "type": "new" },
+          { "label": "Departamento", "value": "Producto", "tag": "nuevo aquí", "type": "new" },
+          { "label": "Banda salarial", "value": "55.000–75.000 €", "tag": "nuevo aquí", "type": "new" },
+          { "label": "Ubicación", "value": "Madrid · híbrido", "tag": "nuevo aquí", "type": "new" }
+        ]
+      },
+      {
+        "kicker": "Seleccionar", "title": "Candidato", "chip": "Encaje calculado", "subtitle": "Elena Vidal",
+        "fields": [
+          { "label": "Candidata", "value": "Elena Vidal", "tag": "nuevo aquí", "type": "new" },
+          { "label": "Puesto", "value": "Senior Product Designer", "tag": "viene de Oferta", "type": "from" },
+          { "label": "Departamento", "value": "Producto", "tag": "viene de Oferta", "type": "from" },
+          { "label": "Encaje IA", "value": "95 / 100", "tag": "nuevo aquí", "type": "new" }
+        ]
+      },
+      {
+        "kicker": "Incorporar · Gestionar", "title": "Empleado", "chip": "Onboarding listo", "subtitle": "Elena Vidal",
+        "fields": [
+          { "label": "Nombre", "value": "Elena Vidal", "tag": "viene de Candidato", "type": "from" },
+          { "label": "Puesto", "value": "Senior Product Designer", "tag": "viene de Oferta", "type": "from" },
+          { "label": "Salario acordado", "value": "68.000 € / año", "tag": "viene de Oferta", "type": "from" },
+          { "label": "Alta", "value": "1 jul 2026", "tag": "nuevo aquí", "type": "new" }
+        ]
+      },
+      {
+        "kicker": "Pagar", "title": "Recibo", "chip": "Sin recapturar", "subtitle": "Nómina de julio",
+        "fields": [
+          { "label": "Empleada", "value": "Elena Vidal", "tag": "viene de Empleado", "type": "from" },
+          { "label": "Salario base", "value": "5.667 € / mes", "tag": "viene de Empleado", "type": "from" },
+          { "label": "IRPF", "value": "−1.020 €", "tag": "calculado", "type": "calc" },
+          { "label": "Neto a pagar", "value": "4.180 €", "tag": "calculado", "type": "calc" }
+        ]
+      }
+    ]
+  },
+  "pilares": {
+    "kicker": "Tres pilares, una base",
+    "title1": "Reclutamiento, personas y nómina — ",
+    "titleAccent": "sobre el mismo dato",
+    "title2": ".",
+    "link": "Ver el módulo →",
+    "ats": { "title": "Reclutamiento", "tag": "ATS", "desc": "Publica en todos tus canales con un clic, gestiona el pipeline de candidatos y estrena tu página de empleo pública." },
+    "hris": { "title": "Personas", "tag": "HRIS", "desc": "Directorio y organigrama, onboarding, ausencias, horas y horarios, con la ficha del empleado como fuente única." },
+    "pay": { "title": "Nómina", "tag": "Payroll", "desc": "Motor de cálculo, recibos y cumplimiento por país. Sin exportar a una gestoría." },
+    "previews": {
+      "atsTitle": "Ofertas",
+      "newJob": "Nueva oferta",
+      "chipAll": "Todas · 6",
+      "chipActive": "activa",
+      "chipTech": "Tecnología",
+      "iaBadge": "IA",
+      "job1": "Senior Product Designer", "job1Meta": "Madrid · Producto", "job1Salary": "55–75k €", "job1Cands": "41 cand.",
+      "job2": "Account Executive", "job2Meta": "Barcelona · Ventas", "job2Salary": "32–45k €", "job2Cands": "28 cand.",
+      "hrisTitle": "Directorio",
+      "onbTitle": "Onboarding de 3 personas", "onbSub": "Asigna flujos a quien se incorpora", "onbCta": "Ver",
+      "reportsTo": "Reporta a",
+      "emp1": "Abernathy, Rex", "emp1Meta": "Account Manager · Boston", "emp1Boss": "Greenholt, E.",
+      "emp2": "Adams, Okey", "emp2Meta": "Data Analyst · Madrid", "emp2Boss": "Ríos, Clara",
+      "payTitle": "Nómina · Junio", "payStatus": "Cerrada", "payCostLabel": "Coste total", "payCost": "148.200 €", "payReceipts": "24 recibos",
+      "pay1": "Aguilar, Marta", "pay1Net": "Neto 2.140 €",
+      "pay2": "Adams, Okey", "pay2Net": "Neto 2.480 €",
+      "receipt": "Recibo ✓"
+    }
+  },
+  "ia": {
+    "kicker": "El diferenciador · IA agéntica",
+    "title1": "La IA no está al lado. ",
+    "titleAccent": "Está dentro de cada tarea",
+    "title2": ".",
+    "subtitle": "Redacta la oferta, genera tu career site entero desde tu web, resume el CV y calcula el encaje, recomienda en qué canal invertir según tu presupuesto y arma el checklist de onboarding por rol.",
+    "agents": [
+      { "title": "Redacta la oferta", "desc": "Genera el texto de la vacante y lo publica donde tú confirmes." },
+      { "title": "Career site desde tu web", "desc": "Extrae tu perfil de empresa y arma tu página de empleo entera." },
+      { "title": "Resume el CV y calcula el encaje", "desc": "Lee cada candidatura y propone un fit con evidencia." },
+      { "title": "Reparte el presupuesto", "desc": "Recomienda en qué canal invertir y arma el onboarding por rol." }
+    ],
+    "trustBadge": "Nuestra bandera de confianza",
+    "trustTitle1": "La IA prepara y propone. ",
+    "trustAccent": "Tú decides",
+    "trustTitle2": ".",
+    "trustBody": "Ningún agente publica, contrata ni paga por su cuenta. Así la automatización es confiable — y compatible con el cumplimiento.",
+    "invariants": [
+      { "label": "PREPARA", "text": "Redacta, extrae, calcula, resume — el trabajo mecánico." },
+      { "label": "PROPONE", "text": "Con alcance, evidencia y una acción concreta." },
+      { "label": "DECIDES TÚ", "text": "Confirmas o descartas. La escritura final es humana." }
+    ]
+  },
+  "audiencias": {
+    "kicker": "Para todo el equipo",
+    "title1": "Una plataforma, ",
+    "titleAccent": "dos miradas",
+    "title2": ".",
+    "cards": [
+      { "title": "Para dirección", "points": ["De 7 licencias a 1 plataforma", "Menos horas de RR. HH. copiando datos", "Cada decisión trazada", "En marcha en días, no meses", "Cada empresa, un espacio aislado y seguro"] },
+      { "title": "Para RR. HH.", "points": ["Un pipeline claro, no CVs perdidos en el correo", "Una oferta en todos tus canales con un clic", "Del candidato al empleado sin recapturar", "Ausencias, horas y nómina en el mismo sitio", "La IA hace lo repetitivo; tú decides lo que importa"] }
+    ]
+  },
+  "seguridad": {
+    "kicker": "Seguridad y control",
+    "title1": "Aislado por diseño, ",
+    "titleAccent": "no solo en la interfaz",
+    "title2": ".",
+    "body": "Cada empresa es un workspace completamente aislado a nivel de base de datos: nunca verás datos de otra empresa. El acceso se gobierna con roles. Y como la IA nunca escribe sola, el dato sensible está protegido desde el diseño.",
+    "badge": "Multi-tenant aislado · 5 roles de fábrica",
+    "roles": [
+      { "name": "OWNER", "scope": "Acceso total, incluida facturación y aprobación de nómina." },
+      { "name": "HR ADMIN", "scope": "Toda la operativa de personas, compensación y compliance." },
+      { "name": "RECRUITER", "scope": "Ofertas, candidatos y pipeline. Sin datos sensibles de empleados." },
+      { "name": "MANAGER", "scope": "Solo su parte del organigrama: su equipo y quienes le reportan." },
+      { "name": "EMPLOYEE", "scope": "Su ficha, sus horas y sus ausencias. Nada más." }
+    ]
+  },
+  "estado": {
+    "badge": "Sección de honestidad · early access",
+    "title1": "Dónde estamos, ",
+    "titleAccent": "con transparencia",
+    "title2": ".",
+    "body": "ATS, HRIS y el motor de nómina están construidos y en producción. Por diseño, el dinero nunca fluye solo del reclutamiento a la nómina: los datos de la oferta solo pre-rellenan lo que RR. HH. confirma al contratar.",
+    "statusProd": "En producción",
+    "statusPreview": "En preview",
+    "cards": [
+      { "title": "ATS", "desc": "Pipeline, ofertas y career site construidos y en uso.", "status": "prod" },
+      { "title": "HRIS", "desc": "Directorio, ficha, ausencias, horas y horarios en producción.", "status": "prod" },
+      { "title": "Motor de nómina", "desc": "Cálculo, recibos y pack de cumplimiento genérico activos.", "status": "prod" },
+      { "title": "Packs por país", "desc": "Cumplimiento específico por país en validación.", "status": "preview" }
+    ]
+  },
+  "cta": {
+    "title1": "De cinco herramientas y un día perdido a ",
+    "titleAccent": "una sola plataforma",
+    "title2": ".",
+    "body": "La IA hace el trabajo operativo. Tu equipo decide. De la oferta al recibo de nómina.",
+    "check1": "Sin tarjeta",
+    "check2": "Migración incluida",
+    "formTitle": "Solicitar acceso anticipado",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "companyLabel": "Empresa",
+    "companyPlaceholder": "Nombre de tu empresa",
+    "emailLabel": "Email de trabajo",
+    "emailPlaceholder": "tu@empresa.com",
+    "submit": "Solicitar acceso →",
+    "foot": "Gratis para empezar · Cancela cuando quieras",
+    "sentTitle": "Estás en la lista",
+    "sentBody": "Te escribimos a {email} con tu acceso anticipado."
+  },
+  "footer": {
+    "tagline": "El sistema operativo del talento: ATS + HRIS + Nómina con IA agéntica. Un dato, todo el ciclo, sin recapturar.",
+    "colProduct": "Producto",
+    "colCompany": "Empresa",
+    "colLegal": "Legal",
+    "ats": "ATS",
+    "hris": "HRIS · Personas",
+    "nomina": "Nómina",
+    "aiAgents": "AI Agents",
+    "why": "Por qué TalentOS",
+    "pricing": "Precios",
+    "resources": "Recursos",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "security": "Seguridad",
+    "copyright": "© 2026 TalentOS",
+    "motto": "Un dato · todo el ciclo · la IA nunca escribe sola"
+  }
+}

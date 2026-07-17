@@ -46,7 +46,9 @@ export async function middleware(request: NextRequest) {
     bare === "/" ||
     bare.startsWith("/login") ||
     bare.startsWith("/auth/") ||
-    bare.startsWith("/careers");
+    bare.startsWith("/careers") ||
+    bare.startsWith("/producto") ||
+    bare.startsWith("/pricing");
 
   if (!user && !isPublic) {
     const redirectUrl = request.nextUrl.clone();

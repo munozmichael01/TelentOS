@@ -1,0 +1,340 @@
+{
+  "nav": {
+    "product": "Produto",
+    "ai": "A IA",
+    "security": "Segurança",
+    "pricing": "Preços",
+    "login": "Entrar",
+    "cta": "Acesso antecipado",
+    "menu": {
+      "ats": { "title": "ATS", "tag": "Disponível", "items": ["Pipeline · ATS", "Vagas e distribuição", "Página de carreiras", "Canais"] },
+      "hris": { "title": "HRIS", "tag": "Disponível", "items": ["Diretório e organograma", "Ficha do colaborador", "Onboarding", "Ausências · Horas · Escalas"] },
+      "nomina": { "title": "Folha", "tag": "Disponível", "items": ["Motor de cálculo", "Holerites", "Fechamentos", "Compliance por país"] },
+      "aiAgents": { "title": "AI Agents", "tag": "Disponível", "items": ["Redator de vagas", "Análise de candidato", "Otimizador de canais", "Página de carreiras com IA"] }
+    }
+  },
+  "hero": {
+    "badge": "ATS + HRIS + Folha · com IA agêntica",
+    "title1": "O sistema operacional ",
+    "titleAccent": "do talento",
+    "title2": ".",
+    "subtitle": "Da vaga ao holerite em uma única plataforma. Um dado que viaja com você, sem redigitar. A IA faz o trabalho operacional; seu time decide.",
+    "ctaPrimary": "Solicitar acesso antecipado →",
+    "ctaSecondary": "Veja como funciona",
+    "tagline": "Um dado · todo o ciclo · sem redigitar",
+    "hint": "Demo real · navegue pelo menu"
+  },
+  "demo": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "groupRecruiting": "Recrutamento",
+      "ofertas": "Vagas",
+      "candidatos": "Candidatos",
+      "groupPeople": "Pessoas",
+      "empleados": "Colaboradores",
+      "organigrama": "Organograma",
+      "ausencias": "Ausências",
+      "horas": "Horas",
+      "groupPayroll": "Folha",
+      "nomina": "Folha",
+      "payruns": "Fechamentos",
+      "perfiles": "Perfis salariais",
+      "groupWorkspace": "Workspace",
+      "ajustes": "Configurações",
+      "logout": "Sair"
+    },
+    "search": "Buscar…",
+    "dash": {
+      "date": "Segunda · 2 jul 2026",
+      "greeting": "Bom dia, Michael",
+      "personalize": "Personalizar",
+      "personalizeHint": "Escolha quais métricas ver no seu pulso",
+      "metrics": [
+        { "label": "Pipeline aberto", "value": "41", "delta": "↑ 12 esta semana", "up": true },
+        { "label": "Contrat. · mês", "value": "3", "delta": "meta 5", "up": false },
+        { "label": "Ausentes hoje", "value": "2", "delta": "de 24 ativos", "up": false },
+        { "label": "Saldo de horas", "value": "+12h", "delta": "↑ vs anterior", "up": true },
+        { "label": "CPA melhor canal", "value": "34€", "delta": "LinkedIn", "up": false }
+      ],
+      "attentionTitle": "Precisa da sua atenção",
+      "attentionSub": "Ações atribuídas a você · sinais precisos, não estimativas",
+      "filters": [
+        { "label": "Tudo", "count": "6" },
+        { "label": "Ausências", "count": "1" },
+        { "label": "Candidatos", "count": "2" },
+        { "label": "Compliance", "count": "1" }
+      ],
+      "rows": [
+        { "ini": "MO", "name": "Marco Ortiz", "tag": "Compliance", "meta": "Excesso de horas · 12 jun · descanso insuficiente", "actions": ["Revisar"] },
+        { "ini": "LF", "name": "Lucía Fernández", "tag": "Ausência", "meta": "Férias · 23–30 jun · 6 dias", "actions": ["Recusar", "Aprovar"] },
+        { "ini": "EV", "name": "Elena Vidal · Backend Sr", "tag": "Candidato", "meta": "Fit 95 · 6 dias em Entrevista sem movimento", "actions": ["Mover"] }
+      ],
+      "viewAll": "Ver toda a caixa (6) →",
+      "agentTitle": "Sugestões do agente",
+      "agentUpdated": "Atualizado há 2h ·",
+      "agentRefresh": "Atualizar",
+      "agentBody": "Em <b>Backend Sr</b> e <b>Product Designer</b>, o LinkedIn converte 2× melhor (fit médio 78 vs 61 · 34 candidaturas).",
+      "agentAction": "Aumentar orçamento",
+      "agentDone": "Feito",
+      "agentIgnore": "Ignorar",
+      "agentFoot": "O agente propõe · você decide",
+      "activityTitle": "Atividade recente",
+      "activity": [
+        { "text": "Nadia Cortés · nova candidatura", "time": "12m" },
+        { "text": "Vaga 'Backend Sr' publicada", "time": "1h" },
+        { "text": "Lucía F. pediu férias", "time": "2h" }
+      ]
+    },
+    "ofertas": {
+      "kicker": "Recrutamento · ATS",
+      "title": "Vagas",
+      "newBtn": "＋ Nova vaga",
+      "filters": ["Todas 6", "Ativas 4", "Rascunhos 2", "Tecnologia"],
+      "iaBadge": "IA",
+      "jobs": [
+        { "ini": "PD", "title": "Senior Product Designer", "ia": true, "meta": "Madri · Produto · ativa", "salary": "55–75k €", "cands": "41 cand." },
+        { "ini": "AE", "title": "Account Executive", "ia": false, "meta": "Barcelona · Vendas · ativa", "salary": "32–45k €", "cands": "28 cand." },
+        { "ini": "BS", "title": "Backend Sênior", "ia": true, "meta": "Remoto · Engenharia · ativa", "salary": "60–80k €", "cands": "34 cand." },
+        { "ini": "DA", "title": "Data Analyst", "ia": false, "meta": "Madri · Dados · rascunho", "salary": "40–52k €", "cands": "—" }
+      ]
+    },
+    "empleados": {
+      "kicker": "Pessoas · HRIS",
+      "title": "Diretório · 24 pessoas",
+      "bannerTitle": "Onboarding de 3 pessoas esta semana",
+      "bannerSub": "Atribua o fluxo por cargo a quem está chegando",
+      "bannerCta": "Ver plano",
+      "reportsTo": "Reporta a",
+      "people": [
+        { "ini": "AR", "name": "Abernathy, Rex", "meta": "Account Manager · Boston", "boss": "Greenholt, E." },
+        { "ini": "AO", "name": "Adams, Okey", "meta": "Data Analyst · Madri", "boss": "Ríos, Clara" },
+        { "ini": "AM", "name": "Aguilar, Marta", "meta": "Product Designer · Madri", "boss": "Ríos, Clara" }
+      ]
+    },
+    "nomina": {
+      "kicker": "Folha · Payroll",
+      "title": "Fechamento de junho",
+      "status": "● Fechada",
+      "costLabel": "Custo total da empresa",
+      "cost": "148.200 €",
+      "receipts": "24 holerites",
+      "pack": "pacote genérico · UE",
+      "receiptBadge": "Holerite ✓",
+      "rows": [
+        { "ini": "AM", "name": "Aguilar, Marta", "net": "Líquido 2.140 €" },
+        { "ini": "AO", "name": "Adams, Okey", "net": "Líquido 2.480 €" },
+        { "ini": "AR", "name": "Abernathy, Rex", "net": "Líquido 2.910 €" }
+      ]
+    },
+    "locked": {
+      "labels": {
+        "candidatos": "Candidatos",
+        "organigrama": "Organograma",
+        "ausencias": "Ausências",
+        "horas": "Horas",
+        "payruns": "Fechamentos",
+        "perfiles": "Perfis salariais",
+        "ajustes": "Configurações"
+      },
+      "body": "Esta seção está na demo completa. Cadastre-se e explore com dados de teste, junto com o resto do produto.",
+      "cta": "Cadastre-se para ver →",
+      "foot": "Dashboard · Vagas · Colaboradores · Folha abertos nesta demo"
+    }
+  },
+  "trust": {
+    "label": "Estamos abrindo acesso antecipado para times de RH de empresas médias",
+    "note": "· logos de exemplo"
+  },
+  "problema": {
+    "title1": "Hoje, gerenciar talento é pular entre ",
+    "titleAccent": "sete ferramentas",
+    "title2": ".",
+    "subtitle": "Um portal para publicar, uma planilha para candidatos, um chat para decidir, um HRIS para o colaborador, uma contabilidade para a folha. E uma IA da moda colada do lado, fora do fluxo.",
+    "stackLabel": "O stack quebrado de sempre",
+    "tools": ["Portal de vagas", "Planilha de candidatos", "Chat para decidir", "HRIS do colaborador", "Contabilidade da folha", "Planilha de ausências", "IA da moda, do lado"],
+    "costKicker": "O custo real",
+    "cost1": "Não são as licenças. É que o dado ",
+    "costAccent": "é redigitado a cada salto",
+    "cost2": ": o candidato que você contrata é digitado de novo como colaborador, e mais uma vez como linha da folha.",
+    "costFoot": "Perde-se tempo, contexto e rastreabilidade."
+  },
+  "plataforma": {
+    "kicker": "A proposta",
+    "title1": "Uma plataforma. Um dado. ",
+    "titleAccent": "Todo o ciclo",
+    "title2": ".",
+    "subtitle": "O TalentOS unifica o ciclo completo do talento em um sistema onde as peças já conversam entre si. O candidato vira colaborador e depois holerite sem redigitar um único dado.",
+    "boardTitle": "O dado viaja pelo ciclo — não é digitado duas vezes",
+    "boardBadge": "um único banco de dados",
+    "detailKicker": "Ficha de {title}",
+    "inheritedBadge": "Dados herdados, não redigitados",
+    "foot": "Clique em cada etapa do ciclo — o dado viaja e só é digitado uma vez.",
+    "stages": [
+      {
+        "kicker": "Atrair", "title": "Vaga", "chip": "IA redige", "subtitle": "Senior Product Designer",
+        "fields": [
+          { "label": "Cargo", "value": "Senior Product Designer", "tag": "novo aqui", "type": "new" },
+          { "label": "Departamento", "value": "Produto", "tag": "novo aqui", "type": "new" },
+          { "label": "Faixa salarial", "value": "55.000–75.000 €", "tag": "novo aqui", "type": "new" },
+          { "label": "Localização", "value": "Madri · híbrido", "tag": "novo aqui", "type": "new" }
+        ]
+      },
+      {
+        "kicker": "Selecionar", "title": "Candidato", "chip": "Fit calculado", "subtitle": "Elena Vidal",
+        "fields": [
+          { "label": "Candidata", "value": "Elena Vidal", "tag": "novo aqui", "type": "new" },
+          { "label": "Cargo", "value": "Senior Product Designer", "tag": "vem da Vaga", "type": "from" },
+          { "label": "Departamento", "value": "Produto", "tag": "vem da Vaga", "type": "from" },
+          { "label": "Fit IA", "value": "95 / 100", "tag": "novo aqui", "type": "new" }
+        ]
+      },
+      {
+        "kicker": "Integrar · Gerenciar", "title": "Colaborador", "chip": "Onboarding pronto", "subtitle": "Elena Vidal",
+        "fields": [
+          { "label": "Nome", "value": "Elena Vidal", "tag": "vem do Candidato", "type": "from" },
+          { "label": "Cargo", "value": "Senior Product Designer", "tag": "vem da Vaga", "type": "from" },
+          { "label": "Salário acordado", "value": "68.000 € / ano", "tag": "vem da Vaga", "type": "from" },
+          { "label": "Admissão", "value": "1 jul 2026", "tag": "novo aqui", "type": "new" }
+        ]
+      },
+      {
+        "kicker": "Pagar", "title": "Holerite", "chip": "Sem redigitar", "subtitle": "Folha de julho",
+        "fields": [
+          { "label": "Colaboradora", "value": "Elena Vidal", "tag": "vem do Colaborador", "type": "from" },
+          { "label": "Salário base", "value": "5.667 € / mês", "tag": "vem do Colaborador", "type": "from" },
+          { "label": "IRRF", "value": "−1.020 €", "tag": "calculado", "type": "calc" },
+          { "label": "Líquido a pagar", "value": "4.180 €", "tag": "calculado", "type": "calc" }
+        ]
+      }
+    ]
+  },
+  "pilares": {
+    "kicker": "Três pilares, uma base",
+    "title1": "Recrutamento, pessoas e folha — ",
+    "titleAccent": "sobre o mesmo dado",
+    "title2": ".",
+    "link": "Ver o módulo →",
+    "ats": { "title": "Recrutamento", "tag": "ATS", "desc": "Publique em todos os seus canais com um clique, gerencie o pipeline de candidatos e estreie sua página de carreiras pública." },
+    "hris": { "title": "Pessoas", "tag": "HRIS", "desc": "Diretório e organograma, onboarding, ausências, horas e escalas, com a ficha do colaborador como fonte única." },
+    "pay": { "title": "Folha", "tag": "Payroll", "desc": "Motor de cálculo, holerites e compliance por país. Sem exportar para a contabilidade." },
+    "previews": {
+      "atsTitle": "Vagas",
+      "newJob": "Nova vaga",
+      "chipAll": "Todas · 6",
+      "chipActive": "ativa",
+      "chipTech": "Tecnologia",
+      "iaBadge": "IA",
+      "job1": "Senior Product Designer", "job1Meta": "Madri · Produto", "job1Salary": "55–75k €", "job1Cands": "41 cand.",
+      "job2": "Account Executive", "job2Meta": "Barcelona · Vendas", "job2Salary": "32–45k €", "job2Cands": "28 cand.",
+      "hrisTitle": "Diretório",
+      "onbTitle": "Onboarding de 3 pessoas", "onbSub": "Atribua fluxos a quem está chegando", "onbCta": "Ver",
+      "reportsTo": "Reporta a",
+      "emp1": "Abernathy, Rex", "emp1Meta": "Account Manager · Boston", "emp1Boss": "Greenholt, E.",
+      "emp2": "Adams, Okey", "emp2Meta": "Data Analyst · Madri", "emp2Boss": "Ríos, Clara",
+      "payTitle": "Folha · Junho", "payStatus": "Fechada", "payCostLabel": "Custo total", "payCost": "148.200 €", "payReceipts": "24 holerites",
+      "pay1": "Aguilar, Marta", "pay1Net": "Líquido 2.140 €",
+      "pay2": "Adams, Okey", "pay2Net": "Líquido 2.480 €",
+      "receipt": "Holerite ✓"
+    }
+  },
+  "ia": {
+    "kicker": "O diferencial · IA agêntica",
+    "title1": "A IA não está do lado. ",
+    "titleAccent": "Está dentro de cada tarefa",
+    "title2": ".",
+    "subtitle": "Redige a vaga, gera sua página de carreiras inteira a partir do seu site, resume o currículo e calcula o fit, recomenda em qual canal investir segundo seu orçamento e monta o checklist de onboarding por cargo.",
+    "agents": [
+      { "title": "Redige a vaga", "desc": "Gera o texto da vaga e publica onde você confirmar." },
+      { "title": "Página de carreiras do seu site", "desc": "Extrai o perfil da sua empresa e monta sua página de carreiras inteira." },
+      { "title": "Resume o CV e calcula o fit", "desc": "Lê cada candidatura e propõe um fit com evidência." },
+      { "title": "Distribui o orçamento", "desc": "Recomenda em qual canal investir e monta o onboarding por cargo." }
+    ],
+    "trustBadge": "Nossa bandeira de confiança",
+    "trustTitle1": "A IA prepara e propõe. ",
+    "trustAccent": "Você decide",
+    "trustTitle2": ".",
+    "trustBody": "Nenhum agente publica, contrata ou paga por conta própria. Assim a automação é confiável — e compatível com o compliance.",
+    "invariants": [
+      { "label": "PREPARA", "text": "Redige, extrai, calcula, resume — o trabalho mecânico." },
+      { "label": "PROPÕE", "text": "Com escopo, evidência e uma ação concreta." },
+      { "label": "VOCÊ DECIDE", "text": "Você confirma ou descarta. A escrita final é humana." }
+    ]
+  },
+  "audiencias": {
+    "kicker": "Para o time inteiro",
+    "title1": "Uma plataforma, ",
+    "titleAccent": "dois olhares",
+    "title2": ".",
+    "cards": [
+      { "title": "Para a diretoria", "points": ["De 7 licenças para 1 plataforma", "Menos horas de RH copiando dados", "Cada decisão rastreada", "No ar em dias, não meses", "Cada empresa, um espaço isolado e seguro"] },
+      { "title": "Para o RH", "points": ["Um pipeline claro, sem CVs perdidos no e-mail", "Uma vaga em todos os seus canais com um clique", "Do candidato ao colaborador sem redigitar", "Ausências, horas e folha no mesmo lugar", "A IA faz o repetitivo; você decide o que importa"] }
+    ]
+  },
+  "seguridad": {
+    "kicker": "Segurança e controle",
+    "title1": "Isolado por design, ",
+    "titleAccent": "não só na interface",
+    "title2": ".",
+    "body": "Cada empresa é um workspace completamente isolado no nível do banco de dados: você nunca verá dados de outra empresa. O acesso é governado por papéis. E como a IA nunca escreve sozinha, o dado sensível está protegido desde o design.",
+    "badge": "Multi-tenant isolado · 5 papéis de fábrica",
+    "roles": [
+      { "name": "OWNER", "scope": "Acesso total, incluindo faturamento e aprovação da folha." },
+      { "name": "HR ADMIN", "scope": "Toda a operação de pessoas, remuneração e compliance." },
+      { "name": "RECRUITER", "scope": "Vagas, candidatos e pipeline. Sem dados sensíveis de colaboradores." },
+      { "name": "MANAGER", "scope": "Só a sua parte do organograma: seu time e quem reporta a você." },
+      { "name": "EMPLOYEE", "scope": "Sua ficha, suas horas e suas ausências. Nada mais." }
+    ]
+  },
+  "estado": {
+    "badge": "Seção de honestidade · early access",
+    "title1": "Onde estamos, ",
+    "titleAccent": "com transparência",
+    "title2": ".",
+    "body": "ATS, HRIS e o motor de folha estão construídos e em produção. Por design, o dinheiro nunca flui sozinho do recrutamento para a folha: os dados da oferta só pré-preenchem o que o RH confirma na contratação.",
+    "statusProd": "Em produção",
+    "statusPreview": "Em preview",
+    "cards": [
+      { "title": "ATS", "desc": "Pipeline, vagas e página de carreiras construídos e em uso.", "status": "prod" },
+      { "title": "HRIS", "desc": "Diretório, ficha, ausências, horas e escalas em produção.", "status": "prod" },
+      { "title": "Motor de folha", "desc": "Cálculo, holerites e pacote de compliance genérico ativos.", "status": "prod" },
+      { "title": "Pacotes por país", "desc": "Compliance específico por país em validação.", "status": "preview" }
+    ]
+  },
+  "cta": {
+    "title1": "De cinco ferramentas e um dia perdido para ",
+    "titleAccent": "uma única plataforma",
+    "title2": ".",
+    "body": "A IA faz o trabalho operacional. Seu time decide. Da vaga ao holerite.",
+    "check1": "Sem cartão",
+    "check2": "Migração incluída",
+    "formTitle": "Solicitar acesso antecipado",
+    "nameLabel": "Nome",
+    "namePlaceholder": "Seu nome",
+    "companyLabel": "Empresa",
+    "companyPlaceholder": "Nome da sua empresa",
+    "emailLabel": "E-mail de trabalho",
+    "emailPlaceholder": "voce@empresa.com",
+    "submit": "Solicitar acesso →",
+    "foot": "Grátis para começar · Cancele quando quiser",
+    "sentTitle": "Você está na lista",
+    "sentBody": "Vamos escrever para {email} com seu acesso antecipado."
+  },
+  "footer": {
+    "tagline": "O sistema operacional do talento: ATS + HRIS + Folha com IA agêntica. Um dado, todo o ciclo, sem redigitar.",
+    "colProduct": "Produto",
+    "colCompany": "Empresa",
+    "colLegal": "Legal",
+    "ats": "ATS",
+    "hris": "HRIS · Pessoas",
+    "nomina": "Folha",
+    "aiAgents": "AI Agents",
+    "why": "Por que TalentOS",
+    "pricing": "Preços",
+    "resources": "Recursos",
+    "privacy": "Privacidade",
+    "terms": "Termos",
+    "security": "Segurança",
+    "copyright": "© 2026 TalentOS",
+    "motto": "Um dado · todo o ciclo · a IA nunca escreve sozinha"
+  }
+}

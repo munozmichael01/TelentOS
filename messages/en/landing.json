@@ -1,0 +1,340 @@
+{
+  "nav": {
+    "product": "Product",
+    "ai": "The AI",
+    "security": "Security",
+    "pricing": "Pricing",
+    "login": "Log in",
+    "cta": "Early access",
+    "menu": {
+      "ats": { "title": "ATS", "tag": "Available", "items": ["Pipeline · ATS", "Jobs & distribution", "Career site", "Channels"] },
+      "hris": { "title": "HRIS", "tag": "Available", "items": ["Directory & org chart", "Employee record", "Onboarding", "Time off · Hours · Schedules"] },
+      "nomina": { "title": "Payroll", "tag": "Available", "items": ["Calculation engine", "Payslips", "Pay runs", "Per-country compliance"] },
+      "aiAgents": { "title": "AI Agents", "tag": "Available", "items": ["Job post writer", "Candidate analysis", "Channel optimizer", "AI career site"] }
+    }
+  },
+  "hero": {
+    "badge": "ATS + HRIS + Payroll · with agentic AI",
+    "title1": "The operating system ",
+    "titleAccent": "for talent",
+    "title2": ".",
+    "subtitle": "From job post to payslip in a single platform. One record that travels with you — never re-entered. AI does the busywork; your team makes the calls.",
+    "ctaPrimary": "Request early access →",
+    "ctaSecondary": "See how it works",
+    "tagline": "One record · the full cycle · no re-entry",
+    "hint": "Real demo · click around the menu"
+  },
+  "demo": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "groupRecruiting": "Recruiting",
+      "ofertas": "Jobs",
+      "candidatos": "Candidates",
+      "groupPeople": "People",
+      "empleados": "Employees",
+      "organigrama": "Org chart",
+      "ausencias": "Time off",
+      "horas": "Hours",
+      "groupPayroll": "Payroll",
+      "nomina": "Payroll",
+      "payruns": "Pay Runs",
+      "perfiles": "Pay profiles",
+      "groupWorkspace": "Workspace",
+      "ajustes": "Settings",
+      "logout": "Sign out"
+    },
+    "search": "Search…",
+    "dash": {
+      "date": "Monday · Jul 2, 2026",
+      "greeting": "Good morning, Michael",
+      "personalize": "Customize",
+      "personalizeHint": "Choose which metrics show in your pulse",
+      "metrics": [
+        { "label": "Open pipeline", "value": "41", "delta": "↑ 12 this week", "up": true },
+        { "label": "Hires · month", "value": "3", "delta": "target 5", "up": false },
+        { "label": "Out today", "value": "2", "delta": "of 24 active", "up": false },
+        { "label": "Hours balance", "value": "+12h", "delta": "↑ vs last", "up": true },
+        { "label": "Best channel CPA", "value": "€34", "delta": "LinkedIn", "up": false }
+      ],
+      "attentionTitle": "Needs your attention",
+      "attentionSub": "Actions assigned to you · precise signals, not estimates",
+      "filters": [
+        { "label": "All", "count": "6" },
+        { "label": "Time off", "count": "1" },
+        { "label": "Candidates", "count": "2" },
+        { "label": "Compliance", "count": "1" }
+      ],
+      "rows": [
+        { "ini": "MO", "name": "Marco Ortiz", "tag": "Compliance", "meta": "Overtime · Jun 12 · insufficient rest", "actions": ["Review"] },
+        { "ini": "LF", "name": "Lucía Fernández", "tag": "Time off", "meta": "Vacation · Jun 23–30 · 6 days", "actions": ["Decline", "Approve"] },
+        { "ini": "EV", "name": "Elena Vidal · Sr Backend", "tag": "Candidate", "meta": "Fit 95 · 6 days in Interview with no movement", "actions": ["Move"] }
+      ],
+      "viewAll": "View the full inbox (6) →",
+      "agentTitle": "Agent suggestions",
+      "agentUpdated": "Updated 2h ago ·",
+      "agentRefresh": "Refresh",
+      "agentBody": "On <b>Sr Backend</b> and <b>Product Designer</b>, LinkedIn converts 2× better (avg fit 78 vs 61 · 34 applications).",
+      "agentAction": "Raise budget",
+      "agentDone": "Done",
+      "agentIgnore": "Dismiss",
+      "agentFoot": "The agent proposes · you decide",
+      "activityTitle": "Recent activity",
+      "activity": [
+        { "text": "Nadia Cortés · new application", "time": "12m" },
+        { "text": "'Sr Backend' job published", "time": "1h" },
+        { "text": "Lucía F. requested time off", "time": "2h" }
+      ]
+    },
+    "ofertas": {
+      "kicker": "Recruiting · ATS",
+      "title": "Jobs",
+      "newBtn": "＋ New job",
+      "filters": ["All 6", "Active 4", "Drafts 2", "Tech"],
+      "iaBadge": "AI",
+      "jobs": [
+        { "ini": "PD", "title": "Senior Product Designer", "ia": true, "meta": "Madrid · Product · active", "salary": "€55–75k", "cands": "41 appl." },
+        { "ini": "AE", "title": "Account Executive", "ia": false, "meta": "Barcelona · Sales · active", "salary": "€32–45k", "cands": "28 appl." },
+        { "ini": "BS", "title": "Senior Backend", "ia": true, "meta": "Remote · Engineering · active", "salary": "€60–80k", "cands": "34 appl." },
+        { "ini": "DA", "title": "Data Analyst", "ia": false, "meta": "Madrid · Data · draft", "salary": "€40–52k", "cands": "—" }
+      ]
+    },
+    "empleados": {
+      "kicker": "People · HRIS",
+      "title": "Directory · 24 people",
+      "bannerTitle": "3 people onboarding this week",
+      "bannerSub": "Assign the role-based flow to every new hire",
+      "bannerCta": "See plan",
+      "reportsTo": "Reports to",
+      "people": [
+        { "ini": "AR", "name": "Abernathy, Rex", "meta": "Account Manager · Boston", "boss": "Greenholt, E." },
+        { "ini": "AO", "name": "Adams, Okey", "meta": "Data Analyst · Madrid", "boss": "Ríos, Clara" },
+        { "ini": "AM", "name": "Aguilar, Marta", "meta": "Product Designer · Madrid", "boss": "Ríos, Clara" }
+      ]
+    },
+    "nomina": {
+      "kicker": "Payroll",
+      "title": "June run",
+      "status": "● Closed",
+      "costLabel": "Total company cost",
+      "cost": "€148,200",
+      "receipts": "24 payslips",
+      "pack": "generic pack · EU",
+      "receiptBadge": "Payslip ✓",
+      "rows": [
+        { "ini": "AM", "name": "Aguilar, Marta", "net": "Net €2,140" },
+        { "ini": "AO", "name": "Adams, Okey", "net": "Net €2,480" },
+        { "ini": "AR", "name": "Abernathy, Rex", "net": "Net €2,910" }
+      ]
+    },
+    "locked": {
+      "labels": {
+        "candidatos": "Candidates",
+        "organigrama": "Org chart",
+        "ausencias": "Time off",
+        "horas": "Hours",
+        "payruns": "Pay Runs",
+        "perfiles": "Pay profiles",
+        "ajustes": "Settings"
+      },
+      "body": "This section lives in the full demo. Sign up and explore it with sample data, along with the rest of the product.",
+      "cta": "Sign up to see it →",
+      "foot": "Dashboard · Jobs · Employees · Payroll are open in this demo"
+    }
+  },
+  "trust": {
+    "label": "We're opening early access to HR teams at mid-sized companies",
+    "note": "· sample logos"
+  },
+  "problema": {
+    "title1": "Managing talent today means juggling ",
+    "titleAccent": "seven different tools",
+    "title2": ".",
+    "subtitle": "One portal to post, a spreadsheet for candidates, a chat to decide, an HRIS for the employee, an outsourced bureau for payroll. And a trendy AI bolted on the side, outside the flow.",
+    "stackLabel": "The same old broken stack",
+    "tools": ["Job board", "Candidate spreadsheet", "Chat to decide", "Employee HRIS", "Payroll bureau", "Absence spreadsheet", "Trendy AI, on the side"],
+    "costKicker": "The real cost",
+    "cost1": "It's not the licenses. It's that your data ",
+    "costAccent": "gets re-entered at every hop",
+    "cost2": ": the candidate you hire is typed in again as an employee, and once more as a payroll line.",
+    "costFoot": "You lose time, context, and traceability."
+  },
+  "plataforma": {
+    "kicker": "The proposal",
+    "title1": "One platform. One record. ",
+    "titleAccent": "The full cycle",
+    "title2": ".",
+    "subtitle": "TalentOS unifies the entire talent lifecycle in one system where the pieces already talk to each other. A candidate becomes an employee and then a payslip without re-entering a single field.",
+    "boardTitle": "Data travels through the cycle — never typed twice",
+    "boardBadge": "a single database",
+    "detailKicker": "{title} record",
+    "inheritedBadge": "Inherited data, not re-entered",
+    "foot": "Click each stage of the cycle — the data travels and is only typed once.",
+    "stages": [
+      {
+        "kicker": "Attract", "title": "Job", "chip": "AI drafts it", "subtitle": "Senior Product Designer",
+        "fields": [
+          { "label": "Position", "value": "Senior Product Designer", "tag": "new here", "type": "new" },
+          { "label": "Department", "value": "Product", "tag": "new here", "type": "new" },
+          { "label": "Salary band", "value": "€55,000–75,000", "tag": "new here", "type": "new" },
+          { "label": "Location", "value": "Madrid · hybrid", "tag": "new here", "type": "new" }
+        ]
+      },
+      {
+        "kicker": "Select", "title": "Candidate", "chip": "Fit scored", "subtitle": "Elena Vidal",
+        "fields": [
+          { "label": "Candidate", "value": "Elena Vidal", "tag": "new here", "type": "new" },
+          { "label": "Position", "value": "Senior Product Designer", "tag": "from the Job", "type": "from" },
+          { "label": "Department", "value": "Product", "tag": "from the Job", "type": "from" },
+          { "label": "AI fit", "value": "95 / 100", "tag": "new here", "type": "new" }
+        ]
+      },
+      {
+        "kicker": "Onboard · Manage", "title": "Employee", "chip": "Onboarding ready", "subtitle": "Elena Vidal",
+        "fields": [
+          { "label": "Name", "value": "Elena Vidal", "tag": "from the Candidate", "type": "from" },
+          { "label": "Position", "value": "Senior Product Designer", "tag": "from the Job", "type": "from" },
+          { "label": "Agreed salary", "value": "€68,000 / year", "tag": "from the Job", "type": "from" },
+          { "label": "Start date", "value": "Jul 1, 2026", "tag": "new here", "type": "new" }
+        ]
+      },
+      {
+        "kicker": "Pay", "title": "Payslip", "chip": "No re-entry", "subtitle": "July payroll",
+        "fields": [
+          { "label": "Employee", "value": "Elena Vidal", "tag": "from the Employee", "type": "from" },
+          { "label": "Base salary", "value": "€5,667 / month", "tag": "from the Employee", "type": "from" },
+          { "label": "Income tax", "value": "−€1,020", "tag": "calculated", "type": "calc" },
+          { "label": "Net pay", "value": "€4,180", "tag": "calculated", "type": "calc" }
+        ]
+      }
+    ]
+  },
+  "pilares": {
+    "kicker": "Three pillars, one foundation",
+    "title1": "Recruiting, people and payroll — ",
+    "titleAccent": "on the same record",
+    "title2": ".",
+    "link": "See the module →",
+    "ats": { "title": "Recruiting", "tag": "ATS", "desc": "Post to every channel in one click, manage your candidate pipeline, and launch your public careers page." },
+    "hris": { "title": "People", "tag": "HRIS", "desc": "Directory and org chart, onboarding, time off, hours and schedules — with the employee record as the single source of truth." },
+    "pay": { "title": "Payroll", "tag": "Payroll", "desc": "Calculation engine, payslips and per-country compliance. No exporting to a payroll bureau." },
+    "previews": {
+      "atsTitle": "Jobs",
+      "newJob": "New job",
+      "chipAll": "All · 6",
+      "chipActive": "active",
+      "chipTech": "Tech",
+      "iaBadge": "AI",
+      "job1": "Senior Product Designer", "job1Meta": "Madrid · Product", "job1Salary": "€55–75k", "job1Cands": "41 appl.",
+      "job2": "Account Executive", "job2Meta": "Barcelona · Sales", "job2Salary": "€32–45k", "job2Cands": "28 appl.",
+      "hrisTitle": "Directory",
+      "onbTitle": "3 people onboarding", "onbSub": "Assign flows to every new hire", "onbCta": "View",
+      "reportsTo": "Reports to",
+      "emp1": "Abernathy, Rex", "emp1Meta": "Account Manager · Boston", "emp1Boss": "Greenholt, E.",
+      "emp2": "Adams, Okey", "emp2Meta": "Data Analyst · Madrid", "emp2Boss": "Ríos, Clara",
+      "payTitle": "Payroll · June", "payStatus": "Closed", "payCostLabel": "Total cost", "payCost": "€148,200", "payReceipts": "24 payslips",
+      "pay1": "Aguilar, Marta", "pay1Net": "Net €2,140",
+      "pay2": "Adams, Okey", "pay2Net": "Net €2,480",
+      "receipt": "Payslip ✓"
+    }
+  },
+  "ia": {
+    "kicker": "The differentiator · Agentic AI",
+    "title1": "The AI isn't on the side. ",
+    "titleAccent": "It's inside every task",
+    "title2": ".",
+    "subtitle": "It drafts the job post, builds your entire career site from your website, summarizes CVs and scores fit, recommends where to invest your budget, and assembles role-based onboarding checklists.",
+    "agents": [
+      { "title": "Drafts the job post", "desc": "Writes the vacancy copy and publishes it wherever you confirm." },
+      { "title": "Career site from your website", "desc": "Extracts your company profile and builds your entire careers page." },
+      { "title": "Summarizes CVs, scores fit", "desc": "Reads every application and proposes a fit score with evidence." },
+      { "title": "Allocates the budget", "desc": "Recommends which channel to invest in and builds role-based onboarding." }
+    ],
+    "trustBadge": "Our flag of trust",
+    "trustTitle1": "The AI prepares and proposes. ",
+    "trustAccent": "You decide",
+    "trustTitle2": ".",
+    "trustBody": "No agent publishes, hires or pays on its own. That's what makes the automation trustworthy — and compliance-friendly.",
+    "invariants": [
+      { "label": "PREPARES", "text": "Drafts, extracts, calculates, summarizes — the mechanical work." },
+      { "label": "PROPOSES", "text": "With scope, evidence and one concrete action." },
+      { "label": "YOU DECIDE", "text": "You confirm or dismiss. The final write is always human." }
+    ]
+  },
+  "audiencias": {
+    "kicker": "For the whole team",
+    "title1": "One platform, ",
+    "titleAccent": "two lenses",
+    "title2": ".",
+    "cards": [
+      { "title": "For leadership", "points": ["From 7 licenses to 1 platform", "Fewer HR hours spent copying data", "Every decision traced", "Up and running in days, not months", "Each company in its own isolated, secure workspace"] },
+      { "title": "For HR", "points": ["One clear pipeline — no CVs lost in email", "One job post on all your channels in one click", "From candidate to employee with no re-entry", "Time off, hours and payroll in the same place", "AI handles the repetitive work; you decide what matters"] }
+    ]
+  },
+  "seguridad": {
+    "kicker": "Security and control",
+    "title1": "Isolated by design, ",
+    "titleAccent": "not just in the UI",
+    "title2": ".",
+    "body": "Each company is a fully isolated workspace at the database level: you will never see another company's data. Access is governed by roles. And because the AI never writes on its own, sensitive data is protected by design.",
+    "badge": "Isolated multi-tenant · 5 built-in roles",
+    "roles": [
+      { "name": "OWNER", "scope": "Full access, including billing and payroll approval." },
+      { "name": "HR ADMIN", "scope": "All people operations, compensation and compliance." },
+      { "name": "RECRUITER", "scope": "Jobs, candidates and pipeline. No sensitive employee data." },
+      { "name": "MANAGER", "scope": "Only their slice of the org chart: their team and direct reports." },
+      { "name": "EMPLOYEE", "scope": "Their own record, hours and time off. Nothing else." }
+    ]
+  },
+  "estado": {
+    "badge": "Honesty section · early access",
+    "title1": "Where we are, ",
+    "titleAccent": "with full transparency",
+    "title2": ".",
+    "body": "The ATS, HRIS and payroll engine are built and in production. By design, money never flows automatically from recruiting to payroll: offer data only pre-fills what HR confirms at the moment of hire.",
+    "statusProd": "In production",
+    "statusPreview": "In preview",
+    "cards": [
+      { "title": "ATS", "desc": "Pipeline, jobs and career site built and in use.", "status": "prod" },
+      { "title": "HRIS", "desc": "Directory, employee records, time off, hours and schedules in production.", "status": "prod" },
+      { "title": "Payroll engine", "desc": "Calculation, payslips and the generic compliance pack are live.", "status": "prod" },
+      { "title": "Country packs", "desc": "Country-specific compliance, currently in validation.", "status": "preview" }
+    ]
+  },
+  "cta": {
+    "title1": "From five tools and a lost day to ",
+    "titleAccent": "one single platform",
+    "title2": ".",
+    "body": "AI does the busywork. Your team decides. From job post to payslip.",
+    "check1": "No credit card",
+    "check2": "Migration included",
+    "formTitle": "Request early access",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your name",
+    "companyLabel": "Company",
+    "companyPlaceholder": "Your company name",
+    "emailLabel": "Work email",
+    "emailPlaceholder": "you@company.com",
+    "submit": "Request access →",
+    "foot": "Free to start · Cancel anytime",
+    "sentTitle": "You're on the list",
+    "sentBody": "We'll email {email} with your early access."
+  },
+  "footer": {
+    "tagline": "The talent operating system: ATS + HRIS + Payroll with agentic AI. One record, the full cycle, no re-entry.",
+    "colProduct": "Product",
+    "colCompany": "Company",
+    "colLegal": "Legal",
+    "ats": "ATS",
+    "hris": "HRIS · People",
+    "nomina": "Payroll",
+    "aiAgents": "AI Agents",
+    "why": "Why TalentOS",
+    "pricing": "Pricing",
+    "resources": "Resources",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "security": "Security",
+    "copyright": "© 2026 TalentOS",
+    "motto": "One record · the full cycle · AI never writes alone"
+  }
+}
