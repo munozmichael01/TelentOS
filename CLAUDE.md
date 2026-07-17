@@ -13,6 +13,10 @@ Stack: **Next.js 14 App Router · Supabase/Postgres · OpenAI GPT-4o**.
 
 ---
 
+## Internacionalización (next-intl, jul 2026)
+
+Toda la app vive bajo `app/[locale]/` (ES default · EN · PT). El locale va en la URL; `middleware.ts` compone **i18n (next-intl) + auth (Supabase)** — las reglas de público/privado se evalúan sobre el path SIN prefijo. `/api` queda fuera del middleware. Mensajes por página en `messages/{locale}/*.json`, compuestos en `i18n/request.ts`. **Reglas:** links internos con `Link`/`redirect` de `@/i18n/navigation` (no `next/link` a rutas de página); página nueva de marketing → su namespace propio de mensajes; strings de UI nuevos → externalizar, no hardcodear (el dashboard aún tiene strings ES hardcodeados — se migran progresivamente). Marketing: home `app/[locale]/page.tsx` + `/producto/*` + `/pricing`, componentes en `components/marketing/`.
+
 ## Arquitectura de autenticación y scoping de empresa
 
 ### API routes — usa `requireApiRole`, no `LIMIT 1`
