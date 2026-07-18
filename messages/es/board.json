@@ -57,5 +57,37 @@
   "toast": {
     "saved": "Guardada en tus ofertas",
     "unsaved": "Quitada de guardadas"
+  },
+  "detail": {
+    "back": "Todas las ofertas",
+    "salary": "Salario",
+    "about": "Sobre el puesto",
+    "looking": "Lo que buscamos",
+    "skills": "Habilidades",
+    "related": "Ofertas relacionadas",
+    "apply": "Aplicar",
+    "reqExperience": "{years, plural, one {# año de experiencia} other {# años de experiencia}}",
+    "reqEducation": "Formación: {level}",
+    "reqSeniority": "Nivel: {level}",
+    "required": "Excluyente",
+    "desirable": "Deseable"
+  },
+  "apply": {
+    "title": "Aplica a {job}",
+    "at": "en {company}",
+    "name": "Nombre completo",
+    "email": "Email",
+    "phone": "Teléfono",
+    "message": "Mensaje (opcional)",
+    "screening": "Unas preguntas de la empresa",
+    "submit": "Enviar candidatura",
+    "sending": "Enviando…",
+    "cancel": "Cancelar",
+    "success": "¡Candidatura enviada!",
+    "successDesc": "La empresa recibió tu solicitud. Puedes seguir su estado en tu cuenta.",
+    "error": "No se pudo enviar. Revisa los datos e inténtalo de nuevo.",
+    "required": "Obligatorio",
+    "yes": "Sí",
+    "no": "No"
   }
 }

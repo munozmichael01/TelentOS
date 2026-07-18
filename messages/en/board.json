@@ -57,5 +57,37 @@
   "toast": {
     "saved": "Saved to your jobs",
     "unsaved": "Removed from saved"
+  },
+  "detail": {
+    "back": "All jobs",
+    "salary": "Salary",
+    "about": "About the role",
+    "looking": "What we're looking for",
+    "skills": "Skills",
+    "related": "Related jobs",
+    "apply": "Apply",
+    "reqExperience": "{years, plural, one {# year of experience} other {# years of experience}}",
+    "reqEducation": "Education: {level}",
+    "reqSeniority": "Level: {level}",
+    "required": "Required",
+    "desirable": "Nice to have"
+  },
+  "apply": {
+    "title": "Apply to {job}",
+    "at": "at {company}",
+    "name": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "message": "Message (optional)",
+    "screening": "A few questions from the company",
+    "submit": "Send application",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "success": "Application sent!",
+    "successDesc": "The company received your application. Track its status from your account.",
+    "error": "Couldn't send. Check your details and try again.",
+    "required": "Required",
+    "yes": "Yes",
+    "no": "No"
   }
 }
