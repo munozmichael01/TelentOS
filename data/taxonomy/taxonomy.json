@@ -25,20 +25,7 @@
         "es": "iluminación en 3D",
         "pt": "iluminação 3D"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "3D lighting effect"
-        },
-        {
-          "locale": "en",
-          "synonym": "3D lighting role"
-        },
-        {
-          "locale": "es",
-          "synonym": "iluminación en 3D perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "3D modelling",
@@ -82,19 +69,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/eb0e5615-1575-4a86-a1a2-7d39595033c5",
       "translations": {
         "en": "ABAP",
-        "es": "ABAP",
+        "es": null,
         "pt": "ABAP"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "ABAP role"
-        },
-        {
-          "locale": "es",
-          "synonym": "ABAP perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "ABBYY FineReader",
@@ -102,19 +80,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/9a35cb50-8106-45f9-8aba-2df99dd6f913",
       "translations": {
         "en": "ABBYY FineReader",
-        "es": "ABBYY FineReader",
+        "es": null,
         "pt": "ABBYY FineReader"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "ABBYY FineReader role"
-        },
-        {
-          "locale": "es",
-          "synonym": "ABBYY FineReader perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "accept own accountability",
@@ -2730,7 +2699,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/b4dc6e4f-dc7d-445f-8ce2-d7b9d225e282",
       "translations": {
         "en": "AJAX",
-        "es": "AJAX",
+        "es": "Asynchronous Javascript and XML",
         "pt": "AJAX"
       },
       "synonyms": [
@@ -2829,14 +2798,6 @@
         {
           "locale": "en",
           "synonym": "alternative energy sources"
-        },
-        {
-          "locale": "en",
-          "synonym": "alternative energy role"
-        },
-        {
-          "locale": "es",
-          "synonym": "energía alternativa perfil"
         }
       ]
     },
@@ -4254,19 +4215,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/6f8a40d6-f9ce-43ec-a72f-d4213a53f3ed",
       "translations": {
         "en": "Ansible",
-        "es": "Ansible",
+        "es": null,
         "pt": "Ansible"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "Ansible role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Ansible perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "Apache Maven",
@@ -4274,21 +4226,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/0d168770-4d9c-4096-b048-a6577818d306",
       "translations": {
         "en": "Apache Maven",
-        "es": "Apache Maven",
+        "es": null,
         "pt": "Apache Maven"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "Maven"
-        },
-        {
-          "locale": "en",
-          "synonym": "Apache Maven role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Apache Maven perfil"
         }
       ]
     },
@@ -4393,14 +4337,6 @@
         {
           "locale": "en",
           "synonym": "applied animal biology"
-        },
-        {
-          "locale": "en",
-          "synonym": "applied zoology role"
-        },
-        {
-          "locale": "es",
-          "synonym": "zoología aplicada perfil"
         }
       ]
     },
@@ -4417,14 +4353,6 @@
         {
           "locale": "en",
           "synonym": "AIT"
-        },
-        {
-          "locale": "en",
-          "synonym": "apply 3D imaging techniques role"
-        },
-        {
-          "locale": "es",
-          "synonym": "aplicar técnicas de formación de imágenes en 3D perfil"
         }
       ]
     },
@@ -5181,14 +5109,6 @@
         {
           "locale": "en",
           "synonym": "AISUP"
-        },
-        {
-          "locale": "en",
-          "synonym": "apply ICT system usage policies role"
-        },
-        {
-          "locale": "es",
-          "synonym": "aplicar políticas de uso de sistemas TIC perfil"
         }
       ]
     },
@@ -5205,14 +5125,6 @@
         {
           "locale": "en",
           "synonym": "AIST"
-        },
-        {
-          "locale": "en",
-          "synonym": "apply ICT systems theory role"
-        },
-        {
-          "locale": "es",
-          "synonym": "aplicar teoría de sistemas de TIC perfil"
         }
       ]
     },
@@ -6494,7 +6406,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/56a7f561-1d55-43c9-9cd7-36a0a9bc6c50",
       "translations": {
         "en": "ASP.NET",
-        "es": "ASP.NET",
+        "es": "ASP+",
         "pt": "ASP.NET"
       },
       "synonyms": [
@@ -7381,14 +7293,6 @@
         {
           "locale": "en",
           "synonym": "AUIWIA"
-        },
-        {
-          "locale": "en",
-          "synonym": "assess users' interaction with ICT applications role"
-        },
-        {
-          "locale": "es",
-          "synonym": "evaluar la interacción de los usuarios con las aplicaciones TIC perfil"
         }
       ]
     },
@@ -8565,16 +8469,7 @@
         "es": "técnicas de auditoría",
         "pt": "técnicas de auditoria"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "audit techniques role"
-        },
-        {
-          "locale": "es",
-          "synonym": "técnicas de auditoría perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "authoring software",
@@ -8585,16 +8480,7 @@
         "es": "software creador",
         "pt": "software de autoria"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "authoring software role"
-        },
-        {
-          "locale": "es",
-          "synonym": "software creador perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "automate cloud tasks",
@@ -8714,7 +8600,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/6ac62059-f71c-4c4c-8aa8-91202816f773",
       "translations": {
         "en": "badminton",
-        "es": "bádminton",
+        "es": null,
         "pt": "badmínton"
       },
       "synonyms": [
@@ -9557,16 +9443,7 @@
         "es": "inteligencia empresarial",
         "pt": "inteligência empresarial"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "business intelligence role"
-        },
-        {
-          "locale": "es",
-          "synonym": "inteligencia empresarial perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "business process modelling",
@@ -9669,14 +9546,6 @@
         {
           "locale": "en",
           "synonym": "BSC"
-        },
-        {
-          "locale": "en",
-          "synonym": "business strategy concepts role"
-        },
-        {
-          "locale": "es",
-          "synonym": "conceptos de estrategia empresarial perfil"
         }
       ]
     },
@@ -9686,19 +9555,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/b633eb55-8f1f-4ae6-ab4c-2022ffe2cb7f",
       "translations": {
         "en": "C++",
-        "es": "C++",
+        "es": null,
         "pt": "C++"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "C++ role"
-        },
-        {
-          "locale": "es",
-          "synonym": "C++ perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "CAD software",
@@ -12258,19 +12118,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/def007fa-5fed-4a5f-91a2-b0d7e3db1be1",
       "translations": {
         "en": "COBOL",
-        "es": "COBOL",
+        "es": null,
         "pt": "COBOL"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "COBOL role"
-        },
-        {
-          "locale": "es",
-          "synonym": "COBOL perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "cognitive psychology",
@@ -12281,16 +12132,7 @@
         "es": "psicología cognitiva",
         "pt": "psicologia cognitiva"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "cognitive psychology role"
-        },
-        {
-          "locale": "es",
-          "synonym": "psicología cognitiva perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "collaborate in the development of marketing strategies",
@@ -12473,14 +12315,6 @@
         {
           "locale": "en",
           "synonym": "CID"
-        },
-        {
-          "locale": "en",
-          "synonym": "collect ICT data role"
-        },
-        {
-          "locale": "es",
-          "synonym": "reunir datos de TIC perfil"
         }
       ]
     },
@@ -12758,19 +12592,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/0cd6dcf1-5778-42a5-b685-4d01ae4a4871",
       "translations": {
         "en": "Common Lisp",
-        "es": "Common Lisp",
+        "es": null,
         "pt": "Common Lisp"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "Common Lisp role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Common Lisp perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "communicate by telephone",
@@ -14201,14 +14026,6 @@
         {
           "locale": "en",
           "synonym": "computer-based simulation"
-        },
-        {
-          "locale": "en",
-          "synonym": "computer simulation role"
-        },
-        {
-          "locale": "es",
-          "synonym": "simulación por ordenador perfil"
         }
       ]
     },
@@ -14329,14 +14146,6 @@
         {
           "locale": "en",
           "synonym": "CICR"
-        },
-        {
-          "locale": "en",
-          "synonym": "conduct ICT code review role"
-        },
-        {
-          "locale": "es",
-          "synonym": "realizar una revisión del código de las TIC perfil"
         }
       ]
     },
@@ -14617,14 +14426,6 @@
         {
           "locale": "en",
           "synonym": "CQR"
-        },
-        {
-          "locale": "en",
-          "synonym": "conduct qualitative research role"
-        },
-        {
-          "locale": "es",
-          "synonym": "realizar investigaciones cualitativas perfil"
         }
       ]
     },
@@ -15381,14 +15182,6 @@
         {
           "locale": "en",
           "synonym": "CDP"
-        },
-        {
-          "locale": "en",
-          "synonym": "content development processes role"
-        },
-        {
-          "locale": "es",
-          "synonym": "procesos de desarrollo de contenido perfil"
         }
       ]
     },
@@ -16577,14 +16370,6 @@
         {
           "locale": "en",
           "synonym": "corporate sustainability strategies"
-        },
-        {
-          "locale": "en",
-          "synonym": "corporate sustainability role"
-        },
-        {
-          "locale": "es",
-          "synonym": "sostenibilidad corporativa perfil"
         }
       ]
     },
@@ -16993,14 +16778,6 @@
         {
           "locale": "en",
           "synonym": "CBPM"
-        },
-        {
-          "locale": "en",
-          "synonym": "create business process models role"
-        },
-        {
-          "locale": "es",
-          "synonym": "crear modelos de procesos empresariales perfil"
         }
       ]
     },
@@ -17225,14 +17002,6 @@
         {
           "locale": "en",
           "synonym": "CFD"
-        },
-        {
-          "locale": "en",
-          "synonym": "create flowchart diagram role"
-        },
-        {
-          "locale": "es",
-          "synonym": "crear diagrama de flujo perfil"
         }
       ]
     },
@@ -17493,14 +17262,6 @@
         {
           "locale": "en",
           "synonym": "CUDT"
-        },
-        {
-          "locale": "en",
-          "synonym": "creatively use digital technologies role"
-        },
-        {
-          "locale": "es",
-          "synonym": "utilizar las tecnologías digitales con creatividad perfil"
         }
       ]
     },
@@ -17698,21 +17459,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/e5d1f825-60ed-4bdd-872a-e748c387f777",
       "translations": {
         "en": "CSS",
-        "es": "CSS",
+        "es": null,
         "pt": "CSS"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "Cascading Style Sheets"
-        },
-        {
-          "locale": "en",
-          "synonym": "CSS role"
-        },
-        {
-          "locale": "es",
-          "synonym": "CSS perfil"
         }
       ]
     },
@@ -17949,14 +17702,6 @@
         {
           "locale": "en",
           "synonym": "data anlysis"
-        },
-        {
-          "locale": "en",
-          "synonym": "data analytics role"
-        },
-        {
-          "locale": "es",
-          "synonym": "análisis de datos perfil"
         }
       ]
     },
@@ -18061,14 +17806,6 @@
         {
           "locale": "en",
           "synonym": "file hosting service"
-        },
-        {
-          "locale": "en",
-          "synonym": "data storage role"
-        },
-        {
-          "locale": "es",
-          "synonym": "almacenamiento de datos perfil"
         }
       ]
     },
@@ -18465,16 +18202,7 @@
         "es": "depurar software",
         "pt": "depurar software"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "debug software role"
-        },
-        {
-          "locale": "es",
-          "synonym": "depurar software perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "decentralized application frameworks",
@@ -18677,14 +18405,6 @@
         {
           "locale": "en",
           "synonym": "DIS"
-        },
-        {
-          "locale": "en",
-          "synonym": "define integration strategy role"
-        },
-        {
-          "locale": "es",
-          "synonym": "definir estrategias de integración perfil"
         }
       ]
     },
@@ -19013,14 +18733,6 @@
         {
           "locale": "en",
           "synonym": "DOT"
-        },
-        {
-          "locale": "en",
-          "synonym": "deliver online training role"
-        },
-        {
-          "locale": "es",
-          "synonym": "proporcionar formación en línea perfil"
         }
       ]
     },
@@ -19505,14 +19217,6 @@
         {
           "locale": "en",
           "synonym": "DDS"
-        },
-        {
-          "locale": "en",
-          "synonym": "design database scheme role"
-        },
-        {
-          "locale": "es",
-          "synonym": "diseñar esquema de base de datos perfil"
         }
       ]
     },
@@ -19609,16 +19313,7 @@
         "es": "diseñar infografías",
         "pt": "desenhar gráficos para computadores"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "design graphics role"
-        },
-        {
-          "locale": "es",
-          "synonym": "diseñar infografías perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "design heat pump installations",
@@ -20017,14 +19712,6 @@
         {
           "locale": "en",
           "synonym": "DWC"
-        },
-        {
-          "locale": "en",
-          "synonym": "design web-based courses role"
-        },
-        {
-          "locale": "es",
-          "synonym": "diseñar cursos web perfil"
         }
       ]
     },
@@ -20553,14 +20240,6 @@
         {
           "locale": "en",
           "synonym": "DAP"
-        },
-        {
-          "locale": "en",
-          "synonym": "develop audit plan role"
-        },
-        {
-          "locale": "es",
-          "synonym": "desarrollar planes de auditoría perfil"
         }
       ]
     },
@@ -20577,14 +20256,6 @@
         {
           "locale": "en",
           "synonym": "DAMM"
-        },
-        {
-          "locale": "en",
-          "synonym": "develop automated migration methods role"
-        },
-        {
-          "locale": "es",
-          "synonym": "desarrollar métodos de migración automatizada perfil"
         }
       ]
     },
@@ -21137,14 +20808,6 @@
         {
           "locale": "en",
           "synonym": "DIDD"
-        },
-        {
-          "locale": "en",
-          "synonym": "develop ICT device driver role"
-        },
-        {
-          "locale": "es",
-          "synonym": "desarrollar un controlador de dispositivo de TIC perfil"
         }
       ]
     },
@@ -21161,14 +20824,6 @@
         {
           "locale": "en",
           "synonym": "DIW"
-        },
-        {
-          "locale": "en",
-          "synonym": "develop ICT workflow role"
-        },
-        {
-          "locale": "es",
-          "synonym": "elaborar flujos de trabajo informáticos perfil"
         }
       ]
     },
@@ -21261,14 +20916,6 @@
         {
           "locale": "en",
           "synonym": "DMS"
-        },
-        {
-          "locale": "en",
-          "synonym": "develop media strategy role"
-        },
-        {
-          "locale": "es",
-          "synonym": "elaborar estrategias multimedia perfil"
         }
       ]
     },
@@ -21774,19 +21421,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/f0de4973-0a70-4644-8fd4-3a97080476f4",
       "translations": {
         "en": "DevOps",
-        "es": "DevOps",
+        "es": null,
         "pt": "DevOps"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "DevOps role"
-        },
-        {
-          "locale": "es",
-          "synonym": "DevOps perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "diagnose psychiatric symptoms",
@@ -21857,16 +21495,7 @@
         "es": "composición digital",
         "pt": "composição digital"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "digital compositing role"
-        },
-        {
-          "locale": "es",
-          "synonym": "composición digital perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "digital curation",
@@ -21881,14 +21510,6 @@
         {
           "locale": "en",
           "synonym": "digital research curation"
-        },
-        {
-          "locale": "en",
-          "synonym": "digital curation role"
-        },
-        {
-          "locale": "es",
-          "synonym": "conservación digital perfil"
         }
       ]
     },
@@ -21969,14 +21590,6 @@
         {
           "locale": "en",
           "synonym": "digital information systems"
-        },
-        {
-          "locale": "en",
-          "synonym": "digital systems role"
-        },
-        {
-          "locale": "es",
-          "synonym": "sistemas digitales perfil"
         }
       ]
     },
@@ -22037,14 +21650,6 @@
         {
           "locale": "en",
           "synonym": "digital enablement"
-        },
-        {
-          "locale": "en",
-          "synonym": "digitization role"
-        },
-        {
-          "locale": "es",
-          "synonym": "digitalización perfil"
         }
       ]
     },
@@ -22513,16 +22118,7 @@
         "es": "gestión de documentos",
         "pt": "gestão de documentos informáticos"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "document management role"
-        },
-        {
-          "locale": "es",
-          "synonym": "gestión de documentos perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "document museum collection",
@@ -22813,14 +22409,6 @@
         {
           "locale": "en",
           "synonym": "DDS"
-        },
-        {
-          "locale": "en",
-          "synonym": "draw design sketches role"
-        },
-        {
-          "locale": "es",
-          "synonym": "elaborar bocetos perfil"
         }
       ]
     },
@@ -23117,16 +22705,7 @@
         "es": "formación en línea",
         "pt": "e-learning"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "e-learning role"
-        },
-        {
-          "locale": "es",
-          "synonym": "formación en línea perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "Eclipse (integrated development environment software)",
@@ -23238,19 +22817,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/17702c40-e963-4593-847e-a332b1c9357e",
       "translations": {
         "en": "Edmodo",
-        "es": "Edmodo",
+        "es": null,
         "pt": "Edmodo"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "Edmodo role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Edmodo perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "educate on sustainable tourism",
@@ -24425,16 +23995,7 @@
         "es": "procesos de ingeniería",
         "pt": "processos de engenharia"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "engineering processes role"
-        },
-        {
-          "locale": "es",
-          "synonym": "procesos de ingeniería perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "enlarge negatives",
@@ -24569,14 +24130,6 @@
         {
           "locale": "en",
           "synonym": "ECWCR"
-        },
-        {
-          "locale": "en",
-          "synonym": "ensure compliance with company regulations role"
-        },
-        {
-          "locale": "es",
-          "synonym": "garantizar el cumplimiento de la normativa empresarial perfil"
         }
       ]
     },
@@ -25614,19 +25167,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/034c29fa-c3ba-45ea-b8f3-bf8e3705e386",
       "translations": {
         "en": "Erlang",
-        "es": "Erlang",
+        "es": null,
         "pt": "Erlang"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "Erlang role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Erlang perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "escort students on a field trip",
@@ -26101,14 +25645,6 @@
         {
           "locale": "en",
           "synonym": "ECOSP"
-        },
-        {
-          "locale": "en",
-          "synonym": "evaluate cost of software products role"
-        },
-        {
-          "locale": "es",
-          "synonym": "evaluar el coste de los productos de software perfil"
         }
       ]
     },
@@ -26725,14 +26261,6 @@
         {
           "locale": "en",
           "synonym": "EFS"
-        },
-        {
-          "locale": "en",
-          "synonym": "execute feasibility study role"
-        },
-        {
-          "locale": "es",
-          "synonym": "ejecutar estudio de viabilidad perfil"
         }
       ]
     },
@@ -26781,14 +26309,6 @@
         {
           "locale": "en",
           "synonym": "EIURA"
-        },
-        {
-          "locale": "en",
-          "synonym": "execute ICT user research activities role"
-        },
-        {
-          "locale": "es",
-          "synonym": "ejecutar actividades de investigación de usuarios de TIC perfil"
         }
       ]
     },
@@ -29113,14 +28633,6 @@
         {
           "locale": "en",
           "synonym": "good governance processes"
-        },
-        {
-          "locale": "en",
-          "synonym": "good governance role"
-        },
-        {
-          "locale": "es",
-          "synonym": "buena gobernanza perfil"
         }
       ]
     },
@@ -29685,14 +29197,6 @@
         {
           "locale": "en",
           "synonym": "HDS"
-        },
-        {
-          "locale": "en",
-          "synonym": "handle data samples role"
-        },
-        {
-          "locale": "es",
-          "synonym": "manejar muestras de datos perfil"
         }
       ]
     },
@@ -30890,19 +30394,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/a4e31589-3632-4926-91d0-15b889c90b9b",
       "translations": {
         "en": "IBM WebSphere",
-        "es": "IBM WebSphere",
+        "es": null,
         "pt": "IBM WebSphere"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "IBM WebSphere role"
-        },
-        {
-          "locale": "es",
-          "synonym": "IBM WebSphere perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "ICT architectural frameworks",
@@ -31037,14 +30532,6 @@
         {
           "locale": "en",
           "synonym": "INR"
-        },
-        {
-          "locale": "en",
-          "synonym": "ICT network routing role"
-        },
-        {
-          "locale": "es",
-          "synonym": "enrutado de red de TIC perfil"
         }
       ]
     },
@@ -31061,14 +30548,6 @@
         {
           "locale": "en",
           "synonym": "INS"
-        },
-        {
-          "locale": "en",
-          "synonym": "ICT network simulation role"
-        },
-        {
-          "locale": "es",
-          "synonym": "simulación de red de TIC perfil"
         }
       ]
     },
@@ -31129,14 +30608,6 @@
         {
           "locale": "en",
           "synonym": "IQP"
-        },
-        {
-          "locale": "en",
-          "synonym": "ICT quality policy role"
-        },
-        {
-          "locale": "es",
-          "synonym": "política de calidad de las TIC perfil"
         }
       ]
     },
@@ -31153,14 +30624,6 @@
         {
           "locale": "en",
           "synonym": "ISM"
-        },
-        {
-          "locale": "en",
-          "synonym": "ICT sales methodologies role"
-        },
-        {
-          "locale": "es",
-          "synonym": "metodologías de ventas de TIC perfil"
         }
       ]
     },
@@ -31309,14 +30772,6 @@
         {
           "locale": "en",
           "synonym": "ISUR"
-        },
-        {
-          "locale": "en",
-          "synonym": "ICT system user requirements role"
-        },
-        {
-          "locale": "es",
-          "synonym": "requisitos de usuario de sistemas de TIC perfil"
         }
       ]
     },
@@ -31373,14 +30828,6 @@
         {
           "locale": "en",
           "synonym": "ICR"
-        },
-        {
-          "locale": "en",
-          "synonym": "identify customer requirements role"
-        },
-        {
-          "locale": "es",
-          "synonym": "identificar requisitos del cliente perfil"
         }
       ]
     },
@@ -32097,14 +31544,6 @@
         {
           "locale": "en",
           "synonym": "IINDT"
-        },
-        {
-          "locale": "en",
-          "synonym": "implement ICT network diagnostic tools role"
-        },
-        {
-          "locale": "es",
-          "synonym": "aplicar herramientas de diagnóstico de red de las TIC perfil"
         }
       ]
     },
@@ -32165,14 +31604,6 @@
         {
           "locale": "en",
           "synonym": "ISS"
-        },
-        {
-          "locale": "en",
-          "synonym": "implement sales strategies role"
-        },
-        {
-          "locale": "es",
-          "synonym": "implementar estrategias de ventas perfil"
         }
       ]
     },
@@ -32413,16 +31844,7 @@
         "es": "extracción de información",
         "pt": "extração de informação"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "information extraction role"
-        },
-        {
-          "locale": "es",
-          "synonym": "extracción de información perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "information security strategy",
@@ -32437,14 +31859,6 @@
         {
           "locale": "en",
           "synonym": "ISS"
-        },
-        {
-          "locale": "en",
-          "synonym": "information security strategy role"
-        },
-        {
-          "locale": "es",
-          "synonym": "estrategia de seguridad de la información perfil"
         }
       ]
     },
@@ -32501,16 +31915,7 @@
         "es": "procesos de innovación",
         "pt": "processos de inovação"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "innovation processes role"
-        },
-        {
-          "locale": "es",
-          "synonym": "procesos de innovación perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "insolvency law",
@@ -33493,14 +32898,6 @@
         {
           "locale": "en",
           "synonym": "IDM"
-        },
-        {
-          "locale": "en",
-          "synonym": "instructional design models role"
-        },
-        {
-          "locale": "es",
-          "synonym": "modelos de diseño educacional perfil"
         }
       ]
     },
@@ -33517,14 +32914,6 @@
         {
           "locale": "en",
           "synonym": "instructional techniques"
-        },
-        {
-          "locale": "en",
-          "synonym": "instructional strategies role"
-        },
-        {
-          "locale": "es",
-          "synonym": "estrategias de instrucción perfil"
         }
       ]
     },
@@ -33825,14 +33214,6 @@
         {
           "locale": "en",
           "synonym": "interactive multimedia"
-        },
-        {
-          "locale": "en",
-          "synonym": "interactive media role"
-        },
-        {
-          "locale": "es",
-          "synonym": "medios interactivos perfil"
         }
       ]
     },
@@ -33845,16 +33226,7 @@
         "es": "técnicas de interconexión",
         "pt": "técnicas de interface"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "interfacing techniques role"
-        },
-        {
-          "locale": "es",
-          "synonym": "técnicas de interconexión perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "international financial reporting standards",
@@ -34041,16 +33413,7 @@
         "es": "gobernanza de internet",
         "pt": "governação da Internet"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "internet governance role"
-        },
-        {
-          "locale": "es",
-          "synonym": "gobernanza de internet perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "interpret 3D plans",
@@ -34285,14 +33648,6 @@
         {
           "locale": "en",
           "synonym": "IEDS"
-        },
-        {
-          "locale": "en",
-          "synonym": "interpret electronic design specifications role"
-        },
-        {
-          "locale": "es",
-          "synonym": "interpretar las especificaciones del diseño electrónico perfil"
         }
       ]
     },
@@ -34429,14 +33784,6 @@
         {
           "locale": "en",
           "synonym": "ITT"
-        },
-        {
-          "locale": "en",
-          "synonym": "interpret technical texts role"
-        },
-        {
-          "locale": "es",
-          "synonym": "interpretar textos técnicos perfil"
         }
       ]
     },
@@ -34637,16 +33984,7 @@
         "es": "análisis de la inversión",
         "pt": "análise de investimento"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "investment analysis role"
-        },
-        {
-          "locale": "es",
-          "synonym": "análisis de la inversión perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "investment banking",
@@ -34661,14 +33999,6 @@
         {
           "locale": "en",
           "synonym": "equity banking"
-        },
-        {
-          "locale": "en",
-          "synonym": "investment banking role"
-        },
-        {
-          "locale": "es",
-          "synonym": "banca de inversión perfil"
         }
       ]
     },
@@ -34830,7 +34160,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/3cd569a2-4f88-4c1e-9995-8dce8c5e51a7",
       "translations": {
         "en": "JavaScript",
-        "es": "JavaScript",
+        "es": "JavaScript 1.7",
         "pt": "JavaScript"
       },
       "synonyms": [
@@ -34874,19 +34204,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/9b9de2a4-d8af-4a7b-933a-a8334ae60067",
       "translations": {
         "en": "JavaScript Framework",
-        "es": "JavaScript Framework",
+        "es": null,
         "pt": "JavaScript Framework"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "JavaScript Framework role"
-        },
-        {
-          "locale": "es",
-          "synonym": "JavaScript Framework perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "Jenkins (tools for software configuration management)",
@@ -34962,21 +34283,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/8785ccda-6f9f-4cf3-9033-fda10653d0be",
       "translations": {
         "en": "JSSS",
-        "es": "JSSS",
+        "es": null,
         "pt": "JSSS"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "JavaScript Style Sheets"
-        },
-        {
-          "locale": "en",
-          "synonym": "JSSS role"
-        },
-        {
-          "locale": "es",
-          "synonym": "JSSS perfil"
         }
       ]
     },
@@ -34986,7 +34299,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/013441c1-1f13-47e9-80c4-9a53e8e1bc05",
       "translations": {
         "en": "KDevelop",
-        "es": "KDevelop",
+        "es": null,
         "pt": "KDevelop"
       },
       "synonyms": [
@@ -35329,14 +34642,6 @@
         {
           "locale": "en",
           "synonym": "KIDC"
-        },
-        {
-          "locale": "en",
-          "synonym": "keywords in digital content role"
-        },
-        {
-          "locale": "es",
-          "synonym": "palabras clave en contenidos digitales perfil"
         }
       ]
     },
@@ -36045,14 +35350,6 @@
         {
           "locale": "en",
           "synonym": "LOST"
-        },
-        {
-          "locale": "en",
-          "synonym": "levels of software testing role"
-        },
-        {
-          "locale": "es",
-          "synonym": "niveles de pruebas del software perfil"
         }
       ]
     },
@@ -36550,21 +35847,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/c7d24594-0c11-4b27-9039-fe0bb903da8e",
       "translations": {
         "en": "LINQ",
-        "es": "LINQ",
+        "es": null,
         "pt": "LINQ"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "Language Integrated Query"
-        },
-        {
-          "locale": "en",
-          "synonym": "LINQ role"
-        },
-        {
-          "locale": "es",
-          "synonym": "LINQ perfil"
         }
       ]
     },
@@ -36610,19 +35899,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/0de61385-de6d-4146-ba32-1cc1bc102220",
       "translations": {
         "en": "Lisp",
-        "es": "Lisp",
+        "es": null,
         "pt": "Lisp"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "Lisp role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Lisp perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "listen actively",
@@ -37345,14 +36625,6 @@
         {
           "locale": "en",
           "synonym": "MIS"
-        },
-        {
-          "locale": "en",
-          "synonym": "maintain ICT server role"
-        },
-        {
-          "locale": "es",
-          "synonym": "mantener el servidor de las TIC perfil"
         }
       ]
     },
@@ -39641,14 +38913,6 @@
         {
           "locale": "en",
           "synonym": "MIDC"
-        },
-        {
-          "locale": "en",
-          "synonym": "manage ICT data classification role"
-        },
-        {
-          "locale": "es",
-          "synonym": "gestionar la clasificación de datos de las TIC perfil"
         }
       ]
     },
@@ -39665,14 +38929,6 @@
         {
           "locale": "en",
           "synonym": "MIP"
-        },
-        {
-          "locale": "en",
-          "synonym": "manage ICT project role"
-        },
-        {
-          "locale": "es",
-          "synonym": "dirigir proyecto de TIC perfil"
         }
       ]
     },
@@ -39717,14 +38973,6 @@
         {
           "locale": "en",
           "synonym": "MIS"
-        },
-        {
-          "locale": "en",
-          "synonym": "manage information sources role"
-        },
-        {
-          "locale": "es",
-          "synonym": "gestionar fuentes de información perfil"
         }
       ]
     },
@@ -41897,14 +41145,6 @@
         {
           "locale": "en",
           "synonym": "marketing data analytics"
-        },
-        {
-          "locale": "en",
-          "synonym": "marketing analytics role"
-        },
-        {
-          "locale": "es",
-          "synonym": "análisis de mercadotecnia perfil"
         }
       ]
     },
@@ -43026,7 +42266,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/8369ede5-4200-4a44-be2e-bc60ef959259",
       "translations": {
         "en": "Microsoft Visual C++",
-        "es": "Microsoft Visual C++",
+        "es": null,
         "pt": "Microsoft Visual C++"
       },
       "synonyms": [
@@ -44814,7 +44054,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/f597f772-24d3-4cec-813c-cf5a7027c794",
       "translations": {
         "en": "N1QL",
-        "es": "N1QL",
+        "es": null,
         "pt": "N1QL"
       },
       "synonyms": [
@@ -44885,14 +44125,6 @@
         {
           "locale": "en",
           "synonym": "naval architecture design"
-        },
-        {
-          "locale": "en",
-          "synonym": "naval architecture role"
-        },
-        {
-          "locale": "es",
-          "synonym": "arquitectura naval perfil"
         }
       ]
     },
@@ -45162,19 +44394,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/76ef6ed3-1658-4a1a-9593-204d799c6d0c",
       "translations": {
         "en": "NoSQL",
-        "es": "NoSQL",
+        "es": null,
         "pt": "NoSQL"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "NoSQL role"
-        },
-        {
-          "locale": "es",
-          "synonym": "NoSQL perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "nutrients of confectionery",
@@ -45218,7 +44441,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/9973a5a2-7822-4161-99e9-95c781eb63f8",
       "translations": {
         "en": "Objective-C",
-        "es": "Objective-C",
+        "es": "Smalltalk and C",
         "pt": "Objective-C"
       },
       "synonyms": [
@@ -45262,7 +44485,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/4959697d-3a24-4f46-af0c-b752318e6c54",
       "translations": {
         "en": "ObjectStore",
-        "es": "ObjectStore",
+        "es": null,
         "pt": "ObjectStore"
       },
       "synonyms": [
@@ -45586,21 +44809,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/300d432b-f457-4cd3-9cb1-1858c7d14954",
       "translations": {
         "en": "OpenEdge Advanced Business Language",
-        "es": "OpenEdge Advanced Business Language",
+        "es": null,
         "pt": "OpenEdge Advanced Business Language"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "OABL"
-        },
-        {
-          "locale": "en",
-          "synonym": "OpenEdge Advanced Business Language role"
-        },
-        {
-          "locale": "es",
-          "synonym": "OpenEdge Advanced Business Language perfil"
         }
       ]
     },
@@ -46465,14 +45680,6 @@
         {
           "locale": "en",
           "synonym": "OTRS"
-        },
-        {
-          "locale": "en",
-          "synonym": "operate two-way radio systems role"
-        },
-        {
-          "locale": "es",
-          "synonym": "operar sistemas bidireccionales de radio perfil"
         }
       ]
     },
@@ -46529,16 +45736,7 @@
         "es": "sistemas operativos",
         "pt": "sistemas operativos"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "operating systems role"
-        },
-        {
-          "locale": "es",
-          "synonym": "sistemas operativos perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "operations management",
@@ -46553,14 +45751,6 @@
         {
           "locale": "en",
           "synonym": "business operations management"
-        },
-        {
-          "locale": "en",
-          "synonym": "operations management role"
-        },
-        {
-          "locale": "es",
-          "synonym": "gestión de operaciones perfil"
         }
       ]
     },
@@ -47637,10 +46827,6 @@
         {
           "locale": "en",
           "synonym": "paper structure"
-        },
-        {
-          "locale": "es",
-          "synonym": "composición del papel"
         }
       ]
     },
@@ -47689,14 +46875,6 @@
         {
           "locale": "en",
           "synonym": "Pascal"
-        },
-        {
-          "locale": "en",
-          "synonym": "Pascal (computer programming) role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Pascal (programación informática) perfil"
         }
       ]
     },
@@ -49085,14 +48263,6 @@
         {
           "locale": "en",
           "synonym": "PRP"
-        },
-        {
-          "locale": "en",
-          "synonym": "perform resource planning role"
-        },
-        {
-          "locale": "es",
-          "synonym": "realizar planificación de recursos perfil"
         }
       ]
     },
@@ -49310,7 +48480,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/401eb8d8-6daa-4f8b-90ad-60afc71eb4f8",
       "translations": {
         "en": "Perl",
-        "es": "Perl",
+        "es": "Ponie",
         "pt": "Perl"
       },
       "synonyms": [
@@ -49458,7 +48628,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/4350c38d-0fe9-4ca7-bab9-40ed7f72b04f",
       "translations": {
         "en": "PHP",
-        "es": "PHP",
+        "es": "PHP-FPM",
         "pt": "PHP"
       },
       "synonyms": [
@@ -52417,14 +51587,6 @@
         {
           "locale": "en",
           "synonym": "Prolog"
-        },
-        {
-          "locale": "en",
-          "synonym": "Prolog (computer programming) role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Prolog (programación informática) perfil"
         }
       ]
     },
@@ -54141,14 +53303,6 @@
         {
           "locale": "en",
           "synonym": "PMC"
-        },
-        {
-          "locale": "en",
-          "synonym": "provide multimedia content role"
-        },
-        {
-          "locale": "es",
-          "synonym": "proporcionar contenidos multimedia perfil"
         }
       ]
     },
@@ -54285,14 +53439,6 @@
         {
           "locale": "en",
           "synonym": "PSTD"
-        },
-        {
-          "locale": "en",
-          "synonym": "provide software testing documentation role"
-        },
-        {
-          "locale": "es",
-          "synonym": "proporcionar la documentación de las pruebas del software perfil"
         }
       ]
     },
@@ -54509,14 +53655,6 @@
         {
           "locale": "en",
           "synonym": "PUD"
-        },
-        {
-          "locale": "en",
-          "synonym": "provide user documentation role"
-        },
-        {
-          "locale": "es",
-          "synonym": "proporcionar documentación para el usuario perfil"
         }
       ]
     },
@@ -55133,16 +54271,7 @@
         "es": "normas de calidad",
         "pt": "normas de qualidade"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "quality standards role"
-        },
-        {
-          "locale": "es",
-          "synonym": "normas de calidad perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "quantum technology",
@@ -55157,14 +54286,6 @@
         {
           "locale": "en",
           "synonym": "principles of quantum technology"
-        },
-        {
-          "locale": "en",
-          "synonym": "quantum technology role"
-        },
-        {
-          "locale": "es",
-          "synonym": "tecnología cuántica perfil"
         }
       ]
     },
@@ -55174,19 +54295,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/51586df8-1c46-4b47-8583-773cb63bf00b",
       "translations": {
         "en": "R",
-        "es": "R",
+        "es": null,
         "pt": "R"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "R role"
-        },
-        {
-          "locale": "es",
-          "synonym": "R perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "react to events in time-critical environments",
@@ -55417,16 +54529,7 @@
         "es": "sistema de tiempo real",
         "pt": "computação em tempo real"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "real-time computing role"
-        },
-        {
-          "locale": "es",
-          "synonym": "sistema de tiempo real perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "receive actors' resumes",
@@ -56697,14 +55800,6 @@
         {
           "locale": "en",
           "synonym": "RCSI"
-        },
-        {
-          "locale": "en",
-          "synonym": "replicate customer software issues role"
-        },
-        {
-          "locale": "es",
-          "synonym": "reproducir los problemas de software del cliente perfil"
         }
       ]
     },
@@ -58002,21 +57097,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/e5a6e1e0-1b07-4432-83ba-77d593b2cb47",
       "translations": {
         "en": "SAS Data Management",
-        "es": "SAS Data Management",
+        "es": null,
         "pt": "SAS Data Management"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "SDM"
-        },
-        {
-          "locale": "en",
-          "synonym": "SAS Data Management role"
-        },
-        {
-          "locale": "es",
-          "synonym": "SAS Data Management perfil"
         }
       ]
     },
@@ -58026,19 +57113,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/ffddfc7c-a9dd-449f-9e96-882dc447c8b6",
       "translations": {
         "en": "Scala",
-        "es": "Scala",
+        "es": null,
         "pt": "Scala"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "Scala role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Scala perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "Schoology",
@@ -58046,19 +57124,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/489b2571-ce18-4944-b452-ed1f54e55b68",
       "translations": {
         "en": "Schoology",
-        "es": "Schoology",
+        "es": null,
         "pt": "Schoology"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "Schoology role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Schoology perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "scientific research methodology",
@@ -59301,14 +58370,6 @@
         {
           "locale": "en",
           "synonym": "skate"
-        },
-        {
-          "locale": "en",
-          "synonym": "skateboard role"
-        },
-        {
-          "locale": "es",
-          "synonym": "monopatín perfil"
         }
       ]
     },
@@ -59389,14 +58450,6 @@
         {
           "locale": "en",
           "synonym": "smart contract software"
-        },
-        {
-          "locale": "en",
-          "synonym": "smart contract role"
-        },
-        {
-          "locale": "es",
-          "synonym": "contrato inteligente perfil"
         }
       ]
     },
@@ -59533,14 +58586,6 @@
         {
           "locale": "en",
           "synonym": "SMMT"
-        },
-        {
-          "locale": "en",
-          "synonym": "social media marketing techniques role"
-        },
-        {
-          "locale": "es",
-          "synonym": "técnicas de comercialización en redes sociales perfil"
         }
       ]
     },
@@ -59581,14 +58626,6 @@
         {
           "locale": "en",
           "synonym": "SDM"
-        },
-        {
-          "locale": "en",
-          "synonym": "software design methodologies role"
-        },
-        {
-          "locale": "es",
-          "synonym": "metodologías de diseño de software perfil"
         }
       ]
     },
@@ -59605,14 +58642,6 @@
         {
           "locale": "es",
           "synonym": "entornos de software"
-        },
-        {
-          "locale": "en",
-          "synonym": "software frameworks role"
-        },
-        {
-          "locale": "es",
-          "synonym": "marcos de software perfil"
         }
       ]
     },
@@ -59978,21 +59007,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/c062bab3-3ea0-4291-9220-a2d8fef4bead",
       "translations": {
         "en": "SQL Server",
-        "es": "SQL Server",
+        "es": null,
         "pt": "SQL Server"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "MS SQL Server"
-        },
-        {
-          "locale": "en",
-          "synonym": "SQL Server role"
-        },
-        {
-          "locale": "es",
-          "synonym": "SQL Server perfil"
         }
       ]
     },
@@ -62126,21 +61147,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/b0ac313d-de44-4344-ada6-76d2177b6d92",
       "translations": {
         "en": "Synfig",
-        "es": "Synfig",
+        "es": null,
         "pt": "Synfig"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "Synfig Studio"
-        },
-        {
-          "locale": "en",
-          "synonym": "Synfig role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Synfig perfil"
         }
       ]
     },
@@ -62265,16 +61278,7 @@
         "es": "teoría de sistemas",
         "pt": "teoria dos sistemas"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "systems theory role"
-        },
-        {
-          "locale": "es",
-          "synonym": "teoría de sistemas perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "tabulate survey results",
@@ -62401,16 +61405,7 @@
         "es": "algoritmización de tareas",
         "pt": "algoritmização de tarefas"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "task algorithmisation role"
-        },
-        {
-          "locale": "es",
-          "synonym": "algoritmización de tareas perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "tax legislation",
@@ -62717,14 +61712,6 @@
         {
           "locale": "en",
           "synonym": "Electronic Communications Code"
-        },
-        {
-          "locale": "en",
-          "synonym": "telecom regulations role"
-        },
-        {
-          "locale": "es",
-          "synonym": "normativa en materia de telecomunicaciones perfil"
         }
       ]
     },
@@ -62822,7 +61809,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/d9eaf831-9348-4330-a83e-b7c099cdc8f6",
       "translations": {
         "en": "Teradata Database",
-        "es": "Teradata Database",
+        "es": null,
         "pt": "Teradata Database"
       },
       "synonyms": [
@@ -62981,14 +61968,6 @@
         {
           "locale": "en",
           "synonym": "TIQ"
-        },
-        {
-          "locale": "en",
-          "synonym": "test ICT queries role"
-        },
-        {
-          "locale": "es",
-          "synonym": "probar búsquedas de TIC perfil"
         }
       ]
     },
@@ -64453,18 +63432,6 @@
         {
           "locale": "en",
           "synonym": "varieties of paper"
-        },
-        {
-          "locale": "es",
-          "synonym": "categorías de papel"
-        },
-        {
-          "locale": "es",
-          "synonym": "clases de papel"
-        },
-        {
-          "locale": "es",
-          "synonym": "modelos de papel"
         }
       ]
     },
@@ -64518,19 +63485,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/867137fb-ff1b-4ca3-99f3-cb6969aa2c68",
       "translations": {
         "en": "TypeScript",
-        "es": "TypeScript",
+        "es": null,
         "pt": "TypeScript"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "TypeScript role"
-        },
-        {
-          "locale": "es",
-          "synonym": "TypeScript perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "undertake inspections",
@@ -64698,21 +63656,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/b04c4965-4fd7-4dfa-a8d4-0cec5c5f5d0c",
       "translations": {
         "en": "Unreal Engine",
-        "es": "Unreal Engine",
+        "es": null,
         "pt": "Unreal Engine"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "Unreal Engine software"
-        },
-        {
-          "locale": "en",
-          "synonym": "Unreal Engine role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Unreal Engine perfil"
         }
       ]
     },
@@ -64789,14 +63739,6 @@
         {
           "locale": "en",
           "synonym": "urban sustainability planning"
-        },
-        {
-          "locale": "en",
-          "synonym": "urban sustainability role"
-        },
-        {
-          "locale": "es",
-          "synonym": "sostenibilidad urbana perfil"
         }
       ]
     },
@@ -65617,14 +64559,6 @@
         {
           "locale": "en",
           "synonym": "UFP"
-        },
-        {
-          "locale": "en",
-          "synonym": "use functional programming role"
-        },
-        {
-          "locale": "es",
-          "synonym": "utilizar programación funcional perfil"
         }
       ]
     },
@@ -66057,14 +64991,6 @@
         {
           "locale": "en",
           "synonym": "UOP"
-        },
-        {
-          "locale": "en",
-          "synonym": "use object-oriented programming role"
-        },
-        {
-          "locale": "es",
-          "synonym": "utilizar programación orientada a objetos perfil"
         }
       ]
     },
@@ -67026,7 +65952,7 @@
       "escoUri": "http://data.europa.eu/esco/skill/13bdd41a-2a18-441f-96db-41252c519413",
       "translations": {
         "en": "Visual Basic",
-        "es": "Visual Basic",
+        "es": null,
         "pt": "Visual Basic"
       },
       "synonyms": [
@@ -67185,16 +66111,7 @@
         "es": "análisis web",
         "pt": "análise Web"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "web analytics role"
-        },
-        {
-          "locale": "es",
-          "synonym": "análisis web perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "web based collaborative platforms",
@@ -67254,19 +66171,10 @@
       "escoUri": "http://data.europa.eu/esco/skill/5c66ce3a-658d-43b1-9d8d-0f39be6c0f2e",
       "translations": {
         "en": "WebCMS",
-        "es": "WebCMS",
+        "es": null,
         "pt": "WebCMS"
       },
-      "synonyms": [
-        {
-          "locale": "en",
-          "synonym": "WebCMS role"
-        },
-        {
-          "locale": "es",
-          "synonym": "WebCMS perfil"
-        }
-      ]
+      "synonyms": []
     },
     {
       "name": "weigh materials",
@@ -68182,21 +67090,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/449d119b-2d66-43a9-9230-7d27f16afbb6",
       "translations": {
         "en": "Xcode",
-        "es": "Xcode",
+        "es": null,
         "pt": "Xcode"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "Xcode IDE"
-        },
-        {
-          "locale": "en",
-          "synonym": "Xcode role"
-        },
-        {
-          "locale": "es",
-          "synonym": "Xcode perfil"
         }
       ]
     },
@@ -68206,21 +67106,13 @@
       "escoUri": "http://data.europa.eu/esco/skill/3f4dab51-572b-4e2c-85ef-3b4c3f7094e1",
       "translations": {
         "en": "XQuery",
-        "es": "XQuery",
+        "es": null,
         "pt": "XQuery"
       },
       "synonyms": [
         {
           "locale": "en",
           "synonym": "XQuery language"
-        },
-        {
-          "locale": "en",
-          "synonym": "XQuery role"
-        },
-        {
-          "locale": "es",
-          "synonym": "XQuery perfil"
         }
       ]
     },

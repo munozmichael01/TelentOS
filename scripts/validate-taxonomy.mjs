@@ -7,9 +7,17 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const TAXONOMY = join(ROOT, "data", "taxonomy", "taxonomy.json");
+const LIGHTCAST_CROSSWALK = join(ROOT, "data", "taxonomy", "lightcast-crosswalk.json");
 const LOCALES = ["en", "es", "pt"];
+const FABRICATED_SUFFIX_RE = /\b(role|effect|perfil|profile|función|funcion|papel)\s*$/i;
 
 const data = JSON.parse(readFileSync(TAXONOMY, "utf8"));
+let lightcastCrosswalk = null;
+try {
+  lightcastCrosswalk = JSON.parse(readFileSync(LIGHTCAST_CROSSWALK, "utf8"));
+} catch {
+  lightcastCrosswalk = null;
+}
 const failures = [];
 const warnings = [];
 
@@ -29,6 +37,17 @@ function hasLocales(translations) {
   return LOCALES.every((locale) => typeof translations?.[locale] === "string" && translations[locale].trim().length > 0);
 }
 
+function hasSkillLocales(translations) {
+  const hasEn = typeof translations?.en === "string" && translations.en.trim().length > 0;
+  const hasPt = typeof translations?.pt === "string" && translations.pt.trim().length > 0;
+  const hasEs = translations?.es === null || (typeof translations?.es === "string" && translations.es.trim().length > 0);
+  return hasEn && hasPt && hasEs;
+}
+
+function hasFabricatedSynonym(row) {
+  return (row.synonyms ?? []).some((item) => FABRICATED_SUFFIX_RE.test(item.synonym));
+}
+
 const jobTitles = data.jobTitles ?? [];
 const skills = data.skills ?? [];
 const jobTitleRelations = data.jobTitleRelations ?? [];
@@ -42,13 +61,18 @@ const titleNames = new Set();
 const skillNames = new Set();
 const sectorCounts = new Map();
 const skillUseCounts = new Map();
+let skillsWithoutSpanish = 0;
+let skillsWithoutSynonyms = 0;
 
 for (const skill of skills) {
   if (!skill.name) fail("Skill without name");
   if (skillNames.has(skill.name)) fail(`Duplicate skill name: ${skill.name}`);
   skillNames.add(skill.name);
-  if (!hasLocales(skill.translations)) fail(`Skill missing es/en/pt translations: ${skill.name}`);
-  if (!Array.isArray(skill.synonyms) || skill.synonyms.length < 1) fail(`Skill missing >=1 synonym: ${skill.name}`);
+  if (!hasSkillLocales(skill.translations)) fail(`Skill missing required translations: ${skill.name}`);
+  if (skill.translations?.es === null) skillsWithoutSpanish += 1;
+  if (!Array.isArray(skill.synonyms)) fail(`Skill synonyms must be an array: ${skill.name}`);
+  if (Array.isArray(skill.synonyms) && skill.synonyms.length === 0) skillsWithoutSynonyms += 1;
+  if (hasFabricatedSynonym(skill)) fail(`Skill has fabricated autocomplete synonym: ${skill.name}`);
 }
 
 for (const title of jobTitles) {
@@ -59,6 +83,7 @@ for (const title of jobTitles) {
 
   if (!hasLocales(title.translations)) fail(`Title missing es/en/pt translations: ${title.canonicalName}`);
   if (!Array.isArray(title.synonyms) || title.synonyms.length < 2) fail(`Title missing >=2 synonyms: ${title.canonicalName}`);
+  if (hasFabricatedSynonym(title)) fail(`Title has fabricated autocomplete synonym: ${title.canonicalName}`);
   if (!Array.isArray(title.skills) || title.skills.length < 3) fail(`Title missing >=3 skills: ${title.canonicalName}`);
   if (!title.skills?.some((skill) => skill.isCore)) fail(`Title missing >=1 core skill: ${title.canonicalName}`);
 
@@ -86,9 +111,22 @@ for (const relation of skillRelations) {
 for (const [sector, count] of sectorCounts.entries()) {
   if (count < 10) warn(`Low sector coverage for ${sector}: ${count}`);
 }
+if (skillsWithoutSynonyms > 0) warn(`Skills without ESCO altLabels after cleanup: ${skillsWithoutSynonyms}`);
 
 const unusedSkills = [...skillNames].filter((name) => !skillUseCounts.has(name));
 if (unusedSkills.length > 0) fail(`Unused skills present: ${unusedSkills.slice(0, 10).join(", ")}${unusedSkills.length > 10 ? "..." : ""}`);
+
+if (lightcastCrosswalk) {
+  const items = lightcastCrosswalk.items ?? [];
+  if (items.length !== skills.length) fail(`Lightcast crosswalk item count ${items.length} does not match skills ${skills.length}`);
+  for (const item of items) {
+    if (!skillNames.has(item.skillName)) fail(`Lightcast crosswalk references missing skill: ${item.skillName}`);
+    if (!["exact", "nearest", "none"].includes(item.match)) fail(`Invalid Lightcast match value for ${item.skillName}: ${item.match}`);
+    if ((item.match === "exact" || item.match === "nearest") && !item.lightcastId) fail(`Mapped Lightcast skill missing id: ${item.skillName}`);
+  }
+} else {
+  warn("Lightcast crosswalk file not found");
+}
 
 console.log("\n[taxonomy] Coverage by sector");
 console.table([...sectorCounts.entries()].map(([sector, count]) => ({ sector, count })));
@@ -98,6 +136,8 @@ console.log("[taxonomy] Counts", {
   skills: skills.length,
   jobTitleRelations: jobTitleRelations.length,
   skillRelations: skillRelations.length,
+  skillsWithoutSpanish,
+  skillsWithoutSynonyms,
 });
 
 if (warnings.length > 0) {

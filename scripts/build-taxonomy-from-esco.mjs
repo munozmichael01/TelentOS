@@ -159,10 +159,6 @@ function pickSynonyms(concept) {
     synonyms.push({ locale: "en", synonym: label });
   }
   const translations = pickTranslations(concept);
-  if (synonyms.length < 2) {
-    synonyms.push({ locale: "en", synonym: `${translations.en} role` });
-    synonyms.push({ locale: "es", synonym: `${translations.es} perfil` });
-  }
   const seen = new Set();
   return synonyms.filter((row) => {
     const key = `${row.locale}:${normalizeKey(row.synonym)}`;
