@@ -30,13 +30,14 @@ type FormState = {
   department: string;
   category: string;
   category_key: string;
+  closes_at: string;
   experience_min_years: string;
 };
 
 const EMPTY: FormState = {
   title: "", description: "", skills: [], salary_min: "", salary_max: "",
   location: "", employment_type: "full_time", sector: "", department: "",
-  category: "", category_key: "", experience_min_years: "0",
+  category: "", category_key: "", closes_at: "", experience_min_years: "0",
 };
 
 export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }) {
@@ -57,6 +58,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
           department: job.department ?? "",
           category: job.category ?? "",
           category_key: (job as { category_key?: string | null }).category_key ?? "",
+          closes_at: (job as { closes_at?: string | null }).closes_at?.slice(0, 10) ?? "",
           experience_min_years: job.experience_min_years.toString(),
         }
       : EMPTY
@@ -165,6 +167,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
         department: form.department || null,
         category: form.category || null,
         category_key: form.category_key || null,
+        closes_at: form.closes_at || null,
         experience_min_years: Number(form.experience_min_years) || 0,
         status,
         source: usedAI ? "ai" : "manual",
@@ -275,6 +278,10 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
                 <option value="">Sin categoría</option>
                 {categories.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
               </NativeSelect>
+            </div>
+            <div>
+              <div style={fieldLabel}>Fecha de cierre</div>
+              <Input type="date" value={form.closes_at} onChange={(e) => set("closes_at", e.target.value)} />
             </div>
             <div>
               <div style={fieldLabel}>Salario mín. (€)</div>

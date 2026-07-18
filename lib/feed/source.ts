@@ -17,11 +17,12 @@ type FeedJobRow = {
   category: string | null;
   created_at: string;
   updated_at?: string | null;
+  closes_at?: string | null;
   company: { id: string; name: string; slug: string | null; logo_url: string | null } | null;
 };
 
 const SELECT =
-  "id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, employment_type, category, created_at, updated_at, company:companies(id, name, slug, logo_url)";
+  "id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, employment_type, category, created_at, updated_at, closes_at, company:companies(id, name, slug, logo_url)";
 
 export async function fetchActiveFeedJobs(supabase: SupabaseClient, origin: string): Promise<FeedJob[]> {
   const { data, error } = await supabase
@@ -60,5 +61,6 @@ export function normalizeFeedJob(row: FeedJobRow, origin: string): FeedJob {
     category: row.category,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    expiresAt: row.closes_at ?? null,
   };
 }

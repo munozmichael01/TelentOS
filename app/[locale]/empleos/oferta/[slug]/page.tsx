@@ -15,6 +15,7 @@ type JobDetail = {
   location: string | null; modality: string | null; salary_min: number | null; salary_max: number | null;
   salary_currency: string | null; employment_type: string | null; category: string | null; created_at: string;
   education_level: string | null; seniority_level: string | null; experience_min_years: number | null;
+  closes_at: string | null;
   company: { id: string; name: string; slug: string | null; logo_url: string | null } | null;
 };
 
@@ -24,7 +25,7 @@ async function getJob(slug: string) {
   const supabase = createClient();
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, employment_type, category, created_at, education_level, seniority_level, experience_min_years, company:companies(id, name, slug, logo_url)")
+    .select("id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, employment_type, category, created_at, education_level, seniority_level, experience_min_years, closes_at, company:companies(id, name, slug, logo_url)")
     .eq("id", id).eq("status", "active").maybeSingle();
   if (!job) return null;
   const { data: skillRows } = await supabase
@@ -76,6 +77,7 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
     title: job.title,
     description: job.description ?? job.title,
     datePosted: job.created_at,
+    validThrough: job.closes_at ?? undefined,
     employmentType: job.employment_type ?? undefined,
     hiringOrganization: job.company
       ? { "@type": "Organization", name: job.company.name, logo: job.company.logo_url ?? undefined }
