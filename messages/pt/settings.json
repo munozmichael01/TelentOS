@@ -1,0 +1,466 @@
+{
+  "eyebrow": "Configurações",
+  "company": {
+    "title": "Empresa",
+    "description": "Configure sua empresa e o site de carreiras público.",
+    "publicSite": "Seu site de carreiras público:",
+    "form": {
+      "nameLabel": "Nome da empresa *",
+      "slugLabel": "Slug do site de carreiras",
+      "slugPlaceholder": "minha-empresa",
+      "descriptionLabel": "Descrição pública",
+      "descriptionPlaceholder": "Mostrado no cabeçalho del site de carreiras.",
+      "websiteLabel": "Website",
+      "addressLabel": "Endereço / Cidade",
+      "addressPlaceholder": "Madrid, Community of Madrid, Spain",
+      "addressHelp": "Será exibido na página pública do site de carreiras.",
+      "payrollSection": "Folha de pagamento",
+      "countryLabel": "País de operação",
+      "countryDefault": "Não especificado (pacote genérico)",
+      "countryHelp": "Define o pacote de cálculo e a moeda padrão para novos perfis salariais.",
+      "rifLabel": "ID Fiscal (RIF / NIF)",
+      "rifPlaceholder": "J-XXXXXXXX-X",
+      "logoLabel": "Logotipo",
+      "saveBtn": "Salvar",
+      "savingBtn": "Salvando...",
+      "savedMsg": "Salvo ✓",
+      "errorMsg": "Erro ao salvar"
+    }
+  },
+  "team": {
+    "title": "Equipe",
+    "description": "Gerencie quem tem acesso ao workspace e com qual função.",
+    "loadError": "Não foi possível carregar a equipe.",
+    "active": {
+      "title": "Membros ativos",
+      "count": "{count, plural, =1 {# pessoa com acesso} other {# pessoas com acesso}}",
+      "inviteBtn": "Convidar pessoa"
+    },
+    "pending": {
+      "title": "Convites pendentes",
+      "count": "{count, plural, =0 {Nenhum pendente} =1 {# sem aceitar} other {# sem aceitar}}",
+      "invitedBy": "Convidado por {inviter} · {time}",
+      "resendBtn": "Reenviar",
+      "cancelBtn": "Cancelar"
+    },
+    "table": {
+      "member": "Membro",
+      "role": "Função",
+      "linked": "Funcionário vinculado",
+      "joined": "Admissão",
+      "unlinked": "Sem vincular",
+      "you": "você",
+      "menu": {
+        "changeRole": "Alterar função",
+        "unlink": "Desvincular funcionário",
+        "revoke": "Revogar acesso"
+      }
+    },
+    "modals": {
+      "invite": {
+        "title": "Convidar pessoa",
+        "desc": "Um link de acesso será enviado por e-mail.",
+        "label": "Pessoa",
+        "placeholder": "Nome ou e-mail...",
+        "removeBtn": "Remover",
+        "externalNote": "Convite externo · sem perfil de funcionário. Será enviado para {email}.",
+        "roleLabel": "Função",
+        "managerWarning": "A função Manager precisa de um perfil de funcionário para calcular sua equipe. Escolha alguém da equipe.",
+        "managerTeamPreview": "Verá sua equipe · {count, plural, =1 {# pessoa} other {# pessoas}}",
+        "managerNoTeamWarn": "{name} não tem subordinados diretos no organograma — como Manager não veria nenhuma equipe. Atribua subordinados a ele ou escolha outra função.",
+        "managerRoleHelp": "Um manager só vê pessoas reportando a ele no organograma. Vincule-o ao seu perfil para calcular sua equipe.",
+        "defaultRoleHelp": "Digite um nome para escolher um funcionário, ou um e-mail para convidar alguém externo.",
+        "alreadyMember": "{name} já é um membro ativo da equipe — não pode ser convidado novamente.",
+        "invalidEmail": "E-mail inválido",
+        "cancelBtn": "Cancelar",
+        "submitBtn": "Enviar convite",
+        "submittingBtn": "Enviando...",
+        "successToast": "Convite enviado",
+        "errorToast": "Erro ao enviar convite"
+      },
+      "role": {
+        "title": "Alterar função",
+        "warning": "Perderá acesso a Ausências, Horas e módulos sensíveis.",
+        "cancelBtn": "Cancelar",
+        "submitBtn": "Salvar alteração",
+        "submittingBtn": "Salvando...",
+        "successToast": "Função atualizada"
+      },
+      "revoke": {
+        "title": "Revogar acesso de {name}?",
+        "desc": "Esta pessoa perderá o acesso imediatamente. Você pode convidá-la novamente a qualquer momento.",
+        "cancelBtn": "Cancel",
+        "submitBtn": "Revogar acesso",
+        "submittingBtn": "Revogando...",
+        "successToast": "Acesso revogado"
+      }
+    },
+    "toast": {
+      "resendSuccess": "Convite reenviado"
+    },
+    "roles": {
+      "owner": "Owner",
+      "hr_admin": "HR Admin",
+      "recruiter": "Recruiter",
+      "manager": "Manager",
+      "hints": {
+        "hr_admin": "Tudo exceto faturamento",
+        "recruiter": "Apenas recrutamento",
+        "manager": "Sua equipe"
+      }
+    },
+    "relativeTime": {
+      "today": "hoje",
+      "oneDayAgo": "há 1 dia",
+      "daysAgo": "há {count} dias",
+      "oneMonthAgo": "há 1 mês",
+      "monthsAgo": "há {count} meses"
+    }
+  },
+  "absences": {
+    "title": "Ausências",
+    "description": "Tipos de ausência da empresa, políticas e feriados.",
+    "types": {
+      "count": "{count, plural, =1 {# tipo configurado} other {# tipos configurados}}",
+      "newBtn": "Novo tipo",
+      "deducts": "Desconta de",
+      "permiso": "saldo",
+      "requiresApproval": "Requer aprovação",
+      "public": "Público",
+      "empty": {
+        "title": "Sem tipos de ausência",
+        "desc": "Crie tipos um por um ou use os 6 tipos padrão que incluem férias, licença médica, licença familiar e mais.",
+        "btn": "Criar tipos padrão",
+        "help": "Também cria um tipo de saldo Dias de férias (22 dias) e sua política anual"
+      },
+      "modal": {
+        "createTitle": "Novo tipo de ausência",
+        "editTitle": "Editar tipo de ausência",
+        "name": "Nome *",
+        "namePlaceholder": "Ex. Férias, Licença médica…",
+        "icon": "Ícone (emoji)",
+        "color": "Cor",
+        "requiresApprovalLabel": "Requer aprovação",
+        "deductsLabel": "Desconta do saldo de licenças",
+        "allowanceTypeLabel": "Tipo de saldo deduzido *",
+        "allowanceTypePlaceholder": "Selecionar tipo de saldo…",
+        "publicLabel": "Visível para todos os funcionários",
+        "requiresDocumentLabel": "Requer documento de suporte",
+        "allowHalfDayLabel": "Permite meio dia",
+        "cancelBtn": "Cancelar",
+        "saveBtn": "Salvar alterações",
+        "createBtn": "Criar tipo"
+      },
+      "delete": {
+        "title": "Excluir tipo de ausência",
+        "desc": "Esta ação não pode ser desfeita. Tem certeza?",
+        "cancel": "Cancelar",
+        "confirm": "Excluir"
+      }
+    },
+    "policies": {
+      "title": "Políticas de Licença",
+      "saldoTitle": "Tipos de Saldo",
+      "saldoNew": "Novo tipo de saldo",
+      "saldoEmpty": "Sem tipos de saldo configurados",
+      "saldoTable": {
+        "name": "Nome",
+        "unit": "Unidade",
+        "status": "Status",
+        "action": "Ação",
+        "days": "Dias",
+        "hours": "Horas",
+        "active": "Ativo",
+        "inactive": "Inativo"
+      },
+      "policyTitle": "Políticas",
+      "policyNew": "Nova política",
+      "policyEmpty": "Sem políticas configuradas",
+      "policyTable": {
+        "name": "Nome",
+        "type": "Tipo",
+        "amount": "Qtd.",
+        "cycle": "Ciclo",
+        "carryover": "Limite",
+        "status": "Status",
+        "action": "Ação",
+        "default": "Padrão",
+        "cycles": {
+          "year": "Anual",
+          "month": "Mensal",
+          "quarter": "Trimestral"
+        }
+      },
+      "saldoModal": {
+        "title": "Novo tipo de saldo",
+        "name": "Nome *",
+        "unit": "Unidade de medida",
+        "days": "Dias",
+        "hours": "Horas",
+        "cancel": "Cancelar",
+        "save": "Criar"
+      },
+      "policyModal": {
+        "title": "Nova política",
+        "name": "Nome da política *",
+        "type": "Tipo de saldo *",
+        "typePlaceholder": "Selecionar tipo de saldo…",
+        "amount": "Quantidade por ciclo *",
+        "cycle": "Ciclo de provisão",
+        "cycles": {
+          "year": "Ano civil",
+          "month": "Mês"
+        },
+        "carryover": "Limite de transferência para o próximo ciclo",
+        "default": "Definir como política padrão",
+        "cancel": "Cancelar",
+        "save": "Criar"
+      },
+      "delete": {
+        "title": "Excluir política",
+        "desc": "Esta ação não pode ser desfeita e desvinculará os funcionários designados. Tem certeza?",
+        "cancel": "Cancelar",
+        "confirm": "Excluir"
+      }
+    },
+    "holidays": {
+      "title": "Feriados da Empresa",
+      "newBtn": "Novo feriado",
+      "empty": "Nenhum feriado configurado",
+      "table": {
+        "name": "Nome",
+        "date": "Data",
+        "type": "Tipo",
+        "action": "Ação",
+        "repeats": "Repete anualmente",
+        "noRepeats": "Uso único",
+        "halfDay": "Meio período",
+        "fullDay": "Período integral"
+      },
+      "modal": {
+        "title": "Novo feriado",
+        "name": "Nome *",
+        "namePlaceholder": "Ex. Ano Novo, Feriado local…",
+        "date": "Data *",
+        "repeats": "Repete todos os anos nesta data",
+        "halfDay": "É meio período",
+        "cancel": "Cancelar",
+        "save": "Criar"
+      },
+      "delete": {
+        "title": "Excluir feriado",
+        "desc": "Esta ação não pode ser desfeita. Tem certeza?",
+        "cancel": "Cancelar",
+        "confirm": "Excluir"
+      }
+    }
+  },
+  "compliance": {
+    "title": "Compliance",
+    "description": "Regras de tempo de trabalho e alertas de não conformidade.",
+    "config": {
+      "title": "Configuração",
+      "desc": "Regras aplicadas ao controle de horas",
+      "maxHours": "Máx. horas/dia",
+      "maxHoursUnit": "horas",
+      "limitStart": "Hora limite de entrada",
+      "limitStartUnit": "HH:MM",
+      "minBreak": "Intervalo mínimo (h)",
+      "minBreakUnit": "horas",
+      "alertMax": "Alerta por excesso de horas",
+      "alertBreak": "Alerta por falta de intervalo",
+      "saveBtn": "Salvar configuração",
+      "savingBtn": "Salvando...",
+      "savedMsg": "✓ Configuração salva",
+      "errorMsg": "Erro ao salvar"
+    },
+    "violations": {
+      "title": "Infrações pendentes",
+      "desc": "Não conformidades não reconhecidas",
+      "empty": "Nenhuma infração pendente",
+      "emptyDesc": "Todos os registros estão dentro das regras configuradas",
+      "table": {
+        "employee": "Funcionário",
+        "date": "Data",
+        "type": "Tipo",
+        "desc": "Descrição",
+        "action": "Reconhecer"
+      },
+      "types": {
+        "max_hours_exceeded": "Excesso de horas",
+        "early_start": "Entrada tardia",
+        "missing_break": "Sem intervalo",
+        "insufficient_break": "Intervalo insuficiente"
+      }
+    }
+  },
+  "payroll": {
+    "title": "Payroll",
+    "description": "Selecione o motor de cálculo aplicável à sua empresa. Apenas o pacote Genérico está ativo; os outros são visualizações sem cálculos operacionais.",
+    "status": {
+      "preview": "Visualização — cálculos não operacionais",
+      "coming": "Em breve",
+      "active": "Aplicando agora"
+    },
+    "cta": {
+      "coming": "Selecionar pacote — Em breve"
+    },
+    "packs": {
+      "generic": {
+        "label": "Genérico",
+        "note": "Cálculo direto: líquido = bruto = custo da empresa. Ideal para empresas que gerenciam retenções fora do TalentOS.",
+        "chips": ["Salário base", "Bruto = Líquido = Custo empresa", "Sem descontos", "Sem encargos patronais"]
+      },
+      "ve": {
+        "label": "Venezuela",
+        "note": "Aplicará SSO/RPE/FAOV/INCES, utilidades, benefícios sociais e moeda dupla VES/USD com taxa do período.",
+        "chips": ["Salário base", "Auxílio alimentação", "Utilidades", "Férias + bônus", "Benefícios sociais", "Adiantamentos", "ISLR", "SSO / RPE / FAOV"]
+      },
+      "br": {
+        "label": "Brasil",
+        "note": "Aplicará INSS, FGTS, IRRF por faixas, 13º salário, férias com +1/3 e benefícios (vale-refeição/transporte).",
+        "chips": ["INSS", "FGTS", "IRRF", "13º salário", "Férias + 1/3", "Vale-refeição/transporte"]
+      },
+      "es": {
+        "label": "Espanha",
+        "note": "Aplicará IRPF por faixas, contribuições à Segurança Social (empresa/trabalhador), pagas extras e cálculo de rescisão.",
+        "chips": ["IRPF por faixas", "Contribuições SS", "Pagas extras (12/14)", "SMI", "Rescisão"]
+      },
+      "co": {
+        "label": "Colômbia",
+        "note": "Em breve: retenções na fonte, previdência social, encargos parafiscais e indenizações por tempo de serviço."
+      },
+      "mx": {
+        "label": "México",
+        "note": "Em breve: ISR, IMSS, INFONAVIT e prestações por lei."
+      }
+    }
+  },
+  "schedules": {
+    "title": "Horários",
+    "description": "Modelos de escala de trabalho para seus funcionários.",
+    "count": "{count, plural, =1 {# modelo} other {# modelos}}",
+    "newBtn": "Novo modelo",
+    "empty": {
+      "title": "Sem modelos de escala",
+      "desc": "Crie modelos de escala de trabalho para atribuí-los facilmente aos seus funcionários",
+      "btn": "Criar primeiro modelo"
+    },
+    "types": {
+      "single": "Semana única",
+      "rotating": "Semana rotativa",
+      "rotatingLabel": "Semana rotativa (A/B)"
+    },
+    "badges": {
+      "default": "Padrão",
+      "active": "Ativo"
+    },
+    "actions": {
+      "setDefault": "Definir como padrão"
+    },
+    "preview": {
+      "total": "TOTAL: {time} / semana"
+    },
+    "builder": {
+      "entrada": "Entrada",
+      "salida": "Saída"
+    },
+    "modal": {
+      "title": "Novo modelo de escala",
+      "nameLabel": "Nome do modelo *",
+      "namePlaceholder": "Ex. Escala de segunda a sexta integral",
+      "typeLabel": "Tipo de semana",
+      "defaultLabel": "Modelo padrão",
+      "tabA": "Semana A",
+      "tabB": "Semana B",
+      "cancel": "Cancelar",
+      "save": "Criar modelo"
+    },
+    "delete": {
+      "title": "Excluir modelo",
+      "desc": "Esta ação não pode ser desfeita. Os funcionários atribuídos a este modelo perderão seu horário de referência.",
+      "cancel": "Cancelar",
+      "confirm": "Excluir"
+    }
+  },
+  "skills": {
+    "title": "Catálogo de Skills",
+    "description": "Vocabulário canônico que alimenta a correspondência candidato-vaga. O parser de CVs e as vagas resolvem contra essas entidades; os aliases colapsam variantes para o nome canônico.",
+    "footer": "Apenas leitura. Novas skills entram automaticamente ao confirmar um CV ou salvar uma vaga; a curadoria do catálogo (editar aliases, mesclar duplicados) virá em Configurações.",
+    "count": "{count} candidato{count, plural, =1 {} other {s}} · {countJobs} vaga{countJobs, plural, =1 {} other {s}}",
+    "alias": "aliás: {aliases}",
+    "categories": {
+      "language": "Idiomas",
+      "framework": "Frameworks",
+      "tool": "Ferramentas",
+      "domain": "Domínio",
+      "soft": "Soft skills",
+      "otras": "Não classificado"
+    }
+  },
+  "billing": {
+    "title": "Billing",
+    "description": "Plano, consumo e faturamento da sua conta.",
+    "plan": {
+      "title": "Plano atual",
+      "priceUnit": "/ mês",
+      "cycleDesc": "Faturamento anual · próximo faturamento 1 de ago de 2025",
+      "changeBtn": "Alterar plano"
+    },
+    "payment": {
+      "title": "Forma de pagamento",
+      "expires": "Expira em {date}",
+      "updateBtn": "Atualizar forma de pagamento"
+    },
+    "usage": {
+      "title": "Uso do plano",
+      "items": {
+        "employees": "Funcionários ativos",
+        "seats": "Membros (seats)",
+        "jobs": "Vagas ativas"
+      }
+    },
+    "invoices": {
+      "title": "Histórico de faturas",
+      "items": {
+        "june": "TalentOS Pro — Junho",
+        "may": "TalentOS Pro — Maio",
+        "april": "TalentOS Pro — Abril"
+      },
+      "table": {
+        "date": "Data",
+        "concept": "Conceito",
+        "amount": "Valor",
+        "status": "Status",
+        "paid": "Paga"
+      }
+    }
+  },
+  "countries": {
+    "ES": "Espanha",
+    "VE": "Venezuela",
+    "BR": "Brasil",
+    "CO": "Colômbia",
+    "MX": "México"
+  },
+  "days": {
+    "short": {
+      "0": "Seg",
+      "1": "Ter",
+      "2": "Qua",
+      "3": "Qui",
+      "4": "Sex",
+      "5": "Sáb",
+      "6": "Dom"
+    },
+    "full": {
+      "0": "Segunda-feira",
+      "1": "Terça-feira",
+      "2": "Quarta-feira",
+      "3": "Quinta-feira",
+      "4": "Sexta-feira",
+      "5": "Sábado",
+      "6": "Domingo"
+    }
+  }
+}

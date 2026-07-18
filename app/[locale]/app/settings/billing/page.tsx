@@ -1,20 +1,9 @@
 import { PageHeader } from "@/components/page-header";
 import { requireRole } from "@/lib/auth-guard";
 import { HairlineTable, HairlineRow } from "@/components/hairline-table";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
-
-const USAGE = [
-  { label: "Empleados activos", text: "7 / 50",  pct: "14%", color: "#0E5C4A" },
-  { label: "Miembros (seats)",  text: "4 / 10",  pct: "40%", color: "#0E5C4A" },
-  { label: "Ofertas activas",   text: "3 / ∞",   pct: "20%", color: "#946312" },
-];
-
-const INVOICES = [
-  { date: "01 jun 2025", concept: "TalentOS Pro — junio", amount: "€149,00", status: "Pagada" },
-  { date: "01 may 2025", concept: "TalentOS Pro — mayo",  amount: "€149,00", status: "Pagada" },
-  { date: "01 abr 2025", concept: "TalentOS Pro — abril", amount: "€149,00", status: "Pagada" },
-];
 
 const S = {
   surface: "#FCFAF6",
@@ -26,14 +15,28 @@ const S = {
 };
 const mono = { fontFamily: "'Space Mono', monospace" as const };
 
-export default async function BillingPage() {
+export default async function BillingPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
   await requireRole(["owner"]);
+  const t = await getTranslations({ locale: params.locale, namespace: "Settings" });
+
+  const USAGE = [
+    { label: t("billing.usage.items.employees"), text: "7 / 50",  pct: "14%", color: "#0E5C4A" },
+    { label: t("billing.usage.items.seats"),  text: "4 / 10",  pct: "40%", color: "#0E5C4A" },
+    { label: t("billing.usage.items.jobs"),   text: "3 / ∞",   pct: "20%", color: "#946312" },
+  ];
+
+  const INVOICES = [
+    { date: "01 jun 2025", concept: t("billing.invoices.items.june"), amount: "€149,00", status: t("billing.invoices.table.paid") },
+    { date: "01 may 2025", concept: t("billing.invoices.items.may"),  amount: "€149,00", status: t("billing.invoices.table.paid") },
+    { date: "01 abr 2025", concept: t("billing.invoices.items.april"), amount: "€149,00", status: t("billing.invoices.table.paid") },
+  ];
 
   return (
     <div>
-      <PageHeader title="Billing" eyebrow="Ajustes" />
+      <PageHeader title={t("billing.title")} eyebrow={t("eyebrow")} />
       <p style={{ fontSize: "13.5px", color: S.soft, margin: "0 0 22px" }}>
-        Plan, consumo y facturación de tu cuenta.
+        {t("billing.description")}
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
@@ -43,47 +46,47 @@ export default async function BillingPage() {
 
           {/* Plan card (dark) */}
           <div style={{ background: S.ink, borderRadius: "16px", padding: "22px 24px", color: "#F4F0E8", position: "relative", overflow: "hidden" }}>
-            <div style={{ ...mono, fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#C6F24E", marginBottom: "12px" }}>Plan actual</div>
+            <div style={{ ...mono, fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#C6F24E", marginBottom: "12px" }}>{t("billing.plan.title")}</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: "12px", flexWrap: "wrap" }}>
               <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "28px", letterSpacing: "-.5px" }}>TalentOS Pro</span>
               <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "18px", color: "#C6F24E" }}>
-                €149<span style={{ fontSize: "12px", color: "#B7B2A8" }}> / mes</span>
+                €149<span style={{ fontSize: "12px", color: "#B7B2A8" }}> {t("billing.plan.priceUnit")}</span>
               </span>
             </div>
             <div style={{ ...mono, fontSize: "11px", color: "#B7B2A8", marginTop: "8px" }}>
-              Facturación anual · próxima factura 1 ago 2025
+              {t("billing.plan.cycleDesc")}
             </div>
             <button
               style={{ marginTop: "18px", fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "12.5px", color: S.ink, background: "#C6F24E", border: "none", borderRadius: "9px", padding: "9px 15px", cursor: "pointer" }}
             >
-              Cambiar plan
+              {t("billing.plan.changeBtn")}
             </button>
           </div>
 
           {/* Payment method */}
           <div style={{ background: S.surface, border: "1px solid " + S.line, borderRadius: "16px", padding: "20px 22px", display: "flex", flexDirection: "column" }}>
-            <div style={{ ...mono, fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: S.soft, marginBottom: "14px" }}>Método de pago</div>
+            <div style={{ ...mono, fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: S.soft, marginBottom: "14px" }}>{t("billing.payment.title")}</div>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <div style={{ width: "44px", height: "30px", borderRadius: "6px", background: "linear-gradient(135deg,#1A1F71,#2B3A9E)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "11px", fontStyle: "italic", color: "#fff" }}>
                 VISA
               </div>
               <div>
                 <div style={{ ...mono, fontSize: "13px", fontWeight: 700, letterSpacing: ".5px" }}>···· 4242</div>
-                <div style={{ ...mono, fontSize: "10.5px", color: S.soft }}>Caduca 09/2026</div>
+                <div style={{ ...mono, fontSize: "10.5px", color: S.soft }}>{t("billing.payment.expires", { date: "09/2026" })}</div>
               </div>
             </div>
             <button
               className="di-hard"
-              style={{ marginTop: "auto", alignSelf: "flex-start", fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "12px", color: S.ink, background: S.surface, border: "1.5px solid " + S.ink, borderRadius: "9px", padding: "8px 13px", boxShadow: "2px 2px 0 " + S.ink, cursor: "pointer" }}
+              style={{ marginTop: "auto", alignSelf: "flex-start", fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "12px", color: S.ink, background: S.surface, border: "1.5px solid " + S.ink, borderRadius: "99px", padding: "8px 13px", boxShadow: "2px 2px 0 " + S.ink, cursor: "pointer" }}
             >
-              Actualizar método de pago
+              {t("billing.payment.updateBtn")}
             </button>
           </div>
         </div>
 
         {/* ── B: Uso del plan ── */}
         <div style={{ background: S.surface, border: "1px solid " + S.line, borderRadius: "16px", padding: "20px 24px" }}>
-          <div style={{ ...mono, fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: S.soft, marginBottom: "16px" }}>Uso del plan</div>
+          <div style={{ ...mono, fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: S.soft, marginBottom: "16px" }}>{t("billing.usage.title")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "26px" }}>
             {USAGE.map((u) => (
               <div key={u.label}>
@@ -101,10 +104,16 @@ export default async function BillingPage() {
 
         {/* ── D: Historial de facturas ── */}
         <div>
-          <div style={{ ...mono, fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: S.soft, marginBottom: "12px" }}>Historial de facturas</div>
+          <div style={{ ...mono, fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: S.soft, marginBottom: "12px" }}>{t("billing.invoices.title")}</div>
           <HairlineTable
             cols="1fr 2fr 1fr 1fr 1.1fr"
-            headers={["Fecha", "Concepto", <span style={{ textAlign: "right" }}>Importe</span>, "Estado", ""]}
+            headers={[
+              t("billing.invoices.table.date"),
+              t("billing.invoices.table.concept"),
+              <span key="amount" style={{ textAlign: "right" }}>{t("billing.invoices.table.amount")}</span>,
+              t("billing.invoices.table.status"),
+              ""
+            ]}
           >
             {INVOICES.map((inv) => (
               <HairlineRow key={inv.date}>

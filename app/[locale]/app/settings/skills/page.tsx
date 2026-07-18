@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
 /**
  * Catálogo canónico de skills (migración 0027) — vista de solo lectura.
@@ -10,16 +11,18 @@ import { createClient } from "@/lib/supabase/server";
  * La gestión (editar aliases, fusionar, curar) llegará en una iteración posterior.
  */
 
-const CATEGORY_LABEL: Record<string, string> = {
-  language: "Lenguajes",
-  framework: "Frameworks",
-  tool: "Herramientas",
-  domain: "Dominio",
-  soft: "Soft skills",
-};
-
-export default async function SkillsCatalogPage() {
+export default async function SkillsCatalogPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
   const supabase = createClient();
+  const t = await getTranslations({ locale: params.locale, namespace: "Settings" });
+
+  const CATEGORY_LABEL: Record<string, string> = {
+    language: t("skills.categories.language"),
+    framework: t("skills.categories.framework"),
+    tool: t("skills.categories.tool"),
+    domain: t("skills.categories.domain"),
+    soft: t("skills.categories.soft"),
+  };
 
   const [{ data: skills }, { data: candSkills }, { data: jobSkills }] = await Promise.all([
     supabase.from("skills").select("id, name, category, aliases").order("name"),
@@ -44,9 +47,9 @@ export default async function SkillsCatalogPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Ajustes"
-        title="Catálogo de skills"
-        description="Vocabulario canónico que alimenta el matching candidato-oferta. El parser de CVs y las ofertas resuelven contra estas entidades; los alias colapsan variantes al nombre canónico."
+        eyebrow={t("eyebrow")}
+        title={t("skills.title")}
+        description={t("skills.description")}
       />
 
       <div className="flex flex-col gap-4">
@@ -56,7 +59,7 @@ export default async function SkillsCatalogPage() {
             <Card key={key} panel className="p-5">
               <div className="flex items-baseline gap-3 mb-3">
                 <h2 className="font-display font-black text-[15px] m-0">
-                  {CATEGORY_LABEL[key] ?? "Sin clasificar"}
+                  {CATEGORY_LABEL[key] ?? t("skills.categories.otras")}
                 </h2>
                 <span className="font-mono text-[10.5px] text-[#79746B]">{list.length}</span>
               </div>
@@ -71,10 +74,10 @@ export default async function SkillsCatalogPage() {
                     >
                       <span className="text-[13.5px] font-semibold min-w-[180px]">{s.name}</span>
                       <span className="flex-1 font-mono text-[10.5px] text-[#79746B] truncate">
-                        {s.aliases.length > 0 ? `alias: ${s.aliases.join(" · ")}` : ""}
+                        {s.aliases.length > 0 ? t("skills.alias", { aliases: s.aliases.join(" · ") }) : ""}
                       </span>
                       <span className="font-mono text-[10.5px] text-[#79746B] whitespace-nowrap">
-                        {nCand} candidato{nCand !== 1 ? "s" : ""} · {nJob} oferta{nJob !== 1 ? "s" : ""}
+                        {t("skills.count", { count: nCand, countJobs: nJob })}
                       </span>
                     </div>
                   );
@@ -86,8 +89,7 @@ export default async function SkillsCatalogPage() {
       </div>
 
       <p className="text-[12px] text-[#79746B] mt-4">
-        Solo lectura. Las skills nuevas entran automáticamente al confirmar un CV o guardar una
-        oferta; la curación del catálogo (editar alias, fusionar duplicados) llegará en Ajustes.
+        {t("skills.footer")}
       </p>
     </div>
   );

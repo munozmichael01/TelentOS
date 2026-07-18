@@ -7,6 +7,7 @@ import { apiFetch, notifyError } from "@/lib/api-client";
 import { Loader2, AlertTriangle, CheckCircle, Settings } from "lucide-react";
 import type { ComplianceConfig, ComplianceViolation } from "@/lib/types";
 import { HairlineTable, HairlineRow } from "@/components/hairline-table";
+import { useTranslations, useLocale } from "next-intl";
 
 const T = {
   bg: "#F4F0E8", surface: "#FCFAF6", ink: "#1A1A17", soft: "#79746B",
@@ -38,23 +39,18 @@ function minutesToTime(min: number | null | undefined): string {
   return `${h}:${m}`;
 }
 
-const VIOLATION_LABELS: Record<string, string> = {
-  max_hours_exceeded: "Exceso de horas",
-  early_start: "Fichaje tardío",
-  missing_break: "Sin descanso",
-  insufficient_break: "Descanso insuficiente",
-};
-
 export function ComplianceSettingsPanel({
   config,
   violations,
-  companyId,
 }: {
   config: ComplianceConfig | null;
   violations: ComplianceViolation[];
   companyId: string;
 }) {
   const router = useRouter();
+  const t = useTranslations("Settings");
+  const locale = useLocale();
+
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -66,6 +62,13 @@ export function ComplianceSettingsPanel({
   const [minBreak, setMinBreak] = useState(minutesToHours(config?.min_break_minutes));
   const [alertMax, setAlertMax] = useState(config?.alert_on_max_hours ?? true);
   const [alertBreak, setAlertBreak] = useState(config?.alert_on_missing_break ?? true);
+
+  const VIOLATION_LABELS: Record<string, string> = {
+    max_hours_exceeded: t("compliance.violations.types.max_hours_exceeded"),
+    early_start: t("compliance.violations.types.early_start"),
+    missing_break: t("compliance.violations.types.missing_break"),
+    insufficient_break: t("compliance.violations.types.insufficient_break"),
+  };
 
   async function saveConfig(e: React.FormEvent) {
     e.preventDefault();
@@ -91,7 +94,7 @@ export function ComplianceSettingsPanel({
       });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d.error ?? "Error al guardar");
+        throw new Error(d.error ?? t("compliance.config.errorMsg"));
       }
       setSaved(true);
       router.refresh();
@@ -165,15 +168,15 @@ export function ComplianceSettingsPanel({
             <Settings size={18} color={T.soft} />
           </div>
           <div>
-            <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "17px" }}>Configuración</div>
-            <div style={{ fontSize: "12.5px", color: T.soft }}>Reglas aplicadas al registro de horas</div>
+            <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "17px" }}>{t("compliance.config.title")}</div>
+            <div style={{ fontSize: "12.5px", color: T.soft }}>{t("compliance.config.desc")}</div>
           </div>
         </div>
 
         <form onSubmit={saveConfig}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginBottom: "20px" }}>
             <div>
-              <label style={fieldLabel}>Máx. horas/día</label>
+              <label style={fieldLabel}>{t("compliance.config.maxHours")}</label>
               <input
                 type="number" min={1} max={24}
                 placeholder="9"
@@ -183,18 +186,18 @@ export function ComplianceSettingsPanel({
                 onFocus={(e) => { e.currentTarget.style.borderColor = T.brand; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = T.line; e.currentTarget.style.boxShadow = "none"; }}
               />
-              <div style={{ fontSize: "11px", color: T.soft, marginTop: "4px" }}>horas</div>
+              <div style={{ fontSize: "11px", color: T.soft, marginTop: "4px" }}>{t("compliance.config.maxHoursUnit")}</div>
             </div>
             <div>
-              <label style={fieldLabel}>Hora límite fichaje</label>
+              <label style={fieldLabel}>{t("compliance.config.limitStart")}</label>
               <TimeField
                 value={maxStart}
                 onChange={setMaxStart}
               />
-              <div style={{ fontSize: "11px", color: T.soft, marginTop: "4px" }}>HH:MM</div>
+              <div style={{ fontSize: "11px", color: T.soft, marginTop: "4px" }}>{t("compliance.config.limitStartUnit")}</div>
             </div>
             <div>
-              <label style={fieldLabel}>Descanso mínimo (h)</label>
+              <label style={fieldLabel}>{t("compliance.config.minBreak")}</label>
               <input
                 type="number" min={0} max={4}
                 placeholder="0.5"
@@ -204,23 +207,23 @@ export function ComplianceSettingsPanel({
                 onFocus={(e) => { e.currentTarget.style.borderColor = T.brand; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = T.line; e.currentTarget.style.boxShadow = "none"; }}
               />
-              <div style={{ fontSize: "11px", color: T.soft, marginTop: "4px" }}>horas</div>
+              <div style={{ fontSize: "11px", color: T.soft, marginTop: "4px" }}>{t("compliance.config.minBreakUnit")}</div>
             </div>
           </div>
 
           <div style={{ display: "flex", gap: "24px", marginBottom: "24px" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
               {toggle(alertMax, setAlertMax)}
-              <span style={{ fontSize: "14px" }}>Alerta por exceso de horas</span>
+              <span style={{ fontSize: "14px" }}>{t("compliance.config.alertMax")}</span>
             </label>
             <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
               {toggle(alertBreak, setAlertBreak)}
-              <span style={{ fontSize: "14px" }}>Alerta por descanso faltante</span>
+              <span style={{ fontSize: "14px" }}>{t("compliance.config.alertBreak")}</span>
             </label>
           </div>
 
           {saveError && <p style={{ fontSize: "13px", color: T.danger, marginBottom: "12px" }}>{saveError}</p>}
-          {saved && <p style={{ fontSize: "13px", color: T.success, marginBottom: "12px" }}>✓ Configuración guardada</p>}
+          {saved && <p style={{ fontSize: "13px", color: T.success, marginBottom: "12px" }}>{t("compliance.config.savedMsg")}</p>}
 
           <button
             type="submit"
@@ -235,7 +238,7 @@ export function ComplianceSettingsPanel({
             }}
           >
             {saving && <Loader2 size={14} className="animate-spin" />}
-            Guardar configuración
+            {saving ? t("compliance.config.savingBtn") : t("compliance.config.saveBtn")}
           </button>
         </form>
       </div>
@@ -248,34 +251,40 @@ export function ComplianceSettingsPanel({
           </div>
           <div>
             <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "17px" }}>
-              Infracciones pendientes
+              {t("compliance.violations.title")}
               {violations.length > 0 && (
                 <span style={{ marginLeft: "8px", background: T.dangerBg, color: T.danger, fontSize: "11px", fontFamily: "'Space Mono',monospace", padding: "2px 7px", borderRadius: "999px" }}>
                   {violations.length}
                 </span>
               )}
             </div>
-            <div style={{ fontSize: "12.5px", color: T.soft }}>Incumplimientos sin reconocer</div>
+            <div style={{ fontSize: "12.5px", color: T.soft }}>{t("compliance.violations.desc")}</div>
           </div>
         </div>
 
         {violations.length === 0 ? (
           <div style={{ textAlign: "center", padding: "32px 0", color: T.soft }}>
             <CheckCircle size={36} style={{ margin: "0 auto 10px", color: T.success }} />
-            <div style={{ fontWeight: 600, marginBottom: "4px" }}>Sin infracciones pendientes</div>
-            <div style={{ fontSize: "13px" }}>Todos los registros están dentro de las reglas configuradas</div>
+            <div style={{ fontWeight: 600, marginBottom: "4px" }}>{t("compliance.violations.empty")}</div>
+            <div style={{ fontSize: "13px" }}>{t("compliance.violations.emptyDesc")}</div>
           </div>
         ) : (
           <HairlineTable
             cols="1.5fr 0.8fr 1.2fr 2.5fr 1fr"
-            headers={["Empleado", "Fecha", "Tipo", "Descripción", ""]}
+            headers={[
+              t("compliance.violations.table.employee"),
+              t("compliance.violations.table.date"),
+              t("compliance.violations.table.type"),
+              t("compliance.violations.table.desc"),
+              ""
+            ]}
             align={["left", "left", "left", "left", "right"]}
           >
             {violations.map((v) => (
               <HairlineRow key={v.id} align={["left", "left", "left", "left", "right"]}>
                 <span style={{ fontWeight: 600 }}>{(v.employees as unknown as { name: string })?.name ?? "—"}</span>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px", color: T.soft }}>
-                  {new Date(v.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
+                  {new Date(v.date).toLocaleDateString(locale, { day: "2-digit", month: "short" })}
                 </span>
                 <span style={{ background: T.dangerBg, color: T.danger, fontSize: "11px", padding: "3px 8px", borderRadius: "999px", fontWeight: 600 }}>
                   {VIOLATION_LABELS[v.violation_type] ?? v.violation_type}
@@ -292,7 +301,7 @@ export function ComplianceSettingsPanel({
                   }}
                 >
                   {ackId === v.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={12} />}
-                  Reconocer
+                  {t("compliance.violations.table.action")}
                 </button>
               </HairlineRow>
             ))}

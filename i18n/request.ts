@@ -19,6 +19,7 @@ async function loadMessages(locale: string) {
     Ai: await load("ai"),
     Pricing: await load("pricing"),
     Board: await load("board"),
+    Settings: await load("settings"),
   };
 }
 

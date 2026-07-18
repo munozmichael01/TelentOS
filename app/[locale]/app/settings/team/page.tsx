@@ -3,6 +3,7 @@ import { TeamPanel } from "@/components/features/team-panel";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getCompany } from "@/lib/workspace";
 import { requireRole } from "@/lib/auth-guard";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -34,40 +35,44 @@ type EmployeeOption = {
   managerId: string | null;
 };
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  const months = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-function formatRelative(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return "hoy";
-  if (diffDays === 1) return "hace 1 día";
-  if (diffDays < 30) return `hace ${diffDays} días`;
-  const diffMonths = Math.floor(diffDays / 30);
-  return diffMonths === 1 ? "hace 1 mes" : `hace ${diffMonths} meses`;
-}
-
-function nameFromUser(u: { email?: string | null; user_metadata?: Record<string, unknown> } | null): string {
-  if (!u) return "Usuario";
-  const meta = u.user_metadata ?? {};
-  return (meta.full_name as string | undefined) || (meta.name as string | undefined) || u.email?.split("@")[0] || "Usuario";
-}
-
-export default async function TeamPage() {
+export default async function TeamPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
   await requireRole(["owner"]);
 
   const supabase = createClient();
   const { data: { user: currentUser } } = await supabase.auth.getUser();
   const company = await getCompany();
+  const t = await getTranslations({ locale: params.locale, namespace: "Settings" });
+
+  function formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString(params.locale, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  function formatRelative(iso: string): string {
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return t("team.relativeTime.today");
+    if (diffDays === 1) return t("team.relativeTime.oneDayAgo");
+    if (diffDays < 30) return t("team.relativeTime.daysAgo", { count: diffDays });
+    const diffMonths = Math.floor(diffDays / 30);
+    return diffMonths === 1 ? t("team.relativeTime.oneMonthAgo") : t("team.relativeTime.monthsAgo", { count: diffMonths });
+  }
+
+  function nameFromUser(u: { email?: string | null; user_metadata?: Record<string, unknown> } | null): string {
+    if (!u) return "Usuario";
+    const meta = u.user_metadata ?? {};
+    return (meta.full_name as string | undefined) || (meta.name as string | undefined) || u.email?.split("@")[0] || "Usuario";
+  }
 
   if (!company || !currentUser) {
     return (
       <div>
-        <PageHeader title="Equipo" eyebrow="Ajustes" />
-        <p style={{ color: "#79746B", fontSize: "14px" }}>No se pudo cargar el equipo.</p>
+        <PageHeader title={t("team.title")} eyebrow={t("eyebrow")} />
+        <p style={{ color: "#79746B", fontSize: "14px" }}>{t("team.loadError")}</p>
       </div>
     );
   }
@@ -146,11 +151,11 @@ export default async function TeamPage() {
   return (
     <div>
       <PageHeader
-        title="Equipo"
-        eyebrow="Ajustes"
+        title={t("team.title")}
+        eyebrow={t("eyebrow")}
       />
       <p style={{ fontSize: "13.5px", color: "#79746B", margin: "0 0 22px" }}>
-        Gestiona quién tiene acceso al workspace y con qué rol.
+        {t("team.description")}
       </p>
       <TeamPanel
         members={memberRows}

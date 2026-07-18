@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { apiFetch, notifyError } from "@/lib/api-client";
 import { Loader2, Plus, Pencil, Trash2, Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -142,20 +143,26 @@ function ConfirmDelete({
   open,
   onClose,
   onConfirm,
-  label,
+  title,
+  desc,
+  cancelText,
+  confirmText,
   loading,
 }: {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  label: string;
+  title: string;
+  desc: string;
+  cancelText: string;
+  confirmText: string;
   loading: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Eliminar {label}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <p
           style={{
@@ -164,15 +171,15 @@ function ConfirmDelete({
             color: "#79746B",
           }}
         >
-          Esta acción no se puede deshacer. ¿Estás seguro?
+          {desc}
         </p>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            {cancelText}
           </Button>
           <Button variant="destructive" onClick={onConfirm} disabled={loading}>
             {loading && <Loader2 className="animate-spin" />}
-            Eliminar
+            {confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -184,6 +191,7 @@ function ConfirmDelete({
 
 function EmptyAbsenceTypes() {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const [seeding, setSeeding] = useState(false);
   const [err, setErr] = useState("");
 
@@ -208,10 +216,10 @@ function EmptyAbsenceTypes() {
     <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "48px 24px", textAlign: "center" }}>
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#CFC7B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 14px" }}><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
       <p style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontSize: "20px", color: "#1A1A17", marginBottom: "8px" }}>
-        Sin tipos de ausencia
+        {t("absences.types.empty.title")}
       </p>
       <p style={{ fontSize: "14px", color: "#79746B", marginBottom: "24px", maxWidth: "380px", margin: "0 auto 24px" }}>
-        Crea los tipos uno a uno o usa los <strong>6 tipos por defecto</strong> que incluyen vacaciones, baja por enfermedad, permiso familiar y más.
+        {t.rich("absences.types.empty.desc", { strong: (chunks) => <strong>{chunks}</strong> })}
       </p>
       {err && <p style={{ fontSize: "13px", color: "#BD4332", marginBottom: "12px" }}>{err}</p>}
       <button
@@ -227,10 +235,10 @@ function EmptyAbsenceTypes() {
         }}
       >
         {seeding ? <Loader2 size={14} className="animate-spin" /> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z"/></svg>}
-        Crear tipos por defecto
+        {t("absences.types.empty.btn")}
       </button>
       <div style={{ marginTop: "10px", fontSize: "12px", color: "#79746B" }}>
-        También crea un tipo de saldo <em>Días de vacaciones (22 días)</em> y su política anual
+        {t("absences.types.empty.help")}
       </div>
     </div>
   );
@@ -246,6 +254,7 @@ function AbsenceTypesTab({
   allowanceTypes: AllowanceType[];
 }) {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -346,11 +355,11 @@ function AbsenceTypesTab({
             color: "#79746B",
           }}
         >
-          {absenceTypes.length} tipos configurados
+          {t("absences.types.count", { count: absenceTypes.length })}
         </p>
         <Button size="sm" onClick={openCreate}>
           <Plus />
-          Nuevo tipo
+          {t("absences.types.newBtn")}
         </Button>
       </div>
 
@@ -358,9 +367,9 @@ function AbsenceTypesTab({
         <EmptyAbsenceTypes />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {absenceTypes.map((t) => (
+          {absenceTypes.map((typeItem) => (
             <div
-              key={t.id}
+              key={typeItem.id}
               style={{
                 ...SECTION,
                 marginBottom: 0,
@@ -370,14 +379,14 @@ function AbsenceTypesTab({
               }}
             >
               <span style={{ fontSize: "22px", flexShrink: 0 }}>
-                {t.icon ?? "📅"}
+                {typeItem.icon ?? "📅"}
               </span>
               <span
                 style={{
                   width: "14px",
                   height: "14px",
                   borderRadius: "4px",
-                  background: t.color,
+                  background: typeItem.color,
                   border: "1.5px solid #1A1A17",
                   flexShrink: 0,
                 }}
@@ -391,29 +400,29 @@ function AbsenceTypesTab({
                   flex: 1,
                 }}
               >
-                {t.name}
+                {typeItem.name}
               </span>
               <div
                 style={{ display: "flex", gap: "6px", alignItems: "center" }}
               >
-                {t.deducts_from_allowance && (
+                {typeItem.deducts_from_allowance && (
                   <Badge variant="brand">
-                    Descuenta{t.allowance_types?.name ? ` · ${t.allowance_types.name}` : " permiso"}
+                    {t("absences.types.deducts")}{typeItem.allowance_types?.name ? ` · ${typeItem.allowance_types.name}` : ` ${t("absences.types.permiso")}`}
                   </Badge>
                 )}
-                {t.requires_approval && (
-                  <Badge variant="warning">Requiere aprobación</Badge>
+                {typeItem.requires_approval && (
+                  <Badge variant="warning">{t("absences.types.requiresApproval")}</Badge>
                 )}
-                {t.is_public && <Badge variant="outline">Público</Badge>}
+                {typeItem.is_public && <Badge variant="outline">{t("absences.types.public")}</Badge>}
               </div>
               <div style={{ display: "flex", gap: "6px" }}>
-                <Button size="icon" variant="ghost" onClick={() => openEdit(t)}>
+                <Button size="icon" variant="ghost" onClick={() => openEdit(typeItem)}>
                   <Pencil />
                 </Button>
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={() => setDeleteId(t.id)}
+                  onClick={() => setDeleteId(typeItem.id)}
                   style={{ color: "#BD4332" }}
                 >
                   <Trash2 />
@@ -428,19 +437,19 @@ function AbsenceTypesTab({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editId ? "Editar tipo de ausencia" : "Nuevo tipo de ausencia"}</DialogTitle>
+            <DialogTitle>{editId ? t("absences.types.modal.editTitle") : t("absences.types.modal.createTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Nombre *</Label>
+              <Label>{t("absences.types.modal.name")}</Label>
               <Input
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
-                placeholder="Ej. Vacaciones, Baja médica…"
+                placeholder={t("absences.types.modal.namePlaceholder")}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Icono (emoji)</Label>
+              <Label>{t("absences.types.modal.icon")}</Label>
               <Input
                 value={form.icon}
                 onChange={(e) => set("icon", e.target.value)}
@@ -449,7 +458,7 @@ function AbsenceTypesTab({
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Color</Label>
+              <Label>{t("absences.types.modal.color")}</Label>
               <div style={{ display: "flex", gap: "8px" }}>
                 {PRESET_COLORS.map((c) => (
                   <button
@@ -475,7 +484,7 @@ function AbsenceTypesTab({
               <Toggle
                 checked={form.requires_approval}
                 onChange={(v) => set("requires_approval", v)}
-                label="Requiere aprobación"
+                label={t("absences.types.modal.requiresApprovalLabel")}
               />
               <Toggle
                 checked={form.deducts_from_allowance}
@@ -483,17 +492,17 @@ function AbsenceTypesTab({
                   set("deducts_from_allowance", v);
                   if (!v) set("allowance_type_id", "");
                 }}
-                label="Descuenta de saldo de permisos"
+                label={t("absences.types.modal.deductsLabel")}
               />
               {form.deducts_from_allowance && (
                 <div className="space-y-1.5" style={{ paddingLeft: "4px" }}>
-                  <Label>Tipo de saldo que descuenta *</Label>
+                  <Label>{t("absences.types.modal.allowanceTypeLabel")}</Label>
                   <Select
                     value={form.allowance_type_id}
                     onValueChange={(v) => set("allowance_type_id", v)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar tipo de saldo…" />
+                      <SelectValue placeholder={t("absences.types.modal.allowanceTypePlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
                       {allowanceTypes.map((at) => (
@@ -508,17 +517,17 @@ function AbsenceTypesTab({
               <Toggle
                 checked={form.is_public}
                 onChange={(v) => set("is_public", v)}
-                label="Visible para todos los empleados"
+                label={t("absences.types.modal.publicLabel")}
               />
               <Toggle
                 checked={form.requires_document}
                 onChange={(v) => set("requires_document", v)}
-                label="Requiere documento justificativo"
+                label={t("absences.types.modal.requiresDocumentLabel")}
               />
               <Toggle
                 checked={form.allow_half_day}
                 onChange={(v) => set("allow_half_day", v)}
-                label="Permite medio día"
+                label={t("absences.types.modal.allowHalfDayLabel")}
               />
             </div>
             {error && (
@@ -527,7 +536,7 @@ function AbsenceTypesTab({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
+              {t("absences.types.modal.cancelBtn")}
             </Button>
             <Button
               onClick={save}
@@ -538,7 +547,7 @@ function AbsenceTypesTab({
               }
             >
               {saving && <Loader2 className="animate-spin" />}
-              {editId ? "Guardar cambios" : "Crear tipo"}
+              {editId ? t("absences.types.modal.saveBtn") : t("absences.types.modal.createBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -548,7 +557,10 @@ function AbsenceTypesTab({
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={doDelete}
-        label="tipo de ausencia"
+        title={t("absences.types.delete.title")}
+        desc={t("absences.types.delete.desc")}
+        cancelText={t("absences.types.delete.cancel")}
+        confirmText={t("absences.types.delete.confirm")}
         loading={deleting}
       />
     </div>
@@ -565,6 +577,7 @@ function AllowancePoliciesTab({
   allowancePolicies: AllowancePolicy[];
 }) {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const [typeOpen, setTypeOpen] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -587,9 +600,9 @@ function AllowancePoliciesTab({
   });
 
   const CYCLE_LABELS: Record<string, string> = {
-    year: "Anual",
-    month: "Mensual",
-    quarter: "Trimestral",
+    year: t("absences.policies.policyTable.cycles.year"),
+    month: t("absences.policies.policyTable.cycles.month"),
+    quarter: t("absences.policies.policyTable.cycles.quarter"),
   };
 
   async function saveType() {
@@ -672,7 +685,7 @@ function AllowancePoliciesTab({
               color: "#1A1A17",
             }}
           >
-            Tipos de saldo
+            {t("absences.policies.saldoTitle")}
           </h3>
           <Button
             size="sm"
@@ -683,7 +696,7 @@ function AllowancePoliciesTab({
             }}
           >
             <Plus />
-            Nuevo tipo de saldo
+            {t("absences.policies.saldoNew")}
           </Button>
         </div>
         {allowanceTypes.length === 0 ? (
@@ -697,20 +710,20 @@ function AllowancePoliciesTab({
               fontFamily: "'Hanken Grotesk', system-ui",
             }}
           >
-            Sin tipos de saldo configurados
+            {t("absences.policies.saldoEmpty")}
           </div>
         ) : (
           <HairlineTable
             cols="2fr 1fr 1fr 0.5fr"
-            headers={["Nombre", "Unidad", "Estado", "Acción"]}
+            headers={[t("absences.policies.saldoTable.name"), t("absences.policies.saldoTable.unit"), t("absences.policies.saldoTable.status"), t("absences.policies.saldoTable.action")]}
             align={["left", "left", "left", "right"]}
           >
-            {allowanceTypes.map((t) => (
-              <HairlineRow key={t.id} align={["left", "left", "left", "right"]}>
-                <span style={{ fontWeight: 600, fontSize: "14px" }}>{t.name}</span>
-                <span style={{ fontSize: "13px" }}>{t.unit === "days" ? "Días" : "Horas"}</span>
-                <Badge variant={t.is_active ? "success" : "outline"}>
-                  {t.is_active ? "Activo" : "Inactivo"}
+            {allowanceTypes.map((tItem) => (
+              <HairlineRow key={tItem.id} align={["left", "left", "left", "right"]}>
+                <span style={{ fontWeight: 600, fontSize: "14px" }}>{tItem.name}</span>
+                <span style={{ fontSize: "13px" }}>{tItem.unit === "days" ? t("absences.policies.saldoTable.days") : t("absences.policies.saldoTable.hours")}</span>
+                <Badge variant={tItem.is_active ? "success" : "outline"}>
+                  {tItem.is_active ? t("absences.policies.saldoTable.active") : t("absences.policies.saldoTable.inactive")}
                 </Badge>
                 <Button size="icon" variant="ghost">
                   <Pencil />
@@ -732,7 +745,7 @@ function AllowancePoliciesTab({
               color: "#1A1A17",
             }}
           >
-            Políticas
+            {t("absences.policies.policyTitle")}
           </h3>
           <Button
             size="sm"
@@ -742,7 +755,7 @@ function AllowancePoliciesTab({
             }}
           >
             <Plus />
-            Nueva política
+            {t("absences.policies.policyNew")}
           </Button>
         </div>
         {allowancePolicies.length === 0 ? (
@@ -756,12 +769,12 @@ function AllowancePoliciesTab({
               fontFamily: "'Hanken Grotesk', system-ui",
             }}
           >
-            Sin políticas configuradas
+            {t("absences.policies.policyEmpty")}
           </div>
         ) : (
           <HairlineTable
             cols="2fr 1.2fr 0.6fr 1fr 0.7fr 1fr 0.7fr"
-            headers={["Nombre", "Tipo", "Cant.", "Ciclo", "Arrastre", "Estado", "Acción"]}
+            headers={[t("absences.policies.policyTable.name"), t("absences.policies.policyTable.type"), t("absences.policies.policyTable.amount"), t("absences.policies.policyTable.cycle"), t("absences.policies.policyTable.carryover"), t("absences.policies.policyTable.status"), t("absences.policies.policyTable.action")]}
             align={["left", "left", "right", "left", "right", "left", "right"]}
           >
             {allowancePolicies.map((p) => (
@@ -771,7 +784,7 @@ function AllowancePoliciesTab({
                 <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px" }}>{p.amount}</span>
                 <span style={{ fontSize: "13px" }}>{CYCLE_LABELS[p.cycle] ?? p.cycle}</span>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px" }}>{p.carryover}</span>
-                <span>{p.is_default && <Badge variant="lime">Por defecto</Badge>}</span>
+                <span>{p.is_default && <Badge variant="lime">{t("absences.policies.policyTable.default")}</Badge>}</span>
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: "4px" }}>
                   <Button size="icon" variant="ghost">
                     <Pencil />
@@ -795,21 +808,21 @@ function AllowancePoliciesTab({
       <Dialog open={typeOpen} onOpenChange={setTypeOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuevo tipo de saldo</DialogTitle>
+            <DialogTitle>{t("absences.policies.saldoModal.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Nombre *</Label>
+              <Label>{t("absences.policies.saldoModal.name")}</Label>
               <Input
                 value={typeForm.name}
                 onChange={(e) =>
                   setTypeForm((f) => ({ ...f, name: e.target.value }))
                 }
-                placeholder="Ej. Vacaciones, Asuntos propios…"
+                placeholder={t("absences.policies.saldoModal.name")}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Unidad</Label>
+              <Label>{t("absences.policies.saldoModal.unit")}</Label>
               <Select
                 value={typeForm.unit}
                 onValueChange={(v) =>
@@ -820,15 +833,15 @@ function AllowancePoliciesTab({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="days">Días</SelectItem>
-                  <SelectItem value="hours">Horas</SelectItem>
+                  <SelectItem value="days">{t("absences.policies.saldoModal.days")}</SelectItem>
+                  <SelectItem value="hours">{t("absences.policies.saldoModal.hours")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <Toggle
               checked={typeForm.is_active}
               onChange={(v) => setTypeForm((f) => ({ ...f, is_active: v }))}
-              label="Activo"
+              label={t("absences.policies.saldoTable.active")}
             />
             {error && (
               <p style={{ fontSize: "13px", color: "#BD4332" }}>{error}</p>
@@ -836,14 +849,14 @@ function AllowancePoliciesTab({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setTypeOpen(false)}>
-              Cancelar
+              {t("absences.policies.saldoModal.cancel")}
             </Button>
             <Button
               onClick={saveType}
               disabled={!typeForm.name.trim() || saving}
             >
               {saving && <Loader2 className="animate-spin" />}
-              Crear tipo
+              {t("absences.policies.saldoModal.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -853,21 +866,21 @@ function AllowancePoliciesTab({
       <Dialog open={policyOpen} onOpenChange={setPolicyOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nueva política de permiso</DialogTitle>
+            <DialogTitle>{t("absences.policies.policyModal.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Nombre *</Label>
+              <Label>{t("absences.policies.policyModal.name")}</Label>
               <Input
                 value={policyForm.name}
                 onChange={(e) =>
                   setPolicyForm((f) => ({ ...f, name: e.target.value }))
                 }
-                placeholder="Ej. 22 días vacaciones estándar"
+                placeholder={t("absences.policies.policyModal.name")}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Tipo de saldo</Label>
+              <Label>{t("absences.policies.policyModal.type")}</Label>
               <Select
                 value={policyForm.allowance_type_id}
                 onValueChange={(v) =>
@@ -875,12 +888,12 @@ function AllowancePoliciesTab({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un tipo…" />
+                  <SelectValue placeholder={t("absences.policies.policyModal.typePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {allowanceTypes.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
+                  {allowanceTypes.map((tItem) => (
+                    <SelectItem key={tItem.id} value={tItem.id}>
+                      {tItem.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -888,7 +901,7 @@ function AllowancePoliciesTab({
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label>Cantidad</Label>
+                <Label>{t("absences.policies.policyModal.amount")}</Label>
                 <Input
                   type="number"
                   value={policyForm.amount}
@@ -899,7 +912,7 @@ function AllowancePoliciesTab({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Ciclo</Label>
+                <Label>{t("absences.policies.policyModal.cycle")}</Label>
                 <Select
                   value={policyForm.cycle}
                   onValueChange={(v) =>
@@ -910,14 +923,14 @@ function AllowancePoliciesTab({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="year">Anual</SelectItem>
-                    <SelectItem value="month">Mensual</SelectItem>
+                    <SelectItem value="year">{t("absences.policies.policyModal.cycles.year")}</SelectItem>
+                    <SelectItem value="month">{t("absences.policies.policyModal.cycles.month")}</SelectItem>
                     <SelectItem value="quarter">Trimestral</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Arrastre máx.</Label>
+                <Label>{t("absences.policies.policyModal.carryover")}</Label>
                 <Input
                   type="number"
                   value={policyForm.carryover}
@@ -936,7 +949,7 @@ function AllowancePoliciesTab({
               onChange={(v) =>
                 setPolicyForm((f) => ({ ...f, is_default: v }))
               }
-              label="Política por defecto"
+              label={t("absences.policies.policyModal.default")}
             />
             {error && (
               <p style={{ fontSize: "13px", color: "#BD4332" }}>{error}</p>
@@ -944,14 +957,14 @@ function AllowancePoliciesTab({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPolicyOpen(false)}>
-              Cancelar
+              {t("absences.policies.policyModal.cancel")}
             </Button>
             <Button
               onClick={savePolicy}
               disabled={!policyForm.name.trim() || saving}
             >
               {saving && <Loader2 className="animate-spin" />}
-              Crear política
+              {t("absences.policies.policyModal.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -961,7 +974,10 @@ function AllowancePoliciesTab({
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={doDelete}
-        label="política"
+        title={t("absences.policies.delete.title")}
+        desc={t("absences.policies.delete.desc")}
+        cancelText={t("absences.policies.delete.cancel")}
+        confirmText={t("absences.policies.delete.confirm")}
         loading={deleting}
       />
     </div>
@@ -972,6 +988,7 @@ function AllowancePoliciesTab({
 
 function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [open, setOpen] = useState(false);
@@ -1079,7 +1096,7 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
           }}
         >
           <Calendar />
-          Añadir festivo
+          {t("absences.holidays.newBtn")}
         </Button>
       </div>
 
@@ -1101,7 +1118,7 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
               marginBottom: "8px",
             }}
           >
-            Sin festivos en {year}
+            {t("absences.holidays.empty")} en {year}
           </p>
           <p
             style={{
@@ -1182,10 +1199,10 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
               </div>
               <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                 {h.repeats_annually && (
-                  <Badge variant="brand">Se repite</Badge>
+                  <Badge variant="brand">{t("absences.holidays.table.repeats")}</Badge>
                 )}
                 {h.is_half_day && (
-                  <Badge variant="warning">Medio día</Badge>
+                  <Badge variant="warning">{t("absences.holidays.table.halfDay")}</Badge>
                 )}
               </div>
               <Button
@@ -1204,21 +1221,21 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Añadir festivo</DialogTitle>
+            <DialogTitle>{t("absences.holidays.modal.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Nombre del festivo *</Label>
+              <Label>{t("absences.holidays.modal.name")}</Label>
               <Input
                 value={form.name}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, name: e.target.value }))
                 }
-                placeholder="Ej. Día de la Constitución"
+                placeholder={t("absences.holidays.modal.namePlaceholder")}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Fecha *</Label>
+              <Label>{t("absences.holidays.modal.date")}</Label>
               <DateField
                 value={form.date}
                 onChange={(v) => setForm((f) => ({ ...f, date: v }))}
@@ -1230,14 +1247,14 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
                 onChange={(v) =>
                   setForm((f) => ({ ...f, repeats_annually: v }))
                 }
-                label="Se repite cada año"
+                label={t("absences.holidays.modal.repeats")}
               />
               <Toggle
                 checked={form.is_half_day}
                 onChange={(v) =>
                   setForm((f) => ({ ...f, is_half_day: v }))
                 }
-                label="Medio día festivo"
+                label={t("absences.holidays.modal.halfDay")}
               />
             </div>
             {error && (
@@ -1246,14 +1263,14 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
+              {t("absences.holidays.modal.cancel")}
             </Button>
             <Button
               onClick={save}
               disabled={!form.name.trim() || !form.date || saving}
             >
               {saving && <Loader2 className="animate-spin" />}
-              Añadir festivo
+              {t("absences.holidays.modal.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1263,7 +1280,10 @@ function HolidaysTab({ holidays }: { holidays: CompanyHoliday[] }) {
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={doDelete}
-        label="festivo"
+        title={t("absences.holidays.delete.title")}
+        desc={t("absences.holidays.delete.desc")}
+        cancelText={t("absences.holidays.delete.cancel")}
+        confirmText={t("absences.holidays.delete.confirm")}
         loading={deleting}
       />
     </div>
@@ -1283,12 +1303,13 @@ export function AbsenceSettingsPanel({
   allowancePolicies: AllowancePolicy[];
   holidays: CompanyHoliday[];
 }) {
+  const t = useTranslations("Settings");
   return (
     <Tabs defaultValue="types">
       <TabsList>
-        <TabsTrigger value="types">Tipos de ausencia</TabsTrigger>
-        <TabsTrigger value="policies">Políticas de permisos</TabsTrigger>
-        <TabsTrigger value="holidays">Festivos de empresa</TabsTrigger>
+        <TabsTrigger value="types">{t("absences.title")}</TabsTrigger>
+        <TabsTrigger value="policies">{t("absences.policies.title")}</TabsTrigger>
+        <TabsTrigger value="holidays">{t("absences.holidays.title")}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="types">

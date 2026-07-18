@@ -1,9 +1,12 @@
 import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { AbsenceSettingsPanel } from "@/components/features/absence-settings-panel";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
-export default async function AbsencesSettingsPage() {
+export default async function AbsencesSettingsPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
   const supabase = createClient();
+  const t = await getTranslations({ locale: params.locale, namespace: "Settings" });
 
   const { data: company } = await supabase
     .from("companies")
@@ -42,9 +45,9 @@ export default async function AbsencesSettingsPage() {
   return (
     <div>
       <PageHeader
-        title="Ausencias"
-        eyebrow="Ajustes"
-        description="Tipos, políticas y festivos de empresa."
+        title={t("absences.title")}
+        eyebrow={t("eyebrow")}
+        description={t("absences.description")}
       />
       <AbsenceSettingsPanel
         absenceTypes={absenceTypes ?? []}

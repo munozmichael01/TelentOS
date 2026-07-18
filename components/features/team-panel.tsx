@@ -12,6 +12,7 @@ import {
   cancelInvite,
   resendInvite,
 } from "@/app/[locale]/app/settings/team/actions";
+import { useTranslations } from "next-intl";
 
 /* ── Types ── */
 export type MemberRow = {
@@ -54,12 +55,6 @@ const ROLE_AVATAR: Record<string, { bg: string; color: string }> = {
   hr_admin: { bg: "#E6F1EC", color: "#2C7A5E" },
   recruiter:{ bg: "#FAE3DE", color: "#C7402E" },
   manager:  { bg: "#F8E7C4", color: "#946312" },
-};
-
-const ROLE_HINTS: Record<string, string> = {
-  hr_admin:  "Todo salvo billing",
-  recruiter: "Solo selección",
-  manager:   "Su equipo",
 };
 
 /* ── Icon atoms ── */
@@ -108,7 +103,14 @@ interface TeamPanelProps {
 /* ══════════ TEAM PANEL ══════════ */
 export function TeamPanel({ members, pending, allEmployees, memberEmpIds: memberEmpIdsArr }: TeamPanelProps) {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const [, startTransition] = useTransition();
+
+  const ROLE_HINTS: Record<string, string> = {
+    hr_admin:  t("team.roles.hints.hr_admin"),
+    recruiter: t("team.roles.hints.recruiter"),
+    manager:   t("team.roles.hints.manager"),
+  };
 
   /* kebab open state */
   const [openKebab, setOpenKebab] = useState<string | null>(null);
@@ -227,10 +229,10 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
     setInvitePending(false);
     if (res.success) {
       closeModal();
-      setToast(res.message ?? "Invitación enviada");
+      setToast(res.message ?? t("team.modals.invite.successToast"));
       startTransition(() => router.refresh());
     } else {
-      setInviteErr(res.error ?? "Error al enviar invitación");
+      setInviteErr(res.error ?? t("team.modals.invite.errorToast"));
     }
   }
 
@@ -242,7 +244,11 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
     fd.set("role",     changeRoleVal);
     const res = await changeRole(fd);
     setRolePending(false);
-    if (res.success) { closeModal(); startTransition(() => router.refresh()); }
+    if (res.success) {
+      closeModal();
+      setToast(t("team.modals.role.successToast"));
+      startTransition(() => router.refresh());
+    }
   }
 
   async function handleRevoke() {
@@ -252,7 +258,11 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
     fd.set("memberId", targetId);
     const res = await revokeMember(fd);
     setRevokePending(false);
-    if (res.success) { closeModal(); startTransition(() => router.refresh()); }
+    if (res.success) {
+      closeModal();
+      setToast(t("team.modals.revoke.successToast"));
+      startTransition(() => router.refresh());
+    }
   }
 
   async function handleUnlink(memberId: string) {
@@ -267,7 +277,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
     const fd = new FormData();
     fd.set("email", email);
     const res = await resendInvite(fd);
-    if (res.success) setToast(res.message ?? "Invitación reenviada");
+    if (res.success) setToast(res.message ?? t("team.toast.resendSuccess"));
   }
 
   async function handleCancelInvite(memberId: string) {
@@ -304,20 +314,20 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
       {/* ── Section A: Miembros activos ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
         <div>
-          <h2 style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "17px", margin: 0 }}>Miembros activos</h2>
-          <div style={{ ...monoSm, fontSize: "10.5px", color: S.soft, marginTop: "3px" }}>{members.length} personas con acceso</div>
+          <h2 style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "17px", margin: 0 }}>{t("team.active.title")}</h2>
+          <div style={{ ...monoSm, fontSize: "10.5px", color: S.soft, marginTop: "3px" }}>{t("team.active.count", { count: members.length })}</div>
         </div>
         <button
           onClick={openInvite}
           className="di-hard"
           style={{ display: "flex", alignItems: "center", gap: "7px", fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: S.brand, border: "2px solid " + S.ink, borderRadius: "11px", padding: "10px 15px", boxShadow: "2px 2px 0 " + S.ink, cursor: "pointer" }}
         >
-          <IconPlus /> Invitar persona
+          <IconPlus /> {t("team.active.inviteBtn")}
         </button>
       </div>
 
       {/* Members table */}
-      <HairlineTable cols="2.3fr 1fr 1.4fr 1fr 40px" headers={["Miembro", "Rol", "Empleado vinculado", "Incorporación", ""]}>
+      <HairlineTable cols="2.3fr 1fr 1.4fr 1fr 40px" headers={[t("team.table.member"), t("team.table.role"), t("team.table.linked"), t("team.table.joined"), ""]}>
         {members.map((m) => {
           const av = ROLE_AVATAR[m.role] ?? ROLE_AVATAR.hr_admin;
           return (
@@ -332,7 +342,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
                   <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap" }}>
                     {m.name}
                     {m.isYou && (
-                      <span style={{ ...monoSm, fontSize: "9px", color: S.soft, background: S.bg, border: "1px solid " + S.line, borderRadius: "999px", padding: "1px 7px" }}>tú</span>
+                      <span style={{ ...monoSm, fontSize: "9px", color: S.soft, background: S.bg, border: "1px solid " + S.line, borderRadius: "999px", padding: "1px 7px" }}>{t("team.table.you")}</span>
                     )}
                   </div>
                   <div style={{ fontSize: "12px", color: S.soft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.email}</div>
@@ -346,7 +356,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
               <div style={{ fontSize: "12.5px", color: m.employeeName ? S.ink : S.soft }}>
                 {m.employeeName
                   ? m.employeeTitle ? `${m.employeeName} · ${m.employeeTitle}` : m.employeeName
-                  : "Sin vincular"}
+                  : t("team.table.unlinked")}
               </div>
 
               {/* Incorporación */}
@@ -364,10 +374,10 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
                     </button>
                     {openKebab === m.id && (
                       <div style={{ position: "absolute", top: "34px", right: 0, zIndex: 20, width: "186px", background: S.surface, border: "1.5px solid " + S.ink, borderRadius: "11px", boxShadow: "4px 4px 0 " + S.ink, padding: "5px", textAlign: "left" }}>
-                        <button onClick={() => openRoleModal(m.id)}  style={menuItemStyle}>Cambiar rol</button>
-                        <button onClick={() => handleUnlink(m.id)}    style={menuItemStyle}>Desvincular empleado</button>
+                        <button onClick={() => openRoleModal(m.id)}  style={menuItemStyle}>{t("team.table.menu.changeRole")}</button>
+                        <button onClick={() => handleUnlink(m.id)}    style={menuItemStyle}>{t("team.table.menu.unlink")}</button>
                         <div style={{ height: "1px", background: S.line, margin: "4px 6px" }} />
-                        <button onClick={() => openRevokeModal(m.id)} style={{ ...menuItemStyle, fontWeight: 700, color: "#BD4332" }}>Revocar acceso</button>
+                        <button onClick={() => openRevokeModal(m.id)} style={{ ...menuItemStyle, fontWeight: 700, color: "#BD4332" }}>{t("team.table.menu.revoke")}</button>
                       </div>
                     )}
                   </div>
@@ -381,8 +391,8 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
       {/* ── Section B: Invitaciones pendientes ── */}
       {pending.length > 0 && (
         <div style={{ marginTop: "30px" }}>
-          <h2 style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "17px", margin: "0 0 4px" }}>Invitaciones pendientes</h2>
-          <div style={{ ...monoSm, fontSize: "10.5px", color: S.soft, marginBottom: "14px" }}>{pending.length} sin aceptar</div>
+          <h2 style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "17px", margin: "0 0 4px" }}>{t("team.pending.title")}</h2>
+          <div style={{ ...monoSm, fontSize: "10.5px", color: S.soft, marginBottom: "14px" }}>{t("team.pending.count", { count: pending.length })}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: "9px" }}>
             {pending.map((p) => (
               <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "14px", background: S.surface, border: "1px dashed " + S.line, borderRadius: "13px", padding: "13px 16px" }}>
@@ -392,7 +402,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "13.5px" }}>{p.email}</div>
                   <div style={{ ...monoSm, fontSize: "10.5px", color: S.soft, marginTop: "2px" }}>
-                    Invitado por {p.inviterName ?? "Sistema"} · {p.invitedAt}
+                    {t("team.pending.invitedBy", { inviter: p.inviterName ?? "Sistema", time: p.invitedAt })}
                   </div>
                 </div>
                 <RoleBadge role={p.role} />
@@ -400,15 +410,15 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
                   <button
                     className="di-hard"
                     onClick={() => handleResend(p.email)}
-                    style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "12px", color: S.ink, background: S.surface, border: "1.5px solid " + S.ink, borderRadius: "9px", padding: "7px 12px", boxShadow: "2px 2px 0 " + S.ink, cursor: "pointer" }}
+                    style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "12px", color: S.ink, background: S.surface, border: "1.5px solid " + S.ink, borderRadius: "99px", padding: "7px 12px", boxShadow: "2px 2px 0 " + S.ink, cursor: "pointer" }}
                   >
-                    Reenviar
+                    {t("team.pending.resendBtn")}
                   </button>
                   <button
                     onClick={() => handleCancelInvite(p.id)}
                     style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontWeight: 600, fontSize: "12px", color: S.soft, background: "none", border: "none", cursor: "pointer", padding: "7px 6px" }}
                   >
-                    Cancelar
+                    {t("team.pending.cancelBtn")}
                   </button>
                 </div>
               </div>
@@ -427,10 +437,10 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
           {/* ── INVITE ── */}
           {modal === "invite" && (
             <div onClick={(e) => e.stopPropagation()} style={{ width: "440px", maxWidth: "100%", background: S.surface, border: "1.5px solid " + S.ink, borderRadius: "18px", boxShadow: "6px 6px 0 " + S.ink, padding: "24px 26px" }}>
-              <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "19px", marginBottom: "4px" }}>Invitar persona</div>
-              <p style={{ fontSize: "12.5px", color: S.soft, margin: "0 0 18px" }}>Se enviará un enlace de acceso por email.</p>
+              <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "19px", marginBottom: "4px" }}>{t("team.modals.invite.title")}</div>
+              <p style={{ fontSize: "12.5px", color: S.soft, margin: "0 0 18px" }}>{t("team.modals.invite.desc")}</p>
 
-              <label style={{ ...monoSm, fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: S.soft, display: "block", marginBottom: "6px" }}>Persona</label>
+              <label style={{ ...monoSm, fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: S.soft, display: "block", marginBottom: "6px" }}>{t("team.modals.invite.label")}</label>
 
               {/* Linked employee chip */}
               {inv.linkedEmp && (
@@ -442,7 +452,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
                     <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "13.5px" }}>{inv.linkedEmp.name}</div>
                     <div style={{ ...monoSm, fontSize: "10px", color: S.soft }}>{inv.linkedEmp.email}</div>
                   </div>
-                  <button onClick={() => { setPickedEmpId(null); setInviteText(""); }} style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "11px", fontWeight: 600, color: S.soft, background: "none", border: "none", cursor: "pointer" }}>Quitar</button>
+                  <button onClick={() => { setPickedEmpId(null); setInviteText(""); }} style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "11px", fontWeight: 600, color: S.soft, background: "none", border: "none", cursor: "pointer" }}>{t("team.modals.invite.removeBtn")}</button>
                 </div>
               )}
 
@@ -450,7 +460,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
               {inv.linkedIsMember && (
                 <div style={{ display: "flex", gap: "9px", background: "#F6D9D2", border: "1px solid #E3A99C", borderRadius: "10px", padding: "10px 13px", marginBottom: "8px" }}>
                   <IconError />
-                  <span style={{ fontSize: "12px", color: "#8A2D20", lineHeight: 1.5 }}><b>{inv.linkedEmp?.name}</b> ya es miembro activo del equipo — no se puede volver a invitar.</span>
+                  <span style={{ fontSize: "12px", color: "#8A2D20", lineHeight: 1.5 }}>{t.rich("team.modals.invite.alreadyMember", { name: inv.linkedEmp?.name ?? "", b: (chunks) => <b>{chunks}</b> })}</span>
                 </div>
               )}
 
@@ -460,7 +470,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
                   <input
                     value={inviteText}
                     onChange={(e) => setInviteText(e.target.value)}
-                    placeholder="Nombre o email…"
+                    placeholder={t("team.modals.invite.placeholder")}
                     autoFocus
                     style={{ width: "100%", fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "13.5px", background: S.bg, border: `1.5px solid ${inv.invalidEmail ? "#D99" : S.line}`, borderRadius: "10px", padding: "11px 12px", outline: "none", boxSizing: "border-box" }}
                   />
@@ -481,7 +491,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
                             <span style={{ display: "block", ...monoSm, fontSize: "9.5px", color: S.soft }}>{e.email}</span>
                           </span>
                           {e.isMember && (
-                            <span style={{ ...monoSm, fontSize: "8.5px", textTransform: "uppercase", letterSpacing: ".5px", color: S.soft, background: S.bg, border: "1px solid " + S.line, borderRadius: "999px", padding: "2px 7px", flexShrink: 0 }}>Ya es miembro</span>
+                            <span style={{ ...monoSm, fontSize: "8.5px", textTransform: "uppercase", letterSpacing: ".5px", color: S.soft, background: S.bg, border: "1px solid " + S.line, borderRadius: "999px", padding: "2px 7px", flexShrink: 0 }}>{t("team.modals.invite.alreadyMember", { name: "" })}</span>
                           )}
                         </button>
                       ))}
@@ -494,12 +504,12 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
               {inv.isExternal && (
                 <div style={{ display: "flex", alignItems: "center", gap: "9px", background: S.bg, border: "1px solid " + S.line, borderRadius: "9px", padding: "8px 11px", marginBottom: "8px" }}>
                   <IconMail />
-                  <span style={{ fontSize: "11.5px", color: S.soft, lineHeight: 1.4 }}>Invitación externa · sin ficha de empleado. Se enviará a <b style={{ color: S.ink }}>{inviteText}</b>.</span>
+                  <span style={{ fontSize: "11.5px", color: S.soft, lineHeight: 1.4 }}>{t("team.modals.invite.externalNote", { email: inviteText })}</span>
                 </div>
               )}
 
               {/* Rol segmented control */}
-              <label style={{ ...monoSm, fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: S.soft, display: "block", margin: "16px 0 8px" }}>Rol</label>
+              <label style={{ ...monoSm, fontSize: "10px", textTransform: "uppercase", letterSpacing: ".5px", color: S.soft, display: "block", margin: "16px 0 8px" }}>{t("team.modals.invite.roleLabel")}</label>
               <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
                 {(["hr_admin", "recruiter", "manager"] as const).map((k) => {
                   const on = inviteRole === k;
@@ -509,7 +519,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
                       onClick={() => setInviteRole(k)}
                       style={{ fontFamily: "'Archivo', sans-serif", fontWeight: on ? 800 : 700, fontSize: "13px", cursor: "pointer", borderRadius: "9px", padding: "9px 14px", border: `1.5px solid ${on ? S.ink : S.line}`, background: on ? S.brandSoft : S.surface, color: on ? S.brand : S.soft }}
                     >
-                      {{ hr_admin: "HR Admin", recruiter: "Recruiter", manager: "Manager" }[k]}
+                      {{ hr_admin: t("team.roles.hr_admin"), recruiter: t("team.roles.recruiter"), manager: t("team.roles.manager") }[k]}
                     </button>
                   );
                 })}
@@ -519,13 +529,13 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
               {inv.showNeedLink && (
                 <div style={{ display: "flex", gap: "9px", background: "#FBE9D9", border: "1px solid #EBC79A", borderRadius: "10px", padding: "11px 13px", marginBottom: "8px" }}>
                   <IconWarn />
-                  <span style={{ fontSize: "12px", color: "#7A5410", lineHeight: 1.5 }}>El rol <b>Manager</b> necesita una ficha de empleado para calcular su equipo. Elige a una persona de la plantilla.</span>
+                  <span style={{ fontSize: "12px", color: "#7A5410", lineHeight: 1.5 }}>{t("team.modals.invite.managerWarning")}</span>
                 </div>
               )}
 
               {inv.showTeamPreview && (
                 <div style={{ background: "#F8E7C4", border: "1px solid #EBC79A", borderRadius: "10px", padding: "10px 13px", marginBottom: "8px" }}>
-                  <div style={{ ...monoSm, fontSize: "9px", textTransform: "uppercase", letterSpacing: ".5px", color: "#946312", marginBottom: "5px" }}>Verá a su equipo · {inv.reports.length} personas</div>
+                  <div style={{ ...monoSm, fontSize: "9px", textTransform: "uppercase", letterSpacing: ".5px", color: "#946312", marginBottom: "5px" }}>{t("team.modals.invite.managerTeamPreview", { count: inv.reports.length })}</div>
                   <div style={{ fontSize: "12px", color: "#7A5410", lineHeight: 1.5 }}>{inv.reports.map((r) => r.name).join(", ")}</div>
                 </div>
               )}
@@ -533,14 +543,14 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
               {inv.showNoTeamWarn && (
                 <div style={{ display: "flex", gap: "9px", background: "#FBE9D9", border: "1px solid #EBC79A", borderRadius: "10px", padding: "11px 13px", marginBottom: "8px" }}>
                   <IconWarn />
-                  <span style={{ fontSize: "12px", color: "#7A5410", lineHeight: 1.5 }}><b>{inv.linkedEmp?.name}</b> no tiene a nadie a cargo en el organigrama — como Manager no vería ningún equipo. Asígnale reportes o elige otro rol.</span>
+                  <span style={{ fontSize: "12px", color: "#7A5410", lineHeight: 1.5 }}>{t.rich("team.modals.invite.managerNoTeamWarn", { name: inv.linkedEmp?.name ?? "", b: (chunks) => <b>{chunks}</b> })}</span>
                 </div>
               )}
 
               <p style={{ fontSize: "11px", color: S.soft, margin: "2px 0 20px", lineHeight: 1.5 }}>
                 {inv.isManagerRole
-                  ? "Un manager solo ve a las personas que le reportan en el organigrama. Vincúlalo a su ficha para calcular su equipo."
-                  : "Escribe un nombre para elegir a un empleado, o un email para invitar a alguien externo."}
+                  ? t("team.modals.invite.managerRoleHelp")
+                  : t("team.modals.invite.defaultRoleHelp")}
               </p>
 
               {/* Invite action error */}
@@ -552,14 +562,14 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
               )}
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "9px" }}>
-                <button onClick={closeModal} style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "13px", color: S.soft, background: "none", border: "none", cursor: "pointer", padding: "10px 12px" }}>Cancelar</button>
+                <button onClick={closeModal} style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "13px", color: S.soft, background: "none", border: "none", cursor: "pointer", padding: "10px 12px" }}>{t("team.modals.invite.cancelBtn")}</button>
                 <button
                   onClick={handleInvite}
                   disabled={!inv.canSend || invitePending}
                   className={inv.canSend && !invitePending ? "di-hard" : ""}
                   style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: inv.canSend ? S.brand : "#9DB5AC", border: "1.5px solid " + S.ink, borderRadius: "10px", padding: "10px 16px", boxShadow: inv.canSend ? "2px 2px 0 " + S.ink : "none", cursor: inv.canSend && !invitePending ? "pointer" : "not-allowed" }}
                 >
-                  {invitePending ? "Enviando…" : "Enviar invitación"}
+                  {invitePending ? t("team.modals.invite.submittingBtn") : t("team.modals.invite.submitBtn")}
                 </button>
               </div>
             </div>
@@ -568,7 +578,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
           {/* ── CHANGE ROLE ── */}
           {modal === "role" && target && (
             <div onClick={(e) => e.stopPropagation()} style={{ width: "420px", maxWidth: "100%", background: S.surface, border: "1.5px solid " + S.ink, borderRadius: "18px", boxShadow: "6px 6px 0 " + S.ink, padding: "24px 26px" }}>
-              <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "19px", marginBottom: "4px" }}>Cambiar rol</div>
+              <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "19px", marginBottom: "4px" }}>{t("team.modals.role.title")}</div>
               <p style={{ fontSize: "12.5px", color: S.soft, margin: "0 0 18px" }}>{target.name} · {target.email}</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "9px", marginBottom: "16px" }}>
@@ -583,7 +593,7 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
                       <span style={{ width: "16px", height: "16px", borderRadius: "50%", border: `2px solid ${on ? S.brand : "#C8C2B8"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         {on && <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: S.brand }} />}
                       </span>
-                      <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "14px" }}>{{ hr_admin: "HR Admin", recruiter: "Recruiter", manager: "Manager" }[k]}</span>
+                      <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "14px" }}>{{ hr_admin: t("team.roles.hr_admin"), recruiter: t("team.roles.recruiter"), manager: t("team.roles.manager") }[k]}</span>
                       <span style={{ fontSize: "11.5px", color: S.soft, marginLeft: "auto" }}>{ROLE_HINTS[k]}</span>
                     </button>
                   );
@@ -593,19 +603,19 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
               {changeRoleVal === "recruiter" && (
                 <div style={{ display: "flex", gap: "9px", background: "#FBE9D9", border: "1px solid #EBC79A", borderRadius: "10px", padding: "11px 13px", marginBottom: "18px" }}>
                   <IconWarn />
-                  <span style={{ fontSize: "12px", color: "#7A5410", lineHeight: 1.5 }}>Perderá acceso a Ausencias, Horas y módulos sensibles.</span>
+                  <span style={{ fontSize: "12px", color: "#7A5410", lineHeight: 1.5 }}>{t("team.modals.role.warning")}</span>
                 </div>
               )}
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "9px" }}>
-                <button onClick={closeModal} style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "13px", color: S.soft, background: "none", border: "none", cursor: "pointer", padding: "10px 12px" }}>Cancelar</button>
+                <button onClick={closeModal} style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "13px", color: S.soft, background: "none", border: "none", cursor: "pointer", padding: "10px 12px" }}>{t("team.modals.role.cancelBtn")}</button>
                 <button
                   onClick={handleChangeRole}
                   disabled={rolePending}
                   className="di-hard"
                   style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: S.brand, border: "1.5px solid " + S.ink, borderRadius: "10px", padding: "10px 16px", boxShadow: "2px 2px 0 " + S.ink, cursor: "pointer" }}
                 >
-                  {rolePending ? "Guardando…" : "Guardar cambio"}
+                  {rolePending ? t("team.modals.role.submittingBtn") : t("team.modals.role.submitBtn")}
                 </button>
               </div>
             </div>
@@ -617,17 +627,17 @@ export function TeamPanel({ members, pending, allEmployees, memberEmpIds: member
               <div style={{ width: "42px", height: "42px", borderRadius: "11px", background: "#F6D9D2", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "14px" }}>
                 <IconX />
               </div>
-              <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "19px", marginBottom: "6px" }}>¿Revocar acceso a {target.name}?</div>
-              <p style={{ fontSize: "13px", color: S.soft, lineHeight: 1.55, margin: "0 0 22px" }}>Esta persona perderá el acceso inmediatamente. Puedes volver a invitarla cuando quieras.</p>
+              <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "19px", marginBottom: "6px" }}>{t("team.modals.revoke.title", { name: target.name })}</div>
+              <p style={{ fontSize: "13px", color: S.soft, lineHeight: 1.55, margin: "0 0 22px" }}>{t("team.modals.revoke.desc")}</p>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "9px" }}>
-                <button onClick={closeModal} style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "13px", color: S.soft, background: "none", border: "none", cursor: "pointer", padding: "10px 12px" }}>Cancelar</button>
+                <button onClick={closeModal} style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: "13px", color: S.soft, background: "none", border: "none", cursor: "pointer", padding: "10px 12px" }}>{t("team.modals.revoke.cancelBtn")}</button>
                 <button
                   onClick={handleRevoke}
                   disabled={revokePending}
                   className="di-hard"
                   style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: S.accent, border: "1.5px solid " + S.ink, borderRadius: "10px", padding: "10px 16px", boxShadow: "2px 2px 0 " + S.ink, cursor: "pointer" }}
                 >
-                  {revokePending ? "Revocando…" : "Revocar acceso"}
+                  {revokePending ? t("team.modals.revoke.submittingBtn") : t("team.modals.revoke.submitBtn")}
                 </button>
               </div>
             </div>

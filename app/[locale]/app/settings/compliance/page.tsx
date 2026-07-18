@@ -2,9 +2,12 @@ import { PageHeader } from "@/components/page-header";
 import { ComplianceSettingsPanel } from "@/components/features/compliance-settings-panel";
 import { createClient } from "@/lib/supabase/server";
 import type { ComplianceConfig, ComplianceViolation } from "@/lib/types";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
-export default async function CompliancePage() {
+export default async function CompliancePage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
   const supabase = createClient();
+  const t = await getTranslations({ locale: params.locale, namespace: "Settings" });
 
   const { data: company } = await supabase
     .from("companies")
@@ -30,9 +33,9 @@ export default async function CompliancePage() {
   return (
     <div>
       <PageHeader
-        title="Compliance"
-        eyebrow="Ajustes"
-        description="Reglas de tiempo de trabajo y alertas de incumplimiento."
+        title={t("compliance.title")}
+        eyebrow={t("eyebrow")}
+        description={t("compliance.description")}
       />
       <ComplianceSettingsPanel
         config={(config ?? null) as ComplianceConfig | null}

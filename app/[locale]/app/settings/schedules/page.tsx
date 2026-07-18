@@ -2,9 +2,12 @@ import { PageHeader } from "@/components/page-header";
 import { ScheduleSettingsPanel } from "@/components/features/schedule-settings-panel";
 import { createClient } from "@/lib/supabase/server";
 import type { WorkScheduleTemplate } from "@/lib/types";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
-export default async function SchedulesSettingsPage() {
+export default async function SchedulesSettingsPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
   const supabase = createClient();
+  const t = await getTranslations({ locale: params.locale, namespace: "Settings" });
 
   const { data: company } = await supabase
     .from("companies")
@@ -23,9 +26,9 @@ export default async function SchedulesSettingsPage() {
   return (
     <div>
       <PageHeader
-        title="Horarios"
-        eyebrow="Ajustes"
-        description="Plantillas de horario laboral para tus empleados."
+        title={t("schedules.title")}
+        eyebrow={t("eyebrow")}
+        description={t("schedules.description")}
       />
       <ScheduleSettingsPanel
         templates={templates as never ?? []}
