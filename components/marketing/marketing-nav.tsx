@@ -40,7 +40,11 @@ const MENU_COLS: MenuCol[] = [
   },
 ];
 
-const LOCALE_LABELS: Record<Locale, string> = { es: "Español", en: "English", pt: "Português" };
+const LOCALE_LABELS: Record<Locale, string> = {
+  "es-ve": "Español (Venezuela)",
+  "en-us": "English (US)",
+  "pt-br": "Português (Brasil)",
+};
 
 export function MarketingNav() {
   const t = useTranslations("Landing.nav");
@@ -105,7 +109,7 @@ export function MarketingNav() {
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setLangOpen((o) => !o); }}
               >
                 <MIcon name="globe" size={13} />
-                {locale.toUpperCase()}
+                {locale.split("-")[0].toUpperCase()}
                 <span style={{ display: "flex", transition: "transform .15s ease", transform: langOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
                   <MIcon name="chevron" size={11} />
                 </span>
@@ -119,7 +123,7 @@ export function MarketingNav() {
                       onClick={() => switchLocale(l)}
                       style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "8px 10px", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 13, fontWeight: l === locale ? 700 : 600, color: l === locale ? "var(--brand)" : "#54504A", background: "transparent", border: "none", cursor: "pointer" }}
                     >
-                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: ".5px", color: l === locale ? "var(--brand)" : "var(--soft)", border: "1px solid", borderColor: l === locale ? "#BEE0CE" : "var(--line)", borderRadius: 6, padding: "1px 5px" }}>{l.toUpperCase()}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: ".5px", color: l === locale ? "var(--brand)" : "var(--soft)", border: "1px solid", borderColor: l === locale ? "#BEE0CE" : "var(--line)", borderRadius: 6, padding: "1px 5px" }}>{(l.split("-")[1] ?? l).toUpperCase()}</span>
                       {LOCALE_LABELS[l]}
                     </button>
                   ))}
