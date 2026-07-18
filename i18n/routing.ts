@@ -32,6 +32,11 @@ export const pathnames = {
     "en-us": "/jobs/opening/[slug]",
     "pt-br": "/vagas/vaga/[slug]",
   },
+  "/empleos/oferta/[slug]/aplicar": {
+    "es-ve": "/empleos/oferta/[slug]/aplicar",
+    "en-us": "/jobs/opening/[slug]/apply",
+    "pt-br": "/vagas/vaga/[slug]/candidatar",
+  },
   "/cuenta": { "es-ve": "/cuenta", "en-us": "/account", "pt-br": "/conta" },
   "/cuenta/entrar": { "es-ve": "/cuenta/entrar", "en-us": "/account/sign-in", "pt-br": "/conta/entrar" },
   "/cuenta/perfil": { "es-ve": "/cuenta/perfil", "en-us": "/account/profile", "pt-br": "/conta/perfil" },

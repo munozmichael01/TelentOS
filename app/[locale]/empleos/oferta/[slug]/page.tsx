@@ -184,13 +184,7 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
         </>}
       </div>
 
-      <JobApplyBar
-        jobId={job.id}
-        jobTitle={job.title}
-        companyName={job.company?.name ?? ""}
-        screening={screening as { id: string; type: string; prompt: string; options: string[]; required: boolean }[]}
-        locale={locale}
-      />
+      <JobApplyBar jobId={job.id} slug={params.slug} locale={locale} />
     </div>
   );
 }
