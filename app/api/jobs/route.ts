@@ -34,6 +34,7 @@ export async function POST(req: Request) {
       sector: body.sector ?? null,
       department: body.department ?? null,
       category: body.category ?? null,
+      category_key: body.category_key ?? null,
       experience_min_years: body.experience_min_years ?? 0,
       status: body.status === "active" ? "active" : "draft",
       source: body.source === "ai" ? "ai" : "manual",

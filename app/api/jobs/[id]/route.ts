@@ -6,7 +6,7 @@ import { dedupeStrings, resolveSkillIds } from "@/lib/skills";
 const EDITABLE = [
   "title", "description", "skills", "salary_min", "salary_max", "salary_currency",
   "location", "city", "country_code", "employment_type", "sector", "department",
-  "category", "experience_min_years", "status",
+  "category", "category_key", "experience_min_years", "status",
 ] as const;
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {

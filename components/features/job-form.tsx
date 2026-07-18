@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Loader2, X } from "lucide-react";
 import { LocationAutocomplete } from "@/components/features/location-autocomplete";
+import { getCategories } from "@/lib/board/categories";
 import type { Job } from "@/lib/types";
 import type { JobDraft } from "@/agents/agent-job-writer";
 import { Input } from "@/components/ui/input";
@@ -27,17 +29,20 @@ type FormState = {
   sector: string;
   department: string;
   category: string;
+  category_key: string;
   experience_min_years: string;
 };
 
 const EMPTY: FormState = {
   title: "", description: "", skills: [], salary_min: "", salary_max: "",
   location: "", employment_type: "full_time", sector: "", department: "",
-  category: "", experience_min_years: "0",
+  category: "", category_key: "", experience_min_years: "0",
 };
 
 export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }) {
   const router = useRouter();
+  const locale = useLocale();
+  const categories = getCategories(locale);
   const [form, setForm] = useState<FormState>(
     job
       ? {
@@ -51,6 +56,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
           sector: job.sector ?? "",
           department: job.department ?? "",
           category: job.category ?? "",
+          category_key: (job as { category_key?: string | null }).category_key ?? "",
           experience_min_years: job.experience_min_years.toString(),
         }
       : EMPTY
@@ -158,6 +164,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
         sector: form.sector || null,
         department: form.department || null,
         category: form.category || null,
+        category_key: form.category_key || null,
         experience_min_years: Number(form.experience_min_years) || 0,
         status,
         source: usedAI ? "ai" : "manual",
@@ -260,6 +267,13 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
                 <option value="part_time">Jornada parcial</option>
                 <option value="contract">Temporal / contrato</option>
                 <option value="internship">Prácticas</option>
+              </NativeSelect>
+            </div>
+            <div>
+              <div style={fieldLabel}>Categoría</div>
+              <NativeSelect value={form.category_key} onChange={(e) => set("category_key", e.target.value)}>
+                <option value="">Sin categoría</option>
+                {categories.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
               </NativeSelect>
             </div>
             <div>
