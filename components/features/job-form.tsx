@@ -169,7 +169,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al guardar");
-      router.push(`/jobs/${job?.id ?? data.job.id}`);
+      router.push(`/app/jobs/${job?.id ?? data.job.id}`);
       router.refresh();
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));

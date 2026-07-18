@@ -361,7 +361,7 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
       <div>
         {/* Back */}
         <button
-          onClick={() => router.push("/payroll/profiles")}
+          onClick={() => router.push("/app/payroll/profiles")}
           style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft, background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "12px" }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -481,7 +481,7 @@ export function PayProfileView({ employeeId }: { employeeId: string }) {
                     <div style={{ fontSize: "13.5px", fontWeight: 600, marginTop: "8px", lineHeight: 1.4 }}>
                       Pack {PACK_LABEL[data.company?.country_pack ?? "generic"] ?? "Genérico"} — gestión, sin retenciones legales
                     </div>
-                    <a href="/settings/payroll" style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: T.brand, textDecoration: "none", marginTop: "5px", display: "inline-block" }}>
+                    <a href="/app/settings/payroll" style={{ fontFamily: "'Space Mono',monospace", fontSize: "10px", color: T.brand, textDecoration: "none", marginTop: "5px", display: "inline-block" }}>
                       Cambiar pack en Ajustes →
                     </a>
                   </div>

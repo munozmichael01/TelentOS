@@ -42,7 +42,7 @@ export function ResetPasswordForm() {
       return;
     }
     setDone(true);
-    setTimeout(() => router.push("/dashboard"), 2500);
+    setTimeout(() => router.push("/app/dashboard"), 2500);
   }
 
   return (

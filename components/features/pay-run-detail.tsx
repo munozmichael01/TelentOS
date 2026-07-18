@@ -651,7 +651,7 @@ export function PayRunDetail({ id, companyName, companyPack, role }: { id: strin
       <div>
         {/* Back */}
         <button
-          onClick={() => router.push("/payroll")}
+          onClick={() => router.push("/app/payroll")}
           style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "'Space Mono',monospace", fontSize: "11px", color: T.soft, background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "12px" }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>

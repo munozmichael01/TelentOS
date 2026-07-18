@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, X, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /**
  * «Añadirme como empleado» (DS §3.7). Puente user↔employee: el user que además es
@@ -15,6 +16,7 @@ const DISMISS_KEY = "add-me-employee-dismissed";
 
 export function AddMeAsEmployee({ name }: { name: string }) {
   const router = useRouter();
+  const t = useTranslations("People");
   const [state, setState] = useState<"offer" | "success" | "hidden">("hidden");
   const [empId, setEmpId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +36,7 @@ export function AddMeAsEmployee({ name }: { name: string }) {
     try {
       const res = await fetch("/api/employees/self", { method: "POST" });
       const j = await res.json();
-      if (!res.ok) throw new Error(j.error || "No se pudo crear tu ficha");
+      if (!res.ok) throw new Error(j.error || t("addMe.offer.errorMsg"));
       setEmpId(j.employee?.id ?? null);
       setState("success");
       // Deja ver el estado de éxito (§3.7) antes de que el roster se refresque y lo oculte.
@@ -55,12 +57,12 @@ export function AddMeAsEmployee({ name }: { name: string }) {
           <Check size={18} strokeWidth={2.4} />
         </span>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px", color: "#0E3D2C" }}>Tu ficha está creada</div>
-          <div style={{ fontSize: "13px", color: "#3E6B57", marginTop: "1px" }}>Ya apareces en la plantilla.</div>
+          <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px", color: "#0E3D2C" }}>{t("addMe.success.title")}</div>
+          <div style={{ fontSize: "13px", color: "#3E6B57", marginTop: "1px" }}>{t("addMe.success.subtitle")}</div>
         </div>
         {empId && (
-          <Link href={`/employees/${empId}`} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "none", whiteSpace: "nowrap" }}>
-            Completar ficha →
+          <Link href={`/app/employees/${empId}`} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "none", whiteSpace: "nowrap" }}>
+            {t("addMe.success.completeLink")}
           </Link>
         )}
       </div>
@@ -77,10 +79,10 @@ export function AddMeAsEmployee({ name }: { name: string }) {
       </span>
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", color: "#1A1A17" }}>
-          {first ? `${first}, ¿trabajas aquí también?` : "¿Trabajas aquí también?"}
+          {first ? t("addMe.offer.titleWithFirst", { first }) : t("addMe.offer.title")}
         </div>
         <div style={{ fontSize: "13px", color: "#5B6B3A", marginTop: "2px", lineHeight: 1.5 }}>
-          Añádete a la plantilla con un clic. Creamos tu ficha desde tu nombre y email; podrás completarla después.
+          {t("addMe.offer.subtitle")}
         </div>
         {error && <div style={{ fontSize: "12.5px", color: "#C0392B", marginTop: "6px" }}>{error}</div>}
       </div>
@@ -90,9 +92,9 @@ export function AddMeAsEmployee({ name }: { name: string }) {
         style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: "6px", padding: "9px 15px", borderRadius: "10px", border: "2px solid #1A1A17", boxShadow: loading ? "none" : "3px 3px 0 #1A1A17", background: "#C6F24E", color: "#1A1A17", fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13.5px", cursor: loading ? "default" : "pointer" }}
       >
         {loading && <Loader2 size={14} className="animate-spin" />}
-        Añadirme
+        {t("addMe.offer.button")}
       </button>
-      <button onClick={dismiss} aria-label="Descartar" style={{ position: "absolute", top: "8px", right: "8px", color: "#8A8A6E", background: "none", border: "none", cursor: "pointer", padding: "2px" }}>
+      <button onClick={dismiss} aria-label={t("addMe.offer.dismissLabel")} style={{ position: "absolute", top: "8px", right: "8px", color: "#8A8A6E", background: "none", border: "none", cursor: "pointer", padding: "2px" }}>
         <X size={15} />
       </button>
     </div>

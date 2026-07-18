@@ -115,7 +115,7 @@ export function PayrollDashboard() {
       >
         {currentRunId && (
           <button
-            onClick={() => router.push(`/payroll/runs/${currentRunId}`)}
+            onClick={() => router.push(`/app/payroll/runs/${currentRunId}`)}
             style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: "13px", color: T.ink, background: T.surface, border: `1.5px solid ${T.line}`, borderRadius: "11px", padding: "10px 15px", cursor: "pointer" }}
           >
             Revisar incidencias
@@ -123,7 +123,7 @@ export function PayrollDashboard() {
         )}
         {currentRunId && (
           <button
-            onClick={() => router.push(`/payroll/runs/${currentRunId}`)}
+            onClick={() => router.push(`/app/payroll/runs/${currentRunId}`)}
             style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: T.brand, border: `2px solid ${T.ink}`, borderRadius: "11px", padding: "10px 18px", boxShadow: `3px 3px 0 ${T.ink}`, cursor: "pointer", transition: "transform .1s,box-shadow .1s" }}
             onMouseOver={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = `4px 4px 0 ${T.ink}`; }}
             onMouseOut={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = `3px 3px 0 ${T.ink}`; }}
@@ -206,7 +206,7 @@ export function PayrollDashboard() {
               {alerts.map((a, i) => (
                 <div
                   key={i}
-                  onClick={() => currentRunId && router.push(`/payroll/runs/${currentRunId}`)}
+                  onClick={() => currentRunId && router.push(`/app/payroll/runs/${currentRunId}`)}
                   style={{ display: "flex", alignItems: "flex-start", gap: "11px", padding: "11px 10px", margin: "0 -10px", borderRadius: "10px", cursor: "pointer", transition: "background .1s" }}
                   onMouseOver={(e) => { e.currentTarget.style.background = "#F8F4EB"; }}
                   onMouseOut={(e) => { e.currentTarget.style.background = ""; }}
@@ -231,7 +231,7 @@ export function PayrollDashboard() {
         <div style={{ display: "flex", alignItems: "center", padding: "15px 20px", borderBottom: `1px solid ${T.line}` }}>
           <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px" }}>Últimas corridas</span>
           <button
-            onClick={() => router.push("/payroll/runs")}
+            onClick={() => router.push("/app/payroll/runs")}
             style={{ marginLeft: "auto", fontSize: "12.5px", fontWeight: 700, color: T.brand, background: "none", border: "none", cursor: "pointer", padding: 0 }}
           >
             Ver todas →
@@ -248,7 +248,7 @@ export function PayrollDashboard() {
           return (
             <div
               key={r.id}
-              onClick={() => router.push(`/payroll/runs/${r.id}`)}
+              onClick={() => router.push(`/app/payroll/runs/${r.id}`)}
               style={{ display: "grid", gridTemplateColumns: "1.3fr 1.2fr 0.7fr 1fr 1fr 0.6fr", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${T.line}`, cursor: "pointer", transition: "background .1s" }}
               onMouseOver={(e) => { e.currentTarget.style.background = "#F8F4EB"; }}
               onMouseOut={(e) => { e.currentTarget.style.background = ""; }}

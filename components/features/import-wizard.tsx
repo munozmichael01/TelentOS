@@ -107,7 +107,7 @@ export function ImportWizard() {
           {done.skipped > 0 && (
             <p className="text-sm text-muted-foreground">{done.skipped} omitidas (duplicados o errores)</p>
           )}
-          <Button onClick={() => { router.push("/jobs"); router.refresh(); }}>Ver ofertas</Button>
+          <Button onClick={() => { router.push("/app/jobs"); router.refresh(); }}>Ver ofertas</Button>
         </CardContent>
       </Card>
     );

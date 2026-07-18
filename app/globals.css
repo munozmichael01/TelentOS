@@ -250,3 +250,11 @@
   /* Reduce content padding */
   .app-content { padding: 16px !important; }
 }
+
+/* ── Job board (superficie pública candidato) — interacciones hard-shadow ── */
+.jb-hard { transition: transform .1s ease, box-shadow .1s ease; }
+.jb-hard:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #1A1A17; }
+.jb-hard:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #1A1A17; }
+.jb-job { transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
+.jb-job:hover { transform: translateY(-2px); border-color: #D2C9B6; box-shadow: 0 12px 24px -16px rgba(26,26,23,.5); }
+.jb-job:active { transform: translateY(0); }

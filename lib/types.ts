@@ -34,12 +34,65 @@ export type Job = {
   department: string | null;
   category: string | null;
   experience_min_years: number;
+  education_level: EducationLevel | null;
+  seniority_level: SeniorityLevel | null;
+  modality: "presencial" | "hibrido" | "remoto" | null;
   status: JobStatus;
   source: string;
   external_id: string | null;
   dedupe_hash: string | null;
   created_at: string;
   updated_at: string;
+};
+
+// ── Job Board: requisitos estructurados, screening, identidad de candidato (0037) ──
+export type EducationLevel = "none" | "secondary" | "vocational" | "bachelor" | "master" | "phd";
+export type SeniorityLevel = "junior" | "mid" | "senior" | "lead" | "principal" | "manager" | "director";
+export type SkillRequirement = "excluyente" | "deseable";
+
+export type ScreeningQuestion = {
+  id: string;
+  job_id: string;
+  type: "yes_no" | "single_choice" | "text" | "url";
+  prompt: string;
+  options: string[];
+  required: boolean;
+  mode: "filter" | "weighted";
+  filter_rule: unknown | null; // respuesta que descarta (mode=filter)
+  weight: number; // ± puntos (mode=weighted)
+  order_index: number;
+};
+
+export type CandidateProfile = {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  headline: string | null;
+  about: string | null;
+  city: string | null;
+  country_code: string | null;
+  experience_years: number | null;
+  education: unknown[];
+  languages: unknown[];
+  pref_salary_min: number | null;
+  pref_currency: string | null;
+  pref_modality: string[];
+  pref_locations: string[];
+  pref_contract: string[];
+  completeness: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SavedJob = { id: string; user_id: string; job_id: string; created_at: string };
+export type JobAlert = {
+  id: string;
+  user_id: string;
+  criteria: Record<string, unknown>;
+  active: boolean;
+  created_at: string;
 };
 
 export type JobStage = {

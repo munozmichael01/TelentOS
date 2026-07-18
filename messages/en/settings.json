@@ -1,0 +1,466 @@
+{
+  "eyebrow": "Settings",
+  "company": {
+    "title": "Company",
+    "description": "Configure your company and public career site.",
+    "publicSite": "Your public career site:",
+    "form": {
+      "nameLabel": "Company Name *",
+      "slugLabel": "Career Site Slug",
+      "slugPlaceholder": "my-company",
+      "descriptionLabel": "Public Description",
+      "descriptionPlaceholder": "Displayed in the header of the career site.",
+      "websiteLabel": "Website",
+      "addressLabel": "Address / City",
+      "addressPlaceholder": "Madrid, Community of Madrid, Spain",
+      "addressHelp": "Will be displayed on the public career site page.",
+      "payrollSection": "Payroll",
+      "countryLabel": "Operating Country",
+      "countryDefault": "Not specified (generic pack)",
+      "countryHelp": "Defines the calculation pack and default currency for new salary profiles.",
+      "rifLabel": "Fiscal ID (RIF / NIF)",
+      "rifPlaceholder": "J-XXXXXXXX-X",
+      "logoLabel": "Logo",
+      "saveBtn": "Save",
+      "savingBtn": "Saving...",
+      "savedMsg": "Saved ✓",
+      "errorMsg": "Error saving"
+    }
+  },
+  "team": {
+    "title": "Team",
+    "description": "Manage who has access to the workspace and with which role.",
+    "loadError": "Could not load the team.",
+    "active": {
+      "title": "Active members",
+      "count": "{count, plural, =1 {# person with access} other {# people with access}}",
+      "inviteBtn": "Invite person"
+    },
+    "pending": {
+      "title": "Pending invitations",
+      "count": "{count, plural, =0 {No pending} =1 {# pending} other {# pending}}",
+      "invitedBy": "Invited by {inviter} · {time}",
+      "resendBtn": "Resend",
+      "cancelBtn": "Cancel"
+    },
+    "table": {
+      "member": "Member",
+      "role": "Role",
+      "linked": "Linked employee",
+      "joined": "Joined",
+      "unlinked": "Not linked",
+      "you": "you",
+      "menu": {
+        "changeRole": "Change role",
+        "unlink": "Unlink employee",
+        "revoke": "Revoke access"
+      }
+    },
+    "modals": {
+      "invite": {
+        "title": "Invite person",
+        "desc": "An access link will be sent by email.",
+        "label": "Person",
+        "placeholder": "Name or email...",
+        "removeBtn": "Remove",
+        "externalNote": "External invitation · no employee profile. Will be sent to {email}.",
+        "roleLabel": "Role",
+        "managerWarning": "The Manager role requires an employee profile to calculate their team. Choose someone from the staff.",
+        "managerTeamPreview": "Will see their team · {count, plural, =1 {# person} other {# people}}",
+        "managerNoTeamWarn": "{name} has no direct reports in the org chart — as a Manager they would see no team. Assign reports to them or choose another role.",
+        "managerRoleHelp": "A manager only sees people reporting to them in the org chart. Link them to their profile to calculate their team.",
+        "defaultRoleHelp": "Type a name to choose an employee, or an email to invite someone external.",
+        "alreadyMember": "{name} is already an active member of the team — cannot invite again.",
+        "invalidEmail": "Invalid email",
+        "cancelBtn": "Cancel",
+        "submitBtn": "Send invitation",
+        "submittingBtn": "Sending...",
+        "successToast": "Invitation sent",
+        "errorToast": "Error sending invitation"
+      },
+      "role": {
+        "title": "Change role",
+        "warning": "Will lose access to Time off, Hours, and sensitive modules.",
+        "cancelBtn": "Cancel",
+        "submitBtn": "Save change",
+        "submittingBtn": "Saving...",
+        "successToast": "Role updated"
+      },
+      "revoke": {
+        "title": "Revoke access for {name}?",
+        "desc": "This person will lose access immediately. You can invite them again at any time.",
+        "cancelBtn": "Cancel",
+        "submitBtn": "Revoke access",
+        "submittingBtn": "Revoking...",
+        "successToast": "Access revoked"
+      }
+    },
+    "toast": {
+      "resendSuccess": "Invitation resent"
+    },
+    "roles": {
+      "owner": "Owner",
+      "hr_admin": "HR Admin",
+      "recruiter": "Recruiter",
+      "manager": "Manager",
+      "hints": {
+        "hr_admin": "Everything except billing",
+        "recruiter": "Recruiting only",
+        "manager": "Their team"
+      }
+    },
+    "relativeTime": {
+      "today": "today",
+      "oneDayAgo": "1 day ago",
+      "daysAgo": "{count} days ago",
+      "oneMonthAgo": "1 month ago",
+      "monthsAgo": "{count} months ago"
+    }
+  },
+  "absences": {
+    "title": "Time Off",
+    "description": "Company time off types, policies, and holidays.",
+    "types": {
+      "count": "{count, plural, =1 {# type configured} other {# types configured}}",
+      "newBtn": "New type",
+      "deducts": "Deducts from",
+      "permiso": "allowance",
+      "requiresApproval": "Requires approval",
+      "public": "Public",
+      "empty": {
+        "title": "No time off types",
+        "desc": "Create types one by one or use the 6 default types which include vacation, sick leave, family leave, and more.",
+        "btn": "Create default types",
+        "help": "Also creates a Vacation Days balance type (22 days) and its annual policy"
+      },
+      "modal": {
+        "createTitle": "New time off type",
+        "editTitle": "Edit time off type",
+        "name": "Name *",
+        "namePlaceholder": "e.g. Vacation, Sick leave…",
+        "icon": "Icon (emoji)",
+        "color": "Color",
+        "requiresApprovalLabel": "Requires approval",
+        "deductsLabel": "Deducts from allowance balance",
+        "allowanceTypeLabel": "Deducted allowance type *",
+        "allowanceTypePlaceholder": "Select allowance type…",
+        "publicLabel": "Visible to all employees",
+        "requiresDocumentLabel": "Requires supporting document",
+        "allowHalfDayLabel": "Allows half day",
+        "cancelBtn": "Cancel",
+        "saveBtn": "Save changes",
+        "createBtn": "Create type"
+      },
+      "delete": {
+        "title": "Delete time off type",
+        "desc": "This action cannot be undone. Are you sure?",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      }
+    },
+    "policies": {
+      "title": "Allowance Policies",
+      "saldoTitle": "Allowance Types",
+      "saldoNew": "New allowance type",
+      "saldoEmpty": "No allowance types configured",
+      "saldoTable": {
+        "name": "Name",
+        "unit": "Unit",
+        "status": "Status",
+        "action": "Action",
+        "days": "Days",
+        "hours": "Hours",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "policyTitle": "Policies",
+      "policyNew": "New policy",
+      "policyEmpty": "No policies configured",
+      "policyTable": {
+        "name": "Name",
+        "type": "Type",
+        "amount": "Amt.",
+        "cycle": "Cycle",
+        "carryover": "Carryover",
+        "status": "Status",
+        "action": "Action",
+        "default": "Default",
+        "cycles": {
+          "year": "Annual",
+          "month": "Monthly",
+          "quarter": "Quarterly"
+        }
+      },
+      "saldoModal": {
+        "title": "New allowance type",
+        "name": "Name *",
+        "unit": "Measurement unit",
+        "days": "Days",
+        "hours": "Hours",
+        "cancel": "Cancel",
+        "save": "Create"
+      },
+      "policyModal": {
+        "title": "New policy",
+        "name": "Policy name *",
+        "type": "Allowance type *",
+        "typePlaceholder": "Select allowance type…",
+        "amount": "Amount per cycle *",
+        "cycle": "Accrual cycle",
+        "cycles": {
+          "year": "Calendar year",
+          "month": "Month"
+        },
+        "carryover": "Carryover limit to next cycle",
+        "default": "Set as default policy",
+        "cancel": "Cancel",
+        "save": "Create"
+      },
+      "delete": {
+        "title": "Delete policy",
+        "desc": "This action cannot be undone and will unlink assigned employees. Are you sure?",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      }
+    },
+    "holidays": {
+      "title": "Company Holidays",
+      "newBtn": "New holiday",
+      "empty": "No holidays configured",
+      "table": {
+        "name": "Name",
+        "date": "Date",
+        "type": "Type",
+        "action": "Action",
+        "repeats": "Repeats annually",
+        "noRepeats": "One-time use",
+        "halfDay": "Half day",
+        "fullDay": "Full day"
+      },
+      "modal": {
+        "title": "New holiday",
+        "name": "Name *",
+        "namePlaceholder": "e.g. New Year, Local holiday…",
+        "date": "Date *",
+        "repeats": "Repeats every year on this date",
+        "halfDay": "Is half day",
+        "cancel": "Cancel",
+        "save": "Create"
+      },
+      "delete": {
+        "title": "Delete holiday",
+        "desc": "This action cannot be undone. Are you sure?",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      }
+    }
+  },
+  "compliance": {
+    "title": "Compliance",
+    "description": "Work time rules and non-compliance alerts.",
+    "config": {
+      "title": "Configuration",
+      "desc": "Rules applied to time tracking",
+      "maxHours": "Max hours/day",
+      "maxHoursUnit": "hours",
+      "limitStart": "Clock-in limit",
+      "limitStartUnit": "HH:MM",
+      "minBreak": "Min break (h)",
+      "minBreakUnit": "hours",
+      "alertMax": "Alert on excess hours",
+      "alertBreak": "Alert on missing break",
+      "saveBtn": "Save configuration",
+      "savingBtn": "Saving...",
+      "savedMsg": "✓ Configuration saved",
+      "errorMsg": "Error saving"
+    },
+    "violations": {
+      "title": "Pending violations",
+      "desc": "Unacknowledged breaches",
+      "empty": "No pending violations",
+      "emptyDesc": "All logs comply with the configured rules",
+      "table": {
+        "employee": "Employee",
+        "date": "Date",
+        "type": "Type",
+        "desc": "Description",
+        "action": "Acknowledge"
+      },
+      "types": {
+        "max_hours_exceeded": "Hours exceeded",
+        "early_start": "Late clock-in",
+        "missing_break": "No break",
+        "insufficient_break": "Insufficient break"
+      }
+    }
+  },
+  "payroll": {
+    "title": "Payroll",
+    "description": "Select the calculation engine that applies to your company. Only the Generic pack is active; the others are previews with calculations not operational.",
+    "status": {
+      "preview": "Preview — calculations not operational",
+      "coming": "Coming soon",
+      "active": "Applying now"
+    },
+    "cta": {
+      "coming": "Select pack — Coming soon"
+    },
+    "packs": {
+      "generic": {
+        "label": "Generic",
+        "note": "Direct calculation: net = gross = company cost. Ideal for companies managing withholdings outside TalentOS.",
+        "chips": ["Base salary", "Gross = Net = Company cost", "No deductions", "No employer contributions"]
+      },
+      "ve": {
+        "label": "Venezuela",
+        "note": "Will apply SSO/RPE/FAOV/INCES, utilidades, social benefits, and dual VES/USD currency with period rate.",
+        "chips": ["Base salary", "Food allowance", "Utilidades", "Vacations + bonus", "Social benefits", "Advances", "ISLR", "SSO / RPE / FAOV"]
+      },
+      "br": {
+        "label": "Brazil",
+        "note": "Will apply INSS, FGTS, IRRF by brackets, 13º salário, vacations with +1/3, and benefits (meal/transport allowance).",
+        "chips": ["INSS", "FGTS", "IRRF", "13th salary", "Vacations + 1/3", "Meal/transport vouchers"]
+      },
+      "es": {
+        "label": "Spain",
+        "note": "Will apply bracket-based IRPF, Social Security contributions (company/employee), extra payments, and severance calculation.",
+        "chips": ["IRPF with brackets", "SS Contributions", "Extra pays (12/14)", "SMI", "Severance"]
+      },
+      "co": {
+        "label": "Colombia",
+        "note": "Coming soon: source withholdings, social security, parafiscales, and cesantías."
+      },
+      "mx": {
+        "label": "Mexico",
+        "note": "Coming soon: ISR, IMSS, INFONAVIT, and statutory benefits."
+      }
+    }
+  },
+  "schedules": {
+    "title": "Schedules",
+    "description": "Work schedule templates for your employees.",
+    "count": "{count, plural, =1 {# template} other {# templates}}",
+    "newBtn": "New template",
+    "empty": {
+      "title": "No schedule templates",
+      "desc": "Create schedule templates to easily assign them to your employees",
+      "btn": "Create first template"
+    },
+    "types": {
+      "single": "Single week",
+      "rotating": "Rotating week",
+      "rotatingLabel": "Rotating week (A/B)"
+    },
+    "badges": {
+      "default": "Default",
+      "active": "Active"
+    },
+    "actions": {
+      "setDefault": "Set as default"
+    },
+    "preview": {
+      "total": "TOTAL: {time} / week"
+    },
+    "builder": {
+      "entrada": "Start",
+      "salida": "End"
+    },
+    "modal": {
+      "title": "New schedule template",
+      "nameLabel": "Template name *",
+      "namePlaceholder": "e.g. Full-time M-F",
+      "typeLabel": "Week type",
+      "defaultLabel": "Default template",
+      "tabA": "Week A",
+      "tabB": "Week B",
+      "cancel": "Cancel",
+      "save": "Create template"
+    },
+    "delete": {
+      "title": "Delete template",
+      "desc": "This action cannot be undone. Assigned employees will lose their reference work schedule.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    }
+  },
+  "skills": {
+    "title": "Skills Catalog",
+    "description": "Canonical vocabulary feeding the candidate-job matching. The CV parser and jobs resolve against these entities; aliases collapse variants to the canonical name.",
+    "footer": "Read-only. New skills are automatically added when confirming a CV or saving a job; catalog curation (editing aliases, merging duplicates) will arrive in Settings.",
+    "count": "{count} candidate{count, plural, =1 {} other {s}} · {countJobs} job{countJobs, plural, =1 {} other {s}}",
+    "alias": "alias: {aliases}",
+    "categories": {
+      "language": "Languages",
+      "framework": "Frameworks",
+      "tool": "Tools",
+      "domain": "Domain",
+      "soft": "Soft skills",
+      "otras": "Unclassified"
+    }
+  },
+  "billing": {
+    "title": "Billing",
+    "description": "Plan, usage, and billing for your account.",
+    "plan": {
+      "title": "Current plan",
+      "priceUnit": "/ month",
+      "cycleDesc": "Annual billing · next invoice Aug 1, 2025",
+      "changeBtn": "Change plan"
+    },
+    "payment": {
+      "title": "Payment method",
+      "expires": "Expires {date}",
+      "updateBtn": "Update payment method"
+    },
+    "usage": {
+      "title": "Plan usage",
+      "items": {
+        "employees": "Active employees",
+        "seats": "Members (seats)",
+        "jobs": "Active jobs"
+      }
+    },
+    "invoices": {
+      "title": "Invoice history",
+      "items": {
+        "june": "TalentOS Pro — June",
+        "may": "TalentOS Pro — May",
+        "april": "TalentOS Pro — April"
+      },
+      "table": {
+        "date": "Date",
+        "concept": "Concept",
+        "amount": "Amount",
+        "status": "Status",
+        "paid": "Paid"
+      }
+    }
+  },
+  "countries": {
+    "ES": "Spain",
+    "VE": "Venezuela",
+    "BR": "Brazil",
+    "CO": "Colombia",
+    "MX": "Mexico"
+  },
+  "days": {
+    "short": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    },
+    "full": {
+      "0": "Monday",
+      "1": "Tuesday",
+      "2": "Wednesday",
+      "3": "Thursday",
+      "4": "Friday",
+      "5": "Saturday",
+      "6": "Sunday"
+    }
+  }
+}

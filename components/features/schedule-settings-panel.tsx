@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { apiFetch, notifyError } from "@/lib/api-client";
 import { Loader2, Plus, Pencil, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,17 +51,6 @@ type ScheduleTemplate = {
 };
 
 // ─── constants ───────────────────────────────────────────────────────────────
-
-const DAYS_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-const DAY_FULL = [
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
-  "Domingo",
-];
 
 const CARD_STYLE = {
   background: "#FCFAF6",
@@ -137,6 +127,17 @@ function timeToMinutes(t: string) {
 // ─── Mini week grid ───────────────────────────────────────────────────────────
 
 function WeekPreview({ week }: { week: ScheduleWeek }) {
+  const t = useTranslations("Settings");
+  const DAYS_SHORT = [
+    t("days.short.0"),
+    t("days.short.1"),
+    t("days.short.2"),
+    t("days.short.3"),
+    t("days.short.4"),
+    t("days.short.5"),
+    t("days.short.6"),
+  ];
+
   const totalMinutes = week.days
     .filter((d) => d.is_working)
     .reduce((sum, d) => sum + d.total_minutes, 0);
@@ -151,7 +152,7 @@ function WeekPreview({ week }: { week: ScheduleWeek }) {
           marginBottom: "8px",
         }}
       >
-        {DAYS_ES.map((label, i) => {
+        {DAYS_SHORT.map((label, i) => {
           const day = week.days.find((d) => d.day_of_week === i);
           const active = day?.is_working ?? false;
           return (
@@ -204,7 +205,7 @@ function WeekPreview({ week }: { week: ScheduleWeek }) {
           letterSpacing: "0.5px",
         }}
       >
-        TOTAL: {minutesToHours(totalMinutes)} / semana
+        {t("schedules.preview.total", { time: minutesToHours(totalMinutes) })}
       </p>
     </div>
   );
@@ -221,7 +222,7 @@ type DayForm = {
 type WeekForm = DayForm[];
 
 function buildEmptyWeek(): WeekForm {
-  return DAY_FULL.map((_, i) => ({
+  return Array.from({ length: 7 }).map((_, i) => ({
     is_working: i < 5, // Mon-Fri default
     start: "09:00",
     end: "18:00",
@@ -237,6 +238,17 @@ function ScheduleWeekBuilder({
   label: string;
   onChange: (w: WeekForm) => void;
 }) {
+  const t = useTranslations("Settings");
+  const DAY_FULL = [
+    t("days.full.0"),
+    t("days.full.1"),
+    t("days.full.2"),
+    t("days.full.3"),
+    t("days.full.4"),
+    t("days.full.5"),
+    t("days.full.6"),
+  ];
+
   return (
     <div>
       {label && (
@@ -289,7 +301,7 @@ function ScheduleWeekBuilder({
                     color: "#79746B",
                   }}
                 >
-                  Entrada
+                  {t("schedules.builder.entrada")}
                 </Label>
                 <TimeField
                   value={d.start}
@@ -312,7 +324,7 @@ function ScheduleWeekBuilder({
                     color: "#79746B",
                   }}
                 >
-                  Salida
+                  {t("schedules.builder.salida")}
                 </Label>
                 <TimeField
                   value={d.end}
@@ -340,6 +352,7 @@ export function ScheduleSettingsPanel({
 }: {
   templates: ScheduleTemplate[];
 }) {
+  const t = useTranslations("Settings");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -447,11 +460,11 @@ export function ScheduleSettingsPanel({
             color: "#79746B",
           }}
         >
-          {templates.length} plantilla{templates.length !== 1 ? "s" : ""}
+          {t("schedules.count", { count: templates.length })}
         </p>
         <Button onClick={openCreate}>
           <Plus />
-          Nueva plantilla
+          {t("schedules.newBtn")}
         </Button>
       </div>
 
@@ -473,7 +486,7 @@ export function ScheduleSettingsPanel({
               marginBottom: "10px",
             }}
           >
-            Sin plantillas de horario
+            {t("schedules.empty.title")}
           </p>
           <p
             style={{
@@ -484,12 +497,11 @@ export function ScheduleSettingsPanel({
               margin: "0 auto 24px",
             }}
           >
-            Crea plantillas de horario para asignarlas a tus empleados de
-            forma sencilla
+            {t("schedules.empty.desc")}
           </p>
           <Button onClick={openCreate}>
             <Plus />
-            Crear primera plantilla
+            {t("schedules.empty.btn")}
           </Button>
         </div>
       ) : (
@@ -500,15 +512,15 @@ export function ScheduleSettingsPanel({
             gap: "14px",
           }}
         >
-          {templates.map((t) => {
-            const primaryWeek = t.weeks?.[0];
+          {templates.map((template) => {
+            const primaryWeek = template.weeks?.[0];
             const totalMinutes =
               primaryWeek?.days
                 .filter((d) => d.is_working)
                 .reduce((sum, d) => sum + d.total_minutes, 0) ?? 0;
 
             return (
-              <div key={t.id} style={CARD_STYLE}>
+              <div key={template.id} style={CARD_STYLE}>
                 {/* Header */}
                 <div
                   style={{
@@ -528,19 +540,19 @@ export function ScheduleSettingsPanel({
                         marginBottom: "6px",
                       }}
                     >
-                      {t.name}
+                      {template.name}
                     </p>
                     <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                       <Badge variant="outline">
-                        {t.week_type === "single"
-                          ? "Semana única"
-                          : "Semana rotativa"}
+                        {template.week_type === "single"
+                          ? t("schedules.types.single")
+                          : t("schedules.types.rotating")}
                       </Badge>
-                      {t.is_default && (
-                        <Badge variant="lime">Por defecto</Badge>
+                      {template.is_default && (
+                        <Badge variant="lime">{t("schedules.badges.default")}</Badge>
                       )}
-                      {t.is_active && (
-                        <Badge variant="success">Activo</Badge>
+                      {template.is_active && (
+                        <Badge variant="success">{t("schedules.badges.active")}</Badge>
                       )}
                     </div>
                   </div>
@@ -553,7 +565,7 @@ export function ScheduleSettingsPanel({
                       variant="ghost"
                       style={{ color: "#BD4332" }}
                       onClick={() => {
-                        setDeleteId(t.id);
+                        setDeleteId(template.id);
                         setConfirmDelete(true);
                       }}
                     >
@@ -566,14 +578,14 @@ export function ScheduleSettingsPanel({
                 {primaryWeek && <WeekPreview week={primaryWeek} />}
 
                 {/* Actions */}
-                {!t.is_default && (
+                {!template.is_default && (
                   <div style={{ marginTop: "14px" }}>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setAsDefault(t.id)}
+                      onClick={() => setAsDefault(template.id)}
                     >
-                      Establecer como defecto
+                      {t("schedules.actions.setDefault")}
                     </Button>
                   </div>
                 )}
@@ -589,20 +601,20 @@ export function ScheduleSettingsPanel({
           style={{ maxWidth: "560px", maxHeight: "85vh", overflowY: "auto" }}
         >
           <DialogHeader>
-            <DialogTitle>Nueva plantilla de horario</DialogTitle>
+            <DialogTitle>{t("schedules.modal.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-5">
             <div className="space-y-1.5">
-              <Label>Nombre de la plantilla *</Label>
+              <Label>{t("schedules.modal.nameLabel")}</Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ej. Jornada completa L-V"
+                placeholder={t("schedules.modal.namePlaceholder")}
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label>Tipo de semana</Label>
+              <Label>{t("schedules.modal.typeLabel")}</Label>
               <Select
                 value={weekType}
                 onValueChange={(v) =>
@@ -613,8 +625,8 @@ export function ScheduleSettingsPanel({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="single">Semana única</SelectItem>
-                  <SelectItem value="rotating">Semana rotativa (A/B)</SelectItem>
+                  <SelectItem value="single">{t("schedules.types.single")}</SelectItem>
+                  <SelectItem value="rotating">{t("schedules.types.rotatingLabel")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -622,7 +634,7 @@ export function ScheduleSettingsPanel({
             <Toggle
               checked={isDefault}
               onChange={setIsDefault}
-              label="Plantilla por defecto"
+              label={t("schedules.modal.defaultLabel")}
             />
 
             {/* Week tabs for rotating */}
@@ -646,7 +658,7 @@ export function ScheduleSettingsPanel({
                       cursor: "pointer",
                     }}
                   >
-                    Semana {tab}
+                    {tab === "A" ? t("schedules.modal.tabA") : t("schedules.modal.tabB")}
                   </button>
                 ))}
               </div>
@@ -661,13 +673,13 @@ export function ScheduleSettingsPanel({
             ) : activeWeekTab === "A" ? (
               <ScheduleWeekBuilder
                 week={weekA}
-                label="Semana A"
+                label={t("schedules.modal.tabA")}
                 onChange={setWeekA}
               />
             ) : (
               <ScheduleWeekBuilder
                 week={weekB}
-                label="Semana B"
+                label={t("schedules.modal.tabB")}
                 onChange={setWeekB}
               />
             )}
@@ -678,11 +690,11 @@ export function ScheduleSettingsPanel({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
+              {t("schedules.modal.cancel")}
             </Button>
             <Button onClick={save} disabled={!name.trim() || saving}>
               {saving && <Loader2 className="animate-spin" />}
-              Crear plantilla
+              {t("schedules.modal.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -700,7 +712,7 @@ export function ScheduleSettingsPanel({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar plantilla</DialogTitle>
+            <DialogTitle>{t("schedules.delete.title")}</DialogTitle>
           </DialogHeader>
           <p
             style={{
@@ -709,8 +721,7 @@ export function ScheduleSettingsPanel({
               color: "#79746B",
             }}
           >
-            Esta acción no se puede deshacer. Los empleados asignados a esta
-            plantilla perderán su horario de referencia.
+            {t("schedules.delete.desc")}
           </p>
           <DialogFooter>
             <Button
@@ -720,7 +731,7 @@ export function ScheduleSettingsPanel({
                 setDeleteId(null);
               }}
             >
-              Cancelar
+              {t("schedules.delete.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -728,7 +739,7 @@ export function ScheduleSettingsPanel({
               disabled={deleting}
             >
               {deleting && <Loader2 className="animate-spin" />}
-              Eliminar
+              {t("schedules.delete.confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>

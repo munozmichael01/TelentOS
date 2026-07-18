@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { apiFetch, notifyError } from "@/lib/api-client";
 import { formatDate } from "@/lib/utils";
 import { GeneratorBlock } from "@/components/ui/generator-block";
@@ -9,6 +10,7 @@ import type { OnboardingTask } from "@/lib/types";
 
 export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tasks: OnboardingTask[] }) {
   const router = useRouter();
+  const t = useTranslations("People");
   const [generating, setGenerating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [error, setError] = useState("");
@@ -43,7 +45,7 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
       });
       router.refresh();
     } catch (e) {
-      notifyError("No se pudo actualizar la tarea", e);
+      notifyError(t("detail.onboarding.updateError"), e);
     }
   }
 
@@ -52,7 +54,7 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
       await apiFetch(`/api/onboarding/${taskId}`, { method: "DELETE" });
       router.refresh();
     } catch (e) {
-      notifyError("No se pudo eliminar la tarea", e);
+      notifyError(t("detail.onboarding.deleteError"), e);
     }
   }
 
@@ -66,7 +68,7 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
       setNewTitle("");
       router.refresh();
     } catch (e) {
-      notifyError("No se pudo crear la tarea", e);
+      notifyError(t("detail.onboarding.createError"), e);
     }
   }
 
@@ -76,10 +78,10 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
     <div style={{ maxWidth: "680px", display: "flex", flexDirection: "column", gap: "14px" }}>
       {/* Taller del agente — B-6 GeneratorBlock; la checklist aterriza en la card clara de abajo */}
       <GeneratorBlock
-        title="Checklist de onboarding"
-        hint="Genero una checklist según el rol y el departamento. La editas, marcas tareas o la regeneras — el seguimiento es tuyo."
-        idleLabel={hasAgentTasks ? "Regenerar checklist" : "Generar checklist"}
-        busyLabel="Generando…"
+        title={t("detail.onboarding.title")}
+        hint={t("detail.onboarding.hint")}
+        idleLabel={hasAgentTasks ? t("detail.onboarding.regenerateBtn") : t("detail.onboarding.generateBtn")}
+        busyLabel={t("detail.onboarding.generating")}
         busy={generating}
         onGenerate={generate}
       />
@@ -87,7 +89,7 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
       <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "20px 22px" }}>
         {/* counter */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-          <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px" }}>Tareas</span>
+          <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px" }}>{t("detail.onboarding.tasksCounter")}</span>
           <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#79746B" }}>
             {done}/{tasks.length}
           </span>
@@ -95,7 +97,7 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
 
         {tasks.length === 0 && !generating && (
           <p style={{ fontSize: "12.5px", lineHeight: 1.45, color: "#79746B", marginBottom: "12px" }}>
-            Sin tareas aún. Genera la checklist con el agente arriba o añade tareas manualmente.
+            {t("detail.onboarding.empty")}
           </p>
         )}
 
@@ -171,7 +173,7 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addTask()}
-            placeholder="Nueva tarea manual…"
+            placeholder={t("detail.onboarding.newTaskPlaceholder")}
             style={{ flex: 1, fontFamily: "'Hanken Grotesk',sans-serif", fontSize: "13.5px", color: "#1A1A17", background: "#F4F0E8", border: "1.5px solid #E7E1D4", borderRadius: "10px", padding: "8px 12px", outline: "none" }}
             onFocus={(e) => { e.currentTarget.style.borderColor = "#0E5C4A"; e.currentTarget.style.boxShadow = "0 0 0 3px #DCEFE4"; }}
             onBlur={(e) => { e.currentTarget.style.borderColor = "#E7E1D4"; e.currentTarget.style.boxShadow = "none"; }}
@@ -181,7 +183,7 @@ export function OnboardingPanel({ employeeId, tasks }: { employeeId: string; tas
             disabled={!newTitle.trim()}
             style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12.5px", color: "#1A1A17", background: "#F4F0E8", border: "1.5px solid #E7E1D4", borderRadius: "10px", padding: "8px 13px", cursor: newTitle.trim() ? "pointer" : "not-allowed", opacity: newTitle.trim() ? 1 : 0.5 }}
           >
-            Añadir
+            {t("detail.onboarding.addBtn")}
           </button>
         </div>
       </div>

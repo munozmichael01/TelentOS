@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { routing, type Locale } from "@/i18n/routing";
+import { routing, type Locale, type StaticPathname } from "@/i18n/routing";
 import { LogoMark, MIcon, type IconName } from "./icons";
 
 const ARCHIVO = "'Archivo',sans-serif";
@@ -40,7 +40,11 @@ const MENU_COLS: MenuCol[] = [
   },
 ];
 
-const LOCALE_LABELS: Record<Locale, string> = { es: "Español", en: "English", pt: "Português" };
+const LOCALE_LABELS: Record<Locale, string> = {
+  "es-ve": "Español (Venezuela)",
+  "en-us": "English (US)",
+  "pt-br": "Português (Brasil)",
+};
 
 export function MarketingNav() {
   const t = useTranslations("Landing.nav");
@@ -67,7 +71,10 @@ export function MarketingNav() {
 
   function switchLocale(next: Locale) {
     setLangOpen(false);
-    router.replace(pathname, { locale: next });
+    // El nav de marketing solo vive en rutas estáticas; usePathname devuelve el path
+    // interno ya resuelto, válido para el cambio de locale (los tipos con pathnames no
+    // modelan bien este caso genérico).
+    router.replace(pathname as never, { locale: next });
   }
 
   return (
@@ -105,7 +112,7 @@ export function MarketingNav() {
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setLangOpen((o) => !o); }}
               >
                 <MIcon name="globe" size={13} />
-                {locale.toUpperCase()}
+                {locale.split("-")[0].toUpperCase()}
                 <span style={{ display: "flex", transition: "transform .15s ease", transform: langOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
                   <MIcon name="chevron" size={11} />
                 </span>
@@ -119,7 +126,7 @@ export function MarketingNav() {
                       onClick={() => switchLocale(l)}
                       style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "8px 10px", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 13, fontWeight: l === locale ? 700 : 600, color: l === locale ? "var(--brand)" : "#54504A", background: "transparent", border: "none", cursor: "pointer" }}
                     >
-                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: ".5px", color: l === locale ? "var(--brand)" : "var(--soft)", border: "1px solid", borderColor: l === locale ? "#BEE0CE" : "var(--line)", borderRadius: 6, padding: "1px 5px" }}>{l.toUpperCase()}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: ".5px", color: l === locale ? "var(--brand)" : "var(--soft)", border: "1px solid", borderColor: l === locale ? "#BEE0CE" : "var(--line)", borderRadius: 6, padding: "1px 5px" }}>{(l.split("-")[1] ?? l).toUpperCase()}</span>
                       {LOCALE_LABELS[l]}
                     </button>
                   ))}
@@ -149,7 +156,7 @@ export function MarketingNav() {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
                     {items.map((label, i) => (
-                      <Link key={label} href={col.hrefs[i] ?? col.hrefs[0]} className="ld-menuitem" onClick={() => setMenuOpen(false)} style={{ display: "block", padding: "7px 9px", fontSize: 13, fontWeight: 600, color: "#54504A" }}>
+                      <Link key={label} href={(col.hrefs[i] ?? col.hrefs[0]) as StaticPathname} className="ld-menuitem" onClick={() => setMenuOpen(false)} style={{ display: "block", padding: "7px 9px", fontSize: 13, fontWeight: 600, color: "#54504A" }}>
                         {label}
                       </Link>
                     ))}
