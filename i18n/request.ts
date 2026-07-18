@@ -20,6 +20,7 @@ async function loadMessages(locale: string) {
     Pricing: await load("pricing"),
     Board: await load("board"),
     Settings: await load("settings"),
+    People: await load("people"),
   };
 }
 

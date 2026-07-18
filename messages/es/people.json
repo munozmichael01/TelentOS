@@ -1,0 +1,263 @@
+{
+  "eyebrow": "Personas",
+  "list": {
+    "title": "Empleados",
+    "empty": {
+      "title": "Sin empleados",
+      "desc": "Contrata desde el pipeline de una oferta o da de alta manualmente."
+    },
+    "table": {
+      "name": "Nombre",
+      "role": "Cargo",
+      "dept": "Departamento",
+      "joined": "Incorporación",
+      "contract": "Contrato",
+      "reportsTo": "Reporta a",
+      "viaAts": "vía ATS"
+    }
+  },
+  "contracts": {
+    "full_time": "Jornada completa",
+    "part_time": "Jornada parcial",
+    "contractor": "Freelance",
+    "internship": "Prácticas"
+  },
+  "org": {
+    "title": "Organigrama",
+    "empty": {
+      "title": "Sin empleados",
+      "desc": "Da de alta empleados y asigna managers para ver el organigrama."
+    }
+  },
+  "addMe": {
+    "success": {
+      "title": "Tu ficha está creada",
+      "subtitle": "Ya apareces en la plantilla.",
+      "completeLink": "Completar ficha →"
+    },
+    "offer": {
+      "title": "¿Trabajas aquí también?",
+      "titleWithFirst": "{first}, ¿trabajas aquí también?",
+      "subtitle": "Añádete a la plantilla con un clic. Creamos tu ficha desde tu nombre y email; podrás completarla después.",
+      "errorMsg": "No se pudo crear tu ficha",
+      "button": "Añadirme",
+      "dismissLabel": "Descartar"
+    }
+  },
+  "form": {
+    "createTitle": "Nuevo empleado",
+    "editTitle": "Editar ficha",
+    "saveError": "Error al guardar",
+    "saveBtn": "Guardar",
+    "cancelBtn": "Cancelar",
+    "newBtn": "Nuevo empleado",
+    "groups": {
+      "personal": "Personales",
+      "org": "Puesto y organización",
+      "location": "Ubicación y modalidad",
+      "legal": "Legal y compensación"
+    },
+    "fields": {
+      "name": "Nombre *",
+      "email": "Email",
+      "phone": "Teléfono",
+      "nationalId": "Documento de identidad",
+      "birthDate": "Fecha de nacimiento",
+      "emergencyContact": "Contacto de emergencia",
+      "emergencyContactPlaceholder": "Nombre",
+      "emergencyPhone": "Teléfono de emergencia",
+      "role": "Cargo",
+      "seniority": "Nivel / seniority",
+      "seniorityPlaceholder": "Senior, Lead…",
+      "dept": "Departamento",
+      "joined": "Incorporación",
+      "contract": "Contrato",
+      "reportsTo": "Reporta a",
+      "reportsToPlaceholder": "Nadie",
+      "country": "País",
+      "city": "Ciudad",
+      "location": "Centro de trabajo",
+      "locationPlaceholder": "Sede, oficina…",
+      "address": "Dirección",
+      "modality": "Modalidad de trabajo",
+      "legalEntity": "Entidad legal",
+      "legalEntityPlaceholder": "Razón social que le contrata",
+      "benefits": "Beneficios",
+      "benefitsPlaceholder": "Escribe un beneficio y pulsa Enter (seguro médico, gimnasio…)",
+      "benefitsRemove": "Quitar {name}"
+    },
+    "contracts": {
+      "indefinido": "Indefinido",
+      "temporal": "Temporal",
+      "practicas": "Prácticas",
+      "freelance": "Freelance"
+    }
+  },
+  "detail": {
+    "backBtn": "Empleados",
+    "actionsBtn": "Acciones ▾",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "stats": {
+      "joined": "Incorporación",
+      "contract": "Contrato",
+      "reportsTo": "Reporta a",
+      "timeoffDisp": "Permisos disp.",
+      "noPolicy": "Sin política"
+    },
+    "tabs": {
+      "info": "Información",
+      "onboarding": "Onboarding",
+      "documents": "Documentos ({count})",
+      "ausencias": "Ausencias ({count})",
+      "horas": "Horas",
+      "compensacion": "Compensación",
+      "horario": "Horario"
+    },
+    "info": {
+      "title": "Datos del empleado",
+      "name": "Nombre",
+      "email": "Email",
+      "id": "ID empleado",
+      "joined": "Incorporación",
+      "contract": "Contrato",
+      "reportsTo": "Manager",
+      "dept": "Departamento",
+      "role": "Rol",
+      "teamPosition": "Posición en el equipo",
+      "you": "TÚ",
+      "moreReports": "+{count} más"
+    },
+    "documents": {
+      "download": "Descargar",
+      "empty": "Sin documentos adjuntos.",
+      "uploadBtn": "Subir documento",
+      "uploading": "Subiendo…",
+      "uploadError": "Error al subir"
+    },
+    "onboarding": {
+      "title": "Checklist de onboarding",
+      "hint": "Genero una checklist según el rol y el departamento. La editas, marcas tareas o la regeneras — el seguimiento es tuyo.",
+      "generateBtn": "Generar checklist",
+      "regenerateBtn": "Regenerar checklist",
+      "generating": "Generando…",
+      "tasksCounter": "Tareas",
+      "empty": "Sin tareas aún. Genera la checklist con el agente arriba o añade tareas manualmente.",
+      "newTaskPlaceholder": "Nueva tarea manual…",
+      "addBtn": "Añadir",
+      "updateError": "No se pudo actualizar la tarea",
+      "deleteError": "No se pudo eliminar la tarea",
+      "createError": "No se pudo crear la tarea"
+    },
+    "absences": {
+      "title": "Balances",
+      "assignBtn": "Asignar permiso",
+      "empty": {
+        "title": "Sin permisos asignados",
+        "desc": "Los nuevos empleados reciben la política por defecto automáticamente.",
+        "link": "Ir a Políticas de ausencias →"
+      },
+      "balanceCard": {
+        "prorated": " (prorateada)",
+        "daysUnit": "días",
+        "hoursUnit": "horas",
+        "expires": "Caduca el {date}",
+        "detailLabel": "{usedApproved} usados · {usedPending} pendientes",
+        "breakdown": {
+          "title": "Origen",
+          "qty": "Cantidad",
+          "policy": "Política",
+          "policyProrated": "Política (prorateada)",
+          "carryover": "Traspaso año anterior",
+          "manual": "Ajustes manuales",
+          "usedApproved": "Ausencias aprobadas",
+          "usedPending": "Ausencias pendientes",
+          "holidays": "Festivos empresa",
+          "expired": "Caducado"
+        },
+        "available": "Disponible",
+        "since": "Desde: {date}",
+        "until": "Hasta: {date}",
+        "noUntil": "Sin fecha de fin"
+      },
+      "history": {
+        "title": "Historial",
+        "newBtn": "+ Nueva ausencia",
+        "empty": "Sin ausencias registradas",
+        "table": {
+          "type": "Tipo",
+          "since": "Desde",
+          "until": "Hasta",
+          "days": "Días",
+          "status": "Estado"
+        },
+        "statusLabels": {
+          "pending": "Pendiente",
+          "approved": "Aprobada",
+          "rejected": "Rechazada",
+          "cancelled": "Cancelada"
+        }
+      }
+    },
+    "hours": {
+      "tiles": {
+        "total": "Total (últimos 30 registros)",
+        "count": "Registros",
+        "avg": "Promedio/día"
+      },
+      "logBtn": "Registrar horas",
+      "empty": "Sin horas registradas",
+      "table": {
+        "date": "Fecha",
+        "checkin": "Entrada",
+        "checkout": "Salida",
+        "duration": "Duración",
+        "notes": "Notas"
+      },
+      "activeStatus": "Activo"
+    },
+    "compensation": {
+      "tiles": {
+        "balance": "Balance total",
+        "compensated": "Compensado",
+        "pending": "Pendiente"
+      },
+      "manageBtn": "Gestionar compensaciones",
+      "empty": "Sin registros de compensación",
+      "table": {
+        "period": "Período",
+        "scheduled": "Programadas",
+        "worked": "Trabajadas",
+        "balance": "Balance",
+        "type": "Tipo"
+      },
+      "types": {
+        "time_off": "Tiempo libre",
+        "payout": "Pago"
+      }
+    },
+    "schedule": {
+      "title": "Horario de trabajo",
+      "assignBtn": "Asignar horario",
+      "empty": {
+        "title": "Sin horario asignado",
+        "desc": "Los nuevos empleados reciben el horario por defecto automáticamente.",
+        "link": "Ir a Horarios →"
+      },
+      "card": {
+        "types": {
+          "single": "Semana fija",
+          "rotating": "Semanas rotativas"
+        },
+        "since": "Desde: {date}",
+        "until": "Hasta: {date}",
+        "noUntil": "Sin fecha de fin",
+        "weekLabel": "Semana {index}",
+        "totalWeek": "Total semana: {hours}h",
+        "emptyWeeks": "Sin semanas configuradas."
+      }
+    }
+  }
+}

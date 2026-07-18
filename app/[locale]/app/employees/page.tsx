@@ -8,6 +8,7 @@ import { HairlineTable, HairlineRow } from "@/components/hairline-table";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, initials } from "@/lib/utils";
 import type { Employee } from "@/lib/types";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
 const AVATAR_PALETTES = [
   { bg: "#DCEFE4", color: "#0E5C4A" },
@@ -21,15 +22,18 @@ function avatarPal(name: string) {
   return AVATAR_PALETTES[code % AVATAR_PALETTES.length];
 }
 
-const contractLabel: Record<string, string> = {
-  full_time: "Jornada completa",
-  part_time: "Jornada parcial",
-  contractor: "Freelance",
-  internship: "Prácticas",
+const contractLabelKeys: Record<string, string> = {
+  full_time: "contracts.full_time",
+  part_time: "contracts.part_time",
+  contractor: "contracts.contractor",
+  internship: "contracts.internship",
 };
 
-export default async function EmployeesPage() {
+export default async function EmployeesPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
   const supabase = createClient();
+  const t = await getTranslations({ locale: params.locale, namespace: "People" });
+
   const [{ data: employees }, { data: { user } }] = await Promise.all([
     supabase.from("employees").select("*").order("name"),
     supabase.auth.getUser(),
@@ -43,7 +47,7 @@ export default async function EmployeesPage() {
 
   return (
     <div>
-      <PageHeader title="Empleados" eyebrow="Personas">
+      <PageHeader title={t("list.title")} eyebrow={t("eyebrow")}>
         <EmployeeForm managers={list.map((e) => ({ id: e.id, name: e.name }))} />
       </PageHeader>
 
@@ -51,13 +55,20 @@ export default async function EmployeesPage() {
 
       {list.length === 0 ? (
         <EmptyState
-          title="Sin empleados"
-          description="Contrata desde el pipeline de una oferta o da de alta manualmente."
+          title={t("list.empty.title")}
+          description={t("list.empty.desc")}
         />
       ) : (
         <HairlineTable
           cols="2.2fr 1.4fr 1.2fr 1fr 1.2fr 1.2fr"
-          headers={["Nombre", "Cargo", "Departamento", "Incorporación", "Contrato", "Reporta a"]}
+          headers={[
+            t("list.table.name"),
+            t("list.table.role"),
+            t("list.table.dept"),
+            t("list.table.joined"),
+            t("list.table.contract"),
+            t("list.table.reportsTo"),
+          ]}
           align={["left", "left", "left", "right", "left", "left"]}
         >
           {list.map((e) => {
@@ -76,7 +87,7 @@ export default async function EmployeesPage() {
                         {e.name}
                       </Link>
                       {e.candidate_id && (
-                        <Badge variant="outline" style={{ fontSize: "9px", padding: "1px 6px" }}>vía ATS</Badge>
+                        <Badge variant="outline" style={{ fontSize: "9px", padding: "1px 6px" }}>{t("list.table.viaAts")}</Badge>
                       )}
                     </div>
                   </div>
@@ -88,7 +99,11 @@ export default async function EmployeesPage() {
                 {/* Incorporación */}
                 <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12px" }}>{formatDate(e.start_date)}</span>
                 {/* Contrato */}
-                <span style={{ fontSize: "12.5px" }}>{contractLabel[e.contract_type ?? ""] ?? (e.contract_type ?? "—")}</span>
+                <span style={{ fontSize: "12.5px" }}>
+                  {e.contract_type && contractLabelKeys[e.contract_type]
+                    ? t(contractLabelKeys[e.contract_type])
+                    : (e.contract_type ?? "—")}
+                </span>
                 {/* Reporta a */}
                 <span style={{ fontSize: "13px", color: "#79746B" }}>{manager?.name ?? "—"}</span>
               </HairlineRow>
