@@ -145,5 +145,16 @@
     "soon": "Em breve",
     "errGeneric": "Algo deu errado. Tente novamente.",
     "errCredentials": "E-mail ou senha incorretos."
+  },
+  "assistant": {
+    "cta": "Assistente IA",
+    "title": "Assistente de vagas",
+    "tagline": "Só busca vagas para você",
+    "greeting": "Oi! Sou seu assistente de busca. Diga que vaga você procura com suas palavras — área, cidade, salário, modalidade — e trago as melhores. Só busco: não publico nem compartilho nada.",
+    "placeholder": "Ex. design remoto acima de $1.500",
+    "view": "Ver vaga",
+    "empty": "Não encontrei vagas para isso agora. Tente ampliar a busca.",
+    "error": "Não consegui processar sua busca. Tente novamente.",
+    "suggestions": ["Design remoto", "Produto em Caracas", "Vagas júnior", "Melhor pagas"]
   }
 }

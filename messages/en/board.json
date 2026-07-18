@@ -145,5 +145,16 @@
     "soon": "Coming soon",
     "errGeneric": "Something went wrong. Please try again.",
     "errCredentials": "Incorrect email or password."
+  },
+  "assistant": {
+    "cta": "AI assistant",
+    "title": "Job assistant",
+    "tagline": "Only searches jobs for you",
+    "greeting": "Hi! I'm your search assistant. Tell me what job you're after in your own words — field, city, salary, work mode — and I'll bring you the best matches. I only search: I never post or share anything.",
+    "placeholder": "e.g. remote design above $1,500",
+    "view": "View job",
+    "empty": "I couldn't find jobs for that right now. Try broadening your search.",
+    "error": "I couldn't process your search. Please try again.",
+    "suggestions": ["Remote design", "Product in Caracas", "Junior roles", "Best paid"]
   }
 }

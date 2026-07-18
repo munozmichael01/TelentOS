@@ -145,5 +145,16 @@
     "soon": "Disponible pronto",
     "errGeneric": "Algo salió mal. Inténtalo de nuevo.",
     "errCredentials": "Email o contraseña incorrectos."
+  },
+  "assistant": {
+    "cta": "Asistente IA",
+    "title": "Asistente de empleo",
+    "tagline": "Solo busca ofertas por ti",
+    "greeting": "¡Hola! Soy tu asistente de búsqueda. Dime qué trabajo buscas en tus palabras — área, ciudad, salario, modalidad — y te traigo las mejores ofertas. Solo busco: no publico ni comparto nada.",
+    "placeholder": "Ej. diseño remoto arriba de $1.500",
+    "view": "Ver oferta",
+    "empty": "No encontré ofertas para eso ahora mismo. Prueba a ampliar la búsqueda.",
+    "error": "No pude procesar tu búsqueda. Inténtalo de nuevo.",
+    "suggestions": ["Diseño remoto", "Producto en Caracas", "Trabajos junior", "Mejor pagados"]
   }
 }
