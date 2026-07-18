@@ -1,0 +1,61 @@
+{
+  "brand": "Empleos",
+  "login": "Entrar",
+  "hero": {
+    "eyebrow": "Encuentra tu próximo empleo",
+    "title": "Encuentra tu",
+    "titleAccent": "próximo",
+    "titleEnd": "trabajo."
+  },
+  "search": {
+    "placeholder": "diseño remoto bien pagado en Caracas",
+    "submit": "Buscar",
+    "filters": "Filtros",
+    "interpreted": "Interpretamos tu búsqueda"
+  },
+  "sort": {
+    "relevance": "Relevancia",
+    "recent": "Reciente",
+    "salary": "Salario"
+  },
+  "results": {
+    "count": "{count, plural, =0 {Sin ofertas} one {# oferta} other {# ofertas}}"
+  },
+  "card": {
+    "new": "Nuevo",
+    "apply": "Aplicar",
+    "quickApply": "1 toque",
+    "applied": "Aplicada",
+    "salaryTBD": "Salario a convenir"
+  },
+  "empty": {
+    "title": "Sin resultados",
+    "desc": "Prueba con menos filtros o una búsqueda más amplia.",
+    "reset": "Limpiar todo"
+  },
+  "filters": {
+    "title": "Filtros",
+    "clear": "Limpiar",
+    "apply": "Ver {count} ofertas",
+    "category": "Área",
+    "modality": "Modalidad",
+    "contract": "Tipo de contrato",
+    "company": "Empresa"
+  },
+  "modality": {
+    "remoto": "Remoto",
+    "hibrido": "Híbrido",
+    "presencial": "Presencial"
+  },
+  "tabs": {
+    "search": "Buscar",
+    "applications": "Candidaturas",
+    "saved": "Guardadas",
+    "alerts": "Alertas",
+    "profile": "Perfil"
+  },
+  "toast": {
+    "saved": "Guardada en tus ofertas",
+    "unsaved": "Quitada de guardadas"
+  }
+}

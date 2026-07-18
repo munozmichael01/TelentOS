@@ -1,0 +1,61 @@
+{
+  "brand": "Jobs",
+  "login": "Sign in",
+  "hero": {
+    "eyebrow": "Find your next job",
+    "title": "Find your",
+    "titleAccent": "next",
+    "titleEnd": "job."
+  },
+  "search": {
+    "placeholder": "well-paid remote design in Caracas",
+    "submit": "Search",
+    "filters": "Filters",
+    "interpreted": "How we read your search"
+  },
+  "sort": {
+    "relevance": "Relevance",
+    "recent": "Recent",
+    "salary": "Salary"
+  },
+  "results": {
+    "count": "{count, plural, =0 {No jobs} one {# job} other {# jobs}}"
+  },
+  "card": {
+    "new": "New",
+    "apply": "Apply",
+    "quickApply": "1 tap",
+    "applied": "Applied",
+    "salaryTBD": "Salary negotiable"
+  },
+  "empty": {
+    "title": "No results",
+    "desc": "Try fewer filters or a broader search.",
+    "reset": "Clear all"
+  },
+  "filters": {
+    "title": "Filters",
+    "clear": "Clear",
+    "apply": "Show {count} jobs",
+    "category": "Area",
+    "modality": "Work mode",
+    "contract": "Contract type",
+    "company": "Company"
+  },
+  "modality": {
+    "remoto": "Remote",
+    "hibrido": "Hybrid",
+    "presencial": "On-site"
+  },
+  "tabs": {
+    "search": "Search",
+    "applications": "Applications",
+    "saved": "Saved",
+    "alerts": "Alerts",
+    "profile": "Profile"
+  },
+  "toast": {
+    "saved": "Saved to your jobs",
+    "unsaved": "Removed from saved"
+  }
+}

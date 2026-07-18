@@ -1,0 +1,61 @@
+{
+  "brand": "Vagas",
+  "login": "Entrar",
+  "hero": {
+    "eyebrow": "Encontre sua próxima vaga",
+    "title": "Encontre sua",
+    "titleAccent": "próxima",
+    "titleEnd": "vaga."
+  },
+  "search": {
+    "placeholder": "design remoto bem pago em Caracas",
+    "submit": "Buscar",
+    "filters": "Filtros",
+    "interpreted": "Como interpretamos sua busca"
+  },
+  "sort": {
+    "relevance": "Relevância",
+    "recent": "Recente",
+    "salary": "Salário"
+  },
+  "results": {
+    "count": "{count, plural, =0 {Sem vagas} one {# vaga} other {# vagas}}"
+  },
+  "card": {
+    "new": "Nova",
+    "apply": "Candidatar",
+    "quickApply": "1 toque",
+    "applied": "Enviada",
+    "salaryTBD": "Salário a combinar"
+  },
+  "empty": {
+    "title": "Sem resultados",
+    "desc": "Tente menos filtros ou uma busca mais ampla.",
+    "reset": "Limpar tudo"
+  },
+  "filters": {
+    "title": "Filtros",
+    "clear": "Limpar",
+    "apply": "Ver {count} vagas",
+    "category": "Área",
+    "modality": "Modalidade",
+    "contract": "Tipo de contrato",
+    "company": "Empresa"
+  },
+  "modality": {
+    "remoto": "Remoto",
+    "hibrido": "Híbrido",
+    "presencial": "Presencial"
+  },
+  "tabs": {
+    "search": "Buscar",
+    "applications": "Candidaturas",
+    "saved": "Salvas",
+    "alerts": "Alertas",
+    "profile": "Perfil"
+  },
+  "toast": {
+    "saved": "Salva nas suas vagas",
+    "unsaved": "Removida das salvas"
+  }
+}

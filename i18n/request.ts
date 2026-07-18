@@ -18,6 +18,7 @@ async function loadMessages(locale: string) {
     Nomina: await load("nomina"),
     Ai: await load("ai"),
     Pricing: await load("pricing"),
+    Board: await load("board"),
   };
 }
 
