@@ -184,5 +184,16 @@
     "viewProfile": "View my account",
     "error": "I couldn't generate the profile. Please try again.",
     "skip": "I'll do it later"
+  },
+  "employer": {
+    "back": "All jobs",
+    "jobs": "{count, plural, =0 {No openings} one {# opening} other {# openings}}",
+    "about": "About the company",
+    "website": "Website",
+    "openings": "Active openings",
+    "noJobs": "No active openings right now. Create an alert and we'll notify you.",
+    "notify": "Notify me of new jobs",
+    "notifying": "We'll notify you of new jobs",
+    "loginToNotify": "Sign in to get alerts"
   }
 }

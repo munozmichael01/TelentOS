@@ -112,7 +112,9 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
         <div style={{ display: "flex", alignItems: "flex-start", gap: 13, margin: "16px 0" }}>
           <span style={{ width: 52, height: 52, borderRadius: 14, background: logo.bg, color: logo.color, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, flexShrink: 0 }}>{logo.initials}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: MONO, fontSize: 12, color: "var(--brand)", fontWeight: 700 }}>{job.company?.name}</div>
+            {job.company?.slug
+              ? <Link href={{ pathname: "/empleos/empresa/[slug]", params: { slug: job.company.slug } }} style={{ fontFamily: MONO, fontSize: 12, color: "var(--brand)", fontWeight: 700 }}>{job.company.name} →</Link>
+              : <div style={{ fontFamily: MONO, fontSize: 12, color: "var(--brand)", fontWeight: 700 }}>{job.company?.name}</div>}
             <h1 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 24, lineHeight: 1.05, letterSpacing: "-.8px", margin: "3px 0 0" }}>{job.title}</h1>
           </div>
         </div>
