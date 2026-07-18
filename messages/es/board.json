@@ -156,5 +156,33 @@
     "empty": "No encontré ofertas para eso ahora mismo. Prueba a ampliar la búsqueda.",
     "error": "No pude procesar tu búsqueda. Inténtalo de nuevo.",
     "suggestions": ["Diseño remoto", "Producto en Caracas", "Trabajos junior", "Mejor pagados"]
+  },
+  "builder": {
+    "eyebrow": "Asistente de perfil",
+    "title": "Construye tu perfil con IA",
+    "intro": "Cuéntame a qué te dedicas y en segundos armo tu perfil. Tú confirmas antes de publicar.",
+    "role": "¿A qué te dedicas?",
+    "rolePlaceholder": "Ej. Product Designer",
+    "experience": "Años de experiencia",
+    "modality": "¿Cómo quieres trabajar?",
+    "pitch": "En una frase, ¿qué te hace bueno?",
+    "pitchPlaceholder": "Ej. Diseño flujos complejos con research y sistemas escalables.",
+    "cvQuestion": "¿Tienes CV? Súbelo y lo leo por ti (PDF)",
+    "cvUpload": "Subir CV",
+    "cvUploaded": "CV cargado",
+    "generate": "Generar mi perfil",
+    "generating": "Construyendo tu perfil…",
+    "disclaimer": "La IA propone · tú confirmas y publicas",
+    "doneTitle": "Perfil listo — revísalo",
+    "headline": "Titular propuesto",
+    "about": "Sobre mí",
+    "skills": "Skills sugeridas (separadas por comas)",
+    "complete": "Perfil al {pct}%",
+    "save": "Guardar y publicar",
+    "saving": "Guardando…",
+    "findJobs": "Buscar ofertas para mí",
+    "viewProfile": "Ver mi cuenta",
+    "error": "No pude generar el perfil. Inténtalo de nuevo.",
+    "skip": "Lo haré luego"
   }
 }

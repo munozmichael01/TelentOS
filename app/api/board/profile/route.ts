@@ -74,24 +74,34 @@ export async function PUT(req: Request) {
   const body = await req.json().catch(() => null);
   if (!body) return jsonError("Cuerpo inválido");
 
-  // Upsert del perfil (solo campos permitidos; user_id fijado por sesión)
+  // Upsert que PRESERVA campos no enviados: los callers parciales (p. ej. el builder de
+  // Perfil IA, que manda headline/about/skills) no deben borrar full_name/email que ya
+  // existen. Solo se toca lo que viene en el body; el resto se conserva.
+  const { data: existing } = await admin.from("candidate_profiles").select("*").eq("user_id", uid).maybeSingle();
+  const has = (k: string) => body[k] !== undefined;
   const patch = {
     user_id: uid,
-    full_name: body.full_name ?? null,
-    email: (body.email ?? user.email ?? null),
-    phone: body.phone ?? null,
-    headline: body.headline ?? null,
-    about: body.about ?? null,
-    city: body.city ?? null,
-    country_code: body.country_code ? String(body.country_code).toUpperCase().slice(0, 2) : null,
-    experience_years: typeof body.experience_years === "number" ? Math.max(0, Math.floor(body.experience_years)) : null,
-    education: Array.isArray(body.education) ? body.education : [],
-    languages: Array.isArray(body.languages) ? body.languages : [],
-    pref_salary_min: typeof body.pref_salary_min === "number" ? body.pref_salary_min : null,
-    pref_currency: body.pref_currency ?? null,
-    pref_modality: strArr(body.pref_modality),
-    pref_locations: strArr(body.pref_locations),
-    pref_contract: strArr(body.pref_contract),
+    full_name: has("full_name") ? (body.full_name || null) : (existing?.full_name ?? null),
+    email: has("email") ? (body.email || null) : (existing?.email ?? user.email ?? null),
+    phone: has("phone") ? (body.phone || null) : (existing?.phone ?? null),
+    headline: has("headline") ? (body.headline || null) : (existing?.headline ?? null),
+    about: has("about") ? (body.about || null) : (existing?.about ?? null),
+    city: has("city") ? (body.city || null) : (existing?.city ?? null),
+    country_code: has("country_code")
+      ? (body.country_code ? String(body.country_code).toUpperCase().slice(0, 2) : null)
+      : (existing?.country_code ?? null),
+    experience_years: has("experience_years")
+      ? (typeof body.experience_years === "number" ? Math.max(0, Math.floor(body.experience_years)) : null)
+      : (existing?.experience_years ?? null),
+    education: has("education") ? (Array.isArray(body.education) ? body.education : []) : (existing?.education ?? []),
+    languages: has("languages") ? (Array.isArray(body.languages) ? body.languages : []) : (existing?.languages ?? []),
+    pref_salary_min: has("pref_salary_min")
+      ? (typeof body.pref_salary_min === "number" ? body.pref_salary_min : null)
+      : (existing?.pref_salary_min ?? null),
+    pref_currency: has("pref_currency") ? (body.pref_currency || null) : (existing?.pref_currency ?? null),
+    pref_modality: has("pref_modality") ? strArr(body.pref_modality) : (existing?.pref_modality ?? []),
+    pref_locations: has("pref_locations") ? strArr(body.pref_locations) : (existing?.pref_locations ?? []),
+    pref_contract: has("pref_contract") ? strArr(body.pref_contract) : (existing?.pref_contract ?? []),
     updated_at: new Date().toISOString(),
   };
   const { data: profile, error } = await admin

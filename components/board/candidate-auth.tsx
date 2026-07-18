@@ -44,7 +44,8 @@ export function CandidateAuth({ locale }: { locale: string }) {
       }
       const { error: signErr } = await supabase.auth.signInWithPassword({ email: form.email.trim().toLowerCase(), password: form.password });
       if (signErr) { setError(signup ? t("errGeneric") : t("errCredentials")); setLoading(false); return; }
-      router.push("/cuenta");
+      // Tras registrarse, al constructor de perfil con IA; al iniciar sesión, a la cuenta.
+      router.push(signup ? "/cuenta/perfil" : "/cuenta");
       router.refresh();
     } catch {
       setError(t("errGeneric")); setLoading(false);

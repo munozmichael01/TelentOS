@@ -156,5 +156,33 @@
     "empty": "I couldn't find jobs for that right now. Try broadening your search.",
     "error": "I couldn't process your search. Please try again.",
     "suggestions": ["Remote design", "Product in Caracas", "Junior roles", "Best paid"]
+  },
+  "builder": {
+    "eyebrow": "Profile assistant",
+    "title": "Build your profile with AI",
+    "intro": "Tell me what you do and I'll build your profile in seconds. You confirm before publishing.",
+    "role": "What do you do?",
+    "rolePlaceholder": "e.g. Product Designer",
+    "experience": "Years of experience",
+    "modality": "How do you want to work?",
+    "pitch": "In one line, what makes you great?",
+    "pitchPlaceholder": "e.g. I design complex flows with research and scalable systems.",
+    "cvQuestion": "Got a CV? Upload it and I'll read it (PDF)",
+    "cvUpload": "Upload CV",
+    "cvUploaded": "CV loaded",
+    "generate": "Generate my profile",
+    "generating": "Building your profile…",
+    "disclaimer": "AI proposes · you confirm and publish",
+    "doneTitle": "Profile ready — review it",
+    "headline": "Suggested headline",
+    "about": "About me",
+    "skills": "Suggested skills (comma-separated)",
+    "complete": "Profile {pct}% complete",
+    "save": "Save and publish",
+    "saving": "Saving…",
+    "findJobs": "Find jobs for me",
+    "viewProfile": "View my account",
+    "error": "I couldn't generate the profile. Please try again.",
+    "skip": "I'll do it later"
   }
 }

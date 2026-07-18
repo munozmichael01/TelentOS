@@ -34,6 +34,7 @@ export const pathnames = {
   },
   "/cuenta": { "es-ve": "/cuenta", "en-us": "/account", "pt-br": "/conta" },
   "/cuenta/entrar": { "es-ve": "/cuenta/entrar", "en-us": "/account/sign-in", "pt-br": "/conta/entrar" },
+  "/cuenta/perfil": { "es-ve": "/cuenta/perfil", "en-us": "/account/profile", "pt-br": "/conta/perfil" },
   "/empleos/asistente": { "es-ve": "/empleos/asistente", "en-us": "/jobs/assistant", "pt-br": "/vagas/assistente" },
 
   // Dashboard B2B autenticado (no localizado — mismo slug en todos los locales)

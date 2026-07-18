@@ -133,6 +133,10 @@ export function AccountClient({ locale }: { locale: string }) {
                   <div style={{ width: `${completeness.pct}%`, height: "100%", background: "var(--brand)" }} />
                 </div>
                 <div style={{ fontSize: 12.5, color: "var(--soft)", marginTop: 9, lineHeight: 1.45 }}>{t("account.completeHint")}</div>
+                <Link href="/cuenta/perfil" className="jb-hard" style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 12, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 10, padding: "8px 14px", boxShadow: "2px 2px 0 var(--ink)" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z" stroke="#C6F24E" strokeWidth="1.7" strokeLinejoin="round" /></svg>
+                  {t("builder.title")}
+                </Link>
               </div>
             )}
             <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: 18 }}>
