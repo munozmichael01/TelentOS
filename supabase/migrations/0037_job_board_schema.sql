@@ -8,7 +8,9 @@ alter table jobs
       ('none','secondary','vocational','bachelor','master','phd')),
   add column if not exists seniority_level text
     check (seniority_level is null or seniority_level in
-      ('junior','mid','senior','lead','principal','manager','director'));
+      ('junior','mid','senior','lead','principal','manager','director')),
+  add column if not exists modality text
+    check (modality is null or modality in ('presencial','hibrido','remoto'));
 
 -- skill excluyente (ausente → descarta/penaliza) vs deseable (solo suma)
 alter table job_skills

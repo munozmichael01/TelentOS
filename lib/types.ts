@@ -36,6 +36,7 @@ export type Job = {
   experience_min_years: number;
   education_level: EducationLevel | null;
   seniority_level: SeniorityLevel | null;
+  modality: "presencial" | "hibrido" | "remoto" | null;
   status: JobStatus;
   source: string;
   external_id: string | null;
