@@ -89,5 +89,33 @@
     "required": "Obligatorio",
     "yes": "Sí",
     "no": "No"
+  },
+  "account": {
+    "title": "Mi cuenta",
+    "completeness": "Perfil {pct}% completo",
+    "completeHint": "Un perfil completo recibe más respuestas de las empresas.",
+    "edit": "Editar",
+    "editProfile": "Editar perfil",
+    "logout": "Cerrar sesión",
+    "profileVisible": "Perfil visible para empresas",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "fullName": "Nombre completo",
+    "headline": "Titular profesional",
+    "about": "Sobre ti",
+    "phone": "Teléfono",
+    "city": "Ciudad",
+    "skills": "Skills (separadas por comas)",
+    "browse": "Explorar ofertas",
+    "newAlert": "Nueva alerta",
+    "alertName": "Nombre o palabra clave",
+    "createAlert": "Crear alerta",
+    "delete": "Eliminar",
+    "appliedOn": "Aplicaste {date}",
+    "fit": "Fit {score}",
+    "emptyApplications": "Aún no has aplicado a ninguna oferta.",
+    "emptySaved": "Nada guardado aún.",
+    "emptyAlerts": "Sin alertas. Crea una para recibir ofertas nuevas que encajen."
   }
 }

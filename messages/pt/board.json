@@ -89,5 +89,33 @@
     "required": "Obrigatório",
     "yes": "Sim",
     "no": "Não"
+  },
+  "account": {
+    "title": "Minha conta",
+    "completeness": "Perfil {pct}% completo",
+    "completeHint": "Um perfil completo recebe mais respostas das empresas.",
+    "edit": "Editar",
+    "editProfile": "Editar perfil",
+    "logout": "Sair",
+    "profileVisible": "Perfil visível para empresas",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "cancel": "Cancelar",
+    "fullName": "Nome completo",
+    "headline": "Título profissional",
+    "about": "Sobre você",
+    "phone": "Telefone",
+    "city": "Cidade",
+    "skills": "Habilidades (separadas por vírgula)",
+    "browse": "Explorar vagas",
+    "newAlert": "Novo alerta",
+    "alertName": "Nome ou palavra-chave",
+    "createAlert": "Criar alerta",
+    "delete": "Excluir",
+    "appliedOn": "Candidatou-se {date}",
+    "fit": "Fit {score}",
+    "emptyApplications": "Você ainda não se candidatou a nenhuma vaga.",
+    "emptySaved": "Nada salvo ainda.",
+    "emptyAlerts": "Sem alertas. Crie um para receber novas vagas compatíveis."
   }
 }

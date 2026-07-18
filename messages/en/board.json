@@ -89,5 +89,33 @@
     "required": "Required",
     "yes": "Yes",
     "no": "No"
+  },
+  "account": {
+    "title": "My account",
+    "completeness": "Profile {pct}% complete",
+    "completeHint": "A complete profile gets more replies from companies.",
+    "edit": "Edit",
+    "editProfile": "Edit profile",
+    "logout": "Sign out",
+    "profileVisible": "Profile visible to companies",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "fullName": "Full name",
+    "headline": "Professional headline",
+    "about": "About you",
+    "phone": "Phone",
+    "city": "City",
+    "skills": "Skills (comma-separated)",
+    "browse": "Browse jobs",
+    "newAlert": "New alert",
+    "alertName": "Name or keyword",
+    "createAlert": "Create alert",
+    "delete": "Delete",
+    "appliedOn": "Applied {date}",
+    "fit": "Fit {score}",
+    "emptyApplications": "You haven't applied to any jobs yet.",
+    "emptySaved": "Nothing saved yet.",
+    "emptyAlerts": "No alerts. Create one to get matching new jobs."
   }
 }
