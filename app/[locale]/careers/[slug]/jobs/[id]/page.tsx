@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatSalaryRange } from "@/lib/utils";
 import type { CareerSiteBranding } from "@/lib/career-site-types";
 import { HEADING_FONTS, BODY_FONTS } from "@/lib/career-site-types";
+import { getJobJsonLd } from "@/lib/career-site/job-jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function PublicJobPage({ params }: { params: { slug: string
   const supabase = createClient();
 
   const [{ data: company }, { data: cmsPage }] = await Promise.all([
-    supabase.from("companies").select("id, name, slug").eq("slug", params.slug).maybeSingle(),
+    supabase.from("companies").select("id, name, slug, logo_url").eq("slug", params.slug).maybeSingle(),
     supabase.from("career_site_pages").select("branding").eq("slug", params.slug).maybeSingle(),
   ]);
   if (!company) notFound();
@@ -32,6 +33,8 @@ export default async function PublicJobPage({ params }: { params: { slug: string
     .eq("status", "active")
     .maybeSingle();
   if (!job) notFound();
+
+  const jsonLd = getJobJsonLd(job, company);
 
   /* ── Branding ── */
   const branding = (cmsPage?.branding ?? {}) as CareerSiteBranding;
@@ -55,6 +58,7 @@ export default async function PublicJobPage({ params }: { params: { slug: string
   return (
     <div style={{ minHeight: "100vh", background: "#ECEAE4", ...body, WebkitFontSmoothing: "antialiased" }}>
       {gFontsImport && <style dangerouslySetInnerHTML={{ __html: gFontsImport }} />}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <div style={{ maxWidth: "760px", margin: "0 auto", padding: "30px 28px 40px" }}>
 
