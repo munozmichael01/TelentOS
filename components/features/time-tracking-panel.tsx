@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { apiFetch, notifyError } from "@/lib/api-client";
 import { Loader2, Plus, Square, Trash2, Play, Clock, ChevronDown, X } from "lucide-react";
 import type { TimeEntry, TimerState, Employee } from "@/lib/types";
@@ -41,14 +42,14 @@ function fmt(min: number) {
   return `${sign}${Math.floor(abs / 60)}h${abs % 60 > 0 ? ` ${abs % 60}m` : ""}`;
 }
 
-function fmtTime(iso: string) {
+function fmtTime(iso: string, locale: string) {
   // "HH:MM:SS" or full ISO — take the HH:MM part
-  const t = iso.includes("T") ? new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : iso.slice(0, 5);
+  const t = iso.includes("T") ? new Date(iso).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }) : iso.slice(0, 5);
   return t;
 }
 
-function fmtStartedAt(iso: string) {
-  return new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+function fmtStartedAt(iso: string, locale: string) {
+  return new Date(iso).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 }
 
 function calcDuration(entry: TimeEntry) {
@@ -173,6 +174,8 @@ function ElapsedTimer({ startedAt }: { startedAt: string }) {
 // ── Active Timers Section ──────────────────────────────────────────
 function ActiveTimers({ timers }: { timers: (TimerState & { employees?: { id: string; name: string; role_title: string | null } | null })[] }) {
   const router = useRouter();
+  const t = useTranslations("Timeoff");
+  const locale = useLocale();
   const [stopping, setStopping] = useState<string | null>(null);
 
   async function stop(employeeId: string) {
@@ -191,7 +194,7 @@ function ActiveTimers({ timers }: { timers: (TimerState & { employees?: { id: st
 
   return (
     <div style={{ marginBottom: "32px" }}>
-      <SectionLabel>Hoy en tiempo real</SectionLabel>
+      <SectionLabel>{t("hours.timers.title")}</SectionLabel>
       <div style={{
         border: `2px solid #1A1A17`,
         boxShadow: "3px 3px 0 #1A1A17",
@@ -214,7 +217,7 @@ function ActiveTimers({ timers }: { timers: (TimerState & { employees?: { id: st
             animation: timers.length > 0 ? "pulse 2s infinite" : undefined,
           }} />
           <span style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase", color: timers.length > 0 ? T.successText : T.soft }}>
-            {timers.length > 0 ? `${timers.length} empleado${timers.length !== 1 ? "s" : ""} fichado${timers.length !== 1 ? "s" : ""} ahora` : "Ningún empleado activo"}
+            {timers.length > 0 ? (timers.length === 1 ? t("hours.timers.singleActive", { count: timers.length }) : t("hours.timers.pluralActive", { count: timers.length })) : t("hours.timers.empty")}
           </span>
         </div>
 
@@ -252,7 +255,7 @@ function ActiveTimers({ timers }: { timers: (TimerState & { employees?: { id: st
                 {/* Working since */}
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: "11px", color: T.soft, marginBottom: "4px" }}>
-                    Desde {fmtStartedAt(timer.started_at)}
+                    {t("hours.timers.since", { time: fmtStartedAt(timer.started_at, locale) })}
                   </div>
                   <ElapsedTimer startedAt={timer.started_at} />
                 </div>
@@ -272,7 +275,7 @@ function ActiveTimers({ timers }: { timers: (TimerState & { employees?: { id: st
                   }}
                 >
                   {stopping === timer.employee_id ? <Loader2 size={12} className="animate-spin" /> : <Square size={12} />}
-                  Parar
+                  {t("hours.timers.stopBtn")}
                 </button>
               </div>
             ))}
@@ -285,8 +288,8 @@ function ActiveTimers({ timers }: { timers: (TimerState & { employees?: { id: st
 }
 
 // ── Entries Table (self-fetching, with filters) ────────────────────
-function fmtShortDate(iso: string) {
-  return new Date(iso + "T12:00:00").toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" });
+function fmtShortDate(iso: string, locale: string) {
+  return new Date(iso + "T12:00:00").toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
 }
 
 function EntriesTable({ initialEntries, employees }: {
@@ -295,6 +298,8 @@ function EntriesTable({ initialEntries, employees }: {
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const router = useRouter();
+  const t = useTranslations("Timeoff");
+  const locale = useLocale();
   const [deleting, setDeleting] = useState<string | null>(null);
   const [empFilter, setEmpFilter] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState(today);
@@ -335,27 +340,34 @@ function EntriesTable({ initialEntries, employees }: {
       router.refresh();
       if (hasFilter) setFetched((prev) => prev ? prev.filter((e) => e.id !== id) : null);
     } catch (e) {
-      notifyError("No se pudo eliminar el registro", e);
+      notifyError(t("hours.table.deleteError"), e);
     } finally {
       setDeleting(null);
     }
   }
 
   const entries = fetched ?? initialEntries;
-  const typeLabel: Record<string, string> = { work: "Trabajo", break: "Descanso" };
+  const typeLabel: Record<string, string> = {
+    work: t("hours.table.types.work"),
+    break: t("hours.table.types.break")
+  };
   const typeBg: Record<string, string> = { work: T.limeSoft, break: "#F0EEE9" };
   const typeText: Record<string, string> = { work: "#2D6E3E", break: T.soft };
-  const sourceLabel: Record<string, string> = { manual: "Manual", timer: "Timer", terminal: "Terminal" };
+  const sourceLabel: Record<string, string> = {
+    manual: t("hours.table.sources.manual"),
+    timer: t("hours.table.sources.timer"),
+    terminal: t("hours.table.sources.terminal")
+  };
 
   return (
     <div style={{ marginBottom: "32px" }}>
-      <SectionLabel>Entradas</SectionLabel>
+      <SectionLabel>{t("hours.table.title")}</SectionLabel>
 
       {/* Filter bar */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
-        <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} />
+        <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} label={t("calendar.filterLabel")} />
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <Label>Rango de fechas</Label>
+          <Label>{t("hours.table.dateRange")}</Label>
           <DateRangeField from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
         </div>
         {hasFilter && (
@@ -368,7 +380,7 @@ function EntriesTable({ initialEntries, employees }: {
               color: T.soft, cursor: "pointer", whiteSpace: "nowrap",
             }}
           >
-            Limpiar filtros
+            {t("hours.table.clearFilters")}
           </button>
         )}
         {loading && <Loader2 size={14} className="animate-spin" style={{ color: T.soft, alignSelf: "center" }} />}
@@ -377,12 +389,21 @@ function EntriesTable({ initialEntries, employees }: {
       {entries.length === 0 ? (
         <div style={{ border: `1px solid ${T.line}`, borderRadius: "14px", padding: "40px", textAlign: "center", color: T.soft, background: T.surface }}>
           <Clock size={28} style={{ margin: "0 auto 10px", display: "block", opacity: 0.4 }} />
-          <div style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>Sin entradas</div>
+          <div style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>{t("hours.table.emptyTitle")}</div>
         </div>
       ) : (
         <HairlineTable
           cols="1.8fr 0.8fr 0.9fr 0.7fr 0.7fr 0.7fr 0.9fr 40px"
-          headers={["Empleado", "Fecha", "Tipo", "Inicio", "Fin", "Duración", "Fuente", ""]}
+          headers={[
+            t("hours.table.employee"),
+            t("hours.table.date"),
+            t("hours.table.type"),
+            t("hours.table.start"),
+            t("hours.table.end"),
+            t("hours.table.duration"),
+            t("hours.table.source"),
+            ""
+          ]}
           align={["left", "left", "left", "left", "left", "right", "left", "right"]}
         >
           {entries.map((e) => (
@@ -394,14 +415,14 @@ function EntriesTable({ initialEntries, employees }: {
                 )}
               </div>
               <span style={{ fontFamily: T.mono, fontSize: "12px", whiteSpace: "nowrap" }}>
-                {fmtShortDate(e.date)}
+                {fmtShortDate(e.date, locale)}
               </span>
               <Pill color={typeText[e.entry_type] ?? T.soft} bg={typeBg[e.entry_type] ?? T.bg}>
                 {typeLabel[e.entry_type] ?? e.entry_type}
               </Pill>
-              <span style={{ fontFamily: T.mono, fontSize: "12px" }}>{fmtTime(e.start_time)}</span>
+              <span style={{ fontFamily: T.mono, fontSize: "12px" }}>{fmtTime(e.start_time, locale)}</span>
               <span style={{ fontFamily: T.mono, fontSize: "12px" }}>
-                {e.end_time ? fmtTime(e.end_time) : <span style={{ color: T.soft }}>Activo</span>}
+                {e.end_time ? fmtTime(e.end_time, locale) : <span style={{ color: T.soft }}>{t("hours.active")}</span>}
               </span>
               <span style={{ fontFamily: T.mono, fontSize: "12px", fontWeight: 700 }}>{calcDuration(e)}</span>
               <Pill color={T.soft} bg={T.bg}>{sourceLabel[e.source] ?? e.source}</Pill>
@@ -415,7 +436,7 @@ function EntriesTable({ initialEntries, employees }: {
                   display: "inline-flex", alignItems: "center", justifyContent: "center",
                   opacity: deleting === e.id ? 0.5 : 1,
                 }}
-                title="Eliminar entrada"
+                title={t("hours.table.deleteTitle")}
               >
                 {deleting === e.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
               </button>
@@ -432,6 +453,7 @@ function WeeklySummary({ entries, employees }: {
   entries: TimeEntry[];
   employees: { id: string; name: string }[];
 }) {
+  const t = useTranslations("Timeoff");
   // Build Mon-Sun for current week
   const today = new Date();
   const dow = today.getDay(); // 0=Sun
@@ -444,7 +466,15 @@ function WeeklySummary({ entries, employees }: {
     return d.toISOString().split("T")[0];
   });
 
-  const dayLabels = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+  const dayLabels = [
+    t("hours.weekly.weekdays.mon"),
+    t("hours.weekly.weekdays.tue"),
+    t("hours.weekly.weekdays.wed"),
+    t("hours.weekly.weekdays.thu"),
+    t("hours.weekly.weekdays.fri"),
+    t("hours.weekly.weekdays.sat"),
+    t("hours.weekly.weekdays.sun")
+  ];
 
   // Aggregate minutes per employee per day (work entries only)
   const empMap: Record<string, Record<string, number>> = {};
@@ -464,17 +494,17 @@ function WeeklySummary({ entries, employees }: {
 
   return (
     <div>
-      <SectionLabel>Resumen semanal</SectionLabel>
+      <SectionLabel>{t("hours.weekly.title")}</SectionLabel>
       <HairlineTable
         cols={`2fr repeat(7, 0.6fr) 0.8fr`}
         headers={[
-          "Empleado",
+          t("hours.weekly.employee"),
           ...dayLabels.map((d, i) => (
-            <span key={d} style={{ color: days[i] === todayStr ? T.brand : undefined, fontWeight: days[i] === todayStr ? 700 : undefined }}>
+            <span key={days[i]} style={{ color: days[i] === todayStr ? T.brand : undefined, fontWeight: days[i] === todayStr ? 700 : undefined }}>
               {d}
             </span>
           )),
-          "Total",
+          t("hours.weekly.total"),
         ]}
         align={["left", "center", "center", "center", "center", "center", "center", "center", "right"]}
       >
@@ -508,6 +538,7 @@ function CreateEntryForm({ employees, onClose }: {
   onClose: () => void;
 }) {
   const router = useRouter();
+  const t = useTranslations("Timeoff");
   const today = new Date().toISOString().slice(0, 10);
 
   const [mode, setMode] = useState<"entry" | "timer">("entry");
@@ -521,7 +552,7 @@ function CreateEntryForm({ employees, onClose }: {
   const [error, setError] = useState("");
 
   async function submit() {
-    if (!employeeId) { setError("Selecciona un empleado"); return; }
+    if (!employeeId) { setError(t("hours.createDrawer.errors.selectEmployee")); return; }
     setSaving(true);
     setError("");
     try {
@@ -532,9 +563,9 @@ function CreateEntryForm({ employees, onClose }: {
           body: JSON.stringify({ employee_id: employeeId, entry_type: entryType }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Error al iniciar timer");
+        if (!res.ok) throw new Error(data.error ?? t("hours.createDrawer.errors.startTimer"));
       } else {
-        if (!startTime) { setError("La hora de inicio es obligatoria"); setSaving(false); return; }
+        if (!startTime) { setError(t("hours.createDrawer.errors.startRequired")); setSaving(false); return; }
         const res = await fetch("/api/time-entries", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -548,7 +579,7 @@ function CreateEntryForm({ employees, onClose }: {
           }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Error al crear entrada");
+        if (!res.ok) throw new Error(data.error ?? t("hours.createDrawer.errors.createEntry"));
       }
       router.refresh();
       onClose();
@@ -563,7 +594,7 @@ function CreateEntryForm({ employees, onClose }: {
     <div>
       {/* Mode toggle */}
       <div style={{ display: "flex", gap: "6px", marginBottom: "24px", padding: "4px", background: T.bg, borderRadius: "10px", border: `1.5px solid ${T.line}` }}>
-        {([["entry", "Entrada manual"], ["timer", "Fichar entrada"]] as const).map(([m, label]) => (
+        {([["entry", t("hours.createDrawer.toggles.manual")], ["timer", t("hours.createDrawer.toggles.timer")]] as const).map(([m, label]) => (
           <button
             key={m}
             onClick={() => setMode(m)}
@@ -582,42 +613,42 @@ function CreateEntryForm({ employees, onClose }: {
         ))}
       </div>
 
-      <Field label="Empleado">
+      <Field label={t("hours.createDrawer.fields.employee")}>
         <NativeSelect value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
-          <option value="">Selecciona empleado…</option>
+          <option value="">{t("hours.createDrawer.fields.employeePlaceholder")}</option>
           {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
         </NativeSelect>
       </Field>
 
       {mode === "entry" && (
-        <Field label="Fecha">
+        <Field label={t("hours.createDrawer.fields.date")}>
           <DateField value={date} onChange={setDate} />
         </Field>
       )}
 
-      <Field label="Tipo">
+      <Field label={t("hours.createDrawer.fields.type")}>
         <NativeSelect value={entryType} onChange={(e) => setEntryType(e.target.value)}>
-          <option value="work">Trabajo</option>
-          <option value="break">Descanso</option>
+          <option value="work">{t("hours.createDrawer.fields.typeWork")}</option>
+          <option value="break">{t("hours.createDrawer.fields.typeBreak")}</option>
         </NativeSelect>
       </Field>
 
       {mode === "entry" && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <Field label="Hora inicio">
+            <Field label={t("hours.createDrawer.fields.start")}>
               <TimeField value={startTime} onChange={setStartTime} />
             </Field>
-            <Field label="Hora fin (opcional)">
+            <Field label={t("hours.createDrawer.fields.end")}>
               <TimeField value={endTime} onChange={setEndTime} />
             </Field>
           </div>
 
-          <Field label="Comentario (opcional)">
+          <Field label={t("hours.createDrawer.fields.comment")}>
             <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Proyecto, tarea…"
+              placeholder={t("hours.createDrawer.fields.commentPlaceholder")}
               rows={3}
               className="resize-y"
             />
@@ -647,7 +678,7 @@ function CreateEntryForm({ employees, onClose }: {
           }}
         >
           {saving && <Loader2 size={14} className="animate-spin" />}
-          {mode === "timer" ? "Iniciar timer" : "Crear entrada"}
+          {mode === "timer" ? t("hours.createDrawer.buttons.startTimer") : t("hours.createDrawer.buttons.createEntry")}
         </button>
         <button
           onClick={onClose}
@@ -658,7 +689,7 @@ function CreateEntryForm({ employees, onClose }: {
             cursor: "pointer",
           }}
         >
-          Cancelar
+          {t("hours.createDrawer.buttons.cancel")}
         </button>
       </div>
     </div>
@@ -677,6 +708,7 @@ export function TimeTrackingPanel({
   employees: { id: string; name: string }[];
   allEntries: TimeEntry[];
 }) {
+  const t = useTranslations("Timeoff");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
@@ -695,7 +727,7 @@ export function TimeTrackingPanel({
           }}
         >
           <Plus size={14} />
-          Nueva entrada
+          {t("hours.panel.newEntry")}
         </button>
       </div>
 
@@ -709,7 +741,7 @@ export function TimeTrackingPanel({
       <WeeklySummary entries={allEntries} employees={employees} />
 
       {/* Create drawer */}
-      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Nueva entrada de tiempo">
+      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title={t("hours.createDrawer.title")}>
         <CreateEntryForm employees={employees} onClose={() => setDrawerOpen(false)} />
       </Drawer>
     </div>

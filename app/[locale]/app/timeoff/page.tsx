@@ -1,10 +1,13 @@
 import { PageHeader } from "@/components/page-header";
 import { AbsencePanel } from "@/components/features/absence-panel";
 import { createClient } from "@/lib/supabase/server";
-import type { AbsenceRequest, AbsenceType, Employee } from "@/lib/types";
+import type { AbsenceRequest, AbsenceType } from "@/lib/types";
 import Link from "next/link";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
-export default async function TimeOffPage() {
+export default async function TimeOffPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
+  const t = await getTranslations({ locale: params.locale, namespace: "Timeoff" });
   const supabase = createClient();
 
   // Fetch company
@@ -17,8 +20,8 @@ export default async function TimeOffPage() {
   if (!company) {
     return (
       <div>
-        <PageHeader title="Ausencias" eyebrow="Ausencias" description="Solicitudes de ausencia del equipo." />
-        <p style={{ color: "#79746B", fontSize: "14px" }}>No se encontró una empresa configurada.</p>
+        <PageHeader title={t("timeoff.title")} eyebrow={t("eyebrow.timeoff")} description={t("timeoff.description")} />
+        <p style={{ color: "#79746B", fontSize: "14px" }}>{t("timeoff.noCompany")}</p>
       </div>
     );
   }
@@ -66,7 +69,7 @@ export default async function TimeOffPage() {
 
   return (
     <div>
-      <PageHeader title="Ausencias" eyebrow="Ausencias" description="Solicitudes de ausencia del equipo.">
+      <PageHeader title={t("timeoff.title")} eyebrow={t("eyebrow.timeoff")} description={t("timeoff.description")}>
         <Link
           href="/app/timeoff/calendar"
           style={{
@@ -89,7 +92,7 @@ export default async function TimeOffPage() {
             <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
             <path d="M16 2v4M8 2v4M3 10h18M8 15h.01M12 15h.01M16 15h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
-          Ver calendario
+          {t("timeoff.viewCalendar")}
         </Link>
       </PageHeader>
 

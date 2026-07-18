@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Loader2, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { CompensationRecord } from "@/lib/types";
 import { apiFetch, ApiError } from "@/lib/api-client";
@@ -31,11 +32,15 @@ function fmt(min: number) {
   const abs = Math.abs(min);
   return `${sign}${Math.floor(abs / 60)}h${abs % 60 > 0 ? ` ${abs % 60}m` : ""}`;
 }
-function fmtDate(iso: string) {
-  return new Date(iso + "T00:00:00").toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+function fmtDate(iso: string, locale: string) {
+  return new Date(iso + "T00:00:00").toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" });
 }
-function monthLabel(year: number, month: number) {
-  const s = new Date(year, month, 1).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+function monthLabel(year: number, month: number, t?: any, locale?: string) {
+  if (t) {
+    const keys = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    return `${t(`calendar.months.${keys[month]}`)} ${year}`;
+  }
+  const s = new Date(year, month, 1).toLocaleDateString(locale ?? "es", { month: "long", year: "numeric" });
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 function monthBounds(year: number, month: number) {
@@ -74,6 +79,7 @@ function PeriodSelector({
   onCurrentMonth: () => void; onPrevMonth: () => void;
   onCustomMode: () => void; onCustomFrom: (v: string) => void; onCustomTo: (v: string) => void;
 }) {
+  const t = useTranslations("Timeoff");
   const now = new Date();
   const isCurrentMonth = !customMode && year === now.getFullYear() && month === now.getMonth();
   const [pY, pM] = prevYM(now.getFullYear(), now.getMonth());
@@ -98,7 +104,7 @@ function PeriodSelector({
               <ChevronLeft size={14} />
             </button>
             <div style={{ padding: "8px 20px", fontFamily: T.head, fontWeight: 800, fontSize: "15px", letterSpacing: "-0.3px", background: T.surface, minWidth: "200px", textAlign: "center" }}>
-              {monthLabel(year, month)}
+              {monthLabel(year, month, t)}
             </div>
             <button onClick={onNext} style={{ padding: "8px 12px", border: "none", background: T.surface, cursor: "pointer", color: T.soft, display: "flex", alignItems: "center" }}>
               <ChevronRight size={14} />
@@ -107,9 +113,9 @@ function PeriodSelector({
         )}
 
         {/* Quick buttons */}
-        <button onClick={onCurrentMonth} style={btnStyle(isCurrentMonth)}>Mes actual</button>
-        <button onClick={onPrevMonth} style={btnStyle(isPrevMonth)}>Mes anterior</button>
-        <button onClick={onCustomMode} style={btnStyle(customMode)}>Personalizado</button>
+        <button onClick={onCurrentMonth} style={btnStyle(isCurrentMonth)}>{t("compensation.nav.current")}</button>
+        <button onClick={onPrevMonth} style={btnStyle(isPrevMonth)}>{t("compensation.nav.prev")}</button>
+        <button onClick={onCustomMode} style={btnStyle(customMode)}>{t("compensation.nav.custom")}</button>
 
         {/* Custom date inputs */}
         {customMode && (
@@ -136,6 +142,7 @@ function ConfirmModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("Timeoff");
   const [scheduledH, setScheduledH] = useState("");
   const [compType, setCompType] = useState("time_off");
   const [comment, setComment] = useState("");
@@ -165,9 +172,9 @@ function ConfirmModal({
       onClose();
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
-        setError("Ya existe un registro para este empleado en este período");
+        setError(t("compensation.confirmModal.errors.exists"));
       } else {
-        setError(e instanceof Error ? e.message : "Error al guardar");
+        setError(e instanceof Error ? e.message : t("compensation.confirmModal.errors.save"));
       }
     } finally {
       setSaving(false);
@@ -186,7 +193,7 @@ function ConfirmModal({
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
           <div>
             <div style={{ fontFamily: T.head, fontWeight: 900, fontSize: "18px", letterSpacing: "-0.4px" }}>
-              Confirmar compensación
+              {t("compensation.confirmModal.title")}
             </div>
             <div style={{ fontSize: "13px", color: T.soft, marginTop: "2px" }}>{employee.name}</div>
           </div>
@@ -197,13 +204,13 @@ function ConfirmModal({
 
         {/* Worked hours (read-only) */}
         <div style={{ padding: "12px 14px", background: T.bg, borderRadius: "10px", border: `1.5px solid ${T.line}`, marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft }}>Horas trabajadas (calculado)</span>
+          <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft }}>{t("compensation.confirmModal.workedHours")}</span>
           <span style={{ fontFamily: T.head, fontWeight: 900, fontSize: "18px", color: T.brand }}>{fmt(workedMinutes)}</span>
         </div>
 
-        <Field label="Horas programadas">
+        <Field label={t("compensation.confirmModal.scheduledHours")}>
           <Input
-            type="number" min="0" step="0.5" placeholder="Ej. 160"
+            type="number" min="0" step="0.5" placeholder={t("compensation.confirmModal.scheduledPlaceholder")}
             value={scheduledH} onChange={(e) => setScheduledH(e.target.value)}
           />
         </Field>
@@ -218,7 +225,7 @@ function ConfirmModal({
           }}>
             {balanceMin >= 0 ? <TrendingUp size={16} color={T.successText} /> : <TrendingDown size={16} color={T.dangerText} />}
             <div>
-              <div style={{ fontFamily: T.mono, fontSize: "9px", letterSpacing: "1px", textTransform: "uppercase", color: balanceMin >= 0 ? T.successText : T.dangerText }}>Balance</div>
+              <div style={{ fontFamily: T.mono, fontSize: "9px", letterSpacing: "1px", textTransform: "uppercase", color: balanceMin >= 0 ? T.successText : T.dangerText }}>{t("compensation.confirmModal.balance")}</div>
               <div style={{ fontFamily: T.head, fontWeight: 900, fontSize: "18px", color: balanceMin >= 0 ? T.successText : T.dangerText }}>
                 {balanceMin > 0 ? "+" : ""}{fmt(balanceMin)}
               </div>
@@ -226,16 +233,16 @@ function ConfirmModal({
           </div>
         )}
 
-        <Field label="Tipo">
+        <Field label={t("compensation.confirmModal.type")}>
           <NativeSelect value={compType} onChange={(e) => setCompType(e.target.value)}>
-            <option value="time_off">Tiempo libre</option>
-            <option value="payment">Pago</option>
+            <option value="time_off">{t("compensation.confirmModal.typeTimeOff")}</option>
+            <option value="payment">{t("compensation.confirmModal.typePayment")}</option>
           </NativeSelect>
         </Field>
 
-        <Field label="Comentario (opcional)">
+        <Field label={t("compensation.confirmModal.comment")}>
           <Textarea value={comment} onChange={(e) => setComment(e.target.value)}
-            placeholder="Notas…" rows={2} />
+            placeholder={t("compensation.confirmModal.commentPlaceholder")} rows={2} />
         </Field>
 
         {error && (
@@ -259,10 +266,10 @@ function ConfirmModal({
             }}
           >
             {saving && <Loader2 size={13} className="animate-spin" />}
-            Guardar registro
+            {t("compensation.confirmModal.buttons.save")}
           </button>
           <button onClick={onClose} style={{ padding: "11px 18px", borderRadius: "10px", border: `1.5px solid ${T.line}`, background: T.bg, color: T.soft, fontFamily: T.mono, fontSize: "12px", cursor: "pointer" }}>
-            Cancelar
+            {t("compensation.confirmModal.buttons.cancel")}
           </button>
         </div>
       </div>
@@ -271,12 +278,22 @@ function ConfirmModal({
 }
 
 // ── Saved Records Table ────────────────────────────────────────────
-const NOVEDAD_LABEL: Record<string, string> = { pending: "Pendiente", included: "En corrida", paid: "Pagado" };
-const NOVEDAD_BG:    Record<string, string> = { pending: T.warnBg,    included: T.successBg,  paid: T.successBg };
-const NOVEDAD_CLR:   Record<string, string> = { pending: T.warnText,  included: T.successText, paid: T.successText };
-
 function RecordsTable({ records }: { records: (CompensationRecord & { employees?: { name: string; role_title: string | null } | null })[] }) {
-  const typeLabel: Record<string, string> = { time_off: "Tiempo libre", payment: "Pago" };
+  const t = useTranslations("Timeoff");
+  const locale = useLocale();
+
+  const NOVEDAD_LABEL: Record<string, string> = {
+    pending: t("compensation.saved.novedad.pending"),
+    included: t("compensation.saved.novedad.included"),
+    paid: t("compensation.saved.novedad.paid")
+  };
+  const NOVEDAD_BG:    Record<string, string> = { pending: T.warnBg,    included: T.successBg,  paid: T.successBg };
+  const NOVEDAD_CLR:   Record<string, string> = { pending: T.warnText,  included: T.successText, paid: T.successText };
+
+  const typeLabel: Record<string, string> = {
+    time_off: t("compensation.saved.types.time_off"),
+    payment: t("compensation.saved.types.payment")
+  };
   const typeBg: Record<string, string>   = { time_off: T.limeSoft, payment: T.warnBg };
   const typeClr: Record<string, string>  = { time_off: "#2D6E3E", payment: T.warnText };
 
@@ -284,10 +301,18 @@ function RecordsTable({ records }: { records: (CompensationRecord & { employees?
 
   return (
     <div>
-      <SL>Registros confirmados</SL>
+      <SL>{t("compensation.saved.title")}</SL>
       <HairlineTable
         cols="1.8fr 1.4fr 1fr 1fr 1fr 0.9fr 0.9fr"
-        headers={["Empleado", "Período", "Programadas", "Trabajadas", "Balance", "Tipo", "Novedad"]}
+        headers={[
+          t("compensation.saved.headers.employee"),
+          t("compensation.saved.headers.period"),
+          t("compensation.saved.headers.scheduled"),
+          t("compensation.saved.headers.worked"),
+          t("compensation.saved.headers.balance"),
+          t("compensation.saved.headers.type"),
+          t("compensation.saved.headers.novedad")
+        ]}
         align={["left", "left", "right", "right", "right", "left", "left"]}
       >
         {records.map((r) => {
@@ -301,8 +326,8 @@ function RecordsTable({ records }: { records: (CompensationRecord & { employees?
                 {r.employees?.role_title && <div style={{ fontSize: "11px", color: T.soft }}>{r.employees.role_title}</div>}
               </div>
               <div>
-                <div style={{ fontFamily: T.mono, fontSize: "11px" }}>{fmtDate(r.period_start)}</div>
-                <div style={{ fontFamily: T.mono, fontSize: "11px", color: T.soft }}>→ {fmtDate(r.period_end)}</div>
+                <div style={{ fontFamily: T.mono, fontSize: "11px" }}>{fmtDate(r.period_start, locale)}</div>
+                <div style={{ fontFamily: T.mono, fontSize: "11px", color: T.soft }}>→ {fmtDate(r.period_end, locale)}</div>
               </div>
               <span style={{ fontFamily: T.mono, fontSize: "12px" }}>{fmt(r.scheduled_minutes)}</span>
               <span style={{ fontFamily: T.mono, fontSize: "12px" }}>{fmt(r.worked_minutes)}</span>
@@ -333,6 +358,7 @@ export function CompensationPanel({
 }: {
   employees: { id: string; name: string }[];
 }) {
+  const t = useTranslations("Timeoff");
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -426,16 +452,16 @@ export function CompensationPanel({
       {loading ? (
         <div style={{ padding: "60px", textAlign: "center", color: T.soft, display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
           <Loader2 size={24} className="animate-spin" />
-          <span style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>Cargando datos…</span>
+          <span style={{ fontFamily: T.mono, fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>{t("compensation.loading")}</span>
         </div>
       ) : (
         <>
           {/* Summary stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px", marginBottom: "28px" }}>
             {[
-              { label: "Con horas registradas", value: String(withHours), color: T.brand },
-              { label: "Sin horas este período", value: String(withoutHours.length), color: withoutHours.length > 0 ? T.warnText : T.soft },
-              { label: "Pendientes de confirmar", value: String(pendingCount), color: pendingCount > 0 ? T.warnText : T.soft },
+              { label: t("compensation.stats.withHours"), value: String(withHours), color: T.brand },
+              { label: t("compensation.stats.withoutHours"), value: String(withoutHours.length), color: withoutHours.length > 0 ? T.warnText : T.soft },
+              { label: t("compensation.stats.pendingConfirm"), value: String(pendingCount), color: pendingCount > 0 ? T.warnText : T.soft },
             ].map(({ label, value, color }) => (
               <div key={label} style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: "12px", padding: "16px 18px" }}>
                 <div style={{ fontFamily: T.mono, fontSize: "10px", color: T.soft, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "6px" }}>{label}</div>
@@ -448,7 +474,7 @@ export function CompensationPanel({
           {withoutHours.length > 0 && empFilter.length === 0 && (
             <div style={{ marginBottom: "24px", padding: "16px 20px", background: T.warnBg, border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17", borderRadius: "12px" }}>
               <div style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.warnText, marginBottom: "10px" }}>
-                Sin horas registradas este período
+                {t("compensation.callout.title")}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {withoutHours.map((s) => (
@@ -466,19 +492,24 @@ export function CompensationPanel({
           {/* Per-employee breakdown */}
           <div style={{ marginBottom: "32px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", gap: "12px", flexWrap: "wrap" }}>
-              <SL>Horas del período</SL>
-              <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} label="Filtrar empleados" />
+              <SL>{t("compensation.grid.title")}</SL>
+              <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} label={t("calendar.filterLabel")} />
             </div>
             {visibleSummaries.length === 0 ? (
               <EmptyState
                 icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" strokeWidth="2"/><path d="M3.5 20a5.5 5.5 0 0111 0M16 6.5a3 3 0 010 6M17.5 20a5.5 5.5 0 00-2-4.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>}
-                title="Sin empleados activos"
-                description="Los resúmenes de compensación aparecerán aquí cuando haya empleados activos con horas registradas."
+                title={t("compensation.grid.noEmployeesTitle")}
+                description={t("compensation.grid.noEmployeesDesc")}
               />
             ) : (
               <HairlineTable
                 cols="2fr 1.2fr 1.2fr 1fr"
-                headers={["Empleado", "Horas trabajadas", "Estado", ""]}
+                headers={[
+                  t("compensation.grid.headers.employee"),
+                  t("compensation.grid.headers.worked"),
+                  t("compensation.grid.headers.status"),
+                  ""
+                ]}
                 align={["left", "right", "left", "right"]}
               >
                 {visibleSummaries.map((s) => (
@@ -495,15 +526,15 @@ export function CompensationPanel({
                     <span>
                       {s.confirmed ? (
                         <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.successText, background: T.successBg, borderRadius: "6px", padding: "3px 9px" }}>
-                          Confirmado
+                          {t("compensation.grid.status.confirmed")}
                         </span>
                       ) : s.worked > 0 ? (
                         <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.warnText, background: T.warnBg, borderRadius: "6px", padding: "3px 9px" }}>
-                          Pendiente
+                          {t("compensation.grid.status.pending")}
                         </span>
                       ) : (
                         <span style={{ fontFamily: T.mono, fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", color: T.soft, background: T.bg, borderRadius: "6px", padding: "3px 9px" }}>
-                          Sin horas
+                          {t("compensation.grid.status.noHours")}
                         </span>
                       )}
                     </span>
@@ -519,7 +550,7 @@ export function CompensationPanel({
                             cursor: "pointer",
                           }}
                         >
-                          Confirmar
+                          {t("compensation.grid.confirmBtn")}
                         </button>
                       )}
                     </span>

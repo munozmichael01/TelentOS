@@ -3,11 +3,14 @@ import { CompensationPanel } from "@/components/features/compensation-panel";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth-guard";
 import type { Employee } from "@/lib/types";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function CompensacionPage() {
+export default async function CompensacionPage({ params }: { params: { locale: string } }) {
   await requireRole(["owner", "hr_admin"]);
+  setRequestLocale(params.locale);
+  const t = await getTranslations({ locale: params.locale, namespace: "Timeoff" });
   const supabase = createClient();
 
   const { data: company } = await supabase
@@ -26,9 +29,9 @@ export default async function CompensacionPage() {
   return (
     <div>
       <PageHeader
-        title="Banco de horas"
-        eyebrow="Horas"
-        description="Gestión de horas extra y compensaciones."
+        title={t("compensation.title")}
+        eyebrow={t("eyebrow.hours")}
+        description={t("compensation.description")}
       />
       <CompensationPanel
         employees={(employees ?? []) as Pick<Employee, "id" | "name">[]}

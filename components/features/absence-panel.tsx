@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { apiFetch, notifyError } from "@/lib/api-client";
 import type { AbsenceRequest, AbsenceType, Employee, AbsenceStatus } from "@/lib/types";
 import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
@@ -79,11 +80,12 @@ const BTN_OUTLINE = {
 /* ─── Status badge ──────────────────────────────────────────────────── */
 
 function StatusBadge({ status }: { status: AbsenceStatus }) {
+  const t = useTranslations("Timeoff");
   const styles: Record<AbsenceStatus, { bg: string; color: string; label: string }> = {
-    pending:   { bg: "#F8E7C4", color: "#946312", label: "Pendiente" },
-    approved:  { bg: "#DCEFE3", color: "#1B6B4F", label: "Aprobada" },
-    rejected:  { bg: "#F6D9D2", color: "#BD4332", label: "Rechazada" },
-    cancelled: { bg: "#F0EDE6", color: "#79746B", label: "Cancelada" },
+    pending:   { bg: "#F8E7C4", color: "#946312", label: t("timeoff.status.pending") },
+    approved:  { bg: "#DCEFE3", color: "#1B6B4F", label: t("timeoff.status.approved") },
+    rejected:  { bg: "#F6D9D2", color: "#BD4332", label: t("timeoff.status.rejected") },
+    cancelled: { bg: "#F0EDE6", color: "#79746B", label: t("timeoff.status.cancelled") },
   };
   const s = styles[status];
   return (
@@ -119,18 +121,20 @@ function TypeBadge({ type }: { type?: Pick<AbsenceType, "name" | "color" | "icon
 
 /* ─── Date range ────────────────────────────────────────────────────── */
 
-function fmtDate(d: string) {
-  return new Date(d + "T12:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+function fmtDate(d: string, locale: string) {
+  return new Date(d + "T12:00:00").toLocaleDateString(locale, { day: "numeric", month: "short" });
 }
 
 function DateRange({ req }: { req: AbsenceRequest }) {
+  const t = useTranslations("Timeoff");
+  const locale = useLocale();
   const same = req.start_date === req.end_date;
   const days = req.working_days_count;
   return (
     <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "11.5px", color: "#79746B", whiteSpace: "nowrap" }}>
-      {same ? fmtDate(req.start_date) : `${fmtDate(req.start_date)} → ${fmtDate(req.end_date)}`}
+      {same ? fmtDate(req.start_date, locale) : `${fmtDate(req.start_date, locale)} → ${fmtDate(req.end_date, locale)}`}
       {" "}
-      <span style={{ color: "#1A1A17", fontWeight: 700 }}>({days} {days === 1 ? "día" : "días"})</span>
+      <span style={{ color: "#1A1A17", fontWeight: 700 }}>({days} {days === 1 ? t("timeoff.duration.day") : t("timeoff.duration.days")})</span>
     </span>
   );
 }
@@ -138,12 +142,17 @@ function DateRange({ req }: { req: AbsenceRequest }) {
 /* ─── Period selector ───────────────────────────────────────────────── */
 
 function PeriodSelect({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
+  const t = useTranslations("Timeoff");
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       <div style={FL}>{label}</div>
       <div style={{ display: "flex", gap: "6px" }}>
         {["full", "morning", "afternoon"].map((p) => {
-          const labels: Record<string, string> = { full: "Completo", morning: "Mañana", afternoon: "Tarde" };
+          const labels: Record<string, string> = { 
+            full: t("timeoff.periods.full"), 
+            morning: t("timeoff.periods.morning"), 
+            afternoon: t("timeoff.periods.afternoon") 
+          };
           const on = value === p;
           return (
             <button
@@ -182,6 +191,7 @@ function CreateModal({
   absenceTypes: AbsenceType[];
   onClose: () => void;
 }) {
+  const t = useTranslations("Timeoff");
   const router = useRouter();
   const [employeeId, setEmployeeId] = useState("");
   const [typeId, setTypeId] = useState("");
@@ -195,7 +205,7 @@ function CreateModal({
   const [calculatedDays, setCalculatedDays] = useState<number | null>(null);
   const [calculating, setCalculating] = useState(false);
 
-  const selectedType = absenceTypes.find((t) => t.id === typeId);
+  const selectedType = absenceTypes.find((typeObj) => typeObj.id === typeId);
 
   const calculateDays = useCallback(async () => {
     if (!startDate || !endDate) return;
@@ -243,7 +253,7 @@ function CreateModal({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error al crear");
+      if (!res.ok) throw new Error(data.error ?? t("timeoff.createModal.errorMsg"));
       router.refresh();
       onClose();
     } catch (err) {
@@ -264,7 +274,7 @@ function CreateModal({
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "22px" }}>
           <h2 style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "22px", letterSpacing: "-.5px", margin: 0 }}>
-            Nueva ausencia
+            {t("timeoff.createModal.title")}
           </h2>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#79746B", padding: "4px" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
@@ -274,9 +284,9 @@ function CreateModal({
         <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
           {/* Employee */}
           <div>
-            <div style={{ ...FL, marginBottom: "7px" }}>Empleado *</div>
+            <div style={{ ...FL, marginBottom: "7px" }}>{t("timeoff.createModal.employee")}</div>
             <NativeSelect value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required>
-              <option value="">Seleccionar empleado…</option>
+              <option value="">{t("timeoff.createModal.employeePlaceholder")}</option>
               {employees.map((emp) => (
                 <option key={emp.id} value={emp.id}>{emp.name}</option>
               ))}
@@ -285,18 +295,18 @@ function CreateModal({
 
           {/* Type */}
           <div>
-            <div style={{ ...FL, marginBottom: "7px" }}>Tipo de ausencia *</div>
+            <div style={{ ...FL, marginBottom: "7px" }}>{t("timeoff.createModal.type")}</div>
             <NativeSelect value={typeId} onChange={(e) => setTypeId(e.target.value)} required>
-              <option value="">Seleccionar tipo…</option>
-              {absenceTypes.map((t) => (
-                <option key={t.id} value={t.id}>{t.icon ? `${t.icon} ` : ""}{t.name}</option>
+              <option value="">{t("timeoff.createModal.typePlaceholder")}</option>
+              {absenceTypes.map((typeObj) => (
+                <option key={typeObj.id} value={typeObj.id}>{typeObj.icon ? `${typeObj.icon} ` : ""}{typeObj.name}</option>
               ))}
             </NativeSelect>
             {selectedType && (
               <div style={{ marginTop: "7px", display: "flex", gap: "8px", alignItems: "center" }}>
                 <TypeBadge type={selectedType} />
                 {selectedType.requires_approval && (
-                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", color: "#946312", background: "#F8E7C4", borderRadius: "999px", padding: "3px 9px" }}>Requiere aprobación</span>
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", color: "#946312", background: "#F8E7C4", borderRadius: "999px", padding: "3px 9px" }}>{t("timeoff.createModal.requiresApproval")}</span>
                 )}
               </div>
             )}
@@ -304,17 +314,21 @@ function CreateModal({
 
           {/* Date range */}
           <div>
-            <div style={{ ...FL, marginBottom: "7px" }}>Fechas *</div>
+            <div style={{ ...FL, marginBottom: "7px" }}>{t("timeoff.createModal.dates")}</div>
             <DateRangeField from={startDate} to={endDate} onFromChange={setStartDate} onToChange={setEndDate} />
           </div>
 
           {/* Periods */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <div>
-              <div style={{ ...FL, marginBottom: "7px" }}>Período inicio</div>
+              <div style={{ ...FL, marginBottom: "7px" }}>{t("timeoff.createModal.startPeriod")}</div>
               <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
                 {["full", "morning", "afternoon"].map((p) => {
-                  const labels: Record<string, string> = { full: "Completo", morning: "Mañana", afternoon: "Tarde" };
+                  const labels: Record<string, string> = { 
+                    full: t("timeoff.periods.full"), 
+                    morning: t("timeoff.periods.morning"), 
+                    afternoon: t("timeoff.periods.afternoon") 
+                  };
                   const on = startPeriod === p;
                   return (
                     <button
@@ -330,10 +344,14 @@ function CreateModal({
               </div>
             </div>
             <div>
-              <div style={{ ...FL, marginBottom: "7px" }}>Período fin</div>
+              <div style={{ ...FL, marginBottom: "7px" }}>{t("timeoff.createModal.endPeriod")}</div>
               <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
                 {["full", "morning", "afternoon"].map((p) => {
-                  const labels: Record<string, string> = { full: "Completo", morning: "Mañana", afternoon: "Tarde" };
+                  const labels: Record<string, string> = { 
+                    full: t("timeoff.periods.full"), 
+                    morning: t("timeoff.periods.morning"), 
+                    afternoon: t("timeoff.periods.afternoon") 
+                  };
                   const on = endPeriod === p;
                   return (
                     <button
@@ -354,13 +372,13 @@ function CreateModal({
           {(calculating || calculatedDays !== null) && (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", background: "#F4F0E8", borderRadius: "10px", border: "1.5px solid #E7E1D4" }}>
               <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "10.5px", color: "#79746B", textTransform: "uppercase", letterSpacing: ".5px" }}>
-                Días laborables
+                {t("timeoff.createModal.workingDays")}
               </span>
               {calculating ? (
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "12px", color: "#79746B" }}>calculando…</span>
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "12px", color: "#79746B" }}>{t("timeoff.createModal.calculating")}</span>
               ) : (
                 <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "20px", color: "#0E5C4A", letterSpacing: "-0.5px" }}>
-                  {calculatedDays} {calculatedDays === 1 ? "día" : "días"}
+                  {calculatedDays} {calculatedDays === 1 ? t("timeoff.duration.day") : t("timeoff.duration.days")}
                 </span>
               )}
             </div>
@@ -368,12 +386,12 @@ function CreateModal({
 
           {/* Comment */}
           <div>
-            <div style={{ ...FL, marginBottom: "7px" }}>Comentario</div>
+            <div style={{ ...FL, marginBottom: "7px" }}>{t("timeoff.createModal.comment")}</div>
             <Textarea
               rows={3}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Motivo o información adicional…"
+              placeholder={t("timeoff.createModal.commentPlaceholder")}
             />
           </div>
 
@@ -385,9 +403,9 @@ function CreateModal({
 
           <div style={{ display: "flex", gap: "10px", paddingTop: "4px" }}>
             <button type="submit" disabled={saving || !employeeId || !typeId} style={{ ...BTN_PRIMARY, opacity: saving || !employeeId || !typeId ? .6 : 1 }}>
-              {saving ? "Guardando…" : "Crear solicitud"}
+              {saving ? t("timeoff.createModal.saving") : t("timeoff.createModal.saveBtn")}
             </button>
-            <button type="button" onClick={onClose} style={BTN_GHOST}>Cancelar</button>
+            <button type="button" onClick={onClose} style={BTN_GHOST}>{t("timeoff.createModal.cancelBtn")}</button>
           </div>
         </form>
       </div>
@@ -398,6 +416,7 @@ function CreateModal({
 /* ─── Reject modal ──────────────────────────────────────────────────── */
 
 function RejectModal({ requestId, onClose }: { requestId: string; onClose: () => void }) {
+  const t = useTranslations("Timeoff");
   const router = useRouter();
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
@@ -413,7 +432,7 @@ function RejectModal({ requestId, onClose }: { requestId: string; onClose: () =>
       router.refresh();
       onClose();
     } catch (err) {
-      notifyError("No se pudo rechazar la solicitud", err);
+      notifyError(t("timeoff.rejectModal.errorMsg"), err);
     } finally {
       setSaving(false);
     }
@@ -423,18 +442,18 @@ function RejectModal({ requestId, onClose }: { requestId: string; onClose: () =>
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 70, background: "rgba(26,26,23,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "420px", background: "#FCFAF6", border: "1.5px solid #1A1A17", borderRadius: "18px", boxShadow: "6px 6px 0 #1A1A17", padding: "26px" }}>
         <h2 style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "20px", letterSpacing: "-.5px", margin: "0 0 16px" }}>
-          Rechazar solicitud
+          {t("timeoff.rejectModal.title")}
         </h2>
         <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <div>
-            <div style={{ ...FL, marginBottom: "7px" }}>Motivo (opcional)</div>
-            <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Explica el motivo del rechazo…" />
+            <div style={{ ...FL, marginBottom: "7px" }}>{t("timeoff.rejectModal.reason")}</div>
+            <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("timeoff.rejectModal.reasonPlaceholder")} />
           </div>
           <div style={{ display: "flex", gap: "10px" }}>
             <button type="submit" disabled={saving} style={{ ...BTN_DANGER, padding: "10px 20px", fontSize: "13px", boxShadow: "3px 3px 0 #1A1A17" }}>
-              {saving ? "Rechazando…" : "Confirmar rechazo"}
+              {saving ? t("timeoff.rejectModal.rejecting") : t("timeoff.rejectModal.confirmBtn")}
             </button>
-            <button type="button" onClick={onClose} style={BTN_GHOST}>Cancelar</button>
+            <button type="button" onClick={onClose} style={BTN_GHOST}>{t("timeoff.rejectModal.cancelBtn")}</button>
           </div>
         </form>
       </div>
@@ -445,6 +464,7 @@ function RejectModal({ requestId, onClose }: { requestId: string; onClose: () =>
 /* ─── Filter tab ────────────────────────────────────────────────────── */
 
 function FilterTab({ label, active, count, onClick }: { label: string; active: boolean; count?: number; onClick: () => void }) {
+  const t = useTranslations("Timeoff");
   return (
     <button
       onClick={onClick}
@@ -489,6 +509,7 @@ function RequestRow({
   onCancel: () => void;
   loading: boolean;
 }) {
+  const t = useTranslations("Timeoff");
   const emp = req.employees as Employee | undefined;
   const type = req.absence_types as Pick<AbsenceType, "name" | "color" | "icon"> | undefined;
 
@@ -540,16 +561,16 @@ function RequestRow({
         {req.status === "pending" && (
           <>
             <button onClick={onApprove} disabled={loading} style={{ ...BTN_SUCCESS, opacity: loading ? .6 : 1 }}>
-              ✓ Aprobar
+              {t("timeoff.actions.approve")}
             </button>
             <button onClick={onReject} disabled={loading} style={{ ...BTN_DANGER, opacity: loading ? .6 : 1 }}>
-              Rechazar
+              {t("timeoff.actions.reject")}
             </button>
           </>
         )}
         {req.status === "approved" && (
           <button onClick={onCancel} disabled={loading} style={{ ...BTN_OUTLINE, opacity: loading ? .6 : 1 }}>
-            Cancelar
+            {t("timeoff.actions.cancel")}
           </button>
         )}
       </div>
@@ -560,11 +581,12 @@ function RequestRow({
 /* ─── Empty state ────────────────────────────────────────────────────── */
 
 function EmptyState({ filter }: { filter: string }) {
+  const t = useTranslations("Timeoff");
   const msgs: Record<string, string> = {
-    all: "No hay solicitudes de ausencia.",
-    pending: "No hay solicitudes pendientes.",
-    approved: "No hay ausencias aprobadas.",
-    rejected: "No hay solicitudes rechazadas.",
+    all: t("timeoff.empty.all"),
+    pending: t("timeoff.empty.pending"),
+    approved: t("timeoff.empty.approved"),
+    rejected: t("timeoff.empty.rejected"),
   };
   return (
     <EmptyStateBase
@@ -574,8 +596,8 @@ function EmptyState({ filter }: { filter: string }) {
           <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
       }
-      title={msgs[filter] ?? "Sin resultados"}
-      description="Las solicitudes aparecerán aquí cuando se creen."
+      title={msgs[filter] ?? t("timeoff.empty.noResults")}
+      description={t("timeoff.empty.desc")}
     />
   );
 }
@@ -600,6 +622,7 @@ export function AbsencePanel({
   absenceTypes: AbsenceType[];
   stats: AbsencePanelStats;
 }) {
+  const t = useTranslations("Timeoff");
   const router = useRouter();
 
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
@@ -637,7 +660,7 @@ export function AbsencePanel({
       await apiFetch(`/api/absence-requests/${id}/approve`, { method: "POST" });
       router.refresh();
     } catch (e) {
-      notifyError("No se pudo aprobar la solicitud", e);
+      notifyError(t("timeoff.errors.approve"), e);
     } finally {
       setLoadingId(null);
     }
@@ -649,7 +672,7 @@ export function AbsencePanel({
       await apiFetch(`/api/absence-requests/${id}/cancel`, { method: "POST" });
       router.refresh();
     } catch (e) {
-      notifyError("No se pudo cancelar la solicitud", e);
+      notifyError(t("timeoff.errors.cancel"), e);
     } finally {
       setLoadingId(null);
     }
@@ -660,10 +683,10 @@ export function AbsencePanel({
       {/* ─── Stats ─────────────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", marginBottom: "24px" }}>
         {[
-          { label: "Pendientes", value: stats.pending, hint: stats.pending > 0 ? "por revisar" : undefined, hintColor: "#946312" },
-          { label: "Aprobadas este mes", value: stats.approvedThisMonth, hint: undefined, hintColor: "#1B6B4F" },
-          { label: "Total este año", value: stats.totalThisYear, hint: undefined, hintColor: "#2B5E8A" },
-          { label: "De baja hoy", value: stats.onLeaveToday, hint: stats.onLeaveToday > 0 ? "en ausencia" : undefined, hintColor: "#79746B" },
+          { label: t("timeoff.stats.pending"), value: stats.pending, hint: stats.pending > 0 ? t("timeoff.stats.pendingHint") : undefined, hintColor: "#946312" },
+          { label: t("timeoff.stats.approvedThisMonth"), value: stats.approvedThisMonth, hint: undefined, hintColor: "#1B6B4F" },
+          { label: t("timeoff.stats.totalThisYear"), value: stats.totalThisYear, hint: undefined, hintColor: "#2B5E8A" },
+          { label: t("timeoff.stats.onLeaveToday"), value: stats.onLeaveToday, hint: stats.onLeaveToday > 0 ? t("timeoff.stats.onLeaveTodayHint") : undefined, hintColor: "#79746B" },
         ].map(({ label, value, hint, hintColor }) => (
           <div
             key={label}
@@ -681,10 +704,10 @@ export function AbsencePanel({
       {/* ─── Header: filter tabs + new button ─────────────────────── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginBottom: "16px", flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: "2px", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "11px", padding: "4px" }}>
-          <FilterTab label="Todas" active={filter === "all"} count={counts.all} onClick={() => setFilter("all")} />
-          <FilterTab label="Pendientes" active={filter === "pending"} count={counts.pending} onClick={() => setFilter("pending")} />
-          <FilterTab label="Aprobadas" active={filter === "approved"} count={counts.approved} onClick={() => setFilter("approved")} />
-          <FilterTab label="Rechazadas" active={filter === "rejected"} count={counts.rejected} onClick={() => setFilter("rejected")} />
+          <FilterTab label={t("timeoff.tabs.all")} active={filter === "all"} count={counts.all} onClick={() => setFilter("all")} />
+          <FilterTab label={t("timeoff.tabs.pending")} active={filter === "pending"} count={counts.pending} onClick={() => setFilter("pending")} />
+          <FilterTab label={t("timeoff.tabs.approved")} active={filter === "approved"} count={counts.approved} onClick={() => setFilter("approved")} />
+          <FilterTab label={t("timeoff.tabs.rejected")} active={filter === "rejected"} count={counts.rejected} onClick={() => setFilter("rejected")} />
         </div>
 
         <button
@@ -692,22 +715,22 @@ export function AbsencePanel({
           style={BTN_PRIMARY}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
-          Nueva ausencia
+          {t("timeoff.actions.new")}
         </button>
       </div>
 
       {/* ─── Advanced filters ──────────────────────────────────────── */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
-        <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} />
+        <EmployeeMultiSelect employees={employees} value={empFilter} onChange={setEmpFilter} label={t("calendar.filterLabel")} />
         <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "140px" }}>
-          <div style={{ ...FL, marginBottom: "2px" }}>Tipo</div>
+          <div style={{ ...FL, marginBottom: "2px" }}>{t("timeoff.filters.type")}</div>
           <NativeSelect value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="">Todos</option>
-            {absenceTypes.map((t) => <option key={t.id} value={t.id}>{t.icon ? `${t.icon} ` : ""}{t.name}</option>)}
+            <option value="">{t("timeoff.filters.all")}</option>
+            {absenceTypes.map((typeObj) => <option key={typeObj.id} value={typeObj.id}>{typeObj.icon ? `${typeObj.icon} ` : ""}{typeObj.name}</option>)}
           </NativeSelect>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <div style={{ ...FL, marginBottom: "2px" }}>Rango</div>
+          <div style={{ ...FL, marginBottom: "2px" }}>{t("timeoff.filters.range")}</div>
           <DateRangeField from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
         </div>
         {hasAdvancedFilter && (
@@ -715,7 +738,7 @@ export function AbsencePanel({
             onClick={() => { setEmpFilter([]); setTypeFilter(""); setDateFrom(""); setDateTo(""); }}
             style={{ ...BTN_GHOST, border: `1.5px solid #E7E1D4`, borderRadius: "9px", padding: "8px 14px", fontSize: "12px", whiteSpace: "nowrap" }}
           >
-            Limpiar
+            {t("timeoff.actions.clean")}
           </button>
         )}
       </div>

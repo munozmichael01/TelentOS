@@ -2,10 +2,13 @@ import { PageHeader } from "@/components/page-header";
 import { TimeTrackingPanel } from "@/components/features/time-tracking-panel";
 import { createClient } from "@/lib/supabase/server";
 import type { TimeEntry, TimerState } from "@/lib/types";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function HorasPage() {
+export default async function HorasPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
+  const t = await getTranslations({ locale: params.locale, namespace: "Timeoff" });
   const supabase = createClient();
 
   const { data: company } = await supabase
@@ -62,9 +65,9 @@ export default async function HorasPage() {
   return (
     <div>
       <PageHeader
-        title="Registro de horas"
-        eyebrow="Horas"
-        description="Fichajes del día y entradas manuales."
+        title={t("hours.title")}
+        eyebrow={t("eyebrow.hours")}
+        description={t("hours.description")}
       />
       <TimeTrackingPanel
         activeTimers={(activeTimers ?? []) as unknown as (TimerState & { employees?: { id: string; name: string; role_title: string | null } | null })[]}

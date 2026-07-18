@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { AbsenceRequest, CompanyHoliday } from "@/lib/types";
 import { EmployeeMultiSelect } from "@/components/features/employee-multi-select";
+import { useTranslations } from "next-intl";
 
 /* ─── Style helpers ──────────────────────────────────────────────────── */
 
@@ -14,7 +15,8 @@ const FL = {
   color: "#79746B",
 };
 
-const WEEKDAYS_ES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -50,9 +52,20 @@ function CalendarGrid({
   absences: AbsenceRequest[];
   holidays: CompanyHoliday[];
 }) {
+  const t = useTranslations("Timeoff");
   const today = new Date().toISOString().slice(0, 10);
   const daysCount = getDaysInMonth(year, month);
   const days = Array.from({ length: daysCount }, (_, i) => i + 1);
+
+  const weekDays = [
+    t("calendar.weekdays.sun"),
+    t("calendar.weekdays.mon"),
+    t("calendar.weekdays.tue"),
+    t("calendar.weekdays.wed"),
+    t("calendar.weekdays.thu"),
+    t("calendar.weekdays.fri"),
+    t("calendar.weekdays.sat")
+  ];
 
   const holidayDates = new Set<string>();
   for (const h of holidays) {
@@ -80,7 +93,7 @@ function CalendarGrid({
       const ds = toDateStr(year, month, d);
       if (ds >= start && ds <= end) {
         absenceMap[empId][ds] = {
-          color, icon: type?.icon ?? "", name: type?.name ?? "Ausencia",
+          color, icon: type?.icon ?? "", name: type?.name ?? t("timeoff.badge.fallback"),
           status: abs.status, startPeriod: abs.start_period, endPeriod: abs.end_period,
           isStart: ds === start, isEnd: ds === end,
         };
@@ -96,7 +109,7 @@ function CalendarGrid({
       <div style={{ minWidth: `${EMPLOYEE_COL_W + daysCount * COL_W + 40}px` }}>
         <div style={{ display: "flex", alignItems: "stretch", borderBottom: "2px solid #E7E1D4", background: "#F4F0E8", borderRadius: "16px 16px 0 0", overflow: "hidden" }}>
           <div style={{ width: `${EMPLOYEE_COL_W}px`, flexShrink: 0, padding: "12px 16px", borderRight: "1px solid #E7E1D4", display: "flex", alignItems: "center" }}>
-            <span style={{ ...FL }}>Empleado</span>
+            <span style={{ ...FL }}>{t("calendar.grid.employee")}</span>
           </div>
           <div style={{ display: "flex", flex: 1 }}>
             {days.map((d) => {
@@ -108,7 +121,7 @@ function CalendarGrid({
               return (
                 <div key={d} style={{ width: `${COL_W}px`, flexShrink: 0, padding: "8px 0 6px", textAlign: "center", borderRight: "1px solid #E7E1D4", background: isToday ? "#0E5C4A" : isHoliday ? "#F6D9D2" : isWeekend ? "#ECEAE4" : "transparent", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
                   <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "9px", color: isToday ? "#C6F24E" : isHoliday ? "#BD4332" : "#79746B" }}>
-                    {WEEKDAYS_ES[dow]}
+                    {weekDays[dow]}
                   </span>
                   <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: isToday ? 900 : 700, fontSize: "13px", color: isToday ? "#fff" : isHoliday ? "#BD4332" : isWeekend ? "#79746B" : "#1A1A17" }}>
                     {d}
@@ -121,7 +134,7 @@ function CalendarGrid({
 
         {employees.length === 0 && (
           <div style={{ padding: "40px 24px", textAlign: "center", color: "#79746B", fontSize: "14px" }}>
-            No hay empleados que mostrar.
+            {t("calendar.grid.empty")}
           </div>
         )}
         {employees.map((emp, rowIdx) => {
@@ -149,7 +162,7 @@ function CalendarGrid({
                   if (isHoliday) cellBg = "#FDF0ED";
                   else if (isWeekend) cellBg = "#F7F4EE";
                   return (
-                    <div key={d} title={absence ? `${absence.name}${absence.status === "pending" ? " (pendiente)" : ""}` : undefined} style={{ width: `${COL_W}px`, flexShrink: 0, borderRight: "1px solid #E7E1D4", background: cellBg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", padding: "4px 2px" }}>
+                    <div key={d} title={absence ? `${absence.name}${absence.status === "pending" ? t("calendar.grid.pendingSuffix") : ""}` : undefined} style={{ width: `${COL_W}px`, flexShrink: 0, borderRight: "1px solid #E7E1D4", background: cellBg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", padding: "4px 2px" }}>
                       {absence && (() => {
                         const hex = absence.color;
                         const isPending = absence.status === "pending";
@@ -189,6 +202,7 @@ export function CalendarWithFilter({
   absences: AbsenceRequest[];
   holidays: CompanyHoliday[];
 }) {
+  const t = useTranslations("Timeoff");
   const [empFilter, setEmpFilter] = useState<string[]>([]);
 
   const visibleEmployees = empFilter.length > 0
@@ -203,7 +217,7 @@ export function CalendarWithFilter({
           employees={allEmployees}
           value={empFilter}
           onChange={setEmpFilter}
-          label="Filtrar empleados"
+          label={t("calendar.filterLabel")}
         />
       </div>
 
