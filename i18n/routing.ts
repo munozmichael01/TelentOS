@@ -9,7 +9,8 @@ import { defineRouting } from "next-intl/routing";
 // Slugs localizados solo donde importa el SEO por mercado (el job board público). El
 // dashboard (/app/*), marketing y auth NO se localizan en la palabra: el prefijo de
 // locale + hreflang ya hacen el geo-targeting; localizar sus slugs no aporta y añade
-// coste. El board sí: `jobs` en EN colisionaría con /app/jobs, por eso `vacancies`.
+// coste. El board sí: /empleos · /jobs · /vagas (el EN `jobs` ya no colisiona con el
+// dashboard porque este vive bajo /app/jobs).
 export const pathnames = {
   "/": "/",
   "/login": "/login",
@@ -25,10 +26,10 @@ export const pathnames = {
   "/careers/[slug]/jobs/[id]": "/careers/[slug]/jobs/[id]",
 
   // Job board público (slugs localizados por mercado)
-  "/empleos": { "es-ve": "/empleos", "en-us": "/vacancies", "pt-br": "/vagas" },
+  "/empleos": { "es-ve": "/empleos", "en-us": "/jobs", "pt-br": "/vagas" },
   "/empleos/oferta/[slug]": {
     "es-ve": "/empleos/oferta/[slug]",
-    "en-us": "/vacancies/job/[slug]",
+    "en-us": "/jobs/opening/[slug]",
     "pt-br": "/vagas/vaga/[slug]",
   },
 
