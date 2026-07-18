@@ -9,7 +9,8 @@ export type BoardSort = "relevance" | "recent" | "salary";
 export type BoardSearchParams = {
   q?: string; // palabra clave (título/descripción)
   location?: string; // ciudad/texto
-  category?: string;
+  category?: string; // free-text legacy
+  categoryKey?: string; // categoría canónica (data/taxonomy/categories.json)
   modality?: "presencial" | "hibrido" | "remoto";
   contract?: string; // employment_type
   salaryMin?: number;
@@ -48,6 +49,7 @@ function applyFilters<T>(q: T, p: BoardSearchParams): T {
   if (p.q) query = query.or(`title.ilike.%${p.q}%,description.ilike.%${p.q}%`);
   if (p.location) query = query.or(`city.ilike.%${p.location}%,location.ilike.%${p.location}%`);
   if (p.category) query = query.eq("category", p.category);
+  if (p.categoryKey) query = query.eq("category_key", p.categoryKey);
   if (p.modality) query = query.eq("modality", p.modality);
   if (p.contract) query = query.eq("employment_type", p.contract);
   if (p.companyId) query = query.eq("company_id", p.companyId);

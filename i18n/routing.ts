@@ -37,6 +37,8 @@ export const pathnames = {
   "/cuenta/perfil": { "es-ve": "/cuenta/perfil", "en-us": "/account/profile", "pt-br": "/conta/perfil" },
   "/empleos/asistente": { "es-ve": "/empleos/asistente", "en-us": "/jobs/assistant", "pt-br": "/vagas/assistente" },
   "/empleos/empresa/[slug]": { "es-ve": "/empleos/empresa/[slug]", "en-us": "/jobs/company/[slug]", "pt-br": "/vagas/empresa/[slug]" },
+  "/empleos/[categoria]": { "es-ve": "/empleos/[categoria]", "en-us": "/jobs/[categoria]", "pt-br": "/vagas/[categoria]" },
+  "/empleos/[categoria]/[ubicacion]": { "es-ve": "/empleos/[categoria]/[ubicacion]", "en-us": "/jobs/[categoria]/[ubicacion]", "pt-br": "/vagas/[categoria]/[ubicacion]" },
 
   // Dashboard B2B autenticado (no localizado — mismo slug en todos los locales)
   "/app/dashboard": "/app/dashboard",

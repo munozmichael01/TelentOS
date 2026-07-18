@@ -4,6 +4,7 @@ import { useState, useTransition, type CSSProperties } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { BoardJob, BoardFacets, BoardSort } from "@/lib/job-board/search";
+import type { BoardCategory, BoardCity } from "@/lib/board/geo";
 import { modalityStyle, formatSalary, logoFor, relativeDate, isNew, jobSlug } from "@/lib/board/format";
 
 const ARCHIVO = "'Archivo',sans-serif";
@@ -18,13 +19,14 @@ const ROOT: CSSProperties = {
   WebkitFontSmoothing: "antialiased",
 } as CSSProperties;
 
-type Filters = { category?: string; modality?: "presencial" | "hibrido" | "remoto"; contract?: string; companyId?: string };
+type Filters = { categoryKey?: string; location?: string; modality?: "presencial" | "hibrido" | "remoto"; contract?: string; companyId?: string };
 type NlChip = { k: string; v: string };
 
 export function BoardClient({
-  initialJobs, initialTotal, initialFacets, initialQuery,
+  initialJobs, initialTotal, initialFacets, initialQuery, categories, country,
 }: {
   initialJobs: BoardJob[]; initialTotal: number; initialFacets: BoardFacets; initialQuery: string;
+  categories: BoardCategory[]; country: string;
 }) {
   const t = useTranslations("Board");
   const locale = useLocale();
@@ -43,15 +45,24 @@ export function BoardClient({
   const [toast, setToast] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const [citySug, setCitySug] = useState<BoardCity[]>([]);
+  const catLabel = (key?: string) => categories.find((c) => c.key === key)?.label ?? key ?? "";
+
   function flash(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 1800);
   }
 
+  async function fetchCities(q: string) {
+    const r = await fetch(`/api/board/cities?country=${country}&q=${encodeURIComponent(q)}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    setCitySug(r?.cities ?? []);
+  }
+
   async function fetchJobs(f: Filters, s: BoardSort, q: string) {
     const p = new URLSearchParams();
     if (q.trim()) p.set("q", q.trim());
-    if (f.category) p.set("category", f.category);
+    if (f.categoryKey) p.set("categoryKey", f.categoryKey);
+    if (f.location) p.set("location", f.location);
     if (f.modality) p.set("modality", f.modality);
     if (f.contract) p.set("contract", f.contract);
     if (f.companyId) p.set("companyId", f.companyId);
@@ -76,9 +87,10 @@ export function BoardClient({
         }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
         if (r?.filters) {
           const f = r.filters;
-          if (f.category) { nlFilters.category = f.category; chips.push({ k: t("filters.category"), v: f.category }); }
+          // La categoría del NL es free-text (no canónica) → no fija filtro; el texto q la
+          // cubre. La ubicación y la modalidad sí son señales fiables.
           if (f.modality) { nlFilters.modality = f.modality; chips.push({ k: t("filters.modality"), v: t(`modality.${f.modality}`) }); }
-          if (f.location) chips.push({ k: "📍", v: f.location });
+          if (f.location) { nlFilters.location = f.location; chips.push({ k: "📍", v: f.location }); }
           if (f.q) { effQuery = f.q; setQuery(f.q); }
         }
       }
@@ -198,7 +210,7 @@ export function BoardClient({
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "6px 0" }}>
             {activeFilters.map((k) => (
               <button key={k} onClick={() => removeFilter(k)} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 999, padding: "5px 8px 5px 11px", cursor: "pointer" }}>
-                {k === "modality" ? t(`modality.${filters.modality}`) : filters[k]}
+                {k === "modality" ? t(`modality.${filters.modality}`) : k === "categoryKey" ? catLabel(filters.categoryKey) : filters[k]}
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#0E5C4A" strokeWidth="2.6" strokeLinecap="round" /></svg>
               </button>
             ))}
@@ -270,7 +282,28 @@ export function BoardClient({
               <button onClick={() => setDraft({})} style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--accent)", background: "none", border: "none", cursor: "pointer" }}>{t("filters.clear")}</button>
             </div>
             <div style={{ padding: "16px 18px 10px" }}>
-              <FacetGroup label={t("filters.category")} options={facets.category.map((f) => ({ val: f.value, label: `${f.value} · ${f.count}` }))} selected={draft.category} onToggle={(v) => setDraft((d) => ({ ...d, category: d.category === v ? undefined : v }))} />
+              {/* Ubicación: autocomplete de la lista canónica del mercado (no solo con ofertas) */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: 1, color: "var(--soft)", marginBottom: 10 }}>{t("filters.location")}</div>
+                {draft.location ? (
+                  <button onClick={() => setDraft((d) => ({ ...d, location: undefined }))} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "#0E5C4A", background: "#DCEFE4", border: "1.5px solid #1A1A17", borderRadius: 999, padding: "7px 13px", cursor: "pointer" }}>
+                    {draft.location}<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#0E5C4A" strokeWidth="2.6" strokeLinecap="round" /></svg>
+                  </button>
+                ) : (
+                  <>
+                    <input onChange={(e) => fetchCities(e.target.value)} placeholder={t("filters.locationPlaceholder")} style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 14, background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: 10, padding: "9px 12px", outline: "none", boxSizing: "border-box" }} />
+                    {citySug.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                        {citySug.map((c) => (
+                          <button key={`${c.name}-${c.admin1}`} onClick={() => { setDraft((d) => ({ ...d, location: c.name })); setCitySug([]); }} style={{ fontSize: 12.5, fontWeight: 600, color: "#54504A", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: 999, padding: "6px 11px", cursor: "pointer" }}>{c.name} <span style={{ color: "var(--soft)", fontSize: 10 }}>{c.admin1}</span></button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              {/* Categoría CANÓNICA — lista completa (las 22), no solo las con ofertas */}
+              <FacetGroup label={t("filters.category")} options={categories.map((c) => ({ val: c.key, label: c.label }))} selected={draft.categoryKey} onToggle={(v) => setDraft((d) => ({ ...d, categoryKey: d.categoryKey === v ? undefined : v }))} />
               <FacetGroup label={t("filters.modality")} options={(["remoto", "hibrido", "presencial"] as const).map((v) => ({ val: v, label: t(`modality.${v}`) }))} selected={draft.modality} onToggle={(v) => setDraft((d) => ({ ...d, modality: d.modality === v ? undefined : (v as Filters["modality"]) }))} />
               <FacetGroup label={t("filters.contract")} options={facets.contract.map((f) => ({ val: f.value, label: `${f.value} · ${f.count}` }))} selected={draft.contract} onToggle={(v) => setDraft((d) => ({ ...d, contract: d.contract === v ? undefined : v }))} />
             </div>

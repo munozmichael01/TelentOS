@@ -40,7 +40,9 @@
     "category": "Area",
     "modality": "Work mode",
     "contract": "Contract type",
-    "company": "Company"
+    "company": "Company",
+    "location": "Location",
+    "locationPlaceholder": "Type a city"
   },
   "modality": {
     "remoto": "Remote",
@@ -155,7 +157,12 @@
     "view": "View job",
     "empty": "I couldn't find jobs for that right now. Try broadening your search.",
     "error": "I couldn't process your search. Please try again.",
-    "suggestions": ["Remote design", "Product in Caracas", "Junior roles", "Best paid"]
+    "suggestions": [
+      "Remote design",
+      "Product in Caracas",
+      "Junior roles",
+      "Best paid"
+    ]
   },
   "builder": {
     "eyebrow": "Profile assistant",
@@ -195,5 +202,16 @@
     "notify": "Notify me of new jobs",
     "notifying": "We'll notify you of new jobs",
     "loginToNotify": "Sign in to get alerts"
+  },
+  "hub": {
+    "titleCat": "{category} jobs",
+    "titleCatCity": "{category} jobs in {city}",
+    "count": "{count, plural, =0 {No jobs} one {# job} other {# jobs}}",
+    "empty": "No {what} jobs yet. Create an alert and we'll notify you when they post.",
+    "createAlert": "Create alert",
+    "alertDone": "We'll notify you",
+    "browseAll": "Browse all jobs",
+    "relatedCats": "Other areas",
+    "inCity": "in {city}"
   }
 }

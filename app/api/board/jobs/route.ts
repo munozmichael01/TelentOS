@@ -17,6 +17,7 @@ export async function GET(req: Request) {
     q: g("q"),
     location: g("location"),
     category: g("category"),
+    categoryKey: g("categoryKey"),
     modality: modality === "presencial" || modality === "hibrido" || modality === "remoto" ? modality : undefined,
     contract: g("contract"),
     salaryMin: num("salaryMin"),

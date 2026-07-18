@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { searchJobs } from "@/lib/job-board/search";
+import { getCategories, countryForLocale } from "@/lib/board/geo";
 import { routing, type Locale } from "@/i18n/routing";
 import { getPathname } from "@/i18n/navigation";
 import { BoardClient } from "@/components/board/board-client";
@@ -49,6 +50,8 @@ export default async function BoardPage({
       initialTotal={initial.total}
       initialFacets={initial.facets}
       initialQuery={searchParams.q ?? ""}
+      categories={getCategories(params.locale)}
+      country={countryForLocale(params.locale)}
     />
   );
 }
