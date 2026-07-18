@@ -3,8 +3,11 @@ import { EmptyState } from "@/components/empty-state";
 import { createClient } from "@/lib/supabase/server";
 import { OrgChart } from "./OrgChart";
 import type { OrgEmployee } from "./OrgChart";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
-export default async function OrgPage() {
+export default async function OrgPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
+  const t = await getTranslations({ locale: params.locale, namespace: "People" });
   const supabase = createClient();
   const { data } = await supabase
     .from("employees")
@@ -16,11 +19,11 @@ export default async function OrgPage() {
 
   return (
     <div>
-      <PageHeader title="Organigrama" eyebrow="Personas" />
+      <PageHeader title={t("org.title")} eyebrow={t("eyebrow")} />
       {employees.length === 0 ? (
         <EmptyState
-          title="Sin empleados"
-          description="Da de alta empleados y asigna managers para ver el organigrama."
+          title={t("org.empty.title")}
+          description={t("org.empty.desc")}
         />
       ) : (
         <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: 16, padding: "32px 16px", overflowX: "auto" }}>

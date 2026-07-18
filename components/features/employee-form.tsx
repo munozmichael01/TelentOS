@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,10 +35,11 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 
 /** Beneficios como chips multi-selección (DS §3.1): pill r-999, seleccionado brand-soft + borde brand. */
 function BenefitsInput({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const t = useTranslations("People");
   const [draft, setDraft] = useState("");
   const add = () => {
-    const t = draft.trim();
-    if (t && !value.includes(t)) onChange([...value, t]);
+    const val = draft.trim();
+    if (val && !value.includes(val)) onChange([...value, val]);
     setDraft("");
   };
   return (
@@ -49,7 +51,7 @@ function BenefitsInput({ value, onChange }: { value: string[]; onChange: (v: str
             className="inline-flex items-center gap-1.5 rounded-full border border-[#0E5C4A] bg-[#E4F0EA] px-3 py-1 text-[13px] text-[#0E5C4A]"
           >
             {b}
-            <button type="button" onClick={() => onChange(value.filter((x) => x !== b))} aria-label={`Quitar ${b}`}>
+            <button type="button" onClick={() => onChange(value.filter((x) => x !== b))} aria-label={t("form.fields.benefitsRemove", { name: b })}>
               <X className="h-3 w-3" />
             </button>
           </span>
@@ -60,7 +62,7 @@ function BenefitsInput({ value, onChange }: { value: string[]; onChange: (v: str
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
         onBlur={add}
-        placeholder="Escribe un beneficio y pulsa Enter (seguro médico, gimnasio…)"
+        placeholder={t("form.fields.benefitsPlaceholder")}
       />
     </div>
   );
@@ -77,6 +79,7 @@ export function EmployeeForm({
   trigger?: React.ReactNode;
 }) {
   const router = useRouter();
+  const t = useTranslations("People");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -116,7 +119,7 @@ export function EmployeeForm({
         body: JSON.stringify({ ...form, manager_id: form.manager_id || null }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error al guardar");
+      if (!res.ok) throw new Error(data.error ?? t("form.saveError"));
       setOpen(false);
       router.refresh();
       if (!employee) router.push(`/app/employees/${data.employee.id}`);
@@ -133,86 +136,86 @@ export function EmployeeForm({
         {trigger ?? (
           <Button>
             <Plus />
-            Nuevo empleado
+            {t("form.newBtn")}
           </Button>
         )}
       </span>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{employee ? "Editar ficha" : "Nuevo empleado"}</DialogTitle>
+            <DialogTitle>{employee ? t("form.editTitle") : t("form.createTitle")}</DialogTitle>
           </DialogHeader>
 
           <div className="max-h-[65vh] space-y-6 overflow-y-auto pr-1">
             {/* ── Personales ── */}
-            <Group title="Personales">
+            <Group title={t("form.groups.personal")}>
               <div className="space-y-1.5">
-                <Label>Nombre *</Label>
+                <Label>{t("form.fields.name")}</Label>
                 <Input value={form.name} onChange={(e) => set("name", e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Email</Label>
+                  <Label>{t("form.fields.email")}</Label>
                   <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Teléfono</Label>
+                  <Label>{t("form.fields.phone")}</Label>
                   <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Documento de identidad</Label>
+                  <Label>{t("form.fields.nationalId")}</Label>
                   <Input value={form.national_id} onChange={(e) => set("national_id", e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Fecha de nacimiento</Label>
+                  <Label>{t("form.fields.birthDate")}</Label>
                   <DateField value={form.birth_date} onChange={(v) => set("birth_date", v)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Contacto de emergencia</Label>
-                  <Input value={form.emergency_contact_name} onChange={(e) => set("emergency_contact_name", e.target.value)} placeholder="Nombre" />
+                  <Label>{t("form.fields.emergencyContact")}</Label>
+                  <Input value={form.emergency_contact_name} onChange={(e) => set("emergency_contact_name", e.target.value)} placeholder={t("form.fields.emergencyContactPlaceholder")} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Teléfono de emergencia</Label>
+                  <Label>{t("form.fields.emergencyPhone")}</Label>
                   <Input value={form.emergency_contact_phone} onChange={(e) => set("emergency_contact_phone", e.target.value)} />
                 </div>
               </div>
             </Group>
 
             {/* ── Puesto y organización ── */}
-            <Group title="Puesto y organización">
+            <Group title={t("form.groups.org")}>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Cargo</Label>
+                  <Label>{t("form.fields.role")}</Label>
                   <Input value={form.role_title} onChange={(e) => set("role_title", e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Nivel / seniority</Label>
-                  <Input value={form.seniority_level} onChange={(e) => set("seniority_level", e.target.value)} placeholder="Senior, Lead…" />
+                  <Label>{t("form.fields.seniority")}</Label>
+                  <Input value={form.seniority_level} onChange={(e) => set("seniority_level", e.target.value)} placeholder={t("form.fields.seniorityPlaceholder")} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Departamento</Label>
+                  <Label>{t("form.fields.dept")}</Label>
                   <Input value={form.department} onChange={(e) => set("department", e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Incorporación</Label>
+                  <Label>{t("form.fields.joined")}</Label>
                   <DateField value={form.start_date} onChange={(v) => set("start_date", v)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Contrato</Label>
+                  <Label>{t("form.fields.contract")}</Label>
                   <Select value={form.contract_type} onValueChange={(v) => set("contract_type", v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="indefinido">Indefinido</SelectItem>
-                      <SelectItem value="temporal">Temporal</SelectItem>
-                      <SelectItem value="practicas">Prácticas</SelectItem>
-                      <SelectItem value="freelance">Freelance</SelectItem>
+                      <SelectItem value="indefinido">{t("form.contracts.indefinido")}</SelectItem>
+                      <SelectItem value="temporal">{t("form.contracts.temporal")}</SelectItem>
+                      <SelectItem value="practicas">{t("form.contracts.practicas")}</SelectItem>
+                      <SelectItem value="freelance">{t("form.contracts.freelance")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Reporta a</Label>
+                  <Label>{t("form.fields.reportsTo")}</Label>
                   <Select value={form.manager_id} onValueChange={(v) => set("manager_id", v)}>
-                    <SelectTrigger><SelectValue placeholder="Nadie" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("form.fields.reportsToPlaceholder")} /></SelectTrigger>
                     <SelectContent>
                       {managers
                         .filter((m) => m.id !== employee?.id)
@@ -224,39 +227,39 @@ export function EmployeeForm({
             </Group>
 
             {/* ── Ubicación y modalidad ── */}
-            <Group title="Ubicación y modalidad">
+            <Group title={t("form.groups.location")}>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1.5">
-                  <Label>País</Label>
+                  <Label>{t("form.fields.country")}</Label>
                   <Input value={form.country} onChange={(e) => set("country", e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Ciudad</Label>
+                  <Label>{t("form.fields.city")}</Label>
                   <Input value={form.city} onChange={(e) => set("city", e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Centro de trabajo</Label>
-                  <Input value={form.work_location} onChange={(e) => set("work_location", e.target.value)} placeholder="Sede, oficina…" />
+                  <Label>{t("form.fields.location")}</Label>
+                  <Input value={form.work_location} onChange={(e) => set("work_location", e.target.value)} placeholder={t("form.fields.locationPlaceholder")} />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label>Dirección</Label>
+                <Label>{t("form.fields.address")}</Label>
                 <Textarea value={form.address} onChange={(e) => set("address", e.target.value)} rows={2} />
               </div>
               <div className="space-y-1.5">
-                <Label>Modalidad de trabajo</Label>
+                <Label>{t("form.fields.modality")}</Label>
                 <ModalitySelector value={form.work_modality} onChange={(m) => set("work_modality", m)} />
               </div>
             </Group>
 
             {/* ── Legal y compensación ── */}
-            <Group title="Legal y compensación">
+            <Group title={t("form.groups.legal")}>
               <div className="space-y-1.5">
-                <Label>Entidad legal</Label>
-                <Input value={form.legal_entity} onChange={(e) => set("legal_entity", e.target.value)} placeholder="Razón social que le contrata" />
+                <Label>{t("form.fields.legalEntity")}</Label>
+                <Input value={form.legal_entity} onChange={(e) => set("legal_entity", e.target.value)} placeholder={t("form.fields.legalEntityPlaceholder")} />
               </div>
               <div className="space-y-1.5">
-                <Label>Beneficios</Label>
+                <Label>{t("form.fields.benefits")}</Label>
                 <BenefitsInput value={form.benefits} onChange={(v) => set("benefits", v)} />
               </div>
             </Group>
@@ -265,10 +268,10 @@ export function EmployeeForm({
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t("form.cancelBtn")}</Button>
             <Button onClick={save} disabled={!form.name.trim() || saving}>
               {saving && <Loader2 className="animate-spin" />}
-              Guardar
+              {t("form.saveBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>

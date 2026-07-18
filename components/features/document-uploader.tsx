@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export function DocumentUploader({ employeeId }: { employeeId: string }) {
+  const t = useTranslations("People");
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -18,7 +20,7 @@ export function DocumentUploader({ employeeId }: { employeeId: string }) {
       fd.append("file", file);
       const res = await fetch(`/api/employees/${employeeId}/documents`, { method: "POST", body: fd });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error al subir");
+      if (!res.ok) throw new Error(data.error ?? t("detail.documents.uploadError"));
       router.refresh();
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));
@@ -31,7 +33,7 @@ export function DocumentUploader({ employeeId }: { employeeId: string }) {
     <div className="space-y-2">
       <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
         <Upload className="h-4 w-4" />
-        {uploading ? "Subiendo…" : "Subir documento"}
+        {uploading ? t("detail.documents.uploading") : t("detail.documents.uploadBtn")}
         <Input
           type="file"
           className="max-w-xs"

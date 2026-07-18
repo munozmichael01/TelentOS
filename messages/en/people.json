@@ -1,0 +1,263 @@
+{
+  "eyebrow": "People",
+  "list": {
+    "title": "Employees",
+    "empty": {
+      "title": "No employees",
+      "desc": "Hire from a job opening pipeline or add manually."
+    },
+    "table": {
+      "name": "Name",
+      "role": "Role",
+      "dept": "Department",
+      "joined": "Joined",
+      "contract": "Contract",
+      "reportsTo": "Reports to",
+      "viaAts": "via ATS"
+    }
+  },
+  "contracts": {
+    "full_time": "Full-time",
+    "part_time": "Part-time",
+    "contractor": "Freelance",
+    "internship": "Internship"
+  },
+  "org": {
+    "title": "Org Chart",
+    "empty": {
+      "title": "No employees",
+      "desc": "Add employees and assign managers to view the org chart."
+    }
+  },
+  "addMe": {
+    "success": {
+      "title": "Your profile has been created",
+      "subtitle": "You now appear on the staff roster.",
+      "completeLink": "Complete profile →"
+    },
+    "offer": {
+      "title": "Do you work here too?",
+      "titleWithFirst": "{first}, do you work here too?",
+      "subtitle": "Add yourself to the roster with one click. We create your profile from your name and email; you can complete it later.",
+      "errorMsg": "Could not create your profile",
+      "button": "Add me",
+      "dismissLabel": "Dismiss"
+    }
+  },
+  "form": {
+    "createTitle": "New Employee",
+    "editTitle": "Edit Profile",
+    "saveError": "Error saving",
+    "saveBtn": "Save",
+    "cancelBtn": "Cancel",
+    "newBtn": "New employee",
+    "groups": {
+      "personal": "Personal",
+      "org": "Job & Organization",
+      "location": "Location & Modality",
+      "legal": "Legal & Compensation"
+    },
+    "fields": {
+      "name": "Name *",
+      "email": "Email",
+      "phone": "Phone",
+      "nationalId": "National ID / Passport",
+      "birthDate": "Date of Birth",
+      "emergencyContact": "Emergency Contact",
+      "emergencyContactPlaceholder": "Name",
+      "emergencyPhone": "Emergency Phone",
+      "role": "Role Title",
+      "seniority": "Seniority Level",
+      "seniorityPlaceholder": "Senior, Lead…",
+      "dept": "Department",
+      "joined": "Joined",
+      "contract": "Contract Type",
+      "reportsTo": "Reports to",
+      "reportsToPlaceholder": "Nobody",
+      "country": "Country",
+      "city": "City",
+      "location": "Work Location",
+      "locationPlaceholder": "HQ, office…",
+      "address": "Address",
+      "modality": "Work Modality",
+      "legalEntity": "Legal Entity",
+      "legalEntityPlaceholder": "Legal company name",
+      "benefits": "Benefits",
+      "benefitsPlaceholder": "Type a benefit and press Enter (health insurance, gym…)",
+      "benefitsRemove": "Remove {name}"
+    },
+    "contracts": {
+      "indefinido": "Permanent",
+      "temporal": "Temporary",
+      "practicas": "Internship",
+      "freelance": "Freelance"
+    }
+  },
+  "detail": {
+    "backBtn": "Employees",
+    "actionsBtn": "Actions ▾",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "stats": {
+      "joined": "Joined",
+      "contract": "Contract",
+      "reportsTo": "Reports to",
+      "timeoffDisp": "Available Off",
+      "noPolicy": "No policy"
+    },
+    "tabs": {
+      "info": "Information",
+      "onboarding": "Onboarding",
+      "documents": "Documents ({count})",
+      "ausencias": "Time Off ({count})",
+      "horas": "Hours",
+      "compensacion": "Compensation",
+      "horario": "Schedule"
+    },
+    "info": {
+      "title": "Employee Data",
+      "name": "Name",
+      "email": "Email",
+      "id": "Employee ID",
+      "joined": "Joined",
+      "contract": "Contract",
+      "reportsTo": "Manager",
+      "dept": "Department",
+      "role": "Role",
+      "teamPosition": "Position in Team",
+      "you": "YOU",
+      "moreReports": "+{count} more"
+    },
+    "documents": {
+      "download": "Download",
+      "empty": "No documents attached.",
+      "uploadBtn": "Upload document",
+      "uploading": "Uploading…",
+      "uploadError": "Error uploading"
+    },
+    "onboarding": {
+      "title": "Onboarding Checklist",
+      "hint": "I generate an onboarding checklist based on the role and department. You can edit, check off tasks, or regenerate it.",
+      "generateBtn": "Generate checklist",
+      "regenerateBtn": "Regenerate checklist",
+      "generating": "Generating…",
+      "tasksCounter": "Tasks",
+      "empty": "No tasks yet. Generate the checklist with the agent above or add tasks manually.",
+      "newTaskPlaceholder": "New manual task…",
+      "addBtn": "Add",
+      "updateError": "Could not update the task",
+      "deleteError": "Could not delete the task",
+      "createError": "Could not create the task"
+    },
+    "absences": {
+      "title": "Balances",
+      "assignBtn": "Assign Allowance",
+      "empty": {
+        "title": "No allowances assigned",
+        "desc": "New employees receive the default policy automatically.",
+        "link": "Go to Time Off Policies →"
+      },
+      "balanceCard": {
+        "prorated": " (prorated)",
+        "daysUnit": "days",
+        "hoursUnit": "hours",
+        "expires": "Expires on {date}",
+        "detailLabel": "{usedApproved} used · {usedPending} pending",
+        "breakdown": {
+          "title": "Origin",
+          "qty": "Quantity",
+          "policy": "Policy",
+          "policyProrated": "Policy (prorated)",
+          "carryover": "Carryover last year",
+          "manual": "Manual adjustments",
+          "usedApproved": "Approved absences",
+          "usedPending": "Pending absences",
+          "holidays": "Company holidays",
+          "expired": "Expired"
+        },
+        "available": "Available",
+        "since": "Since: {date}",
+        "until": "Until: {date}",
+        "noUntil": "No end date"
+      },
+      "history": {
+        "title": "History",
+        "newBtn": "+ New Absence",
+        "empty": "No registered absences",
+        "table": {
+          "type": "Type",
+          "since": "From",
+          "until": "To",
+          "days": "Days",
+          "status": "Status"
+        },
+        "statusLabels": {
+          "pending": "Pending",
+          "approved": "Approved",
+          "rejected": "Rejected",
+          "cancelled": "Cancelled"
+        }
+      }
+    },
+    "hours": {
+      "tiles": {
+        "total": "Total (last 30 records)",
+        "count": "Records",
+        "avg": "Average/day"
+      },
+      "logBtn": "Log hours",
+      "empty": "No logged hours",
+      "table": {
+        "date": "Date",
+        "checkin": "Clock-in",
+        "checkout": "Clock-out",
+        "duration": "Duration",
+        "notes": "Notes"
+      },
+      "activeStatus": "Active"
+    },
+    "compensation": {
+      "tiles": {
+        "balance": "Total balance",
+        "compensated": "Compensated",
+        "pending": "Pending"
+      },
+      "manageBtn": "Manage compensation",
+      "empty": "No compensation records",
+      "table": {
+        "period": "Period",
+        "scheduled": "Scheduled",
+        "worked": "Worked",
+        "balance": "Balance",
+        "type": "Type"
+      },
+      "types": {
+        "time_off": "Time off",
+        "payout": "Payout"
+      }
+    },
+    "schedule": {
+      "title": "Work Schedule",
+      "assignBtn": "Assign Schedule",
+      "empty": {
+        "title": "No schedule assigned",
+        "desc": "New employees receive the default schedule automatically.",
+        "link": "Go to Schedules →"
+      },
+      "card": {
+        "types": {
+          "single": "Fixed week",
+          "rotating": "Rotating weeks"
+        },
+        "since": "Since: {date}",
+        "until": "Until: {date}",
+        "noUntil": "No end date",
+        "weekLabel": "Week {index}",
+        "totalWeek": "Week total: {hours}h",
+        "emptyWeeks": "No weeks configured."
+      }
+    }
+  }
+}
