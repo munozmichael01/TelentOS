@@ -28,7 +28,7 @@ export function OnboardingForm({ email = "" }: { email?: string }) {
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "No se pudo crear la empresa");
-      router.push("/dashboard");
+      router.push("/app/dashboard");
       router.refresh();
     } catch (err) {
       setError(String(err instanceof Error ? err.message : err));

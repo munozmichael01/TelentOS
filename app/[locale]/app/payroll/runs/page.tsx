@@ -47,7 +47,7 @@ export default async function PayRunsPage() {
             const badge = STATUS_LABELS[r.status] ?? STATUS_LABELS.draft;
             return (
               <HairlineRow key={r.id} align={["left", "left", "right", "right", "left", "right"]}>
-                <Link href={`/payroll/runs/${r.id}`} style={{ fontWeight: 700, color: "#1A1A17", textDecoration: "none" }}>{r.period_label}</Link>
+                <Link href={`/app/payroll/runs/${r.id}`} style={{ fontWeight: 700, color: "#1A1A17", textDecoration: "none" }}>{r.period_label}</Link>
                 <span style={{ color: "#54504A" }}>{r.entity_name}</span>
                 <span style={{ fontFamily: "'Space Mono',monospace" }}>{r.employee_count}</span>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>
@@ -58,7 +58,7 @@ export default async function PayRunsPage() {
                     {badge.label}
                   </span>
                 </span>
-                <Link href={`/payroll/runs/${r.id}`} style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none" }}>
+                <Link href={`/app/payroll/runs/${r.id}`} style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none" }}>
                   Ver →
                 </Link>
               </HairlineRow>

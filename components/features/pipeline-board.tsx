@@ -186,7 +186,7 @@ export function PipelineBoard({
                           {initials(name)}
                         </span>
                         <Link
-                          href={`/applications/${app.id}`}
+                          href={`/app/applications/${app.id}`}
                           style={{ flex: 1, minWidth: 0, fontSize: "13.5px", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "inherit", textDecoration: "none" }}
                           onClick={(e) => e.stopPropagation()}
                         >

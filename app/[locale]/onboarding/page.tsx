@@ -11,6 +11,6 @@ export default async function OnboardingPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const company = await getCompany();
-  if (company) redirect("/dashboard"); // ya tiene workspace
+  if (company) redirect("/app/dashboard"); // ya tiene workspace
   return <OnboardingForm email={user.email ?? ""} />;
 }

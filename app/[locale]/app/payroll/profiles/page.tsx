@@ -103,7 +103,7 @@ export default async function PayProfilesPage() {
                   <span style={{ width: "30px", height: "30px", flexShrink: 0, borderRadius: "50%", background: pal.bg, color: pal.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "11px" }}>
                     {initials(e.name)}
                   </span>
-                  <Link href={`/payroll/profiles/${e.id}`} style={{ fontWeight: 700, color: "#1A1A17", textDecoration: "none" }}>{e.name}</Link>
+                  <Link href={`/app/payroll/profiles/${e.id}`} style={{ fontWeight: 700, color: "#1A1A17", textDecoration: "none" }}>{e.name}</Link>
                 </span>
                 <span style={{ color: "#54504A", fontSize: "13px" }}>{e.role_title ?? "—"}</span>
                 <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>
@@ -122,7 +122,7 @@ export default async function PayProfilesPage() {
                 <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", color: "#79746B" }}>
                   {profile ? new Date(profile.updated_at).toLocaleDateString("es-VE") : "—"}
                 </span>
-                <Link href={`/payroll/profiles/${e.id}`} style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none" }}>
+                <Link href={`/app/payroll/profiles/${e.id}`} style={{ fontFamily: "'Space Mono',monospace", fontSize: "11px", fontWeight: 700, color: "#0E5C4A", textDecoration: "none" }}>
                   Ver →
                 </Link>
               </HairlineRow>

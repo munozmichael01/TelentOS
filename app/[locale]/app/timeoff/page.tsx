@@ -68,7 +68,7 @@ export default async function TimeOffPage() {
     <div>
       <PageHeader title="Ausencias" eyebrow="Ausencias" description="Solicitudes de ausencia del equipo.">
         <Link
-          href="/timeoff/calendar"
+          href="/app/timeoff/calendar"
           style={{
             fontFamily: "'Archivo', sans-serif",
             fontWeight: 700,

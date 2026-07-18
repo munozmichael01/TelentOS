@@ -72,7 +72,7 @@ export default async function EmployeesPage() {
                   </span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <Link href={`/employees/${e.id}`} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "14px", color: "#1A1A17", textDecoration: "none" }}>
+                      <Link href={`/app/employees/${e.id}`} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "14px", color: "#1A1A17", textDecoration: "none" }}>
                         {e.name}
                       </Link>
                       {e.candidate_id && (

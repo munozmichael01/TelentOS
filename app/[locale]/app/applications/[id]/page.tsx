@@ -73,7 +73,7 @@ export default async function ApplicationPage({ params }: { params: { id: string
 
   return (
     <div>
-      <Link href={`/jobs/${app.job_id}`} className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link href={`/app/jobs/${app.job_id}`} className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-3.5 w-3.5" />
         {job.title}
       </Link>

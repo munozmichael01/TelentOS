@@ -442,7 +442,7 @@ export default async function TimeOffCalendarPage({
     <div>
       <PageHeader title="Calendario de ausencias" eyebrow="Ausencias">
         <Link
-          href="/timeoff"
+          href="/app/timeoff"
           style={{
             fontFamily: "'Archivo', sans-serif",
             fontWeight: 700,

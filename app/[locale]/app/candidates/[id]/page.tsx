@@ -30,7 +30,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
 
   return (
     <div>
-      <Link href="/candidates" className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link href="/app/candidates" className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-3.5 w-3.5" />
         Candidatos
       </Link>
@@ -72,7 +72,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
                       {stage?.name ?? app.status}
                     </Badge>
                     <Link
-                      href={`/applications/${app.id}`}
+                      href={`/app/applications/${app.id}`}
                       className="text-xs font-medium text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
                     >
                       Ver candidatura →

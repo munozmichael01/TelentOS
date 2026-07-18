@@ -83,7 +83,7 @@ export default async function CandidatesPage() {
                     {initials(c.name)}
                   </span>
                   <div style={{ minWidth: 0 }}>
-                    <Link href={`/candidates/${c.id}`} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "14px", color: "#1A1A17", textDecoration: "none" }}>
+                    <Link href={`/app/candidates/${c.id}`} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "14px", color: "#1A1A17", textDecoration: "none" }}>
                       {c.name}
                     </Link>
                     <div style={{ fontSize: "11.5px", color: "#79746B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.email}</div>

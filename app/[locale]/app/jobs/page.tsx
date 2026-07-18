@@ -62,10 +62,10 @@ export default async function JobsPage({
     <div>
       <PageHeader title="Ofertas" eyebrow="Reclutamiento">
         <Button variant="outline" asChild>
-          <Link href="/jobs/import"><FileUp />Importar</Link>
+          <Link href="/app/jobs/import"><FileUp />Importar</Link>
         </Button>
         <Button asChild>
-          <Link href="/jobs/new"><Plus />Nueva oferta</Link>
+          <Link href="/app/jobs/new"><Plus />Nueva oferta</Link>
         </Button>
       </PageHeader>
 
@@ -96,8 +96,8 @@ export default async function JobsPage({
           description="Crea una oferta desde cero con el agente de redacción o importa desde XML, CSV, Excel o una URL."
           action={
             <div className="flex gap-2">
-              <Button asChild><Link href="/jobs/new">Crear con IA</Link></Button>
-              <Button variant="outline" asChild><Link href="/jobs/import">Importar</Link></Button>
+              <Button asChild><Link href="/app/jobs/new">Crear con IA</Link></Button>
+              <Button variant="outline" asChild><Link href="/app/jobs/import">Importar</Link></Button>
             </div>
           }
         />
@@ -108,7 +108,7 @@ export default async function JobsPage({
             return (
               <Link
                 key={job.id}
-                href={`/jobs/${job.id}`}
+                href={`/app/jobs/${job.id}`}
                 className="flex items-center gap-[18px] rounded-[14px] border border-[#E7E1D4] bg-[#F4F0E8] px-[18px] py-4 transition-[border-color,box-shadow] duration-[120ms] hover:border-[#1A1A17] hover:shadow-[3px_3px_0_#1A1A17]"
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#DCEFE4] font-[Archivo] text-base font-black text-[#0E5C4A]">

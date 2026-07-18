@@ -55,7 +55,7 @@ export function NewRunDialog() {
       });
       setOpen(false);
       reset();
-      router.push(`/payroll/runs/${result.run.id}`);
+      router.push(`/app/payroll/runs/${result.run.id}`);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setError("Ya existe una corrida para este período y entidad.");

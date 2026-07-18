@@ -66,7 +66,7 @@ function MiniOrgChart({ emp, manager, reports }: { emp: { id: string; name: stri
       {/* Manager */}
       {manager && (
         <>
-          <Link href={`/employees/${manager.id}`} style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "12px", padding: "10px 14px", textDecoration: "none", maxWidth: "340px" }}>
+          <Link href={`/app/employees/${manager.id}`} style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#F4F0E8", border: "1px solid #E7E1D4", borderRadius: "12px", padding: "10px 14px", textDecoration: "none", maxWidth: "340px" }}>
             <OrgAvatar name={manager.name} size={32} />
             <div>
               <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#1A1A17" }}>{manager.name}</div>
@@ -93,7 +93,7 @@ function MiniOrgChart({ emp, manager, reports }: { emp: { id: string; name: stri
           {connectorLine}
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {visible.map((r) => (
-              <Link key={r.id} href={`/employees/${r.id}`} style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "11px", padding: "8px 12px", textDecoration: "none", transition: "background .12s" }}>
+              <Link key={r.id} href={`/app/employees/${r.id}`} style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "11px", padding: "8px 12px", textDecoration: "none", transition: "background .12s" }}>
                 <OrgAvatar name={r.name} size={26} />
                 <div>
                   <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "12.5px", color: "#1A1A17" }}>{r.name}</div>
@@ -299,7 +299,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
 
   return (
     <div>
-      <Link href="/employees" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, color: "#79746B", marginBottom: "14px", textDecoration: "none" }}>
+      <Link href="/app/employees" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, color: "#79746B", marginBottom: "14px", textDecoration: "none" }}>
         <ArrowLeft size={15} /> Empleados
       </Link>
 
@@ -422,7 +422,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
             {/* ── Balances ── */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
               <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px" }}>Balances</div>
-              <Link href="/settings/absences" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none", display: "inline-block" }}>
+              <Link href="/app/settings/absences" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none", display: "inline-block" }}>
                 Asignar permiso
               </Link>
             </div>
@@ -432,7 +432,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CFC7B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "10px", display: "block", margin: "0 auto 10px" }}><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>
                 <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "6px" }}>Sin permisos asignados</div>
                 <div style={{ fontSize: "13px", color: "#79746B", marginBottom: "16px" }}>Los nuevos empleados reciben la política por defecto automáticamente.</div>
-                <Link href="/settings/absences" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "underline" }}>
+                <Link href="/app/settings/absences" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "underline" }}>
                   Ir a Políticas de ausencias →
                 </Link>
               </div>
@@ -525,7 +525,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
             {/* ── Historial ── */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
               <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px" }}>Historial</div>
-              <Link href="/timeoff" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
+              <Link href="/app/timeoff" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
                 + Nueva ausencia
               </Link>
             </div>
@@ -607,7 +607,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
-              <Link href="/horas" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
+              <Link href="/app/horas" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
                 Registrar horas
               </Link>
             </div>
@@ -666,7 +666,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
             })()}
 
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
-              <Link href="/horas/compensacion" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
+              <Link href="/app/horas/compensacion" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
                 Gestionar compensaciones
               </Link>
             </div>
@@ -713,7 +713,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
           <div style={{ maxWidth: "760px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
               <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "16px" }}>Horario de trabajo</div>
-              <Link href="/settings/schedules" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none", display: "inline-block" }}>
+              <Link href="/app/settings/schedules" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none", display: "inline-block" }}>
                 Asignar horario
               </Link>
             </div>
@@ -723,7 +723,7 @@ export default async function EmployeePage({ params }: { params: { id: string } 
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CFC7B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 10px" }}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "15px", marginBottom: "6px" }}>Sin horario asignado</div>
                 <div style={{ fontSize: "13px", color: "#79746B", marginBottom: "16px" }}>Los nuevos empleados reciben el horario por defecto automáticamente.</div>
-                <Link href="/settings/schedules" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "underline" }}>
+                <Link href="/app/settings/schedules" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "underline" }}>
                   Ir a Horarios →
                 </Link>
               </div>

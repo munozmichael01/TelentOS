@@ -119,7 +119,7 @@ export function EmployeeForm({
       if (!res.ok) throw new Error(data.error ?? "Error al guardar");
       setOpen(false);
       router.refresh();
-      if (!employee) router.push(`/employees/${data.employee.id}`);
+      if (!employee) router.push(`/app/employees/${data.employee.id}`);
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));
     } finally {

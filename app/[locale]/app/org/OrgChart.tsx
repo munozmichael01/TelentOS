@@ -29,7 +29,7 @@ function NodeCard({ employee, isRoot }: { employee: OrgEmployee; isRoot: boolean
   const pal = palette(employee.name);
   return (
     <Link
-      href={`/employees/${employee.id}`}
+      href={`/app/employees/${employee.id}`}
       style={{
         display: "flex",
         flexDirection: "column",

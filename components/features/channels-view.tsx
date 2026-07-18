@@ -273,7 +273,7 @@ function KPIsTab() {
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       {row.top_jobs.map((j) => (
                         <div key={j.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-                          <Link href={`/jobs/${j.id}`} style={{ fontSize: "13px", color: ink, textDecoration: "none", fontWeight: 600, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <Link href={`/app/jobs/${j.id}`} style={{ fontSize: "13px", color: ink, textDecoration: "none", fontWeight: 600, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {j.title}
                           </Link>
                           <span style={{ ...mono, fontSize: "10.5px", color: soft, flexShrink: 0 }}>{j.applications} aplic.</span>

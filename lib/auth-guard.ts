@@ -16,7 +16,7 @@ export async function requireRole(allowedRoles: Role[]): Promise<Role> {
   if (!user) redirect("/login");
 
   const company = await getCompany();
-  if (!company) redirect("/dashboard");
+  if (!company) redirect("/app/dashboard");
 
   const admin = createAdminClient();
   const { data: member } = await admin
@@ -26,10 +26,10 @@ export async function requireRole(allowedRoles: Role[]): Promise<Role> {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!member?.role) redirect("/dashboard");
+  if (!member?.role) redirect("/app/dashboard");
 
   const role = member.role as Role;
-  if (!allowedRoles.includes(role)) redirect("/dashboard");
+  if (!allowedRoles.includes(role)) redirect("/app/dashboard");
 
   return role;
 }

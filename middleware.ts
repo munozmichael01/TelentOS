@@ -3,9 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 
-// Compone i18n (next-intl) + auth (Supabase). El locale va en la URL (/es, /en, /pt);
-// las comprobaciones de público/privado y los redirects se hacen sobre el path SIN el
-// prefijo de idioma. `/api` queda fuera (no se localiza y se autoprotege por ruta).
+// Compone i18n (next-intl) + auth (Supabase). El locale idioma-país va en la URL
+// (/es-ve, /en-us, /pt-br); las comprobaciones de público/privado y los redirects se
+// hacen sobre el path SIN el prefijo de idioma. `/api` queda fuera (no se localiza y se
+// autoprotege por ruta).
 const handleI18n = createIntlMiddleware(routing);
 const localeRe = new RegExp(`^/(${routing.locales.join("|")})(?=/|$)`);
 
@@ -38,26 +39,22 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // 3) Protección de rutas sobre el path SIN prefijo de idioma.
+  // El dashboard B2B autenticado vive bajo /app/* (privado); TODO lo demás es público
+  // (marketing, career sites, job board, login/auth). Regla simple: /app/* = privado.
   const { pathname } = request.nextUrl;
   const locale = pathname.match(localeRe)?.[1] ?? routing.defaultLocale;
   const bare = pathname.replace(localeRe, "") || "/";
 
-  const isPublic =
-    bare === "/" ||
-    bare.startsWith("/login") ||
-    bare.startsWith("/auth/") ||
-    bare.startsWith("/careers") ||
-    bare.startsWith("/producto") ||
-    bare.startsWith("/pricing");
+  const isPrivate = bare === "/app" || bare.startsWith("/app/");
 
-  if (!user && !isPublic) {
+  if (!user && isPrivate) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = `/${locale}/login`;
     return NextResponse.redirect(redirectUrl);
   }
   if (user && (bare.startsWith("/login") || bare === "/")) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = `/${locale}/dashboard`;
+    redirectUrl.pathname = `/${locale}/app/dashboard`;
     return NextResponse.redirect(redirectUrl);
   }
 

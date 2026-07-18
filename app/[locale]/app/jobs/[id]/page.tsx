@@ -38,7 +38,7 @@ export default async function JobDetailPage({ params }: { params: { id: string }
   return (
     <div>
       <Link
-        href="/jobs"
+        href="/app/jobs"
         style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, color: "#79746B", marginBottom: "14px", textDecoration: "none" }}
       >
         <ArrowLeft size={15} />
@@ -54,7 +54,7 @@ export default async function JobDetailPage({ params }: { params: { id: string }
           {typedJob.status === "active" ? "activa" : typedJob.status}
         </Badge>
         <Button variant="outline" asChild>
-          <Link href={`/jobs/${typedJob.id}/edit`}><Pencil />Editar</Link>
+          <Link href={`/app/jobs/${typedJob.id}/edit`}><Pencil />Editar</Link>
         </Button>
       </PageHeader>
 

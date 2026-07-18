@@ -59,7 +59,7 @@ export function AddMeAsEmployee({ name }: { name: string }) {
           <div style={{ fontSize: "13px", color: "#3E6B57", marginTop: "1px" }}>Ya apareces en la plantilla.</div>
         </div>
         {empId && (
-          <Link href={`/employees/${empId}`} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "none", whiteSpace: "nowrap" }}>
+          <Link href={`/app/employees/${empId}`} style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 700, fontSize: "13px", color: "#0E5C4A", textDecoration: "none", whiteSpace: "nowrap" }}>
             Completar ficha →
           </Link>
         )}
