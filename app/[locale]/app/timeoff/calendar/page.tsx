@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { AbsenceRequest, CompanyHoliday, Employee } from "@/lib/types";
 import Link from "next/link";
 import { CalendarWithFilter } from "@/components/features/calendar-with-filter";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
 /* ─── Style helpers ──────────────────────────────────────────────────── */
 
@@ -17,8 +18,6 @@ const FL = {
 
 /* ─── Weekday helpers ────────────────────────────────────────────────── */
 
-const WEEKDAYS_ES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-const MONTHS_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -62,12 +61,16 @@ function CalendarGrid({
   employees,
   absences,
   holidays,
+  t,
+  weekDays,
 }: {
   year: number;
   month: number;
   employees: { id: string; name: string }[];
   absences: AbsenceRequest[];
   holidays: CompanyHoliday[];
+  t: any;
+  weekDays: string[];
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const daysCount = getDaysInMonth(year, month);
@@ -111,7 +114,7 @@ function CalendarGrid({
         absenceMap[empId][ds] = {
           color,
           icon: type?.icon ?? "",
-          name: type?.name ?? "Ausencia",
+          name: type?.name ?? t("timeoff.badge.fallback"),
           status: abs.status,
           startPeriod: abs.start_period,
           endPeriod: abs.end_period,
@@ -143,7 +146,7 @@ function CalendarGrid({
         <div style={{ display: "flex", alignItems: "stretch", borderBottom: "2px solid #E7E1D4", background: "#F4F0E8", borderRadius: "16px 16px 0 0", overflow: "hidden" }}>
           {/* Employee col header */}
           <div style={{ width: `${EMPLOYEE_COL_W}px`, flexShrink: 0, padding: "12px 16px", borderRight: "1px solid #E7E1D4", display: "flex", alignItems: "center" }}>
-            <span style={{ ...FL }}>Empleado</span>
+            <span style={{ ...FL }}>{t("calendar.grid.employee")}</span>
           </div>
           {/* Day headers */}
           <div style={{ display: "flex", flex: 1 }}>
@@ -170,7 +173,7 @@ function CalendarGrid({
                   }}
                 >
                   <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "9px", color: isToday ? "#C6F24E" : isHoliday ? "#BD4332" : "#79746B" }}>
-                    {WEEKDAYS_ES[dow]}
+                    {weekDays[dow]}
                   </span>
                   <span style={{ fontFamily: "'Archivo', sans-serif", fontWeight: isToday ? 900 : 700, fontSize: "13px", color: isToday ? "#fff" : isHoliday ? "#BD4332" : isWeekend ? "#79746B" : "#1A1A17" }}>
                     {d}
@@ -184,7 +187,7 @@ function CalendarGrid({
         {/* Employee rows */}
         {employees.length === 0 && (
           <div style={{ padding: "40px 24px", textAlign: "center", color: "#79746B", fontSize: "14px" }}>
-            No hay empleados activos.
+            {t("calendar.grid.empty")}
           </div>
         )}
         {employees.map((emp, rowIdx) => {
@@ -228,7 +231,7 @@ function CalendarGrid({
                   return (
                     <div
                       key={d}
-                      title={absence ? `${absence.name}${absence.status === "pending" ? " (pendiente)" : ""}` : undefined}
+                      title={absence ? `${absence.name}${absence.status === "pending" ? t("calendar.grid.pendingSuffix") : ""}` : undefined}
                       style={{
                         width: `${COL_W}px`,
                         flexShrink: 0,
@@ -292,7 +295,7 @@ function CalendarGrid({
 
 /* ─── Month navigation header ────────────────────────────────────────── */
 
-function MonthNav({ year, month }: { year: number; month: number }) {
+function MonthNav({ year, month, t, months }: { year: number; month: number; t: any; months: string[] }) {
   const prev = new Date(year, month - 1, 1);
   const next = new Date(year, month + 1, 1);
   const prevParam = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`;
@@ -319,13 +322,13 @@ function MonthNav({ year, month }: { year: number; month: number }) {
     <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px", flexWrap: "wrap" }}>
       <Link href={`?month=${prevParam}`} style={navBtn}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        Anterior
+        {t("calendar.nav.prev")}
       </Link>
       <h2 style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: "22px", letterSpacing: "-.5px", margin: 0, color: "#1A1A17" }}>
-        {MONTHS_ES[month]} {year}
+        {months[month]} {year}
       </h2>
       <Link href={`?month=${nextParam}`} style={navBtn}>
-        Siguiente
+        {t("calendar.nav.next")}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </Link>
     </div>
@@ -334,7 +337,7 @@ function MonthNav({ year, month }: { year: number; month: number }) {
 
 /* ─── Legend ─────────────────────────────────────────────────────────── */
 
-function Legend({ items }: { items: { name: string; color: string; icon: string }[] }) {
+function Legend({ items, t }: { items: { name: string; color: string; icon: string }[]; t: any }) {
   if (items.length === 0) return null;
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "18px" }}>
@@ -348,15 +351,15 @@ function Legend({ items }: { items: { name: string; color: string; icon: string 
       ))}
       <div style={{ display: "flex", alignItems: "center", gap: "7px", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "999px", padding: "5px 12px" }}>
         <div style={{ width: "12px", height: "12px", borderRadius: "3px", background: "#ECEAE4", flexShrink: 0 }} />
-        <span style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "12.5px", fontWeight: 600, color: "#79746B" }}>Fin de semana</span>
+        <span style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "12.5px", fontWeight: 600, color: "#79746B" }}>{t("calendar.legend.weekend")}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "7px", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "999px", padding: "5px 12px" }}>
         <div style={{ width: "12px", height: "12px", borderRadius: "3px", background: "#F6D9D2", border: "1px solid #F0A89E", flexShrink: 0 }} />
-        <span style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "12.5px", fontWeight: 600, color: "#BD4332" }}>Festivo</span>
+        <span style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "12.5px", fontWeight: 600, color: "#BD4332" }}>{t("calendar.legend.holiday")}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "7px", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "999px", padding: "5px 12px" }}>
         <div style={{ width: "12px", height: "4px", borderRadius: "2px", background: "rgba(100,160,100,.5)", border: "1.5px dashed #1B6B4F", flexShrink: 0 }} />
-        <span style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "12.5px", fontWeight: 600, color: "#79746B" }}>Pendiente</span>
+        <span style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "12.5px", fontWeight: 600, color: "#79746B" }}>{t("calendar.legend.pending")}</span>
       </div>
     </div>
   );
@@ -366,10 +369,40 @@ function Legend({ items }: { items: { name: string; color: string; icon: string 
 /* ─── Page ───────────────────────────────────────────────────────────── */
 
 export default async function TimeOffCalendarPage({
+  params,
   searchParams,
 }: {
+  params: { locale: string };
   searchParams: { month?: string };
 }) {
+  setRequestLocale(params.locale);
+  const t = await getTranslations({ locale: params.locale, namespace: "Timeoff" });
+
+  const weekDays = [
+    t("calendar.weekdays.sun"),
+    t("calendar.weekdays.mon"),
+    t("calendar.weekdays.tue"),
+    t("calendar.weekdays.wed"),
+    t("calendar.weekdays.thu"),
+    t("calendar.weekdays.fri"),
+    t("calendar.weekdays.sat"),
+  ];
+
+  const months = [
+    t("calendar.months.jan"),
+    t("calendar.months.feb"),
+    t("calendar.months.mar"),
+    t("calendar.months.apr"),
+    t("calendar.months.may"),
+    t("calendar.months.jun"),
+    t("calendar.months.jul"),
+    t("calendar.months.aug"),
+    t("calendar.months.sep"),
+    t("calendar.months.oct"),
+    t("calendar.months.nov"),
+    t("calendar.months.dec"),
+  ];
+
   const supabase = createClient();
 
   const { year, month } = parseMonth(searchParams.month);
@@ -388,8 +421,8 @@ export default async function TimeOffCalendarPage({
   if (!company) {
     return (
       <div>
-        <PageHeader title="Calendario de ausencias" eyebrow="Ausencias" />
-        <p style={{ color: "#79746B", fontSize: "14px" }}>No se encontró una empresa configurada.</p>
+        <PageHeader title={t("calendar.title")} eyebrow={t("eyebrow.timeoff")} />
+        <p style={{ color: "#79746B", fontSize: "14px" }}>{t("timeoff.noCompany")}</p>
       </div>
     );
   }
@@ -440,7 +473,7 @@ export default async function TimeOffCalendarPage({
 
   return (
     <div>
-      <PageHeader title="Calendario de ausencias" eyebrow="Ausencias">
+      <PageHeader title={t("calendar.title")} eyebrow={t("eyebrow.timeoff")}>
         <Link
           href="/app/timeoff"
           style={{
@@ -460,26 +493,26 @@ export default async function TimeOffCalendarPage({
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          Lista de solicitudes
+          {t("calendar.backToList")}
         </Link>
       </PageHeader>
 
       {/* Summary stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px", marginBottom: "24px" }}>
-        <StatCard label="Total este mes" value={totalAbsences} />
-        <StatCard label="Aprobadas" value={approvedAbsences} />
-        <StatCard label="Pendientes" value={pendingAbsences} />
+        <StatCard label={t("calendar.stats.totalMonth")} value={totalAbsences} />
+        <StatCard label={t("calendar.stats.approved")} value={approvedAbsences} />
+        <StatCard label={t("calendar.stats.pending")} value={pendingAbsences} />
       </div>
 
       {/* Month navigation */}
-      <MonthNav year={year} month={month} />
+      <MonthNav year={year} month={month} t={t} months={months} />
 
       {/* Calendar grid */}
       {allEmployees.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 24px", background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px" }}>
-          <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "17px", color: "#1A1A17" }}>No hay empleados activos</div>
+          <div style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 800, fontSize: "17px", color: "#1A1A17" }}>{t("calendar.noEmployeesTitle")}</div>
           <div style={{ fontSize: "13.5px", color: "#79746B", marginTop: "6px" }}>
-            Añade empleados activos para ver el calendario.
+            {t("calendar.noEmployeesDesc")}
           </div>
         </div>
       ) : (
@@ -493,12 +526,12 @@ export default async function TimeOffCalendarPage({
       )}
 
       {/* Legend */}
-      <Legend items={legendTypes} />
+      <Legend items={legendTypes} t={t} />
 
       {/* Holiday list */}
       {allHolidays.length > 0 && (
         <div style={{ marginTop: "24px" }}>
-          <div style={{ ...FL, marginBottom: "10px" }}>Festivos del mes</div>
+          <div style={{ ...FL, marginBottom: "10px" }}>{t("calendar.holidays.title")}</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {allHolidays
               .filter((h) => {
@@ -512,11 +545,11 @@ export default async function TimeOffCalendarPage({
               .map((h) => (
                 <div key={h.id} style={{ background: "#F6D9D2", border: "1px solid #F0A89E", borderRadius: "999px", padding: "6px 14px", display: "flex", alignItems: "center", gap: "8px" }}>
                   <span style={{ fontFamily: "'Space Mono', monospace", fontSize: "11px", color: "#BD4332", fontWeight: 700 }}>
-                    {new Date(h.date + "T12:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
+                    {new Date(h.date + "T12:00:00").toLocaleDateString(params.locale, { day: "numeric", month: "short" })}
                   </span>
                   <span style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "12.5px", fontWeight: 600, color: "#1A1A17" }}>
                     {h.name}
-                    {h.is_half_day && <span style={{ color: "#BD4332" }}> (medio día)</span>}
+                    {h.is_half_day && <span style={{ color: "#BD4332" }}>{t("calendar.holidays.halfDay")}</span>}
                   </span>
                 </div>
               ))}

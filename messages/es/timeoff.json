@@ -1,0 +1,288 @@
+{
+  "eyebrow": {
+    "timeoff": "Ausencias",
+    "hours": "Horas"
+  },
+  "timeoff": {
+    "title": "Ausencias",
+    "description": "Solicitudes de ausencia del equipo.",
+    "noCompany": "No se encontró una empresa configurada.",
+    "viewCalendar": "Ver calendario",
+    "stats": {
+      "pending": "Pendientes",
+      "pendingHint": "por revisar",
+      "approvedThisMonth": "Aprobadas este mes",
+      "totalThisYear": "Total este año",
+      "onLeaveToday": "De baja hoy",
+      "onLeaveTodayHint": "en ausencia"
+    },
+    "tabs": {
+      "all": "Todas",
+      "pending": "Pendientes",
+      "approved": "Aprobadas",
+      "rejected": "Rechazadas"
+    },
+    "actions": {
+      "new": "Nueva ausencia",
+      "approve": "✓ Aprobar",
+      "reject": "Rechazar",
+      "cancel": "Cancelar",
+      "clean": "Limpiar"
+    },
+    "filters": {
+      "type": "Tipo",
+      "range": "Rango",
+      "all": "Todos"
+    },
+    "empty": {
+      "all": "No hay solicitudes de ausencia.",
+      "pending": "No hay solicitudes pendientes.",
+      "approved": "No hay ausencias aprobadas.",
+      "rejected": "No hay solicitudes rechazadas.",
+      "noResults": "Sin resultados",
+      "desc": "Las solicitudes aparecerán aquí cuando se creen."
+    },
+    "badge": {
+      "fallback": "Ausencia"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "approved": "Aprobada",
+      "rejected": "Rechazada",
+      "cancelled": "Cancelada"
+    },
+    "duration": {
+      "day": "día",
+      "days": "días"
+    },
+    "periods": {
+      "label": "Período",
+      "full": "Completo",
+      "morning": "Mañana",
+      "afternoon": "Tarde"
+    },
+    "createModal": {
+      "title": "Nueva ausencia",
+      "employee": "Empleado *",
+      "employeePlaceholder": "Seleccionar empleado…",
+      "type": "Tipo de ausencia *",
+      "typePlaceholder": "Seleccionar tipo…",
+      "requiresApproval": "Requiere aprobación",
+      "dates": "Fechas *",
+      "startPeriod": "Período inicio",
+      "endPeriod": "Período fin",
+      "workingDays": "Días laborables",
+      "calculating": "calculando…",
+      "comment": "Comentario",
+      "commentPlaceholder": "Motivo o información adicional…",
+      "errorMsg": "Error al crear",
+      "saveBtn": "Crear solicitud",
+      "saving": "Guardando…",
+      "cancelBtn": "Cancelar"
+    },
+    "rejectModal": {
+      "title": "Rechazar solicitud",
+      "reason": "Motivo (opcional)",
+      "reasonPlaceholder": "Explica el motivo del rechazo…",
+      "confirmBtn": "Confirmar rechazo",
+      "rejecting": "Rechazando…",
+      "cancelBtn": "Cancelar",
+      "errorMsg": "No se pudo rechazar la solicitud"
+    },
+    "errors": {
+      "approve": "No se pudo aprobar la solicitud",
+      "cancel": "No se pudo cancelar la solicitud"
+    }
+  },
+  "calendar": {
+    "title": "Calendario de ausencias",
+    "backToList": "Lista de solicitudes",
+    "noEmployeesTitle": "No hay empleados activos",
+    "noEmployeesDesc": "Añade empleados activos para ver el calendario.",
+    "nav": {
+      "prev": "Anterior",
+      "next": "Siguiente"
+    },
+    "grid": {
+      "employee": "Empleado",
+      "empty": "No hay empleados que mostrar.",
+      "pendingSuffix": " (pendiente)"
+    },
+    "legend": {
+      "weekend": "Fin de semana",
+      "holiday": "Festivo",
+      "pending": "Pendiente"
+    },
+    "stats": {
+      "totalMonth": "Total este mes",
+      "approved": "Aprobadas",
+      "pending": "Pendientes"
+    },
+    "holidays": {
+      "title": "Festivos del mes",
+      "halfDay": " (medio día)"
+    },
+    "months": {
+      "jan": "Enero", "feb": "Febrero", "mar": "Marzo", "apr": "Abril", "may": "Mayo", "jun": "Junio",
+      "jul": "Julio", "aug": "Agosto", "sep": "Septiembre", "oct": "Octubre", "nov": "Noviembre", "dec": "Diciembre"
+    },
+    "weekdays": {
+      "sun": "Dom", "mon": "Lun", "tue": "Mar", "wed": "Mié", "thu": "Jue", "fri": "Vie", "sat": "Sáb"
+    },
+    "filterLabel": "Filtrar empleados"
+  },
+  "hours": {
+    "title": "Registro de horas",
+    "description": "Fichajes del día y entradas manuales.",
+    "active": "Activo",
+    "panel": {
+      "newEntry": "Nueva entrada"
+    },
+    "timers": {
+      "title": "Hoy en tiempo real",
+      "empty": "Ningún empleado activo",
+      "singleActive": "{count} empleado fichado ahora",
+      "pluralActive": "{count} empleados fichados ahora",
+      "since": "Desde {time}",
+      "stopBtn": "Parar"
+    },
+    "table": {
+      "title": "Entradas",
+      "clearFilters": "Limpiar filtros",
+      "emptyTitle": "Sin entradas",
+      "dateRange": "Rango de fechas",
+      "employee": "Empleado",
+      "date": "Fecha",
+      "type": "Tipo",
+      "start": "Inicio",
+      "end": "Fin",
+      "duration": "Duración",
+      "source": "Fuente",
+      "types": {
+        "work": "Trabajo",
+        "break": "Descanso"
+      },
+      "sources": {
+        "manual": "Manual",
+        "timer": "Timer",
+        "terminal": "Terminal"
+      },
+      "deleteTitle": "Eliminar entrada",
+      "deleteError": "No se pudo eliminar el registro"
+    },
+    "weekly": {
+      "title": "Resumen semanal",
+      "employee": "Empleado",
+      "total": "Total",
+      "weekdays": {
+        "mon": "Lun", "tue": "Mar", "wed": "Mié", "thu": "Jue", "fri": "Vie", "sat": "Sáb", "sun": "Dom"
+      }
+    },
+    "createDrawer": {
+      "title": "Nueva entrada de tiempo",
+      "toggles": {
+        "manual": "Entrada manual",
+        "timer": "Fichar entrada"
+      },
+      "fields": {
+        "employee": "Empleado",
+        "employeePlaceholder": "Selecciona empleado…",
+        "date": "Fecha",
+        "type": "Tipo",
+        "typeWork": "Trabajo",
+        "typeBreak": "Descanso",
+        "start": "Hora inicio",
+        "end": "Hora fin (opcional)",
+        "comment": "Comentario (opcional)",
+        "commentPlaceholder": "Proyecto, tarea…"
+      },
+      "errors": {
+        "selectEmployee": "Selecciona un empleado",
+        "startRequired": "La hora de inicio es obligatoria",
+        "startTimer": "Error al iniciar timer",
+        "createEntry": "Error al crear entrada"
+      },
+      "buttons": {
+        "startTimer": "Iniciar timer",
+        "createEntry": "Crear entrada",
+        "cancel": "Cancelar"
+      }
+    }
+  },
+  "compensation": {
+    "title": "Banco de horas",
+    "description": "Gestión de horas extra y compensaciones.",
+    "loading": "Cargando datos…",
+    "stats": {
+      "withHours": "Con horas registradas",
+      "withoutHours": "Sin horas este período",
+      "pendingConfirm": "Pendientes de confirmar"
+    },
+    "callout": {
+      "title": "Sin horas registradas este período"
+    },
+    "nav": {
+      "current": "Mes actual",
+      "prev": "Mes anterior",
+      "custom": "Personalizado"
+    },
+    "grid": {
+      "title": "Horas del período",
+      "filterLabel": "Filtrar empleados",
+      "noEmployeesTitle": "Sin empleados activos",
+      "noEmployeesDesc": "Los resúmenes de compensación aparecerán aquí cuando haya empleados activos con horas registradas.",
+      "headers": {
+        "employee": "Empleado",
+        "worked": "Horas trabajadas",
+        "status": "Estado"
+      },
+      "status": {
+        "confirmed": "Confirmado",
+        "pending": "Pendiente",
+        "noHours": "Sin horas"
+      },
+      "confirmBtn": "Confirmar"
+    },
+    "saved": {
+      "title": "Registros confirmados",
+      "headers": {
+        "employee": "Empleado",
+        "period": "Período",
+        "scheduled": "Programadas",
+        "worked": "Trabajadas",
+        "balance": "Balance",
+        "type": "Tipo",
+        "novedad": "Novedad"
+      },
+      "types": {
+        "time_off": "Tiempo libre",
+        "payment": "Pago"
+      },
+      "novedad": {
+        "pending": "Pendiente",
+        "included": "En corrida",
+        "paid": "Pagado"
+      }
+    },
+    "confirmModal": {
+      "title": "Confirmar compensación",
+      "workedHours": "Horas trabajadas (calculado)",
+      "scheduledHours": "Horas programadas",
+      "scheduledPlaceholder": "Ej. 160",
+      "balance": "Balance",
+      "type": "Tipo",
+      "typeTimeOff": "Tiempo libre",
+      "typePayment": "Pago",
+      "comment": "Comentario (opcional)",
+      "commentPlaceholder": "Notas…",
+      "errors": {
+        "exists": "Ya existe un registro para este empleado en este período",
+        "save": "Error al guardar"
+      },
+      "buttons": {
+        "save": "Guardar registro",
+        "cancel": "Cancelar"
+      }
+    }
+  }
+}

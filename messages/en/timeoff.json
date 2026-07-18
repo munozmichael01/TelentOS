@@ -1,0 +1,288 @@
+{
+  "eyebrow": {
+    "timeoff": "Time Off",
+    "hours": "Hours"
+  },
+  "timeoff": {
+    "title": "Time Off",
+    "description": "Team absence requests.",
+    "noCompany": "No configured company found.",
+    "viewCalendar": "View calendar",
+    "stats": {
+      "pending": "Pending",
+      "pendingHint": "to review",
+      "approvedThisMonth": "Approved this month",
+      "totalThisYear": "Total this year",
+      "onLeaveToday": "On leave today",
+      "onLeaveTodayHint": "absent"
+    },
+    "tabs": {
+      "all": "All",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "actions": {
+      "new": "New absence",
+      "approve": "✓ Approve",
+      "reject": "Reject",
+      "cancel": "Cancel",
+      "clean": "Clear"
+    },
+    "filters": {
+      "type": "Type",
+      "range": "Range",
+      "all": "All"
+    },
+    "empty": {
+      "all": "No time off requests.",
+      "pending": "No pending requests.",
+      "approved": "No approved absences.",
+      "rejected": "No rejected requests.",
+      "noResults": "No results",
+      "desc": "Requests will appear here when they are created."
+    },
+    "badge": {
+      "fallback": "Absence"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "duration": {
+      "day": "day",
+      "days": "days"
+    },
+    "periods": {
+      "label": "Period",
+      "full": "Full",
+      "morning": "Morning",
+      "afternoon": "Afternoon"
+    },
+    "createModal": {
+      "title": "New absence",
+      "employee": "Employee *",
+      "employeePlaceholder": "Select employee…",
+      "type": "Absence type *",
+      "typePlaceholder": "Select type…",
+      "requiresApproval": "Requires approval",
+      "dates": "Dates *",
+      "startPeriod": "Start period",
+      "endPeriod": "End period",
+      "workingDays": "Working days",
+      "calculating": "calculating…",
+      "comment": "Comment",
+      "commentPlaceholder": "Reason or additional information…",
+      "errorMsg": "Error creating",
+      "saveBtn": "Create request",
+      "saving": "Saving…",
+      "cancelBtn": "Cancel"
+    },
+    "rejectModal": {
+      "title": "Reject request",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Explain the reason for rejection…",
+      "confirmBtn": "Confirm rejection",
+      "rejecting": "Rejecting…",
+      "cancelBtn": "Cancel",
+      "errorMsg": "Could not reject request"
+    },
+    "errors": {
+      "approve": "Could not approve request",
+      "cancel": "Could not cancel request"
+    }
+  },
+  "calendar": {
+    "title": "Time off calendar",
+    "backToList": "Requests list",
+    "noEmployeesTitle": "No active employees",
+    "noEmployeesDesc": "Add active employees to view the calendar.",
+    "nav": {
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "grid": {
+      "employee": "Employee",
+      "empty": "No employees to display.",
+      "pendingSuffix": " (pending)"
+    },
+    "legend": {
+      "weekend": "Weekend",
+      "holiday": "Holiday",
+      "pending": "Pending"
+    },
+    "stats": {
+      "totalMonth": "Total this month",
+      "approved": "Approved",
+      "pending": "Pending"
+    },
+    "holidays": {
+      "title": "Holidays of the month",
+      "halfDay": " (half day)"
+    },
+    "months": {
+      "jan": "January", "feb": "February", "mar": "March", "apr": "April", "may": "May", "jun": "June",
+      "jul": "July", "aug": "August", "sep": "September", "oct": "October", "nov": "November", "dec": "December"
+    },
+    "weekdays": {
+      "sun": "Sun", "mon": "Mon", "tue": "Tue", "wed": "Wed", "thu": "Thu", "fri": "Fri", "sat": "Sat"
+    },
+    "filterLabel": "Filter employees"
+  },
+  "hours": {
+    "title": "Hours tracking",
+    "description": "Daily clock-ins and manual entries.",
+    "active": "Active",
+    "panel": {
+      "newEntry": "New entry"
+    },
+    "timers": {
+      "title": "Today in real time",
+      "empty": "No active employees",
+      "singleActive": "{count} employee clocked in now",
+      "pluralActive": "{count} employees clocked in now",
+      "since": "Since {time}",
+      "stopBtn": "Stop"
+    },
+    "table": {
+      "title": "Entries",
+      "clearFilters": "Clear filters",
+      "emptyTitle": "No entries",
+      "dateRange": "Date range",
+      "employee": "Employee",
+      "date": "Date",
+      "type": "Type",
+      "start": "Start",
+      "end": "End",
+      "duration": "Duration",
+      "source": "Source",
+      "types": {
+        "work": "Work",
+        "break": "Break"
+      },
+      "sources": {
+        "manual": "Manual",
+        "timer": "Timer",
+        "terminal": "Terminal"
+      },
+      "deleteTitle": "Delete entry",
+      "deleteError": "Could not delete record"
+    },
+    "weekly": {
+      "title": "Weekly summary",
+      "employee": "Employee",
+      "total": "Total",
+      "weekdays": {
+        "mon": "Mon", "tue": "Tue", "wed": "Wed", "thu": "Thu", "fri": "Fri", "sat": "Sat", "sun": "Sun"
+      }
+    },
+    "createDrawer": {
+      "title": "New time entry",
+      "toggles": {
+        "manual": "Manual entry",
+        "timer": "Clock in entry"
+      },
+      "fields": {
+        "employee": "Employee",
+        "employeePlaceholder": "Select employee…",
+        "date": "Date",
+        "type": "Type",
+        "typeWork": "Work",
+        "typeBreak": "Break",
+        "start": "Start time",
+        "end": "End time (optional)",
+        "comment": "Comment (optional)",
+        "commentPlaceholder": "Project, task…"
+      },
+      "errors": {
+        "selectEmployee": "Select an employee",
+        "startRequired": "Start time is required",
+        "startTimer": "Error starting timer",
+        "createEntry": "Error creating entry"
+      },
+      "buttons": {
+        "startTimer": "Start timer",
+        "createEntry": "Create entry",
+        "cancel": "Cancel"
+      }
+    }
+  },
+  "compensation": {
+    "title": "Hours bank",
+    "description": "Overtime and compensation management.",
+    "loading": "Loading data…",
+    "stats": {
+      "withHours": "With hours logged",
+      "withoutHours": "No hours this period",
+      "pendingConfirm": "Pending confirmation"
+    },
+    "callout": {
+      "title": "No hours logged this period"
+    },
+    "nav": {
+      "current": "Current month",
+      "prev": "Previous month",
+      "custom": "Custom"
+    },
+    "grid": {
+      "title": "Period hours",
+      "filterLabel": "Filter employees",
+      "noEmployeesTitle": "No active employees",
+      "noEmployeesDesc": "Compensation summaries will appear here when there are active employees with registered hours.",
+      "headers": {
+        "employee": "Employee",
+        "worked": "Worked hours",
+        "status": "Status"
+      },
+      "status": {
+        "confirmed": "Confirmed",
+        "pending": "Pending",
+        "noHours": "No hours"
+      },
+      "confirmBtn": "Confirm"
+    },
+    "saved": {
+      "title": "Confirmed records",
+      "headers": {
+        "employee": "Employee",
+        "period": "Period",
+        "scheduled": "Scheduled",
+        "worked": "Worked",
+        "balance": "Balance",
+        "type": "Type",
+        "novedad": "Payslip item"
+      },
+      "types": {
+        "time_off": "Time off",
+        "payment": "Payout"
+      },
+      "novedad": {
+        "pending": "Pending",
+        "included": "In run",
+        "paid": "Paid"
+      }
+    },
+    "confirmModal": {
+      "title": "Confirm compensation",
+      "workedHours": "Worked hours (calculated)",
+      "scheduledHours": "Scheduled hours",
+      "scheduledPlaceholder": "E.g. 160",
+      "balance": "Balance",
+      "type": "Type",
+      "typeTimeOff": "Time off",
+      "typePayment": "Payout",
+      "comment": "Comment (optional)",
+      "commentPlaceholder": "Notes…",
+      "errors": {
+        "exists": "A record already exists for this employee in this period",
+        "save": "Error saving"
+      },
+      "buttons": {
+        "save": "Save record",
+        "cancel": "Cancel"
+      }
+    }
+  }
+}

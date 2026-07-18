@@ -21,6 +21,7 @@ async function loadMessages(locale: string) {
     Board: await load("board"),
     Settings: await load("settings"),
     People: await load("people"),
+    Timeoff: await load("timeoff"),
   };
 }
 

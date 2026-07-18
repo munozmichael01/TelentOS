@@ -1,0 +1,288 @@
+{
+  "eyebrow": {
+    "timeoff": "Ausências",
+    "hours": "Horas"
+  },
+  "timeoff": {
+    "title": "Ausências",
+    "description": "Solicitações de ausência da equipe.",
+    "noCompany": "Nenhuma empresa configurada encontrada.",
+    "viewCalendar": "Ver calendário",
+    "stats": {
+      "pending": "Pendentes",
+      "pendingHint": "para revisar",
+      "approvedThisMonth": "Aprovadas este mês",
+      "totalThisYear": "Total este ano",
+      "onLeaveToday": "Ausentes hoje",
+      "onLeaveTodayHint": "em ausência"
+    },
+    "tabs": {
+      "all": "Todas",
+      "pending": "Pendentes",
+      "approved": "Aprovadas",
+      "rejected": "Rejeitadas"
+    },
+    "actions": {
+      "new": "Nova ausência",
+      "approve": "✓ Aprovar",
+      "reject": "Rejeitar",
+      "cancel": "Cancelar",
+      "clean": "Limpar"
+    },
+    "filters": {
+      "type": "Tipo",
+      "range": "Intervalo",
+      "all": "Todos"
+    },
+    "empty": {
+      "all": "Não há solicitações de ausência.",
+      "pending": "Não há solicitações pendentes.",
+      "approved": "Não há ausências aprovadas.",
+      "rejected": "Não há solicitações rejeitadas.",
+      "noResults": "Sem resultados",
+      "desc": "As solicitações aparecerão aqui quando forem criadas."
+    },
+    "badge": {
+      "fallback": "Ausência"
+    },
+    "status": {
+      "pending": "Pendente",
+      "approved": "Aprovada",
+      "rejected": "Rejeitada",
+      "cancelled": "Cancelada"
+    },
+    "duration": {
+      "day": "dia",
+      "days": "dias"
+    },
+    "periods": {
+      "label": "Período",
+      "full": "Completo",
+      "morning": "Manhã",
+      "afternoon": "Tarde"
+    },
+    "createModal": {
+      "title": "Nova ausência",
+      "employee": "Colaborador *",
+      "employeePlaceholder": "Selecionar colaborador…",
+      "type": "Tipo de ausência *",
+      "typePlaceholder": "Selecionar tipo…",
+      "requiresApproval": "Requer aprovação",
+      "dates": "Datas *",
+      "startPeriod": "Período de início",
+      "endPeriod": "Período de fim",
+      "workingDays": "Dias úteis",
+      "calculating": "calculando…",
+      "comment": "Comentário",
+      "commentPlaceholder": "Motivo ou informação adicional…",
+      "errorMsg": "Erro ao criar",
+      "saveBtn": "Criar solicitação",
+      "saving": "Salvando…",
+      "cancelBtn": "Cancelar"
+    },
+    "rejectModal": {
+      "title": "Rejeitar solicitação",
+      "reason": "Motivo (opcional)",
+      "reasonPlaceholder": "Explique o motivo da rejeição…",
+      "confirmBtn": "Confirmar rejeição",
+      "rejecting": "Rejeitando…",
+      "cancelBtn": "Cancelar",
+      "errorMsg": "Não foi possível rejeitar a solicitação"
+    },
+    "errors": {
+      "approve": "Não foi possível aprovar a solicitação",
+      "cancel": "Não foi possível cancelar a solicitação"
+    }
+  },
+  "calendar": {
+    "title": "Calendário de ausências",
+    "backToList": "Lista de solicitações",
+    "noEmployeesTitle": "Nenhum colaborador ativo",
+    "noEmployeesDesc": "Adicione colaboradores ativos para ver o calendário.",
+    "nav": {
+      "prev": "Anterior",
+      "next": "Próximo"
+    },
+    "grid": {
+      "employee": "Colaborador",
+      "empty": "Nenhum colaborador para exibir.",
+      "pendingSuffix": " (pendente)"
+    },
+    "legend": {
+      "weekend": "Fim de semana",
+      "holiday": "Feriado",
+      "pending": "Pendente"
+    },
+    "stats": {
+      "totalMonth": "Total este mês",
+      "approved": "Aprovadas",
+      "pending": "Pendentes"
+    },
+    "holidays": {
+      "title": "Feriados do mês",
+      "halfDay": " (meio dia)"
+    },
+    "months": {
+      "jan": "Janeiro", "feb": "Fevereiro", "mar": "Março", "apr": "Abril", "may": "Maio", "jun": "Junho",
+      "jul": "Julho", "aug": "Agosto", "sep": "Setembro", "oct": "Outubro", "nov": "Novembro", "dec": "Dezembro"
+    },
+    "weekdays": {
+      "sun": "Dom", "mon": "Seg", "tue": "Ter", "wed": "Qua", "thu": "Qui", "fri": "Sex", "sat": "Sáb"
+    },
+    "filterLabel": "Filtrar colaboradores"
+  },
+  "hours": {
+    "title": "Registro de horas",
+    "description": "Fichagens do dia e entradas manuais.",
+    "active": "Ativo",
+    "panel": {
+      "newEntry": "Nova entrada"
+    },
+    "timers": {
+      "title": "Hoje em tempo real",
+      "empty": "Nenhum colaborador ativo",
+      "singleActive": "{count} colaborador ativo agora",
+      "pluralActive": "{count} colaboradores ativos agora",
+      "since": "Desde {time}",
+      "stopBtn": "Parar"
+    },
+    "table": {
+      "title": "Entradas",
+      "clearFilters": "Limpar filtros",
+      "emptyTitle": "Sem entradas",
+      "dateRange": "Intervalo de datas",
+      "employee": "Colaborador",
+      "date": "Data",
+      "type": "Tipo",
+      "start": "Início",
+      "end": "Fim",
+      "duration": "Duração",
+      "source": "Fonte",
+      "types": {
+        "work": "Trabalho",
+        "break": "Intervalo"
+      },
+      "sources": {
+        "manual": "Manual",
+        "timer": "Timer",
+        "terminal": "Terminal"
+      },
+      "deleteTitle": "Excluir entrada",
+      "deleteError": "Não foi possível excluir o registro"
+    },
+    "weekly": {
+      "title": "Resumo semanal",
+      "employee": "Colaborador",
+      "total": "Total",
+      "weekdays": {
+        "mon": "Seg", "tue": "Ter", "wed": "Qua", "thu": "Qui", "fri": "Sex", "sat": "Sáb", "sun": "Dom"
+      }
+    },
+    "createDrawer": {
+      "title": "Nova entrada de tempo",
+      "toggles": {
+        "manual": "Entrada manual",
+        "timer": "Fichar entrada"
+      },
+      "fields": {
+        "employee": "Colaborador",
+        "employeePlaceholder": "Selecione o colaborador…",
+        "date": "Data",
+        "type": "Tipo",
+        "typeWork": "Trabalho",
+        "typeBreak": "Intervalo",
+        "start": "Hora de início",
+        "end": "Hora de fim (opcional)",
+        "comment": "Comentário (opcional)",
+        "commentPlaceholder": "Projeto, tarefa…"
+      },
+      "errors": {
+        "selectEmployee": "Selecione um colaborador",
+        "startRequired": "A hora de início é obrigatória",
+        "startTimer": "Erro ao iniciar timer",
+        "createEntry": "Erro ao criar entrada"
+      },
+      "buttons": {
+        "startTimer": "Iniciar timer",
+        "createEntry": "Criar entrada",
+        "cancel": "Cancelar"
+      }
+    }
+  },
+  "compensation": {
+    "title": "Banco de horas",
+    "description": "Gestão de horas extras e compensações.",
+    "loading": "Carregando dados…",
+    "stats": {
+      "withHours": "Com horas registradas",
+      "withoutHours": "Sem horas neste período",
+      "pendingConfirm": "Pendentes de confirmação"
+    },
+    "callout": {
+      "title": "Sem horas registradas neste período"
+    },
+    "nav": {
+      "current": "Mês atual",
+      "prev": "Mês anterior",
+      "custom": "Personalizado"
+    },
+    "grid": {
+      "title": "Horas do período",
+      "filterLabel": "Filtrar colaboradores",
+      "noEmployeesTitle": "Nenhum colaborador ativo",
+      "noEmployeesDesc": "Os resumos de compensação aparecerão aqui quando houver colaboradores ativos com horas registradas.",
+      "headers": {
+        "employee": "Colaborador",
+        "worked": "Horas trabalhadas",
+        "status": "Estado"
+      },
+      "status": {
+        "confirmed": "Confirmado",
+        "pending": "Pendente",
+        "noHours": "Sem horas"
+      },
+      "confirmBtn": "Confirmar"
+    },
+    "saved": {
+      "title": "Registros confirmados",
+      "headers": {
+        "employee": "Colaborador",
+        "period": "Período",
+        "scheduled": "Programadas",
+        "worked": "Trabalhadas",
+        "balance": "Saldo",
+        "type": "Tipo",
+        "novedad": "Folha de pagamento"
+      },
+      "types": {
+        "time_off": "Tempo livre",
+        "payment": "Pagamento"
+      },
+      "novedad": {
+        "pending": "Pendente",
+        "included": "Em folha",
+        "paid": "Pago"
+      }
+    },
+    "confirmModal": {
+      "title": "Confirmar compensação",
+      "workedHours": "Horas trabalhadas (calculado)",
+      "scheduledHours": "Horas programadas",
+      "scheduledPlaceholder": "Ex. 160",
+      "balance": "Saldo",
+      "type": "Tipo",
+      "typeTimeOff": "Tempo livre",
+      "typePayment": "Pagamento",
+      "comment": "Comentário (opcional)",
+      "commentPlaceholder": "Notas…",
+      "errors": {
+        "exists": "Já existe um registro para este colaborador neste período",
+        "save": "Erro ao salvar"
+      },
+      "buttons": {
+        "save": "Salvar registro",
+        "cancel": "Cancelar"
+      }
+    }
+  }
+}
