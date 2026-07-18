@@ -16,6 +16,17 @@ export function countryForLocale(locale: string): string {
   return (locale.split("-")[1] || "ve").toUpperCase();
 }
 
+// Slug de ciudad (sin acentos, guiones) para URLs de hub. "São Paulo" → "sao-paulo".
+export function citySlug(name: string): string {
+  return name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+// Ciudad canónica a partir de su slug (valida que exista en el país). null si no existe.
+export function cityFromSlug(slug: string, country: string): BoardCity | null {
+  const cc = country.toUpperCase();
+  const found = CITIES.find((c) => c.country === cc && citySlug(c.name) === slug);
+  return found ? { name: found.name, admin1: found.admin1, country: found.country, population: found.population } : null;
+}
+
 // Autocompletado de ciudades del país (ordenadas por población). q vacío → las mayores.
 export function searchCities(q: string, country: string, limit = 8): BoardCity[] {
   const cc = country.toUpperCase();

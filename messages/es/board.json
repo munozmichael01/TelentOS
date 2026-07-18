@@ -202,5 +202,16 @@
     "notify": "Avisarme de nuevas ofertas",
     "notifying": "Te avisaremos de nuevas ofertas",
     "loginToNotify": "Inicia sesión para recibir alertas"
+  },
+  "hub": {
+    "titleCat": "Empleos de {category}",
+    "titleCatCity": "Empleos de {category} en {city}",
+    "count": "{count, plural, =0 {Sin ofertas} one {# oferta} other {# ofertas}}",
+    "empty": "Aún no hay ofertas de {what}. Crea una alerta y te avisamos cuando publiquen.",
+    "createAlert": "Crear alerta",
+    "alertDone": "Te avisaremos",
+    "browseAll": "Ver todas las ofertas",
+    "relatedCats": "Otras áreas",
+    "inCity": "en {city}"
   }
 }
