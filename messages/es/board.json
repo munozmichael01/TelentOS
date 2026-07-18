@@ -40,7 +40,9 @@
     "category": "Área",
     "modality": "Modalidad",
     "contract": "Tipo de contrato",
-    "company": "Empresa"
+    "company": "Empresa",
+    "location": "Ubicación",
+    "locationPlaceholder": "Escribe una ciudad"
   },
   "modality": {
     "remoto": "Remoto",
@@ -155,7 +157,12 @@
     "view": "Ver oferta",
     "empty": "No encontré ofertas para eso ahora mismo. Prueba a ampliar la búsqueda.",
     "error": "No pude procesar tu búsqueda. Inténtalo de nuevo.",
-    "suggestions": ["Diseño remoto", "Producto en Caracas", "Trabajos junior", "Mejor pagados"]
+    "suggestions": [
+      "Diseño remoto",
+      "Producto en Caracas",
+      "Trabajos junior",
+      "Mejor pagados"
+    ]
   },
   "builder": {
     "eyebrow": "Asistente de perfil",

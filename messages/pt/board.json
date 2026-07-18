@@ -40,7 +40,9 @@
     "category": "Área",
     "modality": "Modalidade",
     "contract": "Tipo de contrato",
-    "company": "Empresa"
+    "company": "Empresa",
+    "location": "Localização",
+    "locationPlaceholder": "Digite uma cidade"
   },
   "modality": {
     "remoto": "Remoto",
@@ -155,7 +157,12 @@
     "view": "Ver vaga",
     "empty": "Não encontrei vagas para isso agora. Tente ampliar a busca.",
     "error": "Não consegui processar sua busca. Tente novamente.",
-    "suggestions": ["Design remoto", "Produto em Caracas", "Vagas júnior", "Melhor pagas"]
+    "suggestions": [
+      "Design remoto",
+      "Produto em Caracas",
+      "Vagas júnior",
+      "Melhor pagas"
+    ]
   },
   "builder": {
     "eyebrow": "Assistente de perfil",
