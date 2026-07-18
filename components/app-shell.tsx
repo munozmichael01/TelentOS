@@ -1,6 +1,7 @@
 "use client";
 
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import type { StaticPathname } from "@/i18n/routing";
 import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -368,7 +369,7 @@ export function AppShell({
                             return (
                               <Link
                                 key={child.href}
-                                href={child.href}
+                                href={child.href as StaticPathname}
                                 className="nav-item"
                                 style={{
                                   fontSize: "13px",
@@ -389,7 +390,7 @@ export function AppShell({
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={item.href as StaticPathname}
                     className="nav-item"
                     title={item.label}
                     style={active ? { background: "#0E5C4A", color: "#fff", boxShadow: "2px 2px 0 #1A1A17" } : undefined}

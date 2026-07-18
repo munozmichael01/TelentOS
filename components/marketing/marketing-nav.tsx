@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { routing, type Locale } from "@/i18n/routing";
+import { routing, type Locale, type StaticPathname } from "@/i18n/routing";
 import { LogoMark, MIcon, type IconName } from "./icons";
 
 const ARCHIVO = "'Archivo',sans-serif";
@@ -71,7 +71,10 @@ export function MarketingNav() {
 
   function switchLocale(next: Locale) {
     setLangOpen(false);
-    router.replace(pathname, { locale: next });
+    // El nav de marketing solo vive en rutas estáticas; usePathname devuelve el path
+    // interno ya resuelto, válido para el cambio de locale (los tipos con pathnames no
+    // modelan bien este caso genérico).
+    router.replace(pathname as never, { locale: next });
   }
 
   return (
@@ -153,7 +156,7 @@ export function MarketingNav() {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
                     {items.map((label, i) => (
-                      <Link key={label} href={col.hrefs[i] ?? col.hrefs[0]} className="ld-menuitem" onClick={() => setMenuOpen(false)} style={{ display: "block", padding: "7px 9px", fontSize: 13, fontWeight: 600, color: "#54504A" }}>
+                      <Link key={label} href={(col.hrefs[i] ?? col.hrefs[0]) as StaticPathname} className="ld-menuitem" onClick={() => setMenuOpen(false)} style={{ display: "block", padding: "7px 9px", fontSize: 13, fontWeight: 600, color: "#54504A" }}>
                         {label}
                       </Link>
                     ))}

@@ -221,7 +221,7 @@ export default function HrisPage({ params: { locale } }: { params: { locale: str
           </h2>
           <p style={{ fontSize: 16, lineHeight: 1.55, color: "#CDE5DC", margin: "18px auto 26px", maxWidth: 520 }}>{t("cta.body")}</p>
           <div style={{ display: "flex", gap: 13, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/#cta" className="ld-hard" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "var(--ink)", background: "var(--lime)", border: "2px solid #000", borderRadius: 11, padding: "13px 24px", boxShadow: "3px 3px 0 #000" }}>{t("cta.primary")}</Link>
+            <a href="/#cta" className="ld-hard" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "var(--ink)", background: "var(--lime)", border: "2px solid #000", borderRadius: 11, padding: "13px 24px", boxShadow: "3px 3px 0 #000" }}>{t("cta.primary")}</a>
             <Link href="/producto/nomina" className="ld-hard" style={{ fontFamily: ARCHIVO, fontWeight: 700, fontSize: 15, color: "#fff", background: "transparent", border: "2px solid rgba(255,255,255,.5)", borderRadius: 11, padding: "13px 24px" }}>{t("cta.secondary")}</Link>
           </div>
         </div>
