@@ -33,6 +33,7 @@ export const pathnames = {
     "pt-br": "/vagas/vaga/[slug]",
   },
   "/cuenta": { "es-ve": "/cuenta", "en-us": "/account", "pt-br": "/conta" },
+  "/cuenta/entrar": { "es-ve": "/cuenta/entrar", "en-us": "/account/sign-in", "pt-br": "/conta/entrar" },
 
   // Dashboard B2B autenticado (no localizado — mismo slug en todos los locales)
   "/app/dashboard": "/app/dashboard",

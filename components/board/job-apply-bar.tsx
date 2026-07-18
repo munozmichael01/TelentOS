@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 
 const ARCHIVO = "'Archivo',sans-serif";
 const MONO = "'Space Mono',monospace";
@@ -14,6 +15,7 @@ export function JobApplyBar({
   jobId: string; jobTitle: string; companyName: string; screening: Question[]; locale: string;
 }) {
   const t = useTranslations("Board");
+  const router = useRouter();
   const [saved, setSaved] = useState(false);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
@@ -28,7 +30,7 @@ export function JobApplyBar({
     const res = next
       ? await fetch("/api/board/saved", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId }) })
       : await fetch(`/api/board/saved?jobId=${jobId}`, { method: "DELETE" });
-    if (res.status === 401) { setSaved(false); window.location.href = `/${locale}/login`; }
+    if (res.status === 401) { setSaved(false); router.push("/cuenta/entrar"); }
     else if (!res.ok) setSaved(!next);
   }
 

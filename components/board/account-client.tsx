@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { logoFor, formatSalary, relativeDate, jobSlug } from "@/lib/board/format";
 
@@ -30,6 +30,7 @@ const input = { width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontSi
 export function AccountClient({ locale }: { locale: string }) {
   const t = useTranslations("Board");
   const loc = useLocale();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("profile");
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -78,7 +79,8 @@ export function AccountClient({ locale }: { locale: string }) {
 
   async function logout() {
     await createClient().auth.signOut();
-    window.location.href = `/${locale}/login`;
+    router.push("/cuenta/entrar");
+    router.refresh();
   }
 
   function openEdit() {

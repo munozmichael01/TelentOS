@@ -8,6 +8,6 @@ import { AccountClient } from "@/components/board/account-client";
 export default async function AccountPage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
   const { data: { user } } = await createClient().auth.getUser();
-  if (!user) redirect({ href: "/login", locale: params.locale });
+  if (!user) redirect({ href: "/cuenta/entrar", locale: params.locale });
   return <AccountClient locale={params.locale} />;
 }

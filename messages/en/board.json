@@ -117,5 +117,33 @@
     "emptyApplications": "You haven't applied to any jobs yet.",
     "emptySaved": "Nothing saved yet.",
     "emptyAlerts": "No alerts. Create one to get matching new jobs."
+  },
+  "auth": {
+    "signinTitle": "Welcome back",
+    "signinSub": "Sign in to track your applications and alerts.",
+    "signupTitle": "Create your account and find work",
+    "signupSub": "One profile, all your applications and alerts in one place.",
+    "signin": "Sign in",
+    "signup": "Sign up",
+    "withGoogle": "with Google",
+    "withLinkedin": "with LinkedIn",
+    "orEmail": "or with your email",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "password": "Password",
+    "forgot": "Forgot?",
+    "signinAction": "Sign in",
+    "signupAction": "Create account",
+    "perk": "With your account you can build your profile with AI in 2 minutes, apply in one tap, and get matching alerts.",
+    "haveAccount": "Already have an account?",
+    "noAccount": "Don't have an account yet?",
+    "goSignin": "Sign in",
+    "goSignup": "Create one free",
+    "guest": "Browse jobs without an account →",
+    "terms": "By continuing you accept TalentOS's Terms and Privacy Policy.",
+    "soon": "Coming soon",
+    "errGeneric": "Something went wrong. Please try again.",
+    "errCredentials": "Incorrect email or password."
   }
 }

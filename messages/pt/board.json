@@ -117,5 +117,33 @@
     "emptyApplications": "Você ainda não se candidatou a nenhuma vaga.",
     "emptySaved": "Nada salvo ainda.",
     "emptyAlerts": "Sem alertas. Crie um para receber novas vagas compatíveis."
+  },
+  "auth": {
+    "signinTitle": "Bem-vindo de volta",
+    "signinSub": "Entre para acompanhar suas candidaturas e alertas.",
+    "signupTitle": "Crie sua conta e encontre trabalho",
+    "signupSub": "Um perfil, todas as suas candidaturas e alertas em um só lugar.",
+    "signin": "Entrar",
+    "signup": "Criar conta",
+    "withGoogle": "com Google",
+    "withLinkedin": "com LinkedIn",
+    "orEmail": "ou com seu e-mail",
+    "name": "Nome",
+    "namePlaceholder": "Seu nome",
+    "email": "E-mail",
+    "password": "Senha",
+    "forgot": "Esqueceu?",
+    "signinAction": "Entrar",
+    "signupAction": "Criar conta",
+    "perk": "Com sua conta você monta seu perfil com IA em 2 minutos, candidata-se em um toque e recebe alertas compatíveis.",
+    "haveAccount": "Já tem conta?",
+    "noAccount": "Ainda não tem conta?",
+    "goSignin": "Entrar",
+    "goSignup": "Crie grátis",
+    "guest": "Explorar vagas sem conta →",
+    "terms": "Ao continuar você aceita os Termos e a Política de Privacidade da TalentOS.",
+    "soon": "Em breve",
+    "errGeneric": "Algo deu errado. Tente novamente.",
+    "errCredentials": "E-mail ou senha incorretos."
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type CSSProperties } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import type { BoardJob, BoardFacets, BoardSort } from "@/lib/job-board/search";
 import { modalityStyle, formatSalary, logoFor, relativeDate, isNew, jobSlug } from "@/lib/board/format";
 
@@ -28,6 +28,7 @@ export function BoardClient({
 }) {
   const t = useTranslations("Board");
   const locale = useLocale();
+  const router = useRouter();
 
   const [jobs, setJobs] = useState(initialJobs);
   const [total, setTotal] = useState(initialTotal);
@@ -111,7 +112,7 @@ export function BoardClient({
     const res = isSaved
       ? await fetch(`/api/board/saved?jobId=${jobId}`, { method: "DELETE" })
       : await fetch("/api/board/saved", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId }) });
-    if (res.status === 401) { setSaved((s) => ({ ...s, [jobId]: false })); window.location.href = `/${locale}/login`; return; }
+    if (res.status === 401) { setSaved((s) => ({ ...s, [jobId]: false })); router.push("/cuenta/entrar"); return; }
     if (!res.ok) { setSaved((s) => ({ ...s, [jobId]: isSaved })); return; } // revierte
     flash(isSaved ? t("toast.unsaved") : t("toast.saved"));
   }
@@ -130,7 +131,7 @@ export function BoardClient({
           <span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 16, letterSpacing: "-.5px" }}>
             TalentOS <span style={{ color: "var(--brand)" }}>{t("brand")}</span>
           </span>
-          <Link href="/login" style={{ marginLeft: "auto", fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--ink)", background: "var(--surface)", border: "1.5px solid var(--ink)", borderRadius: 9, padding: "6px 12px", boxShadow: "2px 2px 0 var(--ink)" }}>
+          <Link href="/cuenta/entrar" style={{ marginLeft: "auto", fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--ink)", background: "var(--surface)", border: "1.5px solid var(--ink)", borderRadius: 9, padding: "6px 12px", boxShadow: "2px 2px 0 var(--ink)" }}>
             {t("login")}
           </Link>
         </div>
