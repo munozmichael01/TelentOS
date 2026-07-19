@@ -291,11 +291,13 @@
     "empty": "No encontré ofertas para eso ahora mismo. Prueba a ampliar la búsqueda.",
     "error": "No pude procesar tu búsqueda. Inténtalo de nuevo.",
     "suggestions": [
-      "Diseño remoto",
+      "Diseño remoto > $1.500",
       "Producto en Caracas",
       "Trabajos junior",
       "Mejor pagados"
-    ]
+    ],
+    "easyApply": "Easy apply",
+    "applied": "Enviada"
   },
   "builder": {
     "eyebrow": "Asistente de perfil",

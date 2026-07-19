@@ -291,11 +291,13 @@
     "empty": "I couldn't find jobs for that right now. Try broadening your search.",
     "error": "I couldn't process your search. Please try again.",
     "suggestions": [
-      "Remote design",
+      "Remote design > $1,500",
       "Product in Caracas",
       "Junior roles",
       "Best paid"
-    ]
+    ],
+    "easyApply": "Easy apply",
+    "applied": "Sent"
   },
   "builder": {
     "eyebrow": "Profile assistant",

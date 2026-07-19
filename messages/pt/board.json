@@ -291,11 +291,13 @@
     "empty": "Não encontrei vagas para isso agora. Tente ampliar a busca.",
     "error": "Não consegui processar sua busca. Tente novamente.",
     "suggestions": [
-      "Design remoto",
+      "Design remoto > $1.500",
       "Produto em Caracas",
       "Vagas júnior",
       "Melhor pagas"
-    ]
+    ],
+    "easyApply": "Easy apply",
+    "applied": "Enviada"
   },
   "builder": {
     "eyebrow": "Assistente de perfil",
