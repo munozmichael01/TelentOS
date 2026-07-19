@@ -6,6 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import type { BoardJob, BoardFacets, BoardSort } from "@/lib/job-board/search";
 import type { BoardCategory, BoardCity } from "@/lib/board/geo";
 import { modalityStyle, formatSalary, logoFor, relativeDate, isNew, jobSlug } from "@/lib/board/format";
+import { BoardTabBar } from "@/components/board/tab-bar";
 
 const ARCHIVO = "'Archivo',sans-serif";
 const MONO = "'Space Mono',monospace";
@@ -267,11 +268,14 @@ export function BoardClient({
         </div>
       </main>
 
-      {/* FAB: asistente IA (la página se auto-protege si no hay sesión) */}
-      <Link href="/empleos/asistente" className="jb-hard" style={{ position: "fixed", right: 18, bottom: 22, zIndex: 25, display: "inline-flex", alignItems: "center", gap: 8, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "#fff", background: "var(--ink)", border: "2px solid var(--ink)", borderRadius: 999, padding: "11px 16px", boxShadow: "3px 3px 0 var(--brand)" }}>
+      {/* FAB: asistente IA (la página se auto-protege si no hay sesión). Sobre la tab bar. */}
+      <Link href="/empleos/asistente" className="jb-hard" style={{ position: "fixed", right: 18, bottom: 84, zIndex: 25, display: "inline-flex", alignItems: "center", gap: 8, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "#fff", background: "var(--ink)", border: "2px solid var(--ink)", borderRadius: 999, padding: "11px 16px", boxShadow: "3px 3px 0 var(--brand)" }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z" stroke="#C6F24E" strokeWidth="1.7" strokeLinejoin="round" /></svg>
         {t("assistant.cta")}
       </Link>
+
+      {/* Navegación inferior (candidato) */}
+      <BoardTabBar active="search" />
 
       {/* Filter sheet */}
       {filtersOpen && (
