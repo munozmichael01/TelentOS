@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { jsonError } from "@/lib/api";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { extractCvText } from "@/lib/cv-text";
@@ -43,5 +44,17 @@ export async function POST(req: Request) {
 
   const result = await extractProfileFromText(cvText);
 
-  return NextResponse.json({ profile: result.output, status: result.status });
+  // Guarda el archivo en el bucket privado `cvs` y devuelve el path, para que el flujo
+  // del board persista cv_url en la ficha (el career site sube el archivo en su propio
+  // apply). Best-effort: si el guardado falla, el parse igual se devuelve.
+  let cvPath: string | null = null;
+  try {
+    const path = `board/${Date.now()}-${cv.name.replace(/[^\w.\-]/g, "_")}`;
+    const { error: upErr } = await createAdminClient().storage
+      .from("cvs")
+      .upload(path, cv, { contentType: cv.type || "application/pdf" });
+    if (!upErr) cvPath = path;
+  } catch { /* no bloquea el parse */ }
+
+  return NextResponse.json({ profile: result.output, status: result.status, cv_path: cvPath, cv_name: cv.name });
 }
