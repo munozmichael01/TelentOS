@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type CSSProperties } from "react";
+import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +13,10 @@ type Edu = { degree: string; institution: string | null; field?: string | null; 
 type Lang = { language: string; level: string | null };
 
 const label: CSSProperties = { fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "var(--soft)", display: "flex", alignItems: "center", gap: 7, marginBottom: 6 };
+
+// Perfil del invitado guardado en su navegador para re-aplicar sin re-subir/re-parsear el CV
+// (ahorra la llamada a OpenAI). Solo su propio dispositivo, sin lookup en servidor.
+const GUEST_KEY = "talentos_board_guest_profile";
 
 export function ApplyWizard({ job, screening, slug, locale, authed = false }: { job: Job; screening: Question[]; slug: string; locale: string; authed?: boolean }) {
   const t = useTranslations("Board.apply");
@@ -61,6 +65,23 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
     } catch { setAcctErr(t("acctError")); setAcctBusy(false); }
   }
 
+  // Re-aplicación: si el invitado ya tiene perfil guardado en este navegador, salta el
+  // paso de CV/parse y entra directo a confirmar (pre-rellenado). Sin re-parsear.
+  useEffect(() => {
+    if (authed) return;
+    try {
+      const raw = window.localStorage.getItem(GUEST_KEY);
+      if (!raw) return;
+      const p = JSON.parse(raw) as { name?: string; email?: string; phone?: string; role?: string; skills?: string[]; exp?: Exp[]; edu?: Edu[]; langs?: Lang[]; expYears?: number; summary?: string; city?: string | null };
+      setForm((f) => ({ ...f, name: p.name ?? f.name, email: p.email ?? f.email, phone: p.phone ?? f.phone, role: p.role ?? f.role }));
+      if (Array.isArray(p.skills)) setSkills(p.skills);
+      setParsed({ exp: p.exp ?? [], edu: p.edu ?? [], langs: p.langs ?? [], expYears: p.expYears ?? 0, summary: p.summary ?? "", city: p.city ?? null });
+      setFromCV(true);
+      setStep(2);
+    } catch { /* localStorage no disponible / corrupto → flujo normal */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
   const addSkill = (v: string) => { const s = v.trim(); if (!s) return; setSkills((cur) => cur.includes(s) ? cur : [...cur, s]); setSkillDraft(""); };
   const suggested = ["Figma", "UX research", "Prototyping", "Design systems", "Node.js", "SQL", "Comunicación", "Liderazgo"].filter((x) => !skills.includes(x)).slice(0, 6);
@@ -91,7 +112,19 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
         screeningAnswers: answers,
       }),
     }).catch(() => null);
-    if (res?.ok) { setBtn("sent"); setTimeout(() => setStep(doneStep), 800); }
+    if (res?.ok) {
+      // Guarda el perfil confirmado para re-aplicar sin re-parsear (solo invitado).
+      if (!authed) {
+        try {
+          window.localStorage.setItem(GUEST_KEY, JSON.stringify({
+            name: form.name, email: form.email, phone: form.phone, role: form.role,
+            skills, exp: parsed.exp, edu: parsed.edu, langs: parsed.langs,
+            expYears: parsed.expYears, summary: parsed.summary, city: parsed.city,
+          }));
+        } catch { /* ignore */ }
+      }
+      setBtn("sent"); setTimeout(() => setStep(doneStep), 800);
+    }
     else { setBtn("idle"); setError(t("error")); }
   }
 
@@ -188,6 +221,12 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="11" fill="#C6F24E" /><path d="M7 12.5l3 3 6-7" stroke="#1A1A17" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   <div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: "#2C3907" }}>{t("autofillBanner")}</div><div style={{ fontSize: 12, color: "#46540F", marginTop: 1 }}>{t("autofillHint")}</div></div>
                 </div>
+              )}
+              {fromCV && (
+                <button onClick={() => setStep(1)} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 12.5, color: "var(--soft)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 14 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  {t("useAnotherCv")}
+                </button>
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <div><label style={label}>{t("name")}{fromCV && form.name && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("name")} style={inputStyle} /></div>
