@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useSearchParams } from "next/navigation";
 
 const ARCHIVO = "'Archivo',sans-serif";
 const MONO = "'Space Mono',monospace";
@@ -18,19 +18,27 @@ const ROOT: CSSProperties = {
   padding: "22px 16px",
 } as CSSProperties;
 
-const input: CSSProperties = { width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 15, color: "#1A1A17", background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: 11, padding: "12px 13px", outline: "none" };
+const input: CSSProperties = { width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 15, color: "#1A1A17", background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: 11, padding: "12px 13px", outline: "none", boxSizing: "border-box" };
 const labelStyle: CSSProperties = { fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "#79746B", display: "block", marginBottom: 6 };
 
 export function CandidateAuth({ locale }: { locale: string }) {
   const t = useTranslations("Board.auth");
   const router = useRouter();
-  const [mode, setMode] = useState<"signin" | "signup">("signup");
   const searchParams = useSearchParams();
-  const [form, setForm] = useState({ name: "", email: searchParams.get("email") ?? "", password: "" });
+  const emailParam = searchParams ? (searchParams.get("email") || "") : "";
+
+  const [mode, setMode] = useState<"signin" | "signup">("signup");
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: emailParam, password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [soon, setSoon] = useState(false);
   const signup = mode === "signup";
+
+  useEffect(() => {
+    if (emailParam) {
+      setForm((f) => ({ ...f, email: emailParam }));
+    }
+  }, [emailParam]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,14 +46,23 @@ export function CandidateAuth({ locale }: { locale: string }) {
     const supabase = createClient();
     try {
       if (signup) {
+        const fullName = `${form.firstName} ${form.lastName}`.trim();
         const res = await fetch("/api/board/auth/signup", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
+          body: JSON.stringify({
+            name: fullName,
+            first_name: form.firstName,
+            last_name: form.lastName,
+            email: form.email,
+            password: form.password
+          }),
         });
         if (!res.ok) { const j = await res.json().catch(() => ({})); setError(j.error || t("errGeneric")); setLoading(false); return; }
       }
       const { error: signErr } = await supabase.auth.signInWithPassword({ email: form.email.trim().toLowerCase(), password: form.password });
       if (signErr) { setError(signup ? t("errGeneric") : t("errCredentials")); setLoading(false); return; }
+      // Vincula las candidaturas hechas como invitado con este email a la cuenta.
+      await fetch("/api/board/auth/link", { method: "POST" }).catch(() => {});
       // Tras registrarse, al constructor de perfil con IA; al iniciar sesión, a la cuenta.
       router.push(signup ? "/cuenta/perfil" : "/cuenta");
       router.refresh();
@@ -55,6 +72,8 @@ export function CandidateAuth({ locale }: { locale: string }) {
   }
 
   const seg = (on: boolean): CSSProperties => ({ flex: 1, textAlign: "center", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: on ? 800 : 600, fontSize: 13.5, borderRadius: 10, padding: 9, color: on ? "#fff" : "#79746B", background: on ? "#1A1A17" : "transparent", border: "none", cursor: "pointer" });
+
+  const isEmailReadOnly = !!emailParam;
 
   return (
     <div style={ROOT}>
@@ -96,9 +115,33 @@ export function CandidateAuth({ locale }: { locale: string }) {
         </div>
 
         <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {signup && <div><label style={labelStyle}>{t("name")}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("namePlaceholder")} style={input} /></div>}
-          <div><label style={labelStyle}>{t("email")}</label><input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="tu@correo.com" style={input} /></div>
-          <div><label style={labelStyle}>{t("password")}</label><input type="password" required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" style={input} /></div>
+          {signup && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div>
+                <label style={labelStyle}>{t("firstName")}</label>
+                <input required value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} placeholder={t("firstNamePlaceholder")} style={input} />
+              </div>
+              <div>
+                <label style={labelStyle}>{t("lastName")}</label>
+                <input required value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} placeholder={t("lastNamePlaceholder")} style={input} />
+              </div>
+            </div>
+          )}
+          <div>
+            <label style={labelStyle}>{t("email")}</label>
+            <input type="email" required readOnly={isEmailReadOnly} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="tu@correo.com" style={{ ...input, background: isEmailReadOnly ? "var(--line)" : "#FCFAF6", cursor: isEmailReadOnly ? "not-allowed" : "text" }} />
+          </div>
+          <div>
+            <label style={{ ...labelStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>{t("password")}</span>
+              {!signup && (
+                <span onClick={() => setSoon(true)} style={{ textTransform: "none", letterSpacing: 0, color: "var(--brand)", fontWeight: 700, cursor: "pointer" }}>
+                  {t("forgot")}
+                </span>
+              )}
+            </label>
+            <input type="password" required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" style={input} />
+          </div>
 
           {error && <p style={{ fontSize: 13, color: "#BD4332", margin: "2px 0 0" }}>{error}</p>}
 

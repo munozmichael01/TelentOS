@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ARCHIVO, MONO, BoardRoot, HardButton, AiTag, MonoLabel, CompanyLogo, StepProgress, inputStyle } from "@/components/board/ui";
+import { CityAutocomplete } from "@/components/board/city-autocomplete";
 
 type Job = { id: string; title: string; modality: string | null; city: string | null; company: string; logoUrl: string | null; salary: string };
 type Question = { id: string; type: string; prompt: string; options: string[]; required: boolean };
@@ -31,7 +32,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
   const [parsing, setParsing] = useState(false);
   const [fromCV, setFromCV] = useState(false);
   const [cvName, setCvName] = useState("");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", note: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", role: "", note: "" });
   const [skills, setSkills] = useState<string[]>([]);
   const [skillDraft, setSkillDraft] = useState("");
   const [parsed, setParsed] = useState<{ exp: Exp[]; edu: Edu[]; langs: Lang[]; expYears: number; summary: string; city: string | null }>({ exp: [], edu: [], langs: [], expYears: 0, summary: "", city: null });
@@ -51,9 +52,10 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
     const supabase = createClient();
     try {
       if (acctMode === "create") {
+        const fullName = `${form.firstName} ${form.lastName}`.trim();
         const res = await fetch("/api/board/auth/signup", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: form.name, email: form.email, password: acctPw }),
+          body: JSON.stringify({ name: fullName, first_name: form.firstName, last_name: form.lastName, email: form.email, password: acctPw }),
         });
         if (res.status === 409) { setAcctMode("signin"); setAcctErr(t("acctExists")); setAcctBusy(false); return; }
         if (!res.ok) { setAcctErr(t("acctError")); setAcctBusy(false); return; }
@@ -72,8 +74,17 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
     try {
       const raw = window.localStorage.getItem(GUEST_KEY);
       if (!raw) return;
-      const p = JSON.parse(raw) as { name?: string; email?: string; phone?: string; role?: string; skills?: string[]; exp?: Exp[]; edu?: Edu[]; langs?: Lang[]; expYears?: number; summary?: string; city?: string | null };
-      setForm((f) => ({ ...f, name: p.name ?? f.name, email: p.email ?? f.email, phone: p.phone ?? f.phone, role: p.role ?? f.role }));
+      const p = JSON.parse(raw) as { name?: string; firstName?: string; lastName?: string; email?: string; phone?: string; role?: string; skills?: string[]; exp?: Exp[]; edu?: Edu[]; langs?: Lang[]; expYears?: number; summary?: string; city?: string | null };
+      
+      let fName = p.firstName ?? "";
+      let lName = p.lastName ?? "";
+      if (!fName && !lName && p.name) {
+        const parts = p.name.trim().split(/\s+/);
+        fName = parts[0] ?? "";
+        lName = parts.slice(1).join(" ") ?? "";
+      }
+
+      setForm((f) => ({ ...f, firstName: fName || f.firstName, lastName: lName || f.lastName, email: p.email ?? f.email, phone: p.phone ?? f.phone, role: p.role ?? f.role }));
       if (Array.isArray(p.skills)) setSkills(p.skills);
       setParsed({ exp: p.exp ?? [], edu: p.edu ?? [], langs: p.langs ?? [], expYears: p.expYears ?? 0, summary: p.summary ?? "", city: p.city ?? null });
       setFromCV(true);
@@ -94,7 +105,19 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
     setParsing(false);
     const p = r?.profile;
     if (p) {
-      setForm((f) => ({ ...f, name: p.name ?? f.name, email: p.email ?? f.email, phone: p.phone ?? f.phone, role: p.experiences?.[0]?.title ?? f.role }));
+      const fullName = p.name ?? "";
+      const nameParts = fullName.trim().split(/\s+/);
+      const firstName = p.first_name ?? nameParts[0] ?? "";
+      const lastName = p.last_name ?? nameParts.slice(1).join(" ") ?? "";
+
+      setForm((f) => ({
+        ...f,
+        firstName: firstName || f.firstName,
+        lastName: lastName || f.lastName,
+        email: p.email ?? f.email,
+        phone: p.phone ?? f.phone,
+        role: p.experiences?.[0]?.title ?? f.role
+      }));
       setSkills(Array.isArray(p.skills) ? p.skills : []);
       setParsed({ exp: p.experiences ?? [], edu: p.education ?? [], langs: p.languages ?? [], expYears: p.experience_years ?? 0, summary: p.summary ?? "", city: p.city ?? null });
     }
@@ -103,12 +126,13 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
 
   async function submit() {
     setBtn("sending"); setError("");
+    const fullName = `${form.firstName} ${form.lastName}`.trim();
     const res = await fetch("/api/board/apply", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jobId: job.id,
         locale,
-        candidate: { name: form.name, email: form.email, phone: form.phone, skills, experience_years: parsed.expYears, summary: parsed.summary || form.note || null, city: parsed.city, experiences: parsed.exp, education: parsed.edu, languages: parsed.langs },
+        candidate: { name: fullName, first_name: form.firstName, last_name: form.lastName, email: form.email, phone: form.phone, skills, experience_years: parsed.expYears, summary: parsed.summary || form.note || null, city: parsed.city, experiences: parsed.exp, education: parsed.edu, languages: parsed.langs },
         screeningAnswers: answers,
       }),
     }).catch(() => null);
@@ -117,7 +141,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
       if (!authed) {
         try {
           window.localStorage.setItem(GUEST_KEY, JSON.stringify({
-            name: form.name, email: form.email, phone: form.phone, role: form.role,
+            firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone, role: form.role,
             skills, exp: parsed.exp, edu: parsed.edu, langs: parsed.langs,
             expYears: parsed.expYears, summary: parsed.summary, city: parsed.city,
           }));
@@ -129,7 +153,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
   }
 
   const screeningComplete = screening.every((q) => !q.required || (answers[q.id] != null && String(answers[q.id]).trim() !== ""));
-  const canContinue2 = form.name.trim() && form.email.trim();
+  const canContinue2 = form.firstName.trim() && form.lastName.trim() && form.email.trim();
 
   function primary() {
     if (step === 2) { if (hasScreening) setStep(3); else submit(); }
@@ -229,12 +253,21 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
                 </button>
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div><label style={label}>{t("name")}{fromCV && form.name && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("name")} style={inputStyle} /></div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div><label style={label}>{t("firstName")}{fromCV && form.firstName && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.firstName} onChange={(e) => set("firstName", e.target.value)} placeholder={t("firstNamePlaceholder")} style={inputStyle} /></div>
+                  <div><label style={label}>{t("lastName")}{fromCV && form.lastName && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.lastName} onChange={(e) => set("lastName", e.target.value)} placeholder={t("lastNamePlaceholder")} style={inputStyle} /></div>
+                </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div><label style={label}>{t("email")}{fromCV && form.email && <AiTag>{t("fromCV")}</AiTag>}</label><input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="tu@correo.com" style={inputStyle} /></div>
                   <div><label style={label}>{t("phone")}</label><input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+58…" style={inputStyle} /></div>
                 </div>
-                <div><label style={label}>{t("role")}{fromCV && form.role && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.role} onChange={(e) => set("role", e.target.value)} placeholder={t("rolePlaceholder")} style={inputStyle} /></div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div><label style={label}>{t("role")}{fromCV && form.role && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.role} onChange={(e) => set("role", e.target.value)} placeholder={t("rolePlaceholder")} style={inputStyle} /></div>
+                  <div>
+                    <label style={label}>{t("city")}{fromCV && parsed.city && <AiTag>{t("fromCV")}</AiTag>}</label>
+                    <CityAutocomplete value={parsed.city || ""} onChange={(city) => setParsed((p) => ({ ...p, city }))} placeholder={t("city")} />
+                  </div>
+                </div>
                 <div>
                   <label style={label}>{fromCV ? t("skillsDetected") : t("skillsYours")}{fromCV && <AiTag>{t("fromCV")}</AiTag>}</label>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>

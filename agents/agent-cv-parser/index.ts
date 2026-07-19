@@ -32,6 +32,8 @@ export const CvEducationSchema = z.object({
 
 export const CvProfileSchema = z.object({
   name: z.string().nullable().default(null),
+  first_name: z.string().nullable().default(null),
+  last_name: z.string().nullable().default(null),
   email: z.string().nullable().default(null),
   phone: z.string().nullable().default(null),
   location: z.string().nullable().default(null),
@@ -57,7 +59,7 @@ async function fallbackProfile(input: CvParserInput): Promise<CvProfile> {
   const ctx = await getCandidateCvContext(input.candidateId);
   if ("error" in ctx) {
     return {
-      name: null, email: null, phone: null, location: null,
+      name: null, first_name: null, last_name: null, email: null, phone: null, location: null,
       city: null, country_code: null, summary: "", skills: [],
       experience_years: 0, experiences: [], languages: [], education: [],
       extracted_source: "fallback",
@@ -65,6 +67,8 @@ async function fallbackProfile(input: CvParserInput): Promise<CvProfile> {
   }
   return {
     name: ctx.name,
+    first_name: ctx.name ? ctx.name.split(" ")[0] : null,
+    last_name: ctx.name && ctx.name.includes(" ") ? ctx.name.slice(ctx.name.indexOf(" ") + 1).trim() : null,
     email: ctx.email,
     phone: ctx.phone,
     location: ctx.location,
@@ -99,7 +103,7 @@ export async function runCvParser(input: CvParserInput): Promise<AgentResult<CvP
 /** Perfil vacío — usado cuando el texto del CV no da para extraer nada. */
 export function emptyCvProfile(): CvProfile {
   return {
-    name: null, email: null, phone: null, location: null,
+    name: null, first_name: null, last_name: null, email: null, phone: null, location: null,
     city: null, country_code: null, summary: "", skills: [],
     experience_years: 0, experiences: [], languages: [], education: [],
     extracted_source: "fallback",

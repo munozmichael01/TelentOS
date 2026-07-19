@@ -1,31 +1,31 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { logoFor, formatSalary, relativeDate, jobSlug } from "@/lib/board/format";
-
-const ARCHIVO = "'Archivo',sans-serif";
-const MONO = "'Space Mono',monospace";
-
-const ROOT: CSSProperties = {
-  "--brand": "#0E5C4A", "--accent": "#F1543F", "--ink": "#1A1A17", "--soft": "#79746B",
-  "--line": "#E7E1D4", "--surface": "#FCFAF6", "--bg": "#F4F0E8", "--brandSoft": "#DCEFE4",
-  fontFamily: "'Hanken Grotesk',system-ui,sans-serif", color: "#1A1A17", background: "#F4F0E8",
-  minHeight: "100vh", WebkitFontSmoothing: "antialiased",
-} as CSSProperties;
+import { formatSalary, jobSlug, relativeDate } from "@/lib/board/format";
+import { BoardTabBar } from "@/components/board/tab-bar";
+import { CityAutocomplete } from "@/components/board/city-autocomplete";
+import { AiTag, ARCHIVO, BoardField, BoardRoot, Chip, CompanyLogo, HardButton, MONO, MonoLabel, inputStyle } from "@/components/board/ui";
 
 type Tab = "profile" | "applications" | "saved" | "alerts";
 type Job = { id: string; title: string; city: string | null; modality: string | null; salary_min: number | null; salary_max: number | null; salary_currency: string | null; employment_type: string | null; company: { name?: string | null; logo_url?: string | null; slug?: string | null } | null };
 type Application = { id: string; created_at: string; fit_score: number | null; job: Job | null };
 type Saved = { id: string; created_at: string; job: Job | null };
-type Alert = { id: string; criteria: Record<string, unknown>; active: boolean };
-type Profile = { full_name?: string | null; headline?: string | null; about?: string | null; phone?: string | null; city?: string | null };
+type Alert = { id: string; criteria: Record<string, unknown>; active: boolean; created_at?: string | null };
+type Experience = { title?: string | null; company?: string | null; seniority?: string | null; start_date?: string | null; end_date?: string | null; is_current?: boolean | null };
+type Education = { degree?: string | null; institution?: string | null; field?: string | null; level?: string | null; start_year?: number | null; end_year?: number | null };
+type Language = { language?: string | null; level?: string | null };
+type Sourced = { experiences?: Experience[]; education?: Education[]; languages?: Language[]; skills?: string[]; first_name?: string | null; last_name?: string | null; phone?: string | null; city?: string | null; country_code?: string | null };
+type Profile = { full_name?: string | null; first_name?: string | null; last_name?: string | null; email?: string | null; headline?: string | null; about?: string | null; phone?: string | null; city?: string | null; country_code?: string | null; pref_salary_min?: number | null; pref_currency?: string | null; pref_modality?: string[] | null; pref_locations?: string[] | null; pref_contract?: string[] | null };
 type Completeness = { pct: number; complete: boolean; missing: string[] };
 
-const label = { fontFamily: MONO, fontSize: 10, textTransform: "uppercase" as const, letterSpacing: .5, color: "#79746B", marginBottom: 5, display: "block" };
-const input = { width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 14, color: "#1A1A17", background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: 10, padding: "10px 12px", outline: "none" } as CSSProperties;
+type FormState = { first_name: string; last_name: string; headline: string; about: string; phone: string; city: string; country_code: string; pref_salary_min: string; pref_currency: string; pref_modality: string; pref_locations: string; pref_contract: string; skills: string };
+
+const pageStyle: CSSProperties = { maxWidth: 720, margin: "0 auto", padding: "16px 16px 84px" };
+const cardStyle: CSSProperties = { background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: 14 };
+const sheetHandle: CSSProperties = { width: 38, height: 4, borderRadius: 999, background: "#CFC7B6", margin: "0 auto 12px" };
 
 export function AccountClient({ locale }: { locale: string }) {
   const t = useTranslations("Board");
@@ -34,15 +34,21 @@ export function AccountClient({ locale }: { locale: string }) {
   const [tab, setTab] = useState<Tab>("profile");
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [sourced, setSourced] = useState<Sourced>({});
   const [skills, setSkills] = useState<string[]>([]);
   const [completeness, setCompleteness] = useState<Completeness | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [saved, setSaved] = useState<Saved[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alertOn, setAlertOn] = useState<Record<string, boolean>>({});
   const [editOpen, setEditOpen] = useState(false);
-  const [form, setForm] = useState<Record<string, string>>({});
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [newAlertOpen, setNewAlertOpen] = useState(false);
+  const [form, setForm] = useState<FormState>(emptyForm());
   const [savingEdit, setSavingEdit] = useState(false);
   const [alertName, setAlertName] = useState("");
+  const [alertFreq, setAlertFreq] = useState("daily");
+  const [prefsOn, setPrefsOn] = useState({ email: true, push: true, digest: false, visible: true });
 
   useEffect(() => {
     (async () => {
@@ -51,16 +57,55 @@ export function AccountClient({ locale }: { locale: string }) {
         fetch("/api/board/saved").then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch("/api/board/alerts").then((r) => (r.ok ? r.json() : null)).catch(() => null),
       ]);
-      if (p) { setProfile(p.profile); setSkills(p.skills ?? []); setCompleteness(p.completeness); setApplications(p.applications ?? []); }
+      if (p) { setProfile(p.profile); setSourced(p.sourced ?? {}); setSkills((p.skills?.length ? p.skills : p.sourced?.skills) ?? []); setCompleteness(p.completeness); setApplications(p.applications ?? []); }
       if (s) setSaved(s.saved ?? []);
-      if (a) setAlerts(a.alerts ?? []);
+      if (a) { setAlerts(a.alerts ?? []); setAlertOn(Object.fromEntries(((a.alerts ?? []) as Alert[]).map((x) => [x.id, x.active !== false]))); }
       setLoading(false);
     })();
   }, []);
 
+  const display = useMemo(() => buildDisplay(profile, sourced, skills), [profile, sourced, skills]);
+
+  function openEdit() {
+    setForm({
+      first_name: profile?.first_name ?? sourced.first_name ?? splitName(profile?.full_name).first,
+      last_name: profile?.last_name ?? sourced.last_name ?? splitName(profile?.full_name).last,
+      headline: profile?.headline ?? "",
+      about: profile?.about ?? "",
+      phone: profile?.phone ?? sourced.phone ?? "",
+      city: profile?.city ?? sourced.city ?? "",
+      country_code: profile?.country_code ?? sourced.country_code ?? defaultCountry(locale),
+      pref_salary_min: profile?.pref_salary_min != null ? String(profile.pref_salary_min) : "",
+      pref_currency: profile?.pref_currency ?? "USD",
+      pref_modality: (profile?.pref_modality ?? []).join(", "),
+      pref_locations: (profile?.pref_locations ?? []).join(", "),
+      pref_contract: (profile?.pref_contract ?? []).join(", "),
+      skills: display.skills.join(", "),
+    });
+    setEditOpen(true);
+  }
+
   async function saveProfile() {
     setSavingEdit(true);
-    const body = { ...form, skills: (form.skills ?? "").split(",").map((x) => x.trim()).filter(Boolean) };
+    const first = form.first_name.trim();
+    const last = form.last_name.trim();
+    const salary = Number(form.pref_salary_min.replace(/[^0-9.]/g, ""));
+    const body = {
+      first_name: first,
+      last_name: last,
+      full_name: [first, last].filter(Boolean).join(" "),
+      headline: form.headline,
+      about: form.about,
+      phone: form.phone,
+      city: form.city,
+      country_code: form.country_code,
+      pref_salary_min: Number.isFinite(salary) && salary > 0 ? salary : null,
+      pref_currency: form.pref_currency || "USD",
+      pref_modality: splitList(form.pref_modality),
+      pref_locations: splitList(form.pref_locations),
+      pref_contract: splitList(form.pref_contract),
+      skills: splitList(form.skills),
+    };
     const res = await fetch("/api/board/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
     setSavingEdit(false);
     if (res) { setProfile(res.profile); setSkills(res.skills ?? []); setCompleteness(res.completeness); setEditOpen(false); }
@@ -69,7 +114,13 @@ export function AccountClient({ locale }: { locale: string }) {
   async function createAlert() {
     if (!alertName.trim()) return;
     const res = await fetch("/api/board/alerts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ criteria: { q: alertName.trim() } }) }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    if (res?.alert) { setAlerts((a) => [res.alert, ...a]); setAlertName(""); }
+    if (res?.alert) { setAlerts((a) => [res.alert, ...a]); setAlertOn((m) => ({ ...m, [res.alert.id]: true })); setAlertName(""); setNewAlertOpen(false); }
+  }
+
+  async function removeSaved(row: Saved) {
+    if (!row.job?.id) return;
+    await fetch(`/api/board/saved?jobId=${encodeURIComponent(row.job.id)}`, { method: "DELETE" });
+    setSaved((rows) => rows.filter((x) => x.id !== row.id));
   }
 
   async function deleteAlert(id: string) {
@@ -83,150 +134,193 @@ export function AccountClient({ locale }: { locale: string }) {
     router.refresh();
   }
 
-  function openEdit() {
-    setForm({ full_name: profile?.full_name ?? "", headline: profile?.headline ?? "", about: profile?.about ?? "", phone: profile?.phone ?? "", city: profile?.city ?? "", skills: skills.join(", ") });
-    setEditOpen(true);
-  }
-
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "profile", label: t("tabs.profile") },
-    { key: "applications", label: t("tabs.applications") },
-    { key: "saved", label: t("tabs.saved") },
-    { key: "alerts", label: t("tabs.alerts") },
-  ];
-
   return (
-    <div style={ROOT}>
-      <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(244,240,232,.94)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--line)", padding: "12px 16px" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", alignItems: "center", gap: 9 }}>
-          <Link href="/empleos" style={{ display: "flex", alignItems: "center", gap: 9, color: "var(--ink)" }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 var(--ink)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round" /></svg>
-            </div>
-            <span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 16, letterSpacing: "-.5px" }}>{t("account.title")}</span>
-          </Link>
-          <button onClick={logout} style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--soft)", background: "none", border: "none", cursor: "pointer" }}>{t("account.logout")}</button>
-        </div>
-      </header>
-
-      {/* Tabs */}
-      <div style={{ position: "sticky", top: 53, zIndex: 19, background: "var(--bg)", borderBottom: "1px solid var(--line)" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", gap: 4, padding: "0 12px", overflowX: "auto" }}>
-          {tabs.map((tb) => (
-            <button key={tb.key} onClick={() => setTab(tb.key)} style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: tab === tb.key ? "var(--ink)" : "var(--soft)", background: "none", border: "none", borderBottom: `2px solid ${tab === tb.key ? "var(--ink)" : "transparent"}`, padding: "13px 10px", cursor: "pointer", whiteSpace: "nowrap" }}>{tb.label}</button>
-          ))}
-        </div>
-      </div>
-
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px 60px" }}>
-        {loading ? (
-          <div style={{ textAlign: "center", color: "var(--soft)", padding: 40, fontSize: 14 }}>…</div>
-        ) : tab === "profile" ? (
+    <BoardRoot>
+      <Header title={t("account.title")} onSettings={() => setSettingsOpen(true)} />
+      <main style={pageStyle}>
+        {loading ? <div style={{ textAlign: "center", color: "var(--soft)", padding: 44, fontSize: 14 }}>...</div> : (
           <>
-            {completeness && !completeness.complete && (
-              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: 16, marginBottom: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14 }}>{t("account.completeness", { pct: completeness.pct })}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 12, color: "var(--brand)" }}>{completeness.pct}%</span>
-                </div>
-                <div style={{ height: 7, background: "var(--bg)", borderRadius: 999, overflow: "hidden" }}>
-                  <div style={{ width: `${completeness.pct}%`, height: "100%", background: "var(--brand)" }} />
-                </div>
-                <div style={{ fontSize: 12.5, color: "var(--soft)", marginTop: 9, lineHeight: 1.45 }}>{t("account.completeHint")}</div>
-                <Link href="/cuenta/perfil" className="jb-hard" style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 12, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 10, padding: "8px 14px", boxShadow: "2px 2px 0 var(--ink)" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z" stroke="#C6F24E" strokeWidth="1.7" strokeLinejoin="round" /></svg>
-                  {t("builder.title")}
-                </Link>
-              </div>
-            )}
-            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: 18 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-                <div>
-                  <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 20, letterSpacing: "-.5px" }}>{profile?.full_name || "—"}</div>
-                  {profile?.headline && <div style={{ fontSize: 13.5, color: "var(--soft)", marginTop: 2 }}>{profile.headline}</div>}
-                  {profile?.city && <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--soft)", marginTop: 4 }}>{profile.city}</div>}
-                </div>
-                <button onClick={openEdit} className="jb-hard" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 10, padding: "7px 14px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer" }}>{t("account.edit")}</button>
-              </div>
-              {profile?.about && <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "#3A3833", margin: "0 0 14px" }}>{profile.about}</p>}
-              {skills.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {skills.map((s) => <span key={s} style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#54504A", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 7, padding: "4px 9px" }}>{s}</span>)}
-                </div>
-              )}
-            </div>
+            {tab === "profile" && <ProfileTab display={display} completeness={completeness} onEdit={openEdit} onSettings={() => setSettingsOpen(true)} t={t} loc={loc} />}
+            {tab === "applications" && <DeferredApplications t={t} applications={applications} loc={loc} />}
+            {tab === "saved" && <SavedTab saved={saved} onRemove={removeSaved} t={t} loc={loc} />}
+            {tab === "alerts" && <AlertsTab alerts={alerts} alertOn={alertOn} setAlertOn={setAlertOn} onNew={() => setNewAlertOpen(true)} onDelete={deleteAlert} t={t} />}
           </>
-        ) : tab === "applications" ? (
-          applications.length === 0
-            ? <Empty text={t("account.emptyApplications")} cta={t("account.browse")} />
-            : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{applications.map((a) => <JobRow key={a.id} job={a.job} meta={`${t("account.appliedOn", { date: relativeDate(a.created_at, loc) })}${a.fit_score != null ? ` · ${t("account.fit", { score: a.fit_score })}` : ""}`} locale={loc} />)}</div>
-        ) : tab === "saved" ? (
-          saved.length === 0
-            ? <Empty text={t("account.emptySaved")} cta={t("account.browse")} />
-            : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{saved.map((s) => <JobRow key={s.id} job={s.job} meta={s.job ? formatSalary(s.job, loc) : ""} locale={loc} />)}</div>
-        ) : (
-          <div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-              <input value={alertName} onChange={(e) => setAlertName(e.target.value)} placeholder={t("account.alertName")} style={input} onKeyDown={(e) => { if (e.key === "Enter") createAlert(); }} />
-              <button onClick={createAlert} className="jb-hard" style={{ flexShrink: 0, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 10, padding: "0 16px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer" }}>{t("account.createAlert")}</button>
-            </div>
-            {alerts.length === 0
-              ? <Empty text={t("account.emptyAlerts")} />
-              : <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{alerts.map((al) => (
-                  <div key={al.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "12px 14px" }}>
-                    <span style={{ fontSize: 13.5, fontWeight: 600 }}>{String((al.criteria as { q?: string }).q ?? Object.values(al.criteria).join(", "))}</span>
-                    <button onClick={() => deleteAlert(al.id)} style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--accent)", background: "none", border: "none", cursor: "pointer" }}>{t("account.delete")}</button>
-                  </div>
-                ))}</div>}
-          </div>
         )}
       </main>
+      <BoardTabBar active={tab} onSelect={setTab} badges={{ applications: applications.length }} />
+      {editOpen && <EditSheet form={form} setForm={setForm} saving={savingEdit} onClose={() => setEditOpen(false)} onSave={saveProfile} t={t} />}
+      {newAlertOpen && <NewAlertSheet name={alertName} setName={setAlertName} freq={alertFreq} setFreq={setAlertFreq} onClose={() => setNewAlertOpen(false)} onCreate={createAlert} t={t} />}
+      {settingsOpen && <SettingsSheet prefs={prefsOn} setPrefs={setPrefsOn} onClose={() => setSettingsOpen(false)} onLogout={logout} t={t} />}
+    </BoardRoot>
+  );
+}
 
-      {/* Edit profile modal */}
-      {editOpen && (
-        <div onClick={() => !savingEdit && setEditOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(26,26,23,.45)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 560, maxHeight: "90%", overflowY: "auto", background: "var(--bg)", borderRadius: "22px 22px 0 0", borderTop: "2px solid var(--ink)", padding: "18px 20px 24px" }}>
-            <div style={{ width: 38, height: 4, borderRadius: 999, background: "#CFC7B6", margin: "0 auto 14px" }} />
-            <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px", marginBottom: 16 }}>{t("account.editProfile")}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {([["full_name", "fullName"], ["headline", "headline"], ["phone", "phone"], ["city", "city"]] as const).map(([k, lbl]) => (
-                <div key={k}><label style={label}>{t(`account.${lbl}`)}</label><input value={form[k] ?? ""} onChange={(e) => setForm({ ...form, [k]: e.target.value })} style={input} /></div>
-              ))}
-              <div><label style={label}>{t("account.about")}</label><textarea value={form.about ?? ""} onChange={(e) => setForm({ ...form, about: e.target.value })} rows={3} style={{ ...input, resize: "vertical" }} /></div>
-              <div><label style={label}>{t("account.skills")}</label><input value={form.skills ?? ""} onChange={(e) => setForm({ ...form, skills: e.target.value })} style={input} /></div>
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-              <button onClick={() => setEditOpen(false)} disabled={savingEdit} style={{ fontFamily: ARCHIVO, fontWeight: 700, fontSize: 14, color: "var(--soft)", background: "transparent", border: "1.5px solid var(--line)", borderRadius: 11, padding: "12px 18px", cursor: "pointer" }}>{t("account.cancel")}</button>
-              <button onClick={saveProfile} disabled={savingEdit} className="jb-hard" style={{ flex: 1, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "#fff", background: "var(--brand)", border: "2px solid var(--ink)", borderRadius: 12, padding: 13, boxShadow: "3px 3px 0 var(--ink)", cursor: "pointer" }}>{savingEdit ? t("account.saving") : t("account.save")}</button>
-            </div>
+function Header({ title, onSettings }: { title: string; onSettings: () => void }) {
+  return (
+    <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(244,240,232,.94)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--line)", padding: "12px 16px" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", alignItems: "center", gap: 9 }}>
+        <Link href="/empleos" style={{ display: "flex", alignItems: "center", gap: 9, color: "var(--ink)" }}>
+          <span style={{ width: 28, height: 28, borderRadius: 8, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 var(--ink)" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round" /></svg>
+          </span>
+          <span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 16, letterSpacing: "-.5px" }}>{title}</span>
+        </Link>
+        <button onClick={onSettings} className="jb-tap" style={{ marginLeft: "auto", width: 36, height: 36, borderRadius: 11, background: "var(--surface)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }} aria-label="settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7Z" stroke="var(--ink)" strokeWidth="2"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 01-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.9.3l-.1.1A2 2 0 014.2 17l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 010-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9L4.2 7A2 2 0 017 4.2l.1.1a1.7 1.7 0 001.9.3h.1a1.7 1.7 0 001-1.5V3a2 2 0 014 0v.1a1.7 1.7 0 001 1.5h.1a1.7 1.7 0 001.9-.3l.1-.1A2 2 0 0119.8 7l-.1.1a1.7 1.7 0 00-.3 1.9v.1a1.7 1.7 0 001.5 1h.1a2 2 0 010 4h-.1a1.7 1.7 0 00-1.5 1Z" stroke="var(--ink)" strokeWidth="2" strokeLinejoin="round"/></svg>
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function ProfileTab({ display, completeness, onEdit, onSettings, t, loc }: { display: ReturnType<typeof buildDisplay>; completeness: Completeness | null; onEdit: () => void; onSettings: () => void; t: ReturnType<typeof useTranslations>; loc: string }) {
+  const pct = completeness?.pct ?? 0;
+  const dash = Math.round(151 * (1 - pct / 100));
+  return (
+    <div className="jb-fade">
+      <section style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 16 }}>
+        <span style={{ width: 56, height: 56, borderRadius: 17, background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", color: "#063D31", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, flexShrink: 0, boxShadow: "2px 2px 0 var(--ink)" }}>{initials(display.name)}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 21, letterSpacing: "-.6px", lineHeight: 1 }}>{display.name || t("account.unnamed")}</div>
+          <div style={{ fontSize: 13, color: "#54504A", marginTop: 3 }}>{display.headline || t("account.noHeadline")}</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}><PinIcon />{display.location || t("account.noLocation")}</div>
+        </div>
+        <IconButton onClick={onEdit} label={t("account.edit")}><EditIcon /></IconButton>
+      </section>
+
+      <section style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 16, padding: 16, marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ position: "relative", width: 56, height: 56, flexShrink: 0 }}>
+            <svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="#38352E" strokeWidth="6"/><circle cx="28" cy="28" r="24" fill="none" stroke="#C6F24E" strokeWidth="6" strokeLinecap="round" transform="rotate(-90 28 28)" strokeDasharray="151" strokeDashoffset={dash}/></svg>
+            <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 15 }}>{pct}%</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15 }}>{t("account.completeness", { pct })}</div>
+            <div style={{ fontSize: 12.5, color: "#B7B2A8", lineHeight: 1.4, marginTop: 2 }}>{t("account.completeHint")}</div>
           </div>
         </div>
-      )}
+        <div style={{ display: "flex", gap: 6, marginTop: 13, flexWrap: "wrap" }}>{display.checks.map((c) => <Chip key={c.key} tone={c.done ? "lime" : "neutral"}>{c.done ? <CheckTiny /> : <PlusTiny />}{t(`account.check.${c.key}`)}</Chip>)}</div>
+      </section>
+
+      <Section title={t("account.cvTitle")}><CvCard t={t} /></Section>
+      <Section title={t("account.aboutTitle")} action={t("account.edit")} onAction={onEdit}><p style={{ fontSize: 13.5, lineHeight: 1.6, color: "#3A3833", margin: 0 }}>{display.about || t("account.emptyAbout")}</p></Section>
+      <Section title={t("account.lookingFor")} action={t("account.edit")} onAction={onEdit}><PrefsView display={display} t={t} loc={loc} /></Section>
+      <ExperienceSection rows={display.experiences} t={t} onEdit={onEdit} />
+      <EducationSection rows={display.education} t={t} onEdit={onEdit} />
+      <LanguageSection rows={display.languages} t={t} />
+      <Section title={t("account.skillsTitle")}><div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{display.skills.map((s) => <span key={s} style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 10px" }}>{s}</span>)}<button onClick={onEdit} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}>{t("account.add")}</button></div></Section>
+      <Section title={t("account.linksTitle")}><Links t={t} /></Section>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 6 }}><HardButton href="/empleos" variant="brand" full><SearchIcon />{t("account.searchForMe")}</HardButton><HardButton href="/cuenta/perfil" variant="lime" full><SparkIcon />{t("account.improveWithAi")}</HardButton><button onClick={onSettings} className="jb-tap" style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: 11, cursor: "pointer" }}>{t("account.settingsAndNotifications")}</button></div>
     </div>
   );
 }
 
-function Empty({ text, cta }: { text: string; cta?: string }) {
-  return (
-    <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--soft)" }}>
-      <div style={{ fontSize: 14, lineHeight: 1.5, marginBottom: cta ? 14 : 0 }}>{text}</div>
-      {cta && <Link href="/empleos" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "var(--brand)" }}>{cta} →</Link>}
-    </div>
-  );
+function Section({ title, children, action, onAction }: { title: string; children: ReactNode; action?: string; onAction?: () => void }) {
+  return <section style={{ marginBottom: 14 }}><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}><MonoLabel>{title}</MonoLabel>{action && <button onClick={onAction} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--brand)", padding: "2px 4px", background: "transparent", border: 0, cursor: "pointer" }}>{action}</button>}</div><div style={cardStyle}>{children}</div></section>;
 }
 
-function JobRow({ job, meta, locale }: { job: Job | null; meta: string; locale: string }) {
-  if (!job) return null;
-  const logo = logoFor(job.company?.name);
-  return (
-    <Link href={{ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(job) } }} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: 13, color: "inherit" }} className="jb-job">
-      <span style={{ width: 40, height: 40, borderRadius: 11, background: logo.bg, color: logo.color, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 14, flexShrink: 0 }}>{logo.initials}</span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)" }}>{job.company?.name}{job.city ? ` · ${job.city}` : ""}</div>
-        <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, letterSpacing: "-.2px", lineHeight: 1.15, marginTop: 2 }}>{job.title}</div>
-        {meta && <div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--brand)", marginTop: 3 }}>{meta}</div>}
-      </div>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6" stroke="var(--soft)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-    </Link>
-  );
+function CvCard({ t }: { t: ReturnType<typeof useTranslations> }) {
+  return <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 38, height: 46, borderRadius: 8, background: "var(--brandSoft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><FileIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t("account.cvFile")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.cvMeta")}</div></div><AiTag>{t("account.fromCv")}</AiTag></div>;
 }
+
+function PrefsView({ display, t, loc }: { display: ReturnType<typeof buildDisplay>; t: ReturnType<typeof useTranslations>; loc: string }) {
+  const prefs = [
+    { label: t("account.role"), value: display.headline || t("account.anyRole"), icon: <BriefcaseIcon /> },
+    { label: t("account.salary"), value: display.salary ? new Intl.NumberFormat(loc, { style: "currency", currency: display.currency }).format(display.salary) : t("account.open") , icon: <MoneyIcon /> },
+    { label: t("account.modality"), value: display.modality || t("account.open"), icon: <ScreenIcon /> },
+    { label: t("account.location"), value: display.prefLocation || display.location || t("account.open"), icon: <PinIcon /> },
+  ];
+  return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{prefs.map((p) => <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 11 }}><span style={{ width: 28, height: 28, borderRadius: 8, background: "var(--bg)", color: "var(--soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{p.icon}</span><span style={{ fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: .4, color: "var(--soft)", width: 78, flexShrink: 0 }}>{p.label}</span><span style={{ fontSize: 13.5, fontWeight: 600, color: "#3A3833" }}>{p.value}</span></div>)}</div>;
+}
+
+function ExperienceSection({ rows, t, onEdit }: { rows: Experience[]; t: ReturnType<typeof useTranslations>; onEdit: () => void }) {
+  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.experienceTitle")} action={t("account.add")} onAction={onEdit} />{rows.length === 0 ? <EmptyInline text={t("account.emptyExperience")} /> : <div style={{ position: "relative", paddingLeft: 6 }}>{rows.map((e, i) => <div key={`${e.title}-${e.company}-${i}`} style={{ display: "flex", gap: 13 }}><div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}><CompanyLogo name={e.company || e.title} size={38} />{i < rows.length - 1 && <span style={{ flex: 1, width: 2, background: "var(--line)", margin: "4px 0" }} />}</div><div style={{ flex: 1, minWidth: 0, paddingBottom: 16 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14.5, letterSpacing: "-.2px" }}>{e.title || t("account.untitledRole")}</div><div style={{ fontSize: 12.5, color: "#54504A", marginTop: 1 }}>{e.company || t("account.noCompany")}</div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{period(e.start_date, e.end_date, e.is_current, t)}</div></div></div>)}</div>}</section>;
+}
+
+function EducationSection({ rows, t, onEdit }: { rows: Education[]; t: ReturnType<typeof useTranslations>; onEdit: () => void }) {
+  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.educationTitle")} action={t("account.add")} onAction={onEdit} />{rows.length === 0 ? <EmptyInline text={t("account.emptyEducation")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>{rows.map((ed, i) => <div key={`${ed.degree}-${ed.institution}-${i}`} style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: "12px 13px" }}><span style={{ width: 34, height: 34, borderRadius: 10, background: "var(--limeSoft)", color: "#46540F", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><EducationIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14 }}>{ed.degree || ed.field || t("account.education")}</div><div style={{ fontSize: 12.5, color: "#54504A", marginTop: 1 }}>{ed.institution || t("account.noInstitution")}</div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{yearPeriod(ed.start_year, ed.end_year)}</div></div></div>)}</div>}</section>;
+}
+
+function LanguageSection({ rows, t }: { rows: Language[]; t: ReturnType<typeof useTranslations> }) {
+  return <section style={{ marginBottom: 14 }}><MonoLabel style={{ marginBottom: 11 }}>{t("account.languagesTitle")}</MonoLabel>{rows.length === 0 ? <EmptyInline text={t("account.emptyLanguages")} /> : <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: "6px 14px" }}>{rows.map((l, i) => <div key={`${l.language}-${i}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i === rows.length - 1 ? "1px solid transparent" : "1px solid var(--line)" }}><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13.5, flex: 1 }}>{l.language || t("account.language")}</span><Dots level={l.level} /><span style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", width: 70, textAlign: "right" }}>{l.level || t("account.basic")}</span></div>)}</div>}</section>;
+}
+
+function Links({ t }: { t: ReturnType<typeof useTranslations> }) {
+  return <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{["portfolio", "linkedin", "website"].map((key) => <div key={key} className="jb-card" style={{ display: "flex", alignItems: "center", gap: 11, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "11px 13px" }}><span style={{ width: 30, height: 30, borderRadius: 9, background: "var(--bg)", color: "var(--soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><ExternalIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13, fontWeight: 700 }}>{t(`account.${key}`)}</div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t("account.addLinkHint")}</div></div><ExternalIcon /></div>)}</div>;
+}
+
+function SavedTab({ saved, onRemove, t, loc }: { saved: Saved[]; onRemove: (row: Saved) => void; t: ReturnType<typeof useTranslations>; loc: string }) {
+  return <div className="jb-fade"><h1 style={titleStyle}>{t("saved.title")}</h1>{saved.length === 0 ? <EmptyPanel title={t("saved.emptyTitle")} text={t("saved.emptyText")} cta={t("account.browse")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>{saved.map((row) => row.job && <div key={row.id} className="jb-card" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 15, padding: 14, display: "flex", alignItems: "center", gap: 12 }}><CompanyLogo name={row.job.company?.name} logoUrl={row.job.company?.logo_url} size={40} /><Link href={{ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(row.job) } }} style={{ flex: 1, minWidth: 0, color: "inherit" }}><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)" }}>{row.job.company?.name}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14.5, letterSpacing: "-.3px", lineHeight: 1.1, marginTop: 1 }}>{row.job.title}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 700, fontSize: 12, color: "var(--brand)", marginTop: 4 }}>{formatSalary(row.job, loc) || t("saved.salaryOpen")}</div></Link><button onClick={() => onRemove(row)} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 9, padding: "8px 9px", cursor: "pointer" }}>{t("saved.remove")}</button></div>)}</div>}</div>;
+}
+
+function AlertsTab({ alerts, alertOn, setAlertOn, onNew, onDelete, t }: { alerts: Alert[]; alertOn: Record<string, boolean>; setAlertOn: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; onNew: () => void; onDelete: (id: string) => void; t: ReturnType<typeof useTranslations> }) {
+  return <div className="jb-fade"><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}><h1 style={{ ...titleStyle, margin: 0 }}>{t("alerts.title")}</h1><HardButton onClick={onNew} style={{ padding: "7px 12px", fontSize: 12 }}><PlusTiny />{t("alerts.new")}</HardButton></div>{alerts.length === 0 ? <EmptyPanel title={t("alerts.emptyTitle")} text={t("alerts.emptyText")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{alerts.map((al) => { const on = alertOn[al.id] !== false; const name = alertLabel(al.criteria, t("alerts.default")); return <div key={al.id} className="jb-pop" style={cardStyle}><div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}><span style={{ width: 34, height: 34, borderRadius: 10, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BellIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, lineHeight: 1.15 }}>{name}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 3 }}>{t("alerts.frequencyWeekly")} · {t("alerts.newCount", { count: 0 })}</div></div><Toggle on={on} onClick={() => setAlertOn((m) => ({ ...m, [al.id]: !on }))} /></div><div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 11 }}>{criteriaChips(al.criteria, t("alerts.match")).map((c) => <span key={c} style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "#54504A", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 7, padding: "3px 8px" }}>{c}</span>)}</div><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 11, paddingTop: 11, borderTop: "1px solid var(--line)" }}><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)" }}>{t("alerts.viewOffers", { count: 0 })}</span><button onClick={() => onDelete(al.id)} style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--accent)", background: "transparent", border: 0, cursor: "pointer" }}>{t("account.delete")}</button></div></div>; })}</div>}<div style={{ marginTop: 14, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 12, padding: "12px 13px", fontSize: 12.5, lineHeight: 1.5, color: "#46540F" }}>{t("alerts.hint")}</div></div>;
+}
+
+function DeferredApplications({ t, applications, loc }: { t: ReturnType<typeof useTranslations>; applications: Application[]; loc: string }) {
+  return <div className="jb-fade"><h1 style={titleStyle}>{t("account.applicationsTitle")}</h1><div style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 15, padding: "15px 16px", marginBottom: 16 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13 }}>{t("account.applicationsDeferredTitle")}</div><p style={{ fontSize: 13, lineHeight: 1.5, color: "#E4E0D8", margin: "8px 0 0" }}>{t("account.applicationsDeferredText")}</p></div>{applications.length > 0 && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{applications.map((a) => a.job && <div key={a.id} style={cardStyle}><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)" }}>{a.job.company?.name} · {relativeDate(a.created_at, loc)}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, marginTop: 3 }}>{a.job.title}</div></div>)}</div>}</div>;
+}
+
+function EditSheet({ form, setForm, saving, onClose, onSave, t }: { form: FormState; setForm: (v: FormState) => void; saving: boolean; onClose: () => void; onSave: () => void; t: ReturnType<typeof useTranslations> }) {
+  const update = (key: keyof FormState, value: string) => setForm({ ...form, [key]: value });
+  return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 10px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div style={sheetHandle} /><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{t("account.editProfile")}</span><button onClick={onSave} disabled={saving} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", padding: 4, background: "transparent", border: 0, cursor: "pointer" }}>{saving ? t("account.saving") : t("account.save")}</button></div></div><div style={{ padding: "16px 18px 20px", display: "flex", flexDirection: "column", gap: 14 }}><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.firstName")} value={form.first_name} onChange={(v) => update("first_name", v)} /><Field label={t("account.lastName")} value={form.last_name} onChange={(v) => update("last_name", v)} /></div><Field label={t("account.headline")} value={form.headline} onChange={(v) => update("headline", v)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.phone")} value={form.phone} onChange={(v) => update("phone", v)} /><Field label={t("account.currency")} value={form.pref_currency} onChange={(v) => update("pref_currency", v)} /></div><BoardField label={t("account.city")}><CityAutocomplete value={form.city} country={form.country_code || "VE"} onChange={(city, meta) => setForm({ ...form, city, country_code: meta?.country ?? form.country_code })} placeholder={t("account.city")} inputStyle={inputStyle} /></BoardField><BoardField label={t("account.about")}><textarea value={form.about} onChange={(e) => update("about", e.target.value)} rows={4} style={{ ...inputStyle, resize: "vertical" }} /></BoardField><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.salaryMin")} value={form.pref_salary_min} onChange={(v) => update("pref_salary_min", v)} /><Field label={t("account.modality")} value={form.pref_modality} onChange={(v) => update("pref_modality", v)} /></div><Field label={t("account.prefLocations")} value={form.pref_locations} onChange={(v) => update("pref_locations", v)} /><Field label={t("account.skills")} value={form.skills} onChange={(v) => update("skills", v)} /><HardButton onClick={onSave} disabled={saving} variant="brand" full>{saving ? t("account.saving") : t("account.saveChanges")}</HardButton></div></Sheet>;
+}
+
+function NewAlertSheet({ name, setName, freq, setFreq, onClose, onCreate, t }: { name: string; setName: (v: string) => void; freq: string; setFreq: (v: string) => void; onClose: () => void; onCreate: () => void; t: ReturnType<typeof useTranslations> }) {
+  const opts = [["instant", t("alerts.instant")], ["daily", t("alerts.daily")], ["weekly", t("alerts.weekly")]] as const;
+  return <Sheet onClose={onClose}><div style={{ padding: "14px 18px 6px" }}><div style={sheetHandle} /><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{t("alerts.new")}</span></div><div style={{ padding: "8px 18px 20px", display: "flex", flexDirection: "column", gap: 14 }}><Field label={t("alerts.name")} value={name} onChange={setName} placeholder={t("alerts.placeholder")} /><BoardField label={t("alerts.frequency")}><div style={{ display: "flex", gap: 7 }}>{opts.map(([key, label]) => <button key={key} onClick={() => setFreq(key)} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: freq === key ? 700 : 600, fontSize: 13, borderRadius: 999, padding: "8px 14px", cursor: "pointer", border: `1.5px solid ${freq === key ? "#1A1A17" : "#E7E1D4"}`, background: freq === key ? "#DCEFE4" : "#FCFAF6", color: freq === key ? "#0E5C4A" : "#54504A" }}>{label}</button>)}</div></BoardField><HardButton onClick={onCreate} variant="brand" full>{t("account.createAlert")}</HardButton></div></Sheet>;
+}
+
+function SettingsSheet({ prefs, setPrefs, onClose, onLogout, t }: { prefs: { email: boolean; push: boolean; digest: boolean; visible: boolean }; setPrefs: React.Dispatch<React.SetStateAction<{ email: boolean; push: boolean; digest: boolean; visible: boolean }>>; onClose: () => void; onLogout: () => void; t: ReturnType<typeof useTranslations> }) {
+  const rows = [{ id: "email", label: t("account.emailNews"), desc: t("account.emailNewsDesc") }, { id: "push", label: t("account.pushNotifications"), desc: t("account.pushNotificationsDesc") }, { id: "digest", label: t("account.weeklyDigest"), desc: t("account.weeklyDigestDesc") }] as const;
+  return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 10px", borderBottom: "1px solid var(--line)" }}><div style={sheetHandle} /><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{t("account.settings")}</span></div><div style={{ padding: "14px 18px 20px" }}><MonoLabel style={{ marginBottom: 10 }}>{t("account.notifications")}</MonoLabel><div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden", marginBottom: 18 }}>{rows.map((r) => <PrefRow key={r.id} label={r.label} desc={r.desc} on={prefs[r.id]} onClick={() => setPrefs((p) => ({ ...p, [r.id]: !p[r.id] }))} />)}</div><div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: "13px 14px", marginBottom: 18 }}><div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{t("account.profileVisible")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.profileVisibleDesc")}</div></div><Toggle on={prefs.visible} onClick={() => setPrefs((p) => ({ ...p, visible: !p.visible }))} /></div><button onClick={onLogout} className="jb-tap" style={{ width: "100%", fontFamily: ARCHIVO, fontWeight: 700, fontSize: 14, color: "var(--accent)", background: "var(--surface)", border: "1.5px solid #F2C4B9", borderRadius: 12, padding: 12, cursor: "pointer" }}>{t("account.logout")}</button></div></Sheet>;
+}
+
+function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) { return <BoardField label={label}><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} style={inputStyle} /></BoardField>; }
+function Sheet({ children, onClose }: { children: ReactNode; onClose: () => void }) { return <div onClick={onClose} className="jb-fade" style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(26,26,23,.4)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}><div onClick={(e) => e.stopPropagation()} className="jb-sheet" style={{ width: "100%", maxWidth: 560, maxHeight: "88%", overflowY: "auto", background: "var(--bg)", borderRadius: "22px 22px 0 0", borderTop: "2px solid var(--ink)" }}>{children}</div></div>; }
+function HeaderLine({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) { return <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 11 }}><MonoLabel>{title}</MonoLabel>{action && <button onClick={onAction} className="jb-tap" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--brand)", padding: "2px 4px", background: "transparent", border: 0, cursor: "pointer" }}><PlusTiny />{action}</button>}</div>; }
+function EmptyInline({ text }: { text: string }) { return <div style={{ ...cardStyle, color: "var(--soft)", fontSize: 13, lineHeight: 1.45 }}>{text}</div>; }
+function EmptyPanel({ title, text, cta }: { title: string; text: string; cta?: string }) { return <div style={{ textAlign: "center", padding: "44px 20px", color: "var(--soft)" }}><span style={{ width: 52, height: 52, borderRadius: 15, background: "var(--surface)", border: "1px solid var(--line)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}><BookmarkIcon /></span><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 16, color: "var(--ink)", marginBottom: 5 }}>{title}</div><div style={{ fontSize: 13, lineHeight: 1.5, marginBottom: cta ? 16 : 0 }}>{text}</div>{cta && <HardButton href="/empleos" variant="accent">{cta}</HardButton>}</div>; }
+function PrefRow({ label, desc, on, onClick }: { label: string; desc: string; on: boolean; onClick: () => void }) { return <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 14px", borderBottom: "1px solid var(--line)" }}><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{label}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{desc}</div></div><Toggle on={on} onClick={onClick} /></div>; }
+function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) { return <button onClick={onClick} className="jb-tap" style={{ flexShrink: 0, width: 42, height: 24, borderRadius: 999, background: on ? "#0E5C4A" : "#D8D1C2", position: "relative", border: 0, cursor: "pointer" }}><span style={{ position: "absolute", top: 2, left: on ? 20 : 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,.3)", transition: "left .15s ease" }} /></button>; }
+function Dots({ level }: { level?: string | null }) { const n = levelScore(level); return <div style={{ display: "flex", gap: 4 }}>{Array.from({ length: 5 }, (_, i) => <span key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: i < n ? "#0E5C4A" : "#E0DACC" }} />)}</div>; }
+
+function buildDisplay(profile: Profile | null, sourced: Sourced, profileSkills: string[]) {
+  const first = profile?.first_name ?? sourced.first_name ?? splitName(profile?.full_name).first;
+  const last = profile?.last_name ?? sourced.last_name ?? splitName(profile?.full_name).last;
+  const name = profile?.full_name || [first, last].filter(Boolean).join(" ");
+  const skills = profileSkills.length ? profileSkills : (sourced.skills ?? []);
+  return {
+    name, headline: profile?.headline ?? "", about: profile?.about ?? "", location: [profile?.city ?? sourced.city, profile?.country_code ?? sourced.country_code].filter(Boolean).join(", "),
+    salary: profile?.pref_salary_min ?? null, currency: profile?.pref_currency ?? "USD", modality: (profile?.pref_modality ?? []).join(" · "), prefLocation: (profile?.pref_locations ?? []).join(" · "),
+    skills, experiences: sourced.experiences ?? [], education: sourced.education ?? [], languages: sourced.languages ?? [],
+    checks: [{ key: "cv", done: true }, { key: "experience", done: (sourced.experiences?.length ?? 0) > 0 }, { key: "languages", done: (sourced.languages?.length ?? 0) > 0 }, { key: "portfolio", done: false }],
+  };
+}
+function emptyForm(): FormState { return { first_name: "", last_name: "", headline: "", about: "", phone: "", city: "", country_code: "VE", pref_salary_min: "", pref_currency: "USD", pref_modality: "", pref_locations: "", pref_contract: "", skills: "" }; }
+function splitList(v: string) { return v.split(",").map((x) => x.trim()).filter(Boolean); }
+function splitName(v?: string | null) { const parts = (v ?? "").trim().split(/\s+/).filter(Boolean); return { first: parts[0] ?? "", last: parts.slice(1).join(" ") }; }
+function initials(name?: string | null) { const n = (name || "?").trim(); return n.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?"; }
+function defaultCountry(locale: string) { if (locale === "pt") return "BR"; if (locale === "en") return "US"; return "VE"; }
+function period(start?: string | null, end?: string | null, current?: boolean | null, t?: ReturnType<typeof useTranslations>) { const s = start ? new Date(start).getUTCFullYear() : null; const e = current ? t?.("account.current") : (end ? new Date(end).getUTCFullYear() : null); return [s, e].filter(Boolean).join(" - ") || "-"; }
+function yearPeriod(start?: number | null, end?: number | null) { return [start, end].filter(Boolean).join(" - ") || "-"; }
+function levelScore(level?: string | null) { const key = (level ?? "").toLowerCase(); if (/native|nativo|c2/.test(key)) return 5; if (/c1|advanced|avanz/.test(key)) return 4; if (/b2|intermediate|intermedio/.test(key)) return 3; if (/b1|basic|basico|básico/.test(key)) return 2; return 1; }
+function alertLabel(criteria: Record<string, unknown>, fallback: string) { return String((criteria as { q?: string }).q ?? (Object.values(criteria).filter(Boolean).join(" · ") || fallback)); }
+function criteriaChips(criteria: Record<string, unknown>, fallback: string) { const chips = Object.entries(criteria).filter(([, v]) => v != null && v !== "").map(([k, v]) => `: `); return chips.length ? chips : [fallback]; }
+const titleStyle: CSSProperties = { fontFamily: ARCHIVO, fontWeight: 900, fontSize: 24, letterSpacing: "-.8px", margin: "0 0 14px" };
+
+function IconButton({ children, onClick, label }: { children: ReactNode; onClick: () => void; label: string }) { return <button onClick={onClick} className="jb-tap" aria-label={label} style={{ width: 36, height: 36, borderRadius: 11, background: "var(--surface)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "pointer" }}>{children}</button>; }
+function EditIcon() { return <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 00-3-3L5 17v3Z" stroke="var(--ink)" strokeWidth="2" strokeLinejoin="round" /></svg>; }
+function PinIcon() { return <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><circle cx="12" cy="9" r="2.4" stroke="currentColor" strokeWidth="2"/></svg>; }
+function FileIcon() { return <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="var(--brand)" strokeWidth="2" strokeLinejoin="round"/><path d="M14 3v4h4" stroke="var(--brand)" strokeWidth="2" strokeLinejoin="round"/></svg>; }
+function BriefcaseIcon() { return <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="2"/></svg>; }
+function MoneyIcon() { return <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/><path d="M12 7v10M9.5 9.5a2.5 2.5 0 015 0c0 1.5-1.2 2-2.5 2.5s-2.5 1-2.5 2.5a2.5 2.5 0 005 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>; }
+function ScreenIcon() { return <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M8 20h8M12 16v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>; }
+function EducationIcon() { return <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 4L2 9l10 5 10-5-10-5ZM6 11v5c0 1 3 3 6 3s6-2 6-3v-5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg>; }
+function ExternalIcon() { return <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
+function SearchIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>; }
+function SparkIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/></svg>; }
+function BellIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M10 19a2 2 0 004 0" stroke="currentColor" strokeWidth="2"/></svg>; }
+function BookmarkIcon() { return <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6 4h12v17l-6-4-6 4V4Z" stroke="var(--soft)" strokeWidth="2" strokeLinejoin="round"/></svg>; }
+function PlusTiny() { return <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/></svg>; }
+function CheckTiny() { return <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
