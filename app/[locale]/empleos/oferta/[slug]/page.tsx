@@ -73,6 +73,10 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
   const data = await getJob(params.slug);
   if (!data) notFound();
   const { job, skills, screening } = data;
+  // 1-toque: candidato logueado + oferta sin screening obligatorio → aplicar directo.
+  const { data: { user } } = await createClient().auth.getUser();
+  const authed = user?.app_metadata?.audience === "candidate";
+  const hasRequiredScreening = (screening ?? []).some((q) => q.required);
   const t = await getTranslations({ locale: params.locale, namespace: "Board" });
   const locale = params.locale;
 
@@ -220,7 +224,7 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
         </>}
       </div>
 
-      <JobApplyBar jobId={job.id} slug={params.slug} locale={locale} />
+      <JobApplyBar jobId={job.id} slug={params.slug} locale={locale} authed={authed} hasRequiredScreening={hasRequiredScreening} />
     </div>
   );
 }
