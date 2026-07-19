@@ -149,10 +149,24 @@ export function ProfileBuilder({ locale }: { locale: string }) {
         }
       }
 
-      const headline = parsed?.experiences?.[0]?.title || role || "";
-      const about = parsed?.summary || pitch || "";
-      const skills = Array.isArray(parsed?.skills) ? parsed.skills : [];
       const expYears = Number(exp.replace(/[^0-9]/g, "")) || parsed?.experience_years || 0;
+
+      // C2 — arranque EN FRÍO (sin CV): el agente redacta titular/"Sobre mí" y sugiere
+      // skills desde rol+experiencia+pitch. El agente PROPONE; se muestra para confirmar.
+      let enriched: { headline?: string; about?: string; skills?: string[] } | null = null;
+      if (!parsed && role.trim()) {
+        const r = await fetch("/api/agents/profile-writer", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role, experience_years: expYears, pitch, modality }),
+        }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+        if (r?.output) enriched = r.output;
+      }
+
+      const headline = parsed?.experiences?.[0]?.title || enriched?.headline || role || "";
+      const about = parsed?.summary || enriched?.about || pitch || "";
+      const skills = (Array.isArray(parsed?.skills) && parsed.skills.length)
+        ? parsed.skills
+        : (Array.isArray(enriched?.skills) ? enriched!.skills! : []);
 
       setGen({
         headline,
