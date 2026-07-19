@@ -7,7 +7,7 @@ import { tools, getCandidateCvContext } from "./tools";
 // Robustez barata donde no cambia el significado: enums case-insensitive, números coercidos.
 const lower = (v: unknown) => (typeof v === "string" ? v.toLowerCase() : v);
 
-const CvExperienceSchema = z.object({
+export const CvExperienceSchema = z.object({
   title: z.string(),
   company: z.string().nullable().default(null),
   seniority: z.preprocess(lower, z.enum(["junior", "mid", "senior", "lead", "exec"]).nullable().default(null)),
@@ -16,15 +16,16 @@ const CvExperienceSchema = z.object({
   is_current: z.boolean().default(false),
 });
 
-const CvLanguageSchema = z.object({
+export const CvLanguageSchema = z.object({
   language: z.string(),
   level: z.preprocess(lower, z.enum(["a1", "a2", "b1", "b2", "c1", "c2", "native"]).nullable().default(null)),
 });
 
-const CvEducationSchema = z.object({
+export const CvEducationSchema = z.object({
   degree: z.string(),
   institution: z.string().nullable().default(null),
   field: z.string().nullable().default(null),
+  level: z.preprocess(lower, z.enum(["none", "secondary", "vocational", "bachelor", "master", "phd"]).nullable().default(null)),
   start_year: z.coerce.number().int().nullable().default(null),
   end_year: z.coerce.number().int().nullable().default(null),
 });

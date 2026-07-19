@@ -4,6 +4,8 @@ import { computeFitScore } from "@/lib/fit-score";
 import { jsonError } from "@/lib/api";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { dedupeStrings, resolveSkillIds } from "@/lib/skills";
+import { EDUCATION_RANK, highestEducationLevel } from "@/lib/education";
+import type { EducationLevel } from "@/lib/types";
 
 const LANGUAGE_LEVELS = new Set(["a1", "a2", "b1", "b2", "c1", "c2", "native"]);
 
@@ -16,7 +18,7 @@ type ValidatedProfile = {
   skills: string[];
   experiences: Array<{ title: string; company: string | null; seniority: string | null; start_date: string | null; end_date: string | null; is_current: boolean }>;
   languages: Array<{ language: string; level: string | null }>;
-  education: Array<{ degree: string; institution: string | null; field: string | null; start_year: number | null; end_year: number | null }>;
+  education: Array<{ degree: string; institution: string | null; field: string | null; level: EducationLevel | null; start_year: number | null; end_year: number | null }>;
 };
 
 function parseCvProfile(raw: string | null): ValidatedProfile | null {
@@ -42,11 +44,15 @@ function parseCvProfile(raw: string | null): ValidatedProfile | null {
       const lvl = s(l.level)?.toLowerCase() ?? null;
       return { language: String(l.language).trim(), level: lvl && LANGUAGE_LEVELS.has(lvl) ? lvl : null };
     }),
-    education: arr<Record<string, unknown>>(p.education).filter((e) => s(e.degree)).slice(0, 12).map((e) => ({
-      degree: String(e.degree).trim(), institution: s(e.institution), field: s(e.field),
-      start_year: typeof e.start_year === "number" ? e.start_year : null,
-      end_year: typeof e.end_year === "number" ? e.end_year : null,
-    })),
+    education: arr<Record<string, unknown>>(p.education).filter((e) => s(e.degree)).slice(0, 12).map((e) => {
+      const lvl = s(e.level)?.toLowerCase() ?? null;
+      return {
+        degree: String(e.degree).trim(), institution: s(e.institution), field: s(e.field),
+        level: lvl && lvl in EDUCATION_RANK ? (lvl as EducationLevel) : null,
+        start_year: typeof e.start_year === "number" ? e.start_year : null,
+        end_year: typeof e.end_year === "number" ? e.end_year : null,
+      };
+    }),
   };
 }
 
@@ -132,6 +138,7 @@ export async function POST(req: Request) {
         summary: validated?.summary ?? null,
         city: validated?.city ?? null,
         country_code: validated?.country_code ?? null,
+        education_level: validated ? highestEducationLevel(validated.education.map((e) => e.level)) : null,
         source: "career_site",
       })
       .select("id")
@@ -188,7 +195,7 @@ export async function POST(req: Request) {
       await supabase.from("candidate_education").insert(
         validated.education.map((e, idx) => ({
           candidate_id: candidateId!, degree: e.degree, institution: e.institution, field: e.field,
-          start_year: e.start_year, end_year: e.end_year, order_index: idx, source: "cv",
+          level: e.level, start_year: e.start_year, end_year: e.end_year, order_index: idx, source: "cv",
         })),
       );
     }

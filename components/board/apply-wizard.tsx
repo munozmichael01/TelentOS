@@ -7,8 +7,8 @@ import { ARCHIVO, MONO, BoardRoot, HardButton, AiTag, MonoLabel, CompanyLogo, St
 
 type Job = { id: string; title: string; modality: string | null; city: string | null; company: string; logoUrl: string | null; salary: string };
 type Question = { id: string; type: string; prompt: string; options: string[]; required: boolean };
-type Exp = { title: string; company: string | null; start_date: string | null; end_date: string | null; is_current?: boolean };
-type Edu = { degree: string; institution: string | null; start_year: number | null; end_year: number | null };
+type Exp = { title: string; company: string | null; seniority?: string | null; start_date: string | null; end_date: string | null; is_current?: boolean };
+type Edu = { degree: string; institution: string | null; field?: string | null; level?: string | null; start_year: number | null; end_year: number | null };
 type Lang = { language: string; level: string | null };
 
 const label: CSSProperties = { fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "var(--soft)", display: "flex", alignItems: "center", gap: 7, marginBottom: 6 };
@@ -59,7 +59,7 @@ export function ApplyWizard({ job, screening, slug, locale }: { job: Job; screen
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jobId: job.id,
-        candidate: { name: form.name, email: form.email, phone: form.phone, skills, experience_years: parsed.expYears, summary: parsed.summary || form.note || null, city: parsed.city },
+        candidate: { name: form.name, email: form.email, phone: form.phone, skills, experience_years: parsed.expYears, summary: parsed.summary || form.note || null, city: parsed.city, experiences: parsed.exp, education: parsed.edu, languages: parsed.langs },
         screeningAnswers: answers,
       }),
     }).catch(() => null);

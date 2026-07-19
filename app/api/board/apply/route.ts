@@ -4,7 +4,10 @@ import { jsonError } from "@/lib/api";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { resolveSkillIds } from "@/lib/skills";
 import { computeRecruiterFit, computeScreeningOutcome, type JobSkillReq } from "@/lib/job-board/fit";
+import { highestEducationLevel } from "@/lib/education";
+import { CvExperienceSchema, CvLanguageSchema, CvEducationSchema } from "@/agents/agent-cv-parser";
 import type { EducationLevel, SeniorityLevel } from "@/lib/types";
+import { z } from "zod";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -55,6 +58,14 @@ export async function POST(req: Request) {
   // Candidato: dedupe por email (no sobrescribe datos existentes — H3)
   const skills: string[] = Array.isArray(c.skills) ? c.skills.filter((s: unknown) => typeof s === "string") : [];
   const expYears = typeof c.experience_years === "number" && c.experience_years >= 0 ? Math.floor(c.experience_years) : 0;
+  // Perfil estructurado confirmado por el candidato (mismo contrato que el career site).
+  const experiences = z.array(CvExperienceSchema).safeParse(c.experiences);
+  const education = z.array(CvEducationSchema).safeParse(c.education);
+  const languages = z.array(CvLanguageSchema).safeParse(c.languages);
+  const exps = experiences.success ? experiences.data : [];
+  const edus = education.success ? education.data : [];
+  const langs = languages.success ? languages.data : [];
+  const educationLevel = highestEducationLevel(edus.map((e) => e.level)) ?? ((c.education_level as EducationLevel | null) ?? null);
   const { data: existing } = await admin.from("candidates").select("id, user_id").ilike("email", email).maybeSingle();
 
   let candidateId = existing?.id as string | undefined;
@@ -64,12 +75,26 @@ export async function POST(req: Request) {
       phone: c.phone ?? null, location: c.location ?? null,
       city: c.city ?? null, country_code: c.country_code ?? null,
       skills, experience_years: expYears, summary: c.summary ?? null,
+      education_level: educationLevel,
       user_id: userId, source: "job_board",
     }).select("id").single();
     if (cErr) return jsonError(cErr.message, 500);
     candidateId = cand.id;
+    // Persistencia estructurada del perfil confirmado (solo candidato NUEVO — H3:
+    // no pisamos el perfil de un candidato existente desde un endpoint público).
     const skillIds = await resolveSkillIds(admin, skills);
     if (skillIds.length) await admin.from("candidate_skills").insert(skillIds.map((skill_id) => ({ candidate_id: candidateId!, skill_id, source: "cv" as const })));
+    if (exps.length) await admin.from("candidate_experiences").insert(exps.map((e, i) => ({
+      candidate_id: candidateId!, title: e.title, company: e.company, seniority: e.seniority,
+      start_date: e.start_date, end_date: e.end_date, is_current: e.is_current, order_index: i, source: "cv",
+    })));
+    if (langs.length) await admin.from("candidate_languages").insert(langs.map((l) => ({
+      candidate_id: candidateId!, language: l.language, level: l.level, source: "cv",
+    })));
+    if (edus.length) await admin.from("candidate_education").insert(edus.map((e, i) => ({
+      candidate_id: candidateId!, degree: e.degree, institution: e.institution, field: e.field,
+      level: e.level, start_year: e.start_year, end_year: e.end_year, order_index: i, source: "cv",
+    })));
   } else if (userId && !existing?.user_id) {
     await admin.from("candidates").update({ user_id: userId }).eq("id", candidateId); // vincular a la cuenta
   }
@@ -84,7 +109,7 @@ export async function POST(req: Request) {
     },
     candidate: {
       skillIds: candSkillIds, experienceYears: expYears,
-      educationLevel: (c.education_level ?? null) as EducationLevel | null, seniorityLevel: (c.seniority_level ?? null) as SeniorityLevel | null,
+      educationLevel, seniorityLevel: (c.seniority_level ?? null) as SeniorityLevel | null,
       country: c.country_code ?? null, city: c.city ?? null, location: c.location ?? null,
     },
   });
