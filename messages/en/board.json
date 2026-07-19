@@ -136,7 +136,18 @@
     "next1": "Track the status from My account, with proactive feedback at each stage.",
     "next2": "With your CV loaded, your next application is one tap.",
     "viewApps": "View my applications",
-    "keepBrowsing": "Keep browsing jobs"
+    "keepBrowsing": "Keep browsing jobs",
+    "acctTitle": "Create your account to track your application",
+    "acctSub": "Save your profile and follow your applications. Just set a password.",
+    "acctCta": "Create account",
+    "acctSigninTitle": "You already have an account",
+    "acctSigninSub": "That email is already registered. Sign in to link this application.",
+    "acctSigninCta": "Sign in",
+    "acctExists": "That email already has an account. Sign in to continue.",
+    "acctBadCreds": "Wrong email or password.",
+    "acctError": "Couldn’t complete. Please try again.",
+    "acctPwHint": "Password must be at least 8 characters.",
+    "acctSkip": "Not now, keep browsing"
   },
   "account": {
     "title": "My account",

@@ -136,7 +136,18 @@
     "next1": "Acompanhe o status em Minha conta, com feedback proativo em cada fase.",
     "next2": "Com seu CV carregado, sua próxima candidatura é de um toque.",
     "viewApps": "Ver minhas candidaturas",
-    "keepBrowsing": "Continuar explorando"
+    "keepBrowsing": "Continuar explorando",
+    "acctTitle": "Crie sua conta para acompanhar sua candidatura",
+    "acctSub": "Salve seu perfil e acompanhe suas candidaturas. Só falta uma senha.",
+    "acctCta": "Criar conta",
+    "acctSigninTitle": "Você já tem conta",
+    "acctSigninSub": "Esse email já está cadastrado. Entre para vincular esta candidatura.",
+    "acctSigninCta": "Entrar",
+    "acctExists": "Esse email já tem conta. Entre para continuar.",
+    "acctBadCreds": "Email ou senha incorretos.",
+    "acctError": "Não foi possível concluir. Tente novamente.",
+    "acctPwHint": "A senha deve ter ao menos 8 caracteres.",
+    "acctSkip": "Agora não, continuar navegando"
   },
   "account": {
     "title": "Minha conta",

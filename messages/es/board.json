@@ -136,7 +136,18 @@
     "next1": "Sigue el estado desde Mi cuenta, con feedback proactivo en cada fase.",
     "next2": "Con tu CV ya cargado, tu próxima aplicación es de un toque.",
     "viewApps": "Ver mis candidaturas",
-    "keepBrowsing": "Seguir explorando ofertas"
+    "keepBrowsing": "Seguir explorando ofertas",
+    "acctTitle": "Crea tu cuenta para seguir tu candidatura",
+    "acctSub": "Guarda tu perfil y sigue el estado de tus candidaturas. Solo falta una contraseña.",
+    "acctCta": "Crear cuenta",
+    "acctSigninTitle": "Ya tienes cuenta",
+    "acctSigninSub": "Ese email ya está registrado. Inicia sesión para vincular esta candidatura.",
+    "acctSigninCta": "Iniciar sesión",
+    "acctExists": "Ese email ya tiene cuenta. Inicia sesión para continuar.",
+    "acctBadCreds": "Email o contraseña incorrectos.",
+    "acctError": "No se pudo completar. Inténtalo de nuevo.",
+    "acctPwHint": "La contraseña debe tener al menos 8 caracteres.",
+    "acctSkip": "Ahora no, seguir explorando"
   },
   "account": {
     "title": "Mi cuenta",
