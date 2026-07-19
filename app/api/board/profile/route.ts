@@ -43,14 +43,45 @@ export async function GET() {
 
   if (candidateIds.length) {
     const [{ data: apps }, { data: exps }, { data: edus }, { data: langs }, { data: cskills }, { data: cinfo }] = await Promise.all([
-      admin.from("applications").select("id, created_at, fit_score, source, stage_id, job:jobs(id, title, city, modality, company:companies(name, logo_url))").in("candidate_id", candidateIds).order("created_at", { ascending: false }).limit(50),
+      admin.from("applications").select("id, created_at, fit_score, source, stage_id, status, job:jobs(id, title, city, modality, company:companies(name, logo_url))").in("candidate_id", candidateIds).order("created_at", { ascending: false }).limit(50),
       admin.from("candidate_experiences").select("title, company, seniority, start_date, end_date, is_current").in("candidate_id", candidateIds).order("order_index"),
       admin.from("candidate_education").select("degree, institution, field, level, start_year, end_year").in("candidate_id", candidateIds).order("order_index"),
       admin.from("candidate_languages").select("language, level").in("candidate_id", candidateIds),
       admin.from("candidate_skills").select("skills(name)").in("candidate_id", candidateIds),
       admin.from("candidates").select("first_name, last_name, phone, city, country_code, created_at").in("id", candidateIds).order("created_at", { ascending: false }).limit(1),
     ]);
-    applications = apps ?? [];
+    // D1 — enriquecer candidaturas para el tracker: etapa actual + pipeline (progreso) +
+    // status + último feedback (razón del evento). Datos ya existentes en el ATS.
+    const rawApps = (apps ?? []) as Array<{ id: string; stage_id: string | null; status?: string | null; job?: { id?: string } | null }>;
+    if (rawApps.length) {
+      const jobIds = Array.from(new Set(rawApps.map((a) => a.job?.id).filter(Boolean))) as string[];
+      const appIds = rawApps.map((a) => a.id);
+      const [{ data: stages }, { data: events }] = await Promise.all([
+        jobIds.length ? admin.from("job_stages").select("id, job_id, name, order_index, is_terminal").in("job_id", jobIds).order("order_index") : Promise.resolve({ data: [] as { id: string; job_id: string; name: string; order_index: number; is_terminal: boolean }[] }),
+        admin.from("application_events").select("application_id, reason, created_at").in("application_id", appIds).order("created_at", { ascending: false }),
+      ]);
+      const stagesByJob = new Map<string, { name: string; order_index: number; is_terminal: boolean }[]>();
+      const stageNameById = new Map<string, string>();
+      for (const s of stages ?? []) {
+        stageNameById.set(s.id, s.name);
+        const arr = stagesByJob.get(s.job_id) ?? [];
+        arr.push({ name: s.name, order_index: s.order_index, is_terminal: s.is_terminal });
+        stagesByJob.set(s.job_id, arr);
+      }
+      const feedbackByApp = new Map<string, { reason: string; created_at: string }>();
+      for (const e of events ?? []) {
+        if (e.reason && !feedbackByApp.has(e.application_id)) feedbackByApp.set(e.application_id, { reason: e.reason, created_at: e.created_at });
+      }
+      applications = rawApps.map((a) => ({
+        ...a,
+        status: a.status ?? "open",
+        stage: a.stage_id ? { name: stageNameById.get(a.stage_id) ?? null } : null,
+        pipeline: a.job?.id ? (stagesByJob.get(a.job.id) ?? []) : [],
+        feedback: feedbackByApp.get(a.id) ?? null,
+      }));
+    } else {
+      applications = [];
+    }
     const dedupe = <T,>(rows: T[], key: (r: T) => string) => {
       const seen = new Set<string>(); const out: T[] = [];
       for (const r of rows) { const k = key(r); if (!seen.has(k)) { seen.add(k); out.push(r); } }
