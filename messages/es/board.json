@@ -147,7 +147,8 @@
     "acctBadCreds": "Email o contraseña incorrectos.",
     "acctError": "No se pudo completar. Inténtalo de nuevo.",
     "acctPwHint": "La contraseña debe tener al menos 8 caracteres.",
-    "acctSkip": "Ahora no, seguir explorando"
+    "acctSkip": "Ahora no, seguir explorando",
+    "useAnotherCv": "Usar otro CV"
   },
   "account": {
     "title": "Mi cuenta",
