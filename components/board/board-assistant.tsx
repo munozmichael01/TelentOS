@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import type { BoardJob } from "@/lib/job-board/search";
 import { logoFor, formatSalary, jobSlug, modalityStyle } from "@/lib/board/format";
 
@@ -40,9 +40,24 @@ function chipsFromFilters(f: Filters, locale: string): { k: string; v: string }[
 export function BoardAssistant({ locale }: { locale: string }) {
   const t = useTranslations("Board.assistant");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>([{ role: "bot", text: t("greeting") }]);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
+  const [applied, setApplied] = useState<Record<string, boolean>>({});
+  const [applying, setApplying] = useState<string | null>(null);
+
+  // Easy apply: aplicar sin salir del chat (1-toque). Sin sesión / con screening / perfil
+  // incompleto → al wizard de la oferta.
+  async function easyApply(j: BoardJob) {
+    setApplying(j.id);
+    const r = await fetch("/api/board/apply/one-tap", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId: j.id }),
+    }).then((x) => x.json().then((body) => ({ status: x.status, body })).catch(() => ({ status: x.status, body: {} }))).catch(() => null);
+    setApplying(null);
+    if (r && (r.status === 200 || r.status === 409)) { setApplied((a) => ({ ...a, [j.id]: true })); return; }
+    router.push({ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug: jobSlug(j) } });
+  }
   const suggestions = (t.raw("suggestions") as string[]) ?? [];
 
   useEffect(() => {
@@ -131,7 +146,12 @@ export function BoardAssistant({ locale }: { locale: string }) {
                             {formatSalary(j, locale) && <span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--brand)" }}>{formatSalary(j, locale)}</span>}
                             {j.modality && <span style={{ fontSize: 10.5, fontWeight: 700, color: md.color, background: md.bg, border: `1px solid ${md.border}`, borderRadius: 6, padding: "2px 7px" }}>{j.modality}</span>}
                           </div>
-                          <Link href={{ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(j) } }} className="jb-hard" style={{ display: "block", textAlign: "center", marginTop: 11, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--lime)", border: "2px solid var(--ink)", borderRadius: 10, padding: 9, boxShadow: "2px 2px 0 var(--ink)" }}>{t("view")}</Link>
+                          <div style={{ display: "flex", gap: 8, marginTop: 11 }}>
+                            <button onClick={() => easyApply(j)} disabled={applying === j.id || applied[j.id]} className="jb-hard" style={{ flex: 1, textAlign: "center", fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: applied[j.id] ? "#fff" : "var(--ink)", background: applied[j.id] ? "var(--brand)" : "var(--lime)", border: "2px solid var(--ink)", borderRadius: 10, padding: 9, boxShadow: "2px 2px 0 var(--ink)", cursor: applied[j.id] ? "default" : "pointer" }}>
+                              {applied[j.id] ? `✓ ${t("applied")}` : applying === j.id ? "…" : t("easyApply")}
+                            </button>
+                            <Link href={{ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(j) } }} className="jb-hard" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 10, padding: "9px 14px", boxShadow: "2px 2px 0 var(--ink)" }}>{t("view")}</Link>
+                          </div>
                         </div>
                       );
                     })}
