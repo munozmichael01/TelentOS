@@ -21,7 +21,7 @@ type Alert = { id: string; criteria: Record<string, unknown>; active: boolean; c
 type Experience = { title?: string | null; company?: string | null; seniority?: string | null; start_date?: string | null; end_date?: string | null; is_current?: boolean | null };
 type Education = { degree?: string | null; institution?: string | null; field?: string | null; level?: string | null; start_year?: number | null; end_year?: number | null };
 type Language = { language?: string | null; level?: string | null };
-type Sourced = { experiences?: Experience[]; education?: Education[]; languages?: Language[]; skills?: string[]; first_name?: string | null; last_name?: string | null; phone?: string | null; city?: string | null; country_code?: string | null };
+type Sourced = { experiences?: Experience[]; education?: Education[]; languages?: Language[]; skills?: string[]; first_name?: string | null; last_name?: string | null; phone?: string | null; city?: string | null; country_code?: string | null; cv_url?: string | null };
 type Profile = { full_name?: string | null; first_name?: string | null; last_name?: string | null; email?: string | null; headline?: string | null; about?: string | null; phone?: string | null; city?: string | null; country_code?: string | null; pref_salary_min?: number | null; pref_currency?: string | null; pref_modality?: string[] | null; pref_locations?: string[] | null; pref_contract?: string[] | null };
 type Completeness = { pct: number; complete: boolean; missing: string[] };
 
@@ -224,7 +224,7 @@ function ProfileTab({ display, completeness, onEdit, onSettings, t, loc }: { dis
         <div style={{ display: "flex", gap: 6, marginTop: 13, flexWrap: "wrap" }}>{display.checks.map((c) => <Chip key={c.key} tone={c.done ? "lime" : "neutral"}>{c.done ? <CheckTiny /> : <PlusTiny />}{t(`account.check.${c.key}`)}</Chip>)}</div>
       </section>
 
-      <Section title={t("account.cvTitle")}><CvCard t={t} /></Section>
+      {display.cvUrl && <Section title={t("account.cvTitle")}><CvCard t={t} name={display.cvName} /></Section>}
       <Section title={t("account.aboutTitle")} action={t("account.edit")} onAction={onEdit}><p style={{ fontSize: 13.5, lineHeight: 1.6, color: "#3A3833", margin: 0 }}>{display.about || t("account.emptyAbout")}</p></Section>
       <Section title={t("account.lookingFor")} action={t("account.edit")} onAction={onEdit}><PrefsView display={display} t={t} loc={loc} /></Section>
       <ExperienceSection rows={display.experiences} t={t} onEdit={onEdit} />
@@ -241,8 +241,15 @@ function Section({ title, children, action, onAction }: { title: string; childre
   return <section style={{ marginBottom: 14 }}><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}><MonoLabel>{title}</MonoLabel>{action && <button onClick={onAction} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--brand)", padding: "2px 4px", background: "transparent", border: 0, cursor: "pointer" }}>{action}</button>}</div><div style={cardStyle}>{children}</div></section>;
 }
 
-function CvCard({ t }: { t: ReturnType<typeof useTranslations> }) {
-  return <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 38, height: 46, borderRadius: 8, background: "var(--brandSoft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><FileIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t("account.cvFile")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.cvMeta")}</div></div><AiTag>{t("account.fromCv")}</AiTag></div>;
+function CvCard({ t, name }: { t: ReturnType<typeof useTranslations>; name: string | null }) {
+  const [busy, setBusy] = useState(false);
+  async function open() {
+    setBusy(true);
+    const r = await fetch("/api/board/cv").then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    setBusy(false);
+    if (r?.url) window.open(r.url, "_blank", "noopener");
+  }
+  return <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 38, height: 46, borderRadius: 8, background: "var(--brandSoft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><FileIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name || t("account.cvFile")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.cvMeta")}</div></div><button onClick={open} disabled={busy} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}>{busy ? "…" : t("account.cvView")}</button></div>;
 }
 
 function PrefsView({ display, t, loc }: { display: ReturnType<typeof buildDisplay>; t: ReturnType<typeof useTranslations>; loc: string }) {
@@ -356,7 +363,9 @@ function buildDisplay(profile: Profile | null, sourced: Sourced, profileSkills: 
     name, headline: profile?.headline ?? "", about: profile?.about ?? "", location: [profile?.city ?? sourced.city, profile?.country_code ?? sourced.country_code].filter(Boolean).join(", "),
     salary: profile?.pref_salary_min ?? null, currency: profile?.pref_currency ?? "USD", modality: (profile?.pref_modality ?? []).join(" · "), prefLocation: (profile?.pref_locations ?? []).join(" · "),
     skills, experiences: sourced.experiences ?? [], education: sourced.education ?? [], languages: sourced.languages ?? [],
-    checks: [{ key: "cv", done: true }, { key: "experience", done: (sourced.experiences?.length ?? 0) > 0 }, { key: "languages", done: (sourced.languages?.length ?? 0) > 0 }, { key: "portfolio", done: false }],
+    cvUrl: sourced.cv_url ?? null,
+    cvName: sourced.cv_url ? (sourced.cv_url.split("/").pop() ?? "").replace(/^\d+-/, "") : null,
+    checks: [{ key: "cv", done: !!sourced.cv_url }, { key: "experience", done: (sourced.experiences?.length ?? 0) > 0 }, { key: "languages", done: (sourced.languages?.length ?? 0) > 0 }, { key: "portfolio", done: false }],
   };
 }
 function normalizedPipeline(app: Application): AppStage[] {

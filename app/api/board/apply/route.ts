@@ -78,6 +78,7 @@ export async function POST(req: Request) {
       city: c.city ?? null, country_code: c.country_code ?? null,
       skills, experience_years: expYears, summary: c.summary ?? null,
       education_level: educationLevel,
+      cv_url: typeof c.cv_url === "string" && c.cv_url ? c.cv_url : null,
       user_id: userId, source: "job_board",
     }).select("id").single();
     if (cErr) return jsonError(cErr.message, 500);

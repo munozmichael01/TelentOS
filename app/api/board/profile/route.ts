@@ -38,8 +38,8 @@ export async function GET() {
   // en vez de pedirlos de cero. Dedupe ligero porque un user puede tener >1 ficha.
   const sourced: {
     experiences: unknown[]; education: unknown[]; languages: unknown[]; skills: string[];
-    first_name: string | null; last_name: string | null; phone: string | null; city: string | null; country_code: string | null;
-  } = { experiences: [], education: [], languages: [], skills: [], first_name: null, last_name: null, phone: null, city: null, country_code: null };
+    first_name: string | null; last_name: string | null; phone: string | null; city: string | null; country_code: string | null; cv_url: string | null;
+  } = { experiences: [], education: [], languages: [], skills: [], first_name: null, last_name: null, phone: null, city: null, country_code: null, cv_url: null };
 
   if (candidateIds.length) {
     const [{ data: apps }, { data: exps }, { data: edus }, { data: langs }, { data: cskills }, { data: cinfo }] = await Promise.all([
@@ -48,7 +48,7 @@ export async function GET() {
       admin.from("candidate_education").select("degree, institution, field, level, start_year, end_year").in("candidate_id", candidateIds).order("order_index"),
       admin.from("candidate_languages").select("language, level").in("candidate_id", candidateIds),
       admin.from("candidate_skills").select("skills(name)").in("candidate_id", candidateIds),
-      admin.from("candidates").select("first_name, last_name, phone, city, country_code, created_at").in("id", candidateIds).order("created_at", { ascending: false }).limit(1),
+      admin.from("candidates").select("first_name, last_name, phone, city, country_code, cv_url, created_at").in("id", candidateIds).order("created_at", { ascending: false }).limit(1),
     ]);
     // D1 — enriquecer candidaturas para el tracker: etapa actual + pipeline (progreso) +
     // status + último feedback (razón del evento). Datos ya existentes en el ATS.
@@ -92,7 +92,7 @@ export async function GET() {
     sourced.languages = dedupe(langs ?? [], (l) => (l.language ?? "").toLowerCase());
     sourced.skills = dedupeStrings((cskills ?? []).map((r) => (r.skills as { name?: string } | null)?.name).filter(Boolean) as string[]);
     const info = (cinfo ?? [])[0];
-    if (info) { sourced.first_name = info.first_name ?? null; sourced.last_name = info.last_name ?? null; sourced.phone = info.phone ?? null; sourced.city = info.city ?? null; sourced.country_code = info.country_code ?? null; }
+    if (info) { sourced.first_name = info.first_name ?? null; sourced.last_name = info.last_name ?? null; sourced.phone = info.phone ?? null; sourced.city = info.city ?? null; sourced.country_code = info.country_code ?? null; sourced.cv_url = info.cv_url ?? null; }
   }
 
   const completeness = computeProfileCompleteness({

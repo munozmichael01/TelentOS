@@ -32,6 +32,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
   const [parsing, setParsing] = useState(false);
   const [fromCV, setFromCV] = useState(false);
   const [cvName, setCvName] = useState("");
+  const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", role: "", note: "" });
   const [skills, setSkills] = useState<string[]>([]);
   const [skillDraft, setSkillDraft] = useState("");
@@ -87,6 +88,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
       setForm((f) => ({ ...f, firstName: fName || f.firstName, lastName: lName || f.lastName, email: p.email ?? f.email, phone: p.phone ?? f.phone, role: p.role ?? f.role }));
       if (Array.isArray(p.skills)) setSkills(p.skills);
       setParsed({ exp: p.exp ?? [], edu: p.edu ?? [], langs: p.langs ?? [], expYears: p.expYears ?? 0, summary: p.summary ?? "", city: p.city ?? null });
+      if (typeof (p as { cvUrl?: string }).cvUrl === "string") setCvUrl((p as { cvUrl?: string }).cvUrl ?? null);
       setFromCV(true);
       setStep(2);
     } catch { /* localStorage no disponible / corrupto → flujo normal */ }
@@ -103,6 +105,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
     const fd = new FormData(); fd.append("cv", file);
     const r = await fetch("/api/careers/parse-cv", { method: "POST", body: fd }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
     setParsing(false);
+    if (r?.cv_path) setCvUrl(r.cv_path);
     const p = r?.profile;
     if (p) {
       const fullName = p.name ?? "";
@@ -132,7 +135,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
       body: JSON.stringify({
         jobId: job.id,
         locale,
-        candidate: { name: fullName, first_name: form.firstName, last_name: form.lastName, email: form.email, phone: form.phone, skills, experience_years: parsed.expYears, summary: parsed.summary || form.note || null, city: parsed.city, experiences: parsed.exp, education: parsed.edu, languages: parsed.langs },
+        candidate: { name: fullName, first_name: form.firstName, last_name: form.lastName, email: form.email, phone: form.phone, skills, experience_years: parsed.expYears, summary: parsed.summary || form.note || null, city: parsed.city, cv_url: cvUrl, experiences: parsed.exp, education: parsed.edu, languages: parsed.langs },
         screeningAnswers: answers,
       }),
     }).catch(() => null);
@@ -143,7 +146,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
           window.localStorage.setItem(GUEST_KEY, JSON.stringify({
             firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone, role: form.role,
             skills, exp: parsed.exp, edu: parsed.edu, langs: parsed.langs,
-            expYears: parsed.expYears, summary: parsed.summary, city: parsed.city,
+            expYears: parsed.expYears, summary: parsed.summary, city: parsed.city, cvUrl,
           }));
         } catch { /* ignore */ }
       }
