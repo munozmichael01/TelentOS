@@ -72,7 +72,9 @@
     "reqEducation": "Formación: {level}",
     "reqSeniority": "Nivel: {level}",
     "required": "Excluyente",
-    "desirable": "Deseable"
+    "desirable": "Deseable",
+    "oneTap": "Aplicar en un toque",
+    "applied": "¡Aplicado!"
   },
   "apply": {
     "title": "Aplica a {job}",

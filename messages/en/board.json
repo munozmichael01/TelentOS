@@ -72,7 +72,9 @@
     "reqEducation": "Education: {level}",
     "reqSeniority": "Level: {level}",
     "required": "Required",
-    "desirable": "Nice to have"
+    "desirable": "Nice to have",
+    "oneTap": "Apply in one tap",
+    "applied": "Applied!"
   },
   "apply": {
     "title": "Apply to {job}",
