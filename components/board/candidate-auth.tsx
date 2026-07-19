@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -24,7 +25,8 @@ export function CandidateAuth({ locale }: { locale: string }) {
   const t = useTranslations("Board.auth");
   const router = useRouter();
   const [mode, setMode] = useState<"signin" | "signup">("signup");
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const searchParams = useSearchParams();
+  const [form, setForm] = useState({ name: "", email: searchParams.get("email") ?? "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [soon, setSoon] = useState(false);

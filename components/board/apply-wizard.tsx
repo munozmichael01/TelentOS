@@ -86,6 +86,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jobId: job.id,
+        locale,
         candidate: { name: form.name, email: form.email, phone: form.phone, skills, experience_years: parsed.expYears, summary: parsed.summary || form.note || null, city: parsed.city, experiences: parsed.exp, education: parsed.edu, languages: parsed.langs },
         screeningAnswers: answers,
       }),

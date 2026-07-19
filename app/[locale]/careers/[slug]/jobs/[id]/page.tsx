@@ -5,6 +5,8 @@ import { Markdown } from "@/components/markdown";
 import { ApplyForm } from "@/components/features/apply-form";
 import { TrackCareerEvent } from "@/components/features/career-site-track";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "@/i18n/navigation";
+import { jobSlug } from "@/lib/board/format";
 import { formatSalaryRange } from "@/lib/utils";
 import type { CareerSiteBranding } from "@/lib/career-site-types";
 import { HEADING_FONTS, BODY_FONTS } from "@/lib/career-site-types";
@@ -16,12 +18,12 @@ const TYPE_LABEL: Record<string, string> = {
   full_time: "Jornada completa", part_time: "Parcial", contract: "Temporal", internship: "Prácticas",
 };
 
-export default async function PublicJobPage({ params }: { params: { slug: string; id: string } }) {
+export default async function PublicJobPage({ params }: { params: { locale: string; slug: string; id: string } }) {
   const supabase = createClient();
 
   const [{ data: company }, { data: cmsPage }] = await Promise.all([
     supabase.from("companies").select("id, name, slug, logo_url").eq("slug", params.slug).maybeSingle(),
-    supabase.from("career_site_pages").select("branding").eq("slug", params.slug).maybeSingle(),
+    supabase.from("career_site_pages").select("branding, is_published").eq("slug", params.slug).maybeSingle(),
   ]);
   if (!company) notFound();
 
@@ -33,6 +35,14 @@ export default async function PublicJobPage({ params }: { params: { slug: string
     .eq("status", "active")
     .maybeSingle();
   if (!job) notFound();
+
+  // Career inactivo → la oferta canónica es la del board. Redirect temporal (flipa con el plan).
+  if (!cmsPage?.is_published) {
+    redirect({
+      href: { pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug({ id: job.id, title: job.title, company: { name: company.name } }) } },
+      locale: params.locale,
+    });
+  }
 
   const jsonLd = getJobJsonLd(job, company);
 

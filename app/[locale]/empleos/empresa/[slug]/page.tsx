@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { searchJobs } from "@/lib/job-board/search";
 import { logoFor, formatSalary, modalityStyle, relativeDate, jobSlug } from "@/lib/board/format";
 import { countryName } from "@/lib/countries";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
+import { careerSiteActive } from "@/lib/board/canonical";
 import { EmployerNotify } from "@/components/board/employer-notify";
 
 const ARCHIVO = "'Archivo',sans-serif";
@@ -35,6 +36,12 @@ export default async function EmployerPage({ params }: { params: { locale: strin
   setRequestLocale(params.locale);
   const company = await getCompany(params.slug);
   if (!company) notFound();
+  // Career activo → la cara pública de la empresa es su career site. Redirect TEMPORAL
+  // (flipa con el plan; el rel=canonical del career consolida el SEO). Así "el board
+  // muestra el career site" al navegar a la empresa.
+  if (company.slug && await careerSiteActive(company.id)) {
+    redirect({ href: { pathname: "/careers/[slug]", params: { slug: company.slug } }, locale: params.locale });
+  }
   const t = await getTranslations({ locale: params.locale, namespace: "Board" });
   const locale = params.locale;
 

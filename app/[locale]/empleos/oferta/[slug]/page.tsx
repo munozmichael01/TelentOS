@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { searchJobs } from "@/lib/job-board/search";
+import { careerSiteActive } from "@/lib/board/canonical";
 import { idFromSlug, formatSalary, modalityStyle, logoFor, relativeDate, jobSlug } from "@/lib/board/format";
 import { Link } from "@/i18n/navigation";
 import { JobApplyBar } from "@/components/board/job-apply-bar";
@@ -53,10 +54,15 @@ export async function generateMetadata({ params }: { params: { locale: string; s
   if (!data) return {};
   const { job } = data;
   const desc = (job.description ?? "").slice(0, 155);
+  // Si la empresa tiene career site activo, la canónica es la oferta del career site:
+  // esta ruta del board queda noindex + canonical→career (pero sigue viva para el board).
+  const careerActive = job.company ? await careerSiteActive(job.company.id) : false;
   return {
     title: `${job.title} · ${job.company?.name ?? "TalentOS"}`,
     description: desc,
-    alternates: { canonical: `/${params.locale}/empleos/oferta/${params.slug}` },
+    ...(careerActive && job.company?.slug
+      ? { robots: { index: false, follow: true }, alternates: { canonical: `/${params.locale}/careers/${job.company.slug}/jobs/${job.id}` } }
+      : { alternates: { canonical: `/${params.locale}/empleos/oferta/${params.slug}` } }),
   };
 }
 
@@ -98,7 +104,9 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
   };
   const related = Array.from(pool.values()).sort((a, b) => scoreRel(b) - scoreRel(a)).slice(0, 3);
 
-  // JobPosting JSON-LD — la palanca SEO real (Google for Jobs)
+  // JobPosting JSON-LD — la palanca SEO real (Google for Jobs). Solo en la CANÓNICA:
+  // si la empresa tiene career site activo, el JSON-LD vive allí, no aquí (evita doble entrada).
+  const careerActive = job.company ? await careerSiteActive(job.company.id) : false;
   const jsonLd = {
     "@context": "https://schema.org/",
     "@type": "JobPosting",
@@ -131,7 +139,7 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
 
   return (
     <div style={{ "--brand": "#0E5C4A", "--accent": "#F1543F", "--soft": "#79746B", "--line": "#E7E1D4", "--surface": "#FCFAF6", "--bg": "#F4F0E8", "--brandSoft": "#DCEFE4", background: "#F4F0E8", minHeight: "100vh", fontFamily: "'Hanken Grotesk',system-ui,sans-serif", color: "#1A1A17", WebkitFontSmoothing: "antialiased", paddingBottom: 90 } as React.CSSProperties}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {!careerActive && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "16px 16px 12px" }}>
         <Link href="/empleos" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 12, fontWeight: 700, color: "var(--brand)" }}>
