@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "@/i18n/navigation";
 import { formatSalaryRange } from "@/lib/utils";
 import type { Job } from "@/lib/types";
 import type { CareerSiteContent, CareerSiteBranding } from "@/lib/career-site-types";
@@ -76,7 +77,7 @@ function has(v: unknown) {
 
 /* ─── Page ────────────────────────────────────────────────────────────────── */
 
-export default async function CareersPage({ params }: { params: { slug: string } }) {
+export default async function CareersPage({ params }: { params: { locale: string; slug: string } }) {
   const supabase = createClient();
 
   const { data: company } = await supabase.from("companies").select("*").eq("slug", params.slug).maybeSingle();
@@ -86,6 +87,12 @@ export default async function CareersPage({ params }: { params: { slug: string }
     supabase.from("jobs").select("*").eq("company_id", company.id).eq("status", "active").order("created_at", { ascending: false }),
     supabase.from("career_site_pages").select("*").eq("company_id", company.id).eq("is_published", true).maybeSingle(),
   ]);
+
+  // Career inactivo (sin página publicada) → la cara pública es el board. Redirect temporal
+  // para no perder el posicionamiento de la empresa y sus ofertas cuando cae el plan.
+  if (!cmsPage) {
+    redirect({ href: { pathname: "/empleos/empresa/[slug]", params: { slug: params.slug } }, locale: params.locale });
+  }
 
   const cms        = (cmsPage?.published_content ?? {}) as CareerSiteContent;
   const branding   = (cmsPage?.branding ?? {}) as CareerSiteBranding;
