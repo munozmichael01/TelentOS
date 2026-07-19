@@ -11,7 +11,11 @@ import { AiTag, ARCHIVO, BoardField, BoardRoot, Chip, CompanyLogo, HardButton, M
 
 type Tab = "profile" | "applications" | "saved" | "alerts";
 type Job = { id: string; title: string; city: string | null; modality: string | null; salary_min: number | null; salary_max: number | null; salary_currency: string | null; employment_type: string | null; company: { name?: string | null; logo_url?: string | null; slug?: string | null } | null };
-type Application = { id: string; created_at: string; fit_score: number | null; job: Job | null };
+type AppStage = { name: string | null; order_index?: number | null; is_terminal?: boolean | null };
+type AppFeedback = { reason: string; created_at: string } | null;
+type Application = { id: string; created_at: string; fit_score: number | null; status?: "open" | "hired" | "rejected" | string | null; stage?: AppStage | null; pipeline?: AppStage[]; feedback?: AppFeedback; job: Job | null };
+type ApplicationTimelineEvent = { type?: string | null; from_stage?: string | null; to_stage?: string | null; reason?: string | null; created_at: string };
+type ApplicationDetail = { application: Application; timeline: ApplicationTimelineEvent[] };
 type Saved = { id: string; created_at: string; job: Job | null };
 type Alert = { id: string; criteria: Record<string, unknown>; active: boolean; created_at?: string | null };
 type Experience = { title?: string | null; company?: string | null; seniority?: string | null; start_date?: string | null; end_date?: string | null; is_current?: boolean | null };
@@ -49,6 +53,9 @@ export function AccountClient({ locale }: { locale: string }) {
   const [alertName, setAlertName] = useState("");
   const [alertFreq, setAlertFreq] = useState("daily");
   const [prefsOn, setPrefsOn] = useState({ email: true, push: true, digest: false, visible: true });
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [appDetail, setAppDetail] = useState<ApplicationDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -117,6 +124,20 @@ export function AccountClient({ locale }: { locale: string }) {
     if (res?.alert) { setAlerts((a) => [res.alert, ...a]); setAlertOn((m) => ({ ...m, [res.alert.id]: true })); setAlertName(""); setNewAlertOpen(false); }
   }
 
+  async function openApplicationDetail(id: string) {
+    setDetailId(id);
+    setDetailLoading(true);
+    const res = await fetch(`/api/board/applications/${encodeURIComponent(id)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    setDetailLoading(false);
+    if (res) setAppDetail(res);
+  }
+
+  function closeApplicationDetail() {
+    setDetailId(null);
+    setAppDetail(null);
+    setDetailLoading(false);
+  }
+
   async function removeSaved(row: Saved) {
     if (!row.job?.id) return;
     await fetch(`/api/board/saved?jobId=${encodeURIComponent(row.job.id)}`, { method: "DELETE" });
@@ -141,7 +162,7 @@ export function AccountClient({ locale }: { locale: string }) {
         {loading ? <div style={{ textAlign: "center", color: "var(--soft)", padding: 44, fontSize: 14 }}>...</div> : (
           <>
             {tab === "profile" && <ProfileTab display={display} completeness={completeness} onEdit={openEdit} onSettings={() => setSettingsOpen(true)} t={t} loc={loc} />}
-            {tab === "applications" && <DeferredApplications t={t} applications={applications} loc={loc} />}
+            {tab === "applications" && <ApplicationsTracker t={t} applications={applications} loc={loc} onOpen={openApplicationDetail} />}
             {tab === "saved" && <SavedTab saved={saved} onRemove={removeSaved} t={t} loc={loc} />}
             {tab === "alerts" && <AlertsTab alerts={alerts} alertOn={alertOn} setAlertOn={setAlertOn} onNew={() => setNewAlertOpen(true)} onDelete={deleteAlert} t={t} />}
           </>
@@ -151,6 +172,7 @@ export function AccountClient({ locale }: { locale: string }) {
       {editOpen && <EditSheet form={form} setForm={setForm} saving={savingEdit} onClose={() => setEditOpen(false)} onSave={saveProfile} t={t} />}
       {newAlertOpen && <NewAlertSheet name={alertName} setName={setAlertName} freq={alertFreq} setFreq={setAlertFreq} onClose={() => setNewAlertOpen(false)} onCreate={createAlert} t={t} />}
       {settingsOpen && <SettingsSheet prefs={prefsOn} setPrefs={setPrefsOn} onClose={() => setSettingsOpen(false)} onLogout={logout} t={t} />}
+      {detailId && <ApplicationDetailSheet detail={appDetail} fallback={applications.find((a) => a.id === detailId) ?? null} loading={detailLoading} onClose={closeApplicationDetail} t={t} loc={loc} />}
     </BoardRoot>
   );
 }
@@ -257,11 +279,51 @@ function AlertsTab({ alerts, alertOn, setAlertOn, onNew, onDelete, t }: { alerts
   return <div className="jb-fade"><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}><h1 style={{ ...titleStyle, margin: 0 }}>{t("alerts.title")}</h1><HardButton onClick={onNew} style={{ padding: "7px 12px", fontSize: 12 }}><PlusTiny />{t("alerts.new")}</HardButton></div>{alerts.length === 0 ? <EmptyPanel title={t("alerts.emptyTitle")} text={t("alerts.emptyText")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{alerts.map((al) => { const on = alertOn[al.id] !== false; const name = alertLabel(al.criteria, t("alerts.default")); return <div key={al.id} className="jb-pop" style={cardStyle}><div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}><span style={{ width: 34, height: 34, borderRadius: 10, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BellIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, lineHeight: 1.15 }}>{name}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 3 }}>{t("alerts.frequencyWeekly")} · {t("alerts.newCount", { count: 0 })}</div></div><Toggle on={on} onClick={() => setAlertOn((m) => ({ ...m, [al.id]: !on }))} /></div><div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 11 }}>{criteriaChips(al.criteria, t("alerts.match")).map((c) => <span key={c} style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "#54504A", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 7, padding: "3px 8px" }}>{c}</span>)}</div><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 11, paddingTop: 11, borderTop: "1px solid var(--line)" }}><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)" }}>{t("alerts.viewOffers", { count: 0 })}</span><button onClick={() => onDelete(al.id)} style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--accent)", background: "transparent", border: 0, cursor: "pointer" }}>{t("account.delete")}</button></div></div>; })}</div>}<div style={{ marginTop: 14, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 12, padding: "12px 13px", fontSize: 12.5, lineHeight: 1.5, color: "#46540F" }}>{t("alerts.hint")}</div></div>;
 }
 
-function DeferredApplications({ t, applications, loc }: { t: ReturnType<typeof useTranslations>; applications: Application[]; loc: string }) {
-  return <div className="jb-fade"><h1 style={titleStyle}>{t("account.applicationsTitle")}</h1><div style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 15, padding: "15px 16px", marginBottom: 16 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13 }}>{t("account.applicationsDeferredTitle")}</div><p style={{ fontSize: 13, lineHeight: 1.5, color: "#E4E0D8", margin: "8px 0 0" }}>{t("account.applicationsDeferredText")}</p></div>{applications.length > 0 && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{applications.map((a) => a.job && <div key={a.id} style={cardStyle}><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)" }}>{a.job.company?.name} · {relativeDate(a.created_at, loc)}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, marginTop: 3 }}>{a.job.title}</div></div>)}</div>}</div>;
+function ApplicationsTracker({ t, applications, loc, onOpen }: { t: ReturnType<typeof useTranslations>; applications: Application[]; loc: string; onOpen: (id: string) => void }) {
+  const actionCount = applications.filter((a) => statusStyle(a).kind === "action").length;
+  return <div className="jb-fade"><h1 style={titleStyle}>{t("account.applicationsTitle")}</h1>{actionCount > 0 && <div className="jb-pop" style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 15, padding: "15px 16px", marginBottom: 16 }}><div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}><span style={{ width: 24, height: 24, borderRadius: 7, background: "rgba(198,242,78,.18)", display: "flex", alignItems: "center", justifyContent: "center" }}><EditIcon /></span><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13 }}>{t("account.applicationsTitle")}</span><AiTag>{actionCount}</AiTag></div><p style={{ fontSize: 13, lineHeight: 1.5, color: "#E4E0D8", margin: 0 }}>{applications.find((a) => statusStyle(a).kind === "action")?.feedback?.reason ?? t("account.completeHint")}</p></div>}{applications.length === 0 ? <EmptyPanel title={t("account.emptyApplications")} text={t("account.emptyApplications")} cta={t("account.browse")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>{applications.map((a) => <ApplicationCard key={a.id} app={a} loc={loc} onOpen={() => onOpen(a.id)} />)}</div>}</div>;
 }
 
-function EditSheet({ form, setForm, saving, onClose, onSave, t }: { form: FormState; setForm: (v: FormState) => void; saving: boolean; onClose: () => void; onSave: () => void; t: ReturnType<typeof useTranslations> }) {
+function ApplicationCard({ app, loc, onOpen }: { app: Application; loc: string; onOpen: () => void }) {
+  if (!app.job) return null;
+  const st = statusStyle(app);
+  const stageLabel = app.stage?.name || statusLabel(app.status);
+  return <button onClick={onOpen} className="jb-card jb-pop" style={{ width: "100%", textAlign: "left", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: 15, cursor: "pointer" }}><div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 13 }}><CompanyLogo name={app.job.company?.name} logoUrl={app.job.company?.logo_url} size={40} /><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)" }}>{app.job.company?.name || "-"}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, letterSpacing: "-.3px", lineHeight: 1.1, marginTop: 2 }}>{app.job.title}</div></div><span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .4, color: st.color, background: st.bg, border: `1px solid ${st.border}`, borderRadius: 999, padding: "4px 9px", whiteSpace: "nowrap", flexShrink: 0 }}>{st.label}</span></div><StageTrack app={app} /><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "3px 0 9px" }}><span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{stageLabel}</span><span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{relativeDate(app.created_at, loc)}</span></div>{app.feedback?.reason && <FeedbackBox app={app} />}{app.fit_score != null && <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--brand)", marginTop: 10 }}>Fit {app.fit_score}</div>}</button>;
+}
+
+function StageTrack({ app }: { app: Application }) {
+  const pipeline = normalizedPipeline(app);
+  const current = currentStageIndex(app, pipeline);
+  return <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 8 }}>{pipeline.map((stage, i) => { const done = app.status === "hired" || i <= current; const rejected = app.status === "rejected" && i >= current; return <span key={`${stage.name}-${i}`} style={{ display: "flex", alignItems: "center", flex: i === pipeline.length - 1 ? "0 0 auto" : 1 }}><span style={{ width: i === current ? 12 : 9, height: i === current ? 12 : 9, borderRadius: "50%", background: rejected ? "#79746B" : done ? "#0E5C4A" : "#E0DACC", flexShrink: 0, border: i === current ? "2px solid #BEE0CE" : "2px solid transparent" }} />{i < pipeline.length - 1 && <span style={{ flex: 1, height: 2, background: done && !rejected ? "#0E5C4A" : "#E0DACC" }} />}</span>; })}</div>;
+}
+
+function FeedbackBox({ app }: { app: Application }) {
+  const st = statusStyle(app);
+  return <div style={{ display: "flex", gap: 9, alignItems: "flex-start", background: st.feedbackBg, border: `1px solid ${st.feedbackBorder}`, borderRadius: 11, padding: "9px 11px" }}><span style={{ flexShrink: 0, marginTop: 1 }}>{st.icon}</span><span style={{ fontSize: 12.5, lineHeight: 1.45, color: st.feedbackColor }}>{app.feedback?.reason}</span></div>;
+}
+
+function ApplicationDetailSheet({ detail, fallback, loading, onClose, t, loc }: { detail: ApplicationDetail | null; fallback: Application | null; loading: boolean; onClose: () => void; t: ReturnType<typeof useTranslations>; loc: string }) {
+  const app = detail?.application ?? fallback;
+  const st = app ? statusStyle(app) : null;
+  return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 12px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div style={sheetHandle} />{app?.job && <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}><CompanyLogo name={app.job.company?.name} logoUrl={app.job.company?.logo_url} size={44} /><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)" }}>{app.job.company?.name}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 18, letterSpacing: "-.4px", lineHeight: 1.1, marginTop: 2 }}>{app.job.title}</div></div>{st && <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .4, color: st.color, background: st.bg, border: `1px solid ${st.border}`, borderRadius: 999, padding: "4px 9px", whiteSpace: "nowrap", flexShrink: 0 }}>{st.label}</span>}</div>}</div><div style={{ padding: "16px 18px 8px" }}>{loading ? <div style={{ color: "var(--soft)", padding: 20, textAlign: "center" }}>...</div> : <><MonoLabel style={{ marginBottom: 14 }}>Progreso de tu candidatura</MonoLabel>{detail?.timeline?.length ? <Timeline rows={detail.timeline} loc={loc} /> : app ? <FallbackTimeline app={app} loc={loc} /> : null}{app?.feedback?.reason && <FeedbackBox app={app} />}</>}</div><div style={{ position: "sticky", bottom: 0, background: "var(--bg)", borderTop: "1px solid var(--line)", padding: "12px 18px 18px", display: "flex", flexDirection: "column", gap: 9 }}><HardButton onClick={onClose} variant={st?.kind === "good" ? "lime" : st?.kind === "action" ? "accent" : "brand"} full>{app?.job ? "Ver oferta original" : t("account.cancel")}</HardButton><button onClick={onClose} className="jb-tap" style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "transparent", border: 0, padding: 6, cursor: "pointer" }}>{t("account.cancel")}</button></div></Sheet>;
+}
+
+function Timeline({ rows, loc }: { rows: ApplicationTimelineEvent[]; loc: string }) {
+  return <div style={{ position: "relative", paddingLeft: 4 }}>{rows.map((row, i) => <TimelineRow key={`${row.created_at}-${i}`} title={row.to_stage || row.type || "Actualización"} date={relativeDate(row.created_at, loc)} note={row.reason || stageMove(row)} done={i < rows.length - 1} current={i === rows.length - 1} connector={i < rows.length - 1} />)}</div>;
+}
+
+function FallbackTimeline({ app, loc }: { app: Application; loc: string }) {
+  const pipeline = normalizedPipeline(app);
+  const current = currentStageIndex(app, pipeline);
+  return <div style={{ position: "relative", paddingLeft: 4 }}>{pipeline.map((stage, i) => <TimelineRow key={`${stage.name}-${i}`} title={stage.name || statusLabel(app.status)} date={i === 0 ? relativeDate(app.created_at, loc) : i === current ? statusLabel(app.status) : "Pendiente"} note={i === current ? app.feedback?.reason ?? "" : ""} done={i < current || app.status === "hired"} current={i === current && app.status !== "hired"} connector={i < pipeline.length - 1} />)}</div>;
+}
+
+function TimelineRow({ title, date, note, done, current, connector }: { title: string; date: string; note?: string | null; done?: boolean; current?: boolean; connector?: boolean }) {
+  return <div style={{ display: "flex", gap: 13 }}><div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}><span style={{ width: 24, height: 24, borderRadius: "50%", background: done ? "#0E5C4A" : current ? "#C6F24E" : "#EDE8DC", border: `2px solid ${done ? "#0E5C4A" : current ? "#1A1A17" : "#E0DACC"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>{done ? <CheckTiny /> : <span style={{ width: 7, height: 7, borderRadius: "50%", background: current ? "#1A1A17" : "#CFC7B6", display: "block" }} />}</span>{connector && <span style={{ flex: 1, width: 2, background: done ? "#0E5C4A" : "#E0DACC", margin: "3px 0", minHeight: 22 }} />}</div><div style={{ flex: 1, minWidth: 0, paddingBottom: 14 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: done || current ? "#1A1A17" : "#A39E94" }}>{title}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{date}</div>{note && <p style={{ fontSize: 12.5, lineHeight: 1.5, color: "#54504A", margin: "6px 0 0" }}>{note}</p>}</div></div>;
+}
+
+function EditSheet
+({ form, setForm, saving, onClose, onSave, t }: { form: FormState; setForm: (v: FormState) => void; saving: boolean; onClose: () => void; onSave: () => void; t: ReturnType<typeof useTranslations> }) {
   const update = (key: keyof FormState, value: string) => setForm({ ...form, [key]: value });
   return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 10px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div style={sheetHandle} /><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{t("account.editProfile")}</span><button onClick={onSave} disabled={saving} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", padding: 4, background: "transparent", border: 0, cursor: "pointer" }}>{saving ? t("account.saving") : t("account.save")}</button></div></div><div style={{ padding: "16px 18px 20px", display: "flex", flexDirection: "column", gap: 14 }}><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.firstName")} value={form.first_name} onChange={(v) => update("first_name", v)} /><Field label={t("account.lastName")} value={form.last_name} onChange={(v) => update("last_name", v)} /></div><Field label={t("account.headline")} value={form.headline} onChange={(v) => update("headline", v)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.phone")} value={form.phone} onChange={(v) => update("phone", v)} /><Field label={t("account.currency")} value={form.pref_currency} onChange={(v) => update("pref_currency", v)} /></div><BoardField label={t("account.city")}><CityAutocomplete value={form.city} country={form.country_code || "VE"} onChange={(city, meta) => setForm({ ...form, city, country_code: meta?.country ?? form.country_code })} placeholder={t("account.city")} inputStyle={inputStyle} /></BoardField><BoardField label={t("account.about")}><textarea value={form.about} onChange={(e) => update("about", e.target.value)} rows={4} style={{ ...inputStyle, resize: "vertical" }} /></BoardField><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.salaryMin")} value={form.pref_salary_min} onChange={(v) => update("pref_salary_min", v)} /><Field label={t("account.modality")} value={form.pref_modality} onChange={(v) => update("pref_modality", v)} /></div><Field label={t("account.prefLocations")} value={form.pref_locations} onChange={(v) => update("pref_locations", v)} /><Field label={t("account.skills")} value={form.skills} onChange={(v) => update("skills", v)} /><HardButton onClick={onSave} disabled={saving} variant="brand" full>{saving ? t("account.saving") : t("account.saveChanges")}</HardButton></div></Sheet>;
 }
@@ -297,6 +359,33 @@ function buildDisplay(profile: Profile | null, sourced: Sourced, profileSkills: 
     checks: [{ key: "cv", done: true }, { key: "experience", done: (sourced.experiences?.length ?? 0) > 0 }, { key: "languages", done: (sourced.languages?.length ?? 0) > 0 }, { key: "portfolio", done: false }],
   };
 }
+function normalizedPipeline(app: Application): AppStage[] {
+  const rows = (app.pipeline ?? []).slice().sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+  if (rows.length) return rows;
+  return [{ name: "Aplicada", order_index: 0 }, { name: app.stage?.name || statusLabel(app.status), order_index: 1 }, { name: "Decisión", order_index: 2, is_terminal: true }];
+}
+function currentStageIndex(app: Application, pipeline = normalizedPipeline(app)) {
+  if (app.status === "hired" || app.status === "rejected") return Math.max(0, pipeline.length - 1);
+  const name = app.stage?.name;
+  const idx = pipeline.findIndex((s) => s.name === name);
+  return idx >= 0 ? idx : Math.min(1, pipeline.length - 1);
+}
+function statusLabel(status?: string | null) {
+  if (status === "hired") return "Contratado";
+  if (status === "rejected") return "No seleccionado";
+  return "En revisión";
+}
+function statusStyle(app: Application) {
+  if (app.status === "hired") return { kind: "good", label: statusLabel(app.status), color: "#0E5C4A", bg: "#DCEFE4", border: "#BEE0CE", feedbackBg: "#DCEFE4", feedbackBorder: "#BEE0CE", feedbackColor: "#0A4638", icon: <GoodIcon /> };
+  if (app.status === "rejected") return { kind: "closed", label: statusLabel(app.status), color: "#79746B", bg: "#EEE9DD", border: "#E0DACC", feedbackBg: "#EEE9DD", feedbackBorder: "#E0DACC", feedbackColor: "#5A564E", icon: <ClosedIcon /> };
+  if (app.feedback?.reason) return { kind: "action", label: app.stage?.name || statusLabel(app.status), color: "#C7402E", bg: "#FAE3DE", border: "#F2C4B9", feedbackBg: "#FAE3DE", feedbackBorder: "#F2C4B9", feedbackColor: "#8A3122", icon: <WarnIcon /> };
+  return { kind: "info", label: app.stage?.name || statusLabel(app.status), color: "#946312", bg: "#F8E7C4", border: "#EBD4A0", feedbackBg: "#F4F0E8", feedbackBorder: "#E7E1D4", feedbackColor: "#54504A", icon: <InfoIcon /> };
+}
+function stageMove(row: ApplicationTimelineEvent) {
+  if (row.from_stage && row.to_stage) return `${row.from_stage} → ${row.to_stage}`;
+  return row.from_stage || row.to_stage || "";
+}
+
 function emptyForm(): FormState { return { first_name: "", last_name: "", headline: "", about: "", phone: "", city: "", country_code: "VE", pref_salary_min: "", pref_currency: "USD", pref_modality: "", pref_locations: "", pref_contract: "", skills: "" }; }
 function splitList(v: string) { return v.split(",").map((x) => x.trim()).filter(Boolean); }
 function splitName(v?: string | null) { const parts = (v ?? "").trim().split(/\s+/).filter(Boolean); return { first: parts[0] ?? "", last: parts.slice(1).join(" ") }; }
@@ -308,6 +397,11 @@ function levelScore(level?: string | null) { const key = (level ?? "").toLowerCa
 function alertLabel(criteria: Record<string, unknown>, fallback: string) { return String((criteria as { q?: string }).q ?? (Object.values(criteria).filter(Boolean).join(" · ") || fallback)); }
 function criteriaChips(criteria: Record<string, unknown>, fallback: string) { const chips = Object.entries(criteria).filter(([, v]) => v != null && v !== "").map(([k, v]) => `: `); return chips.length ? chips : [fallback]; }
 const titleStyle: CSSProperties = { fontFamily: ARCHIVO, fontWeight: 900, fontSize: 24, letterSpacing: "-.8px", margin: "0 0 14px" };
+
+function InfoIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#79746B" strokeWidth="2"/><path d="M12 11v5M12 8h.01" stroke="#79746B" strokeWidth="2" strokeLinecap="round"/></svg>; }
+function WarnIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 16H3L12 3Z" stroke="#C7402E" strokeWidth="2" strokeLinejoin="round"/><path d="M12 10v4M12 17h.01" stroke="#C7402E" strokeWidth="2" strokeLinecap="round"/></svg>; }
+function GoodIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#0E5C4A" strokeWidth="2"/><path d="M8 12.5l2.5 2.5 5-5.5" stroke="#0E5C4A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
+function ClosedIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#79746B" strokeWidth="2"/><path d="M15 9l-6 6M9 9l6 6" stroke="#79746B" strokeWidth="2" strokeLinecap="round"/></svg>; }
 
 function IconButton({ children, onClick, label }: { children: ReactNode; onClick: () => void; label: string }) { return <button onClick={onClick} className="jb-tap" aria-label={label} style={{ width: 36, height: 36, borderRadius: 11, background: "var(--surface)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "pointer" }}>{children}</button>; }
 function EditIcon() { return <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 00-3-3L5 17v3Z" stroke="var(--ink)" strokeWidth="2" strokeLinejoin="round" /></svg>; }
