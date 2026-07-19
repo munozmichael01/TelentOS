@@ -15,7 +15,7 @@ type JobDetail = {
   location: string | null; modality: string | null; salary_min: number | null; salary_max: number | null;
   salary_currency: string | null; employment_type: string | null; category: string | null; created_at: string;
   education_level: string | null; seniority_level: string | null; experience_min_years: number | null;
-  closes_at: string | null;
+  closes_at: string | null; category_key: string | null;
   company: { id: string; name: string; slug: string | null; logo_url: string | null } | null;
 };
 
@@ -25,7 +25,7 @@ async function getJob(slug: string) {
   const supabase = createClient();
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, employment_type, category, created_at, education_level, seniority_level, experience_min_years, closes_at, company:companies(id, name, slug, logo_url)")
+    .select("id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, employment_type, category, created_at, education_level, seniority_level, experience_min_years, closes_at, category_key, company:companies(id, name, slug, logo_url)")
     .eq("id", id).eq("status", "active").maybeSingle();
   if (!job) return null;
   const { data: skillRows } = await supabase
@@ -65,10 +65,16 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
   const logo = logoFor(job.company?.name);
   const salary = formatSalary(job, locale);
 
-  // Ofertas relacionadas (misma categoría, excluye la actual)
-  const related = job.category
-    ? (await searchJobs(createClient(), { category: job.category, pageSize: 4 })).jobs.filter((j) => j.id !== job.id).slice(0, 3)
+  // Ofertas relacionadas: por categoría canónica; si no llenan, se completan con recientes.
+  let related = job.category_key
+    ? (await searchJobs(createClient(), { categoryKey: job.category_key, pageSize: 6 })).jobs.filter((j) => j.id !== job.id)
     : [];
+  if (related.length < 3) {
+    const recent = (await searchJobs(createClient(), { sort: "recent", pageSize: 8 })).jobs
+      .filter((j) => j.id !== job.id && !related.some((r) => r.id === j.id));
+    related = [...related, ...recent];
+  }
+  related = related.slice(0, 3);
 
   // JobPosting JSON-LD — la palanca SEO real (Google for Jobs)
   const jsonLd = {
@@ -184,13 +190,7 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
         </>}
       </div>
 
-      <JobApplyBar
-        jobId={job.id}
-        jobTitle={job.title}
-        companyName={job.company?.name ?? ""}
-        screening={screening as { id: string; type: string; prompt: string; options: string[]; required: boolean }[]}
-        locale={locale}
-      />
+      <JobApplyBar jobId={job.id} slug={params.slug} locale={locale} />
     </div>
   );
 }

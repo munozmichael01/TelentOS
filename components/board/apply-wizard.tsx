@@ -1,0 +1,278 @@
+"use client";
+
+import { useState, useRef, type CSSProperties } from "react";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
+import { ARCHIVO, MONO, BoardRoot, HardButton, AiTag, MonoLabel, CompanyLogo, StepProgress, inputStyle } from "@/components/board/ui";
+
+type Job = { id: string; title: string; modality: string | null; city: string | null; company: string; logoUrl: string | null; salary: string };
+type Question = { id: string; type: string; prompt: string; options: string[]; required: boolean };
+type Exp = { title: string; company: string | null; start_date: string | null; end_date: string | null; is_current?: boolean };
+type Edu = { degree: string; institution: string | null; start_year: number | null; end_year: number | null };
+type Lang = { language: string; level: string | null };
+
+const label: CSSProperties = { fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "var(--soft)", display: "flex", alignItems: "center", gap: 7, marginBottom: 6 };
+
+export function ApplyWizard({ job, screening, slug, locale }: { job: Job; screening: Question[]; slug: string; locale: string }) {
+  const t = useTranslations("Board.apply");
+  const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const hasScreening = screening.length > 0;
+  const totalSteps = hasScreening ? 4 : 3;
+  const doneStep = totalSteps;
+
+  const [step, setStep] = useState(1);
+  const [parsing, setParsing] = useState(false);
+  const [fromCV, setFromCV] = useState(false);
+  const [cvName, setCvName] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", note: "" });
+  const [skills, setSkills] = useState<string[]>([]);
+  const [skillDraft, setSkillDraft] = useState("");
+  const [parsed, setParsed] = useState<{ exp: Exp[]; edu: Edu[]; langs: Lang[]; expYears: number; summary: string; city: string | null }>({ exp: [], edu: [], langs: [], expYears: 0, summary: "", city: null });
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
+  const [btn, setBtn] = useState<"idle" | "sending" | "sent">("idle");
+  const [error, setError] = useState("");
+
+  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const addSkill = (v: string) => { const s = v.trim(); if (!s) return; setSkills((cur) => cur.includes(s) ? cur : [...cur, s]); setSkillDraft(""); };
+  const suggested = ["Figma", "UX research", "Prototyping", "Design systems", "Node.js", "SQL", "Comunicación", "Liderazgo"].filter((x) => !skills.includes(x)).slice(0, 6);
+
+  async function onFile(file: File | null) {
+    if (!file) return;
+    setCvName(file.name); setParsing(true); setError("");
+    const fd = new FormData(); fd.append("cv", file);
+    const r = await fetch("/api/careers/parse-cv", { method: "POST", body: fd }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    setParsing(false);
+    const p = r?.profile;
+    if (p) {
+      setForm((f) => ({ ...f, name: p.name ?? f.name, email: p.email ?? f.email, phone: p.phone ?? f.phone, role: p.experiences?.[0]?.title ?? f.role }));
+      setSkills(Array.isArray(p.skills) ? p.skills : []);
+      setParsed({ exp: p.experiences ?? [], edu: p.education ?? [], langs: p.languages ?? [], expYears: p.experience_years ?? 0, summary: p.summary ?? "", city: p.city ?? null });
+    }
+    setFromCV(true); setStep(2);
+  }
+
+  async function submit() {
+    setBtn("sending"); setError("");
+    const res = await fetch("/api/board/apply", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId: job.id,
+        candidate: { name: form.name, email: form.email, phone: form.phone, skills, experience_years: parsed.expYears, summary: parsed.summary || form.note || null, city: parsed.city },
+        screeningAnswers: answers,
+      }),
+    }).catch(() => null);
+    if (res?.ok) { setBtn("sent"); setTimeout(() => setStep(doneStep), 800); }
+    else { setBtn("idle"); setError(t("error")); }
+  }
+
+  const screeningComplete = screening.every((q) => !q.required || (answers[q.id] != null && String(answers[q.id]).trim() !== ""));
+  const canContinue2 = form.name.trim() && form.email.trim();
+
+  function primary() {
+    if (step === 2) { if (hasScreening) setStep(3); else submit(); }
+    else if (step === 3 && screeningComplete) submit();
+  }
+
+  const stepTitles: Record<number, string> = { 1: t("s1Title"), 2: t("s2Title"), 3: hasScreening ? t("s3Title") : t("doneTitle2"), 4: t("doneTitle2") };
+  const isDone = step === doneStep;
+
+  // Botón sticky de acción (pasos 2-3)
+  let actionLabel = "", actionVariant: "accent" | "brand" | "disabled" = "accent", actionDisabled = false;
+  if (btn === "sending") { actionLabel = t("sending"); actionVariant = "accent"; actionDisabled = true; }
+  else if (btn === "sent") { actionLabel = t("sent"); actionVariant = "brand"; actionDisabled = true; }
+  else if (step === 2) { actionLabel = hasScreening ? t("continue") : t("submitApply"); actionDisabled = !canContinue2; actionVariant = canContinue2 ? "accent" : "disabled"; }
+  else if (step === 3) { actionLabel = screeningComplete ? t("submitApply") : t("answerRequired"); actionDisabled = !screeningComplete; actionVariant = screeningComplete ? "accent" : "disabled"; }
+  const showAction = (step === 2 || step === 3) && !isDone;
+
+  return (
+    <BoardRoot style={{ display: "flex", flexDirection: "column" }}>
+      {/* header + progress */}
+      <header style={{ padding: "10px 16px 12px", borderBottom: "1px solid var(--line)", background: "rgba(244,240,232,.9)", position: "sticky", top: 0, zIndex: 20 }}>
+        <div style={{ maxWidth: 560, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button onClick={() => (step > 1 && !isDone ? setStep(step - 1) : router.push({ pathname: "/empleos/oferta/[slug]", params: { slug } }))} className="jb-tap" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "pointer" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="var(--ink)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <MonoLabel style={{ fontSize: 9.5 }}>{t("hdr", { n: step, total: totalSteps })}</MonoLabel>
+              <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, letterSpacing: "-.3px", lineHeight: 1.1, marginTop: 2 }}>{stepTitles[step]}</div>
+            </div>
+          </div>
+          <div style={{ marginTop: 11 }}><StepProgress total={totalSteps} current={step} /></div>
+        </div>
+      </header>
+
+      <div style={{ flex: 1, overflowY: "auto", paddingBottom: showAction ? 90 : 20 }}>
+        <div style={{ maxWidth: 560, margin: "0 auto", padding: "14px 16px 0" }}>
+          {/* banner de la oferta (persistente) */}
+          <div style={{ display: "flex", alignItems: "center", gap: 11, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: "11px 13px" }}>
+            <CompanyLogo name={job.company} logoUrl={job.logoUrl} size={38} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, lineHeight: 1.1 }}>{job.title}</div>
+              <div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)", marginTop: 2 }}>{[job.company, job.modality, job.salary].filter(Boolean).join(" · ")}</div>
+            </div>
+          </div>
+
+          {/* STEP 1 */}
+          {step === 1 && (
+            <div style={{ paddingTop: 16 }}>
+              <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 22, letterSpacing: "-.7px", margin: "0 0 5px" }}>{t("cvHead")}</h2>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: "var(--soft)", margin: "0 0 16px" }}>{t("cvSub")}</p>
+              <input ref={fileRef} type="file" accept="application/pdf,text/plain" onChange={(e) => onFile(e.target.files?.[0] ?? null)} style={{ display: "none" }} />
+              {!parsing ? (
+                <button onClick={() => fileRef.current?.click()} className="jb-hard" style={{ width: "100%", cursor: "pointer", background: "var(--surface)", border: "2px dashed #C4BCA9", borderRadius: 16, padding: "30px 20px", textAlign: "center" }}>
+                  <span style={{ width: 52, height: 52, borderRadius: 15, background: "var(--brandSoft)", color: "var(--brand)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M5 16v3a1 1 0 001 1h12a1 1 0 001-1v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                  </span>
+                  <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15 }}>{t("cvUploadBig")}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)", marginTop: 5 }}>{t("cvUploadHint")}</div>
+                </button>
+              ) : (
+                <div style={{ background: "var(--ink)", borderRadius: 16, padding: "22px 20px", color: "#F4F0E8" }}>
+                  <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "#fff" }}>{t("parsing")}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: "#B7B2A8", margin: "3px 0 12px" }}>{cvName}</div>
+                  <div style={{ height: 6, borderRadius: 999, background: "#38352E", overflow: "hidden" }}><div className="jb-fillbar" style={{ height: "100%", width: "60%", background: "var(--lime)" }} /></div>
+                  <div style={{ fontFamily: MONO, fontSize: 9.5, color: "#8C877E", marginTop: 9 }}>{t("parsingHint")}</div>
+                </div>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0" }}>
+                <span style={{ flex: 1, height: 1, background: "var(--line)" }} /><span style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)" }}>{t("orAuto")}</span><span style={{ flex: 1, height: 1, background: "var(--line)" }} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                <HardButton variant="surface" onClick={() => { setFromCV(false); setStep(2); }} full style={{ fontSize: 14 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21.6 12.2c0-.6-.1-1.2-.2-1.8H12v3.4h5.4c-.2 1.2-.9 2.3-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.1Z" fill="#4285F4" /><path d="M12 22c2.7 0 5-1 6.6-2.7l-3.2-2.5c-.9.6-2 .9-3.4.9-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6C4.7 19.8 8.1 22 12 22Z" fill="#34A853" /><path d="M6.4 13.6c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7H3.1C2.4 8.5 2 10.2 2 12s.4 3.5 1.1 5l3.3-2.6Z" fill="#FBBC05" /><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 2.9 14.7 2 12 2 8.1 2 4.7 4.2 3.1 7.5l3.3 2.6C7.2 7.6 9.4 5.9 12 5.9Z" fill="#EA4335" /></svg>{t("withGoogle")}
+                </HardButton>
+                <HardButton variant="surface" onClick={() => { setFromCV(false); setStep(2); }} full style={{ fontSize: 14 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.4 3H3.6A.6.6 0 003 3.6v16.8a.6.6 0 00.6.6h16.8a.6.6 0 00.6-.6V3.6a.6.6 0 00-.6-.6ZM8.3 18.3H5.5V9.4h2.8v8.9ZM6.9 8.2a1.6 1.6 0 110-3.3 1.6 1.6 0 010 3.3Zm11.4 10.1h-2.8v-4.3c0-1 0-2.4-1.4-2.4s-1.7 1.1-1.7 2.3v4.4H9.6V9.4h2.7v1.2h.04c.4-.7 1.3-1.5 2.6-1.5 2.8 0 3.3 1.9 3.3 4.3v4.9Z" /></svg>{t("withLinkedin")}
+                </HardButton>
+                <button onClick={() => { setFromCV(false); setStep(2); }} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: 13, color: "var(--soft)", background: "transparent", border: "none", padding: 8, cursor: "pointer" }}>{t("manual")}</button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2 */}
+          {step === 2 && (
+            <div style={{ paddingTop: 16 }}>
+              {fromCV && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 12, padding: "11px 13px", marginBottom: 16 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="11" fill="#C6F24E" /><path d="M7 12.5l3 3 6-7" stroke="#1A1A17" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: "#2C3907" }}>{t("autofillBanner")}</div><div style={{ fontSize: 12, color: "#46540F", marginTop: 1 }}>{t("autofillHint")}</div></div>
+                </div>
+              )}
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div><label style={label}>{t("name")}{fromCV && form.name && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("name")} style={inputStyle} /></div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div><label style={label}>{t("email")}{fromCV && form.email && <AiTag>{t("fromCV")}</AiTag>}</label><input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="tu@correo.com" style={inputStyle} /></div>
+                  <div><label style={label}>{t("phone")}</label><input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+58…" style={inputStyle} /></div>
+                </div>
+                <div><label style={label}>{t("role")}{fromCV && form.role && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.role} onChange={(e) => set("role", e.target.value)} placeholder={t("rolePlaceholder")} style={inputStyle} /></div>
+                <div>
+                  <label style={label}>{fromCV ? t("skillsDetected") : t("skillsYours")}{fromCV && <AiTag>{t("fromCV")}</AiTag>}</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {skills.map((s) => (
+                      <span key={s} onClick={() => setSkills((cur) => cur.filter((x) => x !== s))} className="jb-tap" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "5px 8px 5px 10px", cursor: "pointer" }}>{s}<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="var(--soft)" strokeWidth="2.6" strokeLinecap="round" /></svg></span>
+                    ))}
+                  </div>
+                  {skills.length === 0 && <div style={{ fontSize: 12.5, color: "var(--soft)", margin: "6px 0 4px" }}>{t("noSkills")}</div>}
+                  <div style={{ display: "flex", gap: 7, marginTop: 8 }}>
+                    <input value={skillDraft} onChange={(e) => setSkillDraft(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(skillDraft); } }} placeholder={t("addSkillPlaceholder")} style={{ ...inputStyle, flex: 1 }} />
+                    <HardButton variant="brand" onClick={() => addSkill(skillDraft)} style={{ fontSize: 13, padding: "0 15px" }}>{t("addSkill")}</HardButton>
+                  </div>
+                  {suggested.length > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                      <MonoLabel style={{ fontSize: 9, marginBottom: 6 }}>{t("suggested")}</MonoLabel>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {suggested.map((sg) => <span key={sg} onClick={() => addSkill(sg)} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px dashed #BEE0CE", borderRadius: 8, padding: "5px 9px", cursor: "pointer" }}>+ {sg}</span>)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div><label style={label}>{t("messageLabel")} <span style={{ textTransform: "none", color: "#B0AAA0" }}>{t("optional")}</span></label><textarea value={form.note} onChange={(e) => set("note", e.target.value)} placeholder={t("messagePlaceholder")} style={{ ...inputStyle, minHeight: 74, resize: "none" }} /></div>
+
+                {fromCV && parsed.exp.length > 0 && <ParsedBlock title={t("experience")} tag={t("fromCV")} items={parsed.exp.map((e) => ({ main: e.title, sub: [e.company, [e.start_date, e.is_current ? "actual" : e.end_date].filter(Boolean).join(" — ")].filter(Boolean).join(" · ") }))} />}
+                {fromCV && parsed.edu.length > 0 && <ParsedBlock title={t("education")} tag={t("fromCV")} items={parsed.edu.map((e) => ({ main: e.degree, sub: [e.institution, [e.start_year, e.end_year].filter(Boolean).join(" — ")].filter(Boolean).join(" · ") }))} />}
+                {fromCV && parsed.langs.length > 0 && <ParsedBlock title={t("languages")} tag={t("fromCV")} items={parsed.langs.map((l) => ({ main: l.language, sub: l.level ?? "" }))} />}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: screening */}
+          {step === 3 && hasScreening && (
+            <div style={{ paddingTop: 16 }}>
+              <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 21, letterSpacing: "-.6px", margin: "0 0 6px" }}>{t("s3Title")}</h2>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: "var(--soft)", margin: "0 0 18px" }}>{t("screeningIntro", { company: job.company, job: job.title })}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                {screening.map((q, i) => (
+                  <div key={q.id}>
+                    <label style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", display: "block", marginBottom: 10 }}>{i + 1} · {q.prompt}{q.required && <span style={{ color: "var(--accent)" }}> *</span>}</label>
+                    {q.type === "yes_no" || q.type === "single_choice" ? (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                        {(q.type === "yes_no" ? [t("yes"), t("no")] : q.options).map((opt) => {
+                          const on = answers[q.id] === opt;
+                          return <button key={opt} onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt }))} style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: on ? 700 : 600, fontSize: 13, borderRadius: 999, padding: "8px 14px", border: `1.5px solid ${on ? "#1A1A17" : "#E7E1D4"}`, background: on ? "#DCEFE4" : "#FCFAF6", color: on ? "#0E5C4A" : "#54504A", cursor: "pointer" }}>{opt}</button>;
+                        })}
+                      </div>
+                    ) : (
+                      <input type={q.type === "url" ? "url" : "text"} value={(answers[q.id] as string) ?? ""} onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))} placeholder={q.type === "url" ? "https://…" : ""} style={inputStyle} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP DONE */}
+          {isDone && (
+            <div style={{ padding: "30px 4px", textAlign: "center" }}>
+              <span style={{ width: 74, height: 74, borderRadius: 22, background: "var(--brandSoft)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}><svg width="38" height="38" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5 8-9" stroke="#0E5C4A" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+              <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 25, letterSpacing: "-.9px", margin: "0 0 8px" }}>{t("success")}</h2>
+              <p style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--soft)", margin: "0 auto 22px", maxWidth: 290 }}>{t("doneDesc", { company: job.company, job: job.title, email: form.email })}</p>
+              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 15, padding: 16, textAlign: "left", marginBottom: 16 }}>
+                <MonoLabel style={{ marginBottom: 11 }}>{t("whatsNext")}</MonoLabel>
+                {[t("next1"), t("next2")].map((txt, i) => (
+                  <div key={i} style={{ display: "flex", gap: 11, alignItems: "flex-start", marginBottom: i === 0 ? 11 : 0 }}>
+                    <span style={{ width: 24, height: 24, borderRadius: 8, background: i === 0 ? "var(--limeSoft)" : "var(--brandSoft)", color: i === 0 ? "#46540F" : "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontWeight: 700, fontSize: 11, flexShrink: 0 }}>{i + 1}</span>
+                    <span style={{ fontSize: 13.5, lineHeight: 1.45, color: "#3A3833" }}>{txt}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                <HardButton variant="brand" full onClick={() => router.push("/cuenta")}>{t("viewApps")}</HardButton>
+                <Link href="/empleos" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 14, color: "var(--soft)", padding: 8, textAlign: "center" }}>{t("keepBrowsing")}</Link>
+              </div>
+            </div>
+          )}
+
+          {error && <p style={{ fontSize: 13, color: "#BD4332", marginTop: 12 }}>{error}</p>}
+        </div>
+      </div>
+
+      {/* sticky action */}
+      {showAction && (
+        <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, background: "rgba(252,250,246,.96)", backdropFilter: "blur(8px)", borderTop: "1px solid var(--line)", padding: "12px 16px 16px", zIndex: 20 }}>
+          <div style={{ maxWidth: 560, margin: "0 auto" }}>
+            <HardButton variant={actionVariant} full disabled={actionDisabled} onClick={primary}>{actionLabel}</HardButton>
+          </div>
+        </div>
+      )}
+    </BoardRoot>
+  );
+}
+
+function ParsedBlock({ title, tag, items }: { title: string; tag: string; items: { main: string; sub: string }[] }) {
+  return (
+    <div>
+      <label style={label}>{title} <AiTag>{tag}</AiTag></label>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {items.map((it, i) => (
+          <div key={i} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "10px 12px" }}>
+            <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13.5, letterSpacing: "-.2px" }}>{it.main}</div>
+            {it.sub && <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{it.sub}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
