@@ -21,6 +21,10 @@ export default async function ApplyPage({ params }: { params: { locale: string; 
   const { data: screening } = await supabase
     .from("screening_questions").select("id, type, prompt, options, required").eq("job_id", id).order("order_index");
 
+  // ¿candidato ya logueado? decide el cierre del apply (ver candidaturas vs crear cuenta).
+  const { data: { user } } = await supabase.auth.getUser();
+  const authed = user?.app_metadata?.audience === "candidate";
+
   const j = job as unknown as {
     id: string; title: string; modality: string | null; city: string | null;
     salary_min: number | null; salary_max: number | null; salary_currency: string | null;
@@ -37,6 +41,7 @@ export default async function ApplyPage({ params }: { params: { locale: string; 
       screening={(screening ?? []) as { id: string; type: string; prompt: string; options: string[]; required: boolean }[]}
       slug={params.slug}
       locale={params.locale}
+      authed={authed}
     />
   );
 }

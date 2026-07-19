@@ -10,6 +10,15 @@ import { JobApplyBar } from "@/components/board/job-apply-bar";
 const ARCHIVO = "'Archivo',sans-serif";
 const MONO = "'Space Mono',monospace";
 
+// Tokens significativos del título para medir afinidad de rol entre ofertas.
+const TITLE_STOP = new Set(["de","la","el","los","las","del","un","una","y","o","a","en","para","con","por","sr","jr","senior","junior"]);
+function titleTokens(s: string): Set<string> {
+  return new Set(
+    s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .split(/[^a-z0-9]+/).filter((w) => w.length > 2 && !TITLE_STOP.has(w))
+  );
+}
+
 type JobDetail = {
   id: string; title: string; description: string | null; city: string | null; country_code: string | null;
   location: string | null; modality: string | null; salary_min: number | null; salary_max: number | null;
@@ -65,16 +74,29 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
   const logo = logoFor(job.company?.name);
   const salary = formatSalary(job, locale);
 
-  // Ofertas relacionadas: por categoría canónica; si no llenan, se completan con recientes.
-  let related = job.category_key
-    ? (await searchJobs(createClient(), { categoryKey: job.category_key, pageSize: 6 })).jobs.filter((j) => j.id !== job.id)
-    : [];
-  if (related.length < 3) {
-    const recent = (await searchJobs(createClient(), { sort: "recent", pageSize: 8 })).jobs
-      .filter((j) => j.id !== job.id && !related.some((r) => r.id === j.id));
-    related = [...related, ...recent];
+  // Ofertas relacionadas por relevancia real: afinidad de rol (título) + ciudad + categoría.
+  // Prioridad: misma categoría+ciudad › título afín › misma categoría › misma ciudad › reciente.
+  const rc = createClient();
+  const [catRes, cityRes, recentRes] = await Promise.all([
+    job.category_key ? searchJobs(rc, { categoryKey: job.category_key, pageSize: 12 }) : Promise.resolve(null),
+    job.city ? searchJobs(rc, { location: job.city, pageSize: 12 }) : Promise.resolve(null),
+    searchJobs(rc, { sort: "recent", pageSize: 12 }),
+  ]);
+  const catIds = new Set((catRes?.jobs ?? []).map((j) => j.id));
+  const cityIds = new Set((cityRes?.jobs ?? []).map((j) => j.id));
+  const pool = new Map<string, (typeof recentRes.jobs)[number]>();
+  for (const j of [...(catRes?.jobs ?? []), ...(cityRes?.jobs ?? []), ...recentRes.jobs]) {
+    if (j.id !== job.id) pool.set(j.id, j);
   }
-  related = related.slice(0, 3);
+  const selfTokens = titleTokens(job.title);
+  const scoreRel = (j: { id: string; title: string }) => {
+    const cat = catIds.has(j.id), city = cityIds.has(j.id);
+    let s = cat && city ? 100 : (cat ? 60 : 0) + (city ? 40 : 0);
+    let overlap = 0;
+    titleTokens(j.title).forEach((w) => { if (selfTokens.has(w)) overlap++; });
+    return s + overlap * 25; // el rol afín (palabras del título) pesa fuerte
+  };
+  const related = Array.from(pool.values()).sort((a, b) => scoreRel(b) - scoreRel(a)).slice(0, 3);
 
   // JobPosting JSON-LD — la palanca SEO real (Google for Jobs)
   const jsonLd = {

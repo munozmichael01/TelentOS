@@ -110,7 +110,7 @@ export function CvProfileFields({ profile: p, onChange, disabled = false }: Prop
 
   // ── Education ───────────────────────────────────────────────────────────
   function addEducation() {
-    const blank: CvEducation = { degree: "", institution: null, field: null, start_year: null, end_year: null };
+    const blank: CvEducation = { degree: "", institution: null, field: null, level: null, start_year: null, end_year: null };
     onChange({ ...p, education: [...p.education, blank] });
   }
   function updateEducation(idx: number, patch: Partial<CvEducation>) {

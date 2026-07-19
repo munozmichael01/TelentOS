@@ -27,7 +27,7 @@ const EXTRACTION_RULES = `Devuelve SOLO JSON válido, sin markdown, sin bloques 
     { "language": string, "level": "a1" | "a2" | "b1" | "b2" | "c1" | "c2" | "native" | null }
   ],
   "education": [
-    { "degree": string, "institution": string | null, "field": string | null, "start_year": number | null, "end_year": number | null }
+    { "degree": string, "institution": string | null, "field": string | null, "level": "none" | "secondary" | "vocational" | "bachelor" | "master" | "phd" | null, "start_year": number | null, "end_year": number | null }
   ],
   "extracted_source": "cv_text" | "fallback"
 }
@@ -54,6 +54,9 @@ Reglas estrictas:
   idiomas → [] (array vacío). NUNCA inventes idiomas ni niveles.
 - education: formación académica del CV (degree obligatorio). field = área de estudio; institution = centro.
   end_year null = en curso. Si el CV no tiene sección de educación → [] (array vacío). NUNCA inventes.
+  - level: nivel canónico del título. Mapea: bachillerato/secundaria→"secondary"; FP/técnico/tecnólogo/vocacional→"vocational";
+    grado/licenciatura/ingeniería/bachelor→"bachelor"; máster/maestría/MBA/postgrado→"master"; doctorado/PhD→"phd";
+    sin estudios formales→"none". null si el título no permite determinar el nivel con seguridad.
 - summary: 2-4 oraciones que describan el perfil profesional. Usa el idioma del CV. No inventes logros.
 - extracted_source: "cv_text" si extrajiste del CV; "fallback" solo si cv_text era null.
 - NUNCA inventes datos. Si un campo no se puede determinar con seguridad → null (o [] para listas).

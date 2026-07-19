@@ -3,17 +3,18 @@
 import { useState, useRef, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { ARCHIVO, MONO, BoardRoot, HardButton, AiTag, MonoLabel, CompanyLogo, StepProgress, inputStyle } from "@/components/board/ui";
 
 type Job = { id: string; title: string; modality: string | null; city: string | null; company: string; logoUrl: string | null; salary: string };
 type Question = { id: string; type: string; prompt: string; options: string[]; required: boolean };
-type Exp = { title: string; company: string | null; start_date: string | null; end_date: string | null; is_current?: boolean };
-type Edu = { degree: string; institution: string | null; start_year: number | null; end_year: number | null };
+type Exp = { title: string; company: string | null; seniority?: string | null; start_date: string | null; end_date: string | null; is_current?: boolean };
+type Edu = { degree: string; institution: string | null; field?: string | null; level?: string | null; start_year: number | null; end_year: number | null };
 type Lang = { language: string; level: string | null };
 
 const label: CSSProperties = { fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "var(--soft)", display: "flex", alignItems: "center", gap: 7, marginBottom: 6 };
 
-export function ApplyWizard({ job, screening, slug, locale }: { job: Job; screening: Question[]; slug: string; locale: string }) {
+export function ApplyWizard({ job, screening, slug, locale, authed = false }: { job: Job; screening: Question[]; slug: string; locale: string; authed?: boolean }) {
   const t = useTranslations("Board.apply");
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -33,6 +34,32 @@ export function ApplyWizard({ job, screening, slug, locale }: { job: Job; screen
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [btn, setBtn] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState("");
+  // Paso de cuenta opcional al cerrar (invitado): crear contraseña o, si el email ya
+  // existe, iniciar sesión. En ambos casos se liga la candidatura ya registrada.
+  const [acctPw, setAcctPw] = useState("");
+  const [acctMode, setAcctMode] = useState<"create" | "signin">("create");
+  const [acctBusy, setAcctBusy] = useState(false);
+  const [acctErr, setAcctErr] = useState("");
+
+  async function finishAccount() {
+    if (acctPw.length < 8) { setAcctErr(t("acctPwHint")); return; }
+    setAcctBusy(true); setAcctErr("");
+    const supabase = createClient();
+    try {
+      if (acctMode === "create") {
+        const res = await fetch("/api/board/auth/signup", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: form.name, email: form.email, password: acctPw }),
+        });
+        if (res.status === 409) { setAcctMode("signin"); setAcctErr(t("acctExists")); setAcctBusy(false); return; }
+        if (!res.ok) { setAcctErr(t("acctError")); setAcctBusy(false); return; }
+      }
+      const { error: signErr } = await supabase.auth.signInWithPassword({ email: form.email.trim().toLowerCase(), password: acctPw });
+      if (signErr) { setAcctErr(acctMode === "signin" ? t("acctBadCreds") : t("acctError")); setAcctBusy(false); return; }
+      await fetch("/api/board/auth/link", { method: "POST" }); // liga la candidatura a la cuenta
+      router.push("/cuenta");
+    } catch { setAcctErr(t("acctError")); setAcctBusy(false); }
+  }
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
   const addSkill = (v: string) => { const s = v.trim(); if (!s) return; setSkills((cur) => cur.includes(s) ? cur : [...cur, s]); setSkillDraft(""); };
@@ -59,7 +86,7 @@ export function ApplyWizard({ job, screening, slug, locale }: { job: Job; screen
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jobId: job.id,
-        candidate: { name: form.name, email: form.email, phone: form.phone, skills, experience_years: parsed.expYears, summary: parsed.summary || form.note || null, city: parsed.city },
+        candidate: { name: form.name, email: form.email, phone: form.phone, skills, experience_years: parsed.expYears, summary: parsed.summary || form.note || null, city: parsed.city, experiences: parsed.exp, education: parsed.edu, languages: parsed.langs },
         screeningAnswers: answers,
       }),
     }).catch(() => null);
@@ -238,10 +265,28 @@ export function ApplyWizard({ job, screening, slug, locale }: { job: Job; screen
                   </div>
                 ))}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                <HardButton variant="brand" full onClick={() => router.push("/cuenta")}>{t("viewApps")}</HardButton>
-                <Link href="/empleos" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 14, color: "var(--soft)", padding: 8, textAlign: "center" }}>{t("keepBrowsing")}</Link>
-              </div>
+              {authed ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                  <HardButton variant="brand" full onClick={() => router.push("/cuenta")}>{t("viewApps")}</HardButton>
+                  <Link href="/empleos" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 14, color: "var(--soft)", padding: 8, textAlign: "center" }}>{t("keepBrowsing")}</Link>
+                </div>
+              ) : (
+                <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 15, padding: 16, textAlign: "left" }}>
+                  <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15.5, letterSpacing: "-.3px", marginBottom: 3 }}>{acctMode === "signin" ? t("acctSigninTitle") : t("acctTitle")}</div>
+                  <p style={{ fontSize: 13, lineHeight: 1.45, color: "var(--soft)", margin: "0 0 12px" }}>{acctMode === "signin" ? t("acctSigninSub") : t("acctSub")}</p>
+                  <input
+                    type="password" value={acctPw} onChange={(e) => setAcctPw(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") finishAccount(); }}
+                    placeholder="••••••••" autoComplete={acctMode === "signin" ? "current-password" : "new-password"}
+                    style={{ ...inputStyle, marginBottom: 10 }}
+                  />
+                  <HardButton variant={acctBusy ? "disabled" : "brand"} full disabled={acctBusy} onClick={finishAccount}>
+                    {acctBusy ? t("sending") : acctMode === "signin" ? t("acctSigninCta") : t("acctCta")}
+                  </HardButton>
+                  {acctErr && <p style={{ fontSize: 12.5, color: acctMode === "signin" ? "#BD4332" : "var(--soft)", margin: "9px 0 0" }}>{acctErr}</p>}
+                  <Link href="/empleos" style={{ display: "block", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", padding: "10px 8px 2px", textAlign: "center" }}>{t("acctSkip")}</Link>
+                </div>
+              )}
             </div>
           )}
 
