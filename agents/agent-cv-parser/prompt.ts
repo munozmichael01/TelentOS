@@ -5,6 +5,8 @@
 const EXTRACTION_RULES = `Devuelve SOLO JSON válido, sin markdown, sin bloques de código, con esta estructura exacta:
 {
   "name": string | null,
+  "first_name": string | null,
+  "last_name": string | null,
   "email": string | null,
   "phone": string | null,
   "location": string | null,
@@ -34,6 +36,7 @@ const EXTRACTION_RULES = `Devuelve SOLO JSON válido, sin markdown, sin bloques 
 
 Reglas estrictas:
 - name, email, phone, location, city, country_code: del CV. null si no hay evidencia clara.
+- first_name / last_name: separa el nombre completo en nombre(s) de pila y apellido(s). Ej. "María José Pérez Gómez" → first_name "María José", last_name "Pérez Gómez". Usa tu criterio con nombres compuestos; null si no hay nombre.
 - country_code: código ISO 3166-1 alpha-2 (ej. "ES", "VE", "MX"). null si no se puede determinar.
 - skills: máximo 20 elementos, normalizados (sin duplicados), en el idioma predominante del CV.
 - experience_years: años TOTALES de experiencia profesional del candidato. Calcúlalo como el SPAN temporal

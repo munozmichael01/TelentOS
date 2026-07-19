@@ -33,14 +33,35 @@ export async function GET() {
   const hasCv = (cands ?? []).some((c) => !!c.cv_url);
 
   let applications: unknown[] = [];
+  // Datos estructurados que YA tenemos del candidato (parseados de su CV al aplicar),
+  // atados a `candidates`. Son la fuente para SEMBRAR el perfil y mostrarlos en Mi cuenta,
+  // en vez de pedirlos de cero. Dedupe ligero porque un user puede tener >1 ficha.
+  const sourced: {
+    experiences: unknown[]; education: unknown[]; languages: unknown[]; skills: string[];
+    first_name: string | null; last_name: string | null; phone: string | null; city: string | null; country_code: string | null;
+  } = { experiences: [], education: [], languages: [], skills: [], first_name: null, last_name: null, phone: null, city: null, country_code: null };
+
   if (candidateIds.length) {
-    const { data: apps } = await admin
-      .from("applications")
-      .select("id, created_at, fit_score, source, stage_id, job:jobs(id, title, city, modality, company:companies(name, logo_url))")
-      .in("candidate_id", candidateIds)
-      .order("created_at", { ascending: false })
-      .limit(50);
+    const [{ data: apps }, { data: exps }, { data: edus }, { data: langs }, { data: cskills }, { data: cinfo }] = await Promise.all([
+      admin.from("applications").select("id, created_at, fit_score, source, stage_id, job:jobs(id, title, city, modality, company:companies(name, logo_url))").in("candidate_id", candidateIds).order("created_at", { ascending: false }).limit(50),
+      admin.from("candidate_experiences").select("title, company, seniority, start_date, end_date, is_current").in("candidate_id", candidateIds).order("order_index"),
+      admin.from("candidate_education").select("degree, institution, field, level, start_year, end_year").in("candidate_id", candidateIds).order("order_index"),
+      admin.from("candidate_languages").select("language, level").in("candidate_id", candidateIds),
+      admin.from("candidate_skills").select("skills(name)").in("candidate_id", candidateIds),
+      admin.from("candidates").select("first_name, last_name, phone, city, country_code, created_at").in("id", candidateIds).order("created_at", { ascending: false }).limit(1),
+    ]);
     applications = apps ?? [];
+    const dedupe = <T,>(rows: T[], key: (r: T) => string) => {
+      const seen = new Set<string>(); const out: T[] = [];
+      for (const r of rows) { const k = key(r); if (!seen.has(k)) { seen.add(k); out.push(r); } }
+      return out;
+    };
+    sourced.experiences = dedupe(exps ?? [], (e) => `${e.title}|${e.company ?? ""}`);
+    sourced.education = dedupe(edus ?? [], (e) => `${e.degree}|${e.institution ?? ""}`);
+    sourced.languages = dedupe(langs ?? [], (l) => (l.language ?? "").toLowerCase());
+    sourced.skills = dedupeStrings((cskills ?? []).map((r) => (r.skills as { name?: string } | null)?.name).filter(Boolean) as string[]);
+    const info = (cinfo ?? [])[0];
+    if (info) { sourced.first_name = info.first_name ?? null; sourced.last_name = info.last_name ?? null; sourced.phone = info.phone ?? null; sourced.city = info.city ?? null; sourced.country_code = info.country_code ?? null; }
   }
 
   const completeness = computeProfileCompleteness({
@@ -61,7 +82,7 @@ export async function GET() {
     skillCount: skillNames.length,
   });
 
-  return NextResponse.json({ profile: profile ?? null, skills: skillNames, completeness, applications });
+  return NextResponse.json({ profile: profile ?? null, skills: skillNames, completeness, applications, sourced });
 }
 
 const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : []);
@@ -82,6 +103,8 @@ export async function PUT(req: Request) {
   const patch = {
     user_id: uid,
     full_name: has("full_name") ? (body.full_name || null) : (existing?.full_name ?? null),
+    first_name: has("first_name") ? (body.first_name || null) : (existing?.first_name ?? null),
+    last_name: has("last_name") ? (body.last_name || null) : (existing?.last_name ?? null),
     email: has("email") ? (body.email || null) : (existing?.email ?? user.email ?? null),
     phone: has("phone") ? (body.phone || null) : (existing?.phone ?? null),
     headline: has("headline") ? (body.headline || null) : (existing?.headline ?? null),

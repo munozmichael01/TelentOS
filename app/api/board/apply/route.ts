@@ -70,8 +70,10 @@ export async function POST(req: Request) {
 
   let candidateId = existing?.id as string | undefined;
   if (!candidateId) {
+    const firstName = (typeof c.first_name === "string" && c.first_name.trim()) ? c.first_name.trim() : (name.split(" ")[0] || null);
+    const lastName = (typeof c.last_name === "string" && c.last_name.trim()) ? c.last_name.trim() : (name.includes(" ") ? name.slice(name.indexOf(" ") + 1).trim() : null);
     const { data: cand, error: cErr } = await admin.from("candidates").insert({
-      name, email,
+      name, first_name: firstName, last_name: lastName, email,
       phone: c.phone ?? null, location: c.location ?? null,
       city: c.city ?? null, country_code: c.country_code ?? null,
       skills, experience_years: expYears, summary: c.summary ?? null,

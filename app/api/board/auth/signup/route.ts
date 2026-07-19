@@ -18,6 +18,8 @@ export async function POST(req: Request) {
   }
   const body = await req.json().catch(() => null);
   const name = String(body?.name ?? "").trim();
+  const firstName = String(body?.first_name ?? "").trim() || (name.split(" ")[0] || null);
+  const lastName = String(body?.last_name ?? "").trim() || (name.includes(" ") ? name.slice(name.indexOf(" ") + 1).trim() : null);
   const email = String(body?.email ?? "").trim().toLowerCase();
   const password = String(body?.password ?? "");
   if (!email || !password) return jsonError("Email y contraseña son obligatorios");
@@ -40,7 +42,7 @@ export async function POST(req: Request) {
 
   // Perfil global del candidato (idempotente por user_id unique)
   await admin.from("candidate_profiles").upsert(
-    { user_id: data.user.id, full_name: name || null, email },
+    { user_id: data.user.id, full_name: name || null, first_name: firstName, last_name: lastName, email },
     { onConflict: "user_id" }
   );
 
