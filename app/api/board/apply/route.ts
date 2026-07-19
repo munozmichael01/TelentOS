@@ -6,6 +6,8 @@ import { resolveSkillIds } from "@/lib/skills";
 import { computeRecruiterFit, computeScreeningOutcome, type JobSkillReq } from "@/lib/job-board/fit";
 import { highestEducationLevel } from "@/lib/education";
 import { CvExperienceSchema, CvLanguageSchema, CvEducationSchema } from "@/agents/agent-cv-parser";
+import { sendEmail } from "@/lib/email/resend";
+import { candidateActivationEmail } from "@/lib/email/candidate-emails";
 import type { EducationLevel, SeniorityLevel } from "@/lib/types";
 import { z } from "zod";
 
@@ -38,7 +40,7 @@ export async function POST(req: Request) {
   // Oferta activa + requisitos estructurados
   const { data: job } = await admin
     .from("jobs")
-    .select("id, company_id, status, experience_min_years, education_level, seniority_level, city, country_code, location")
+    .select("id, title, company_id, status, experience_min_years, education_level, seniority_level, city, country_code, location, company:companies(name)")
     .eq("id", body.jobId).eq("status", "active").maybeSingle();
   if (!job) return jsonError("La oferta no está disponible", 404);
 
@@ -141,6 +143,18 @@ export async function POST(req: Request) {
     application_id: application.id, type: "created", to_stage: "Aplicado",
     reason: screening.autoDiscard ? "Candidatura del job board — descartada por screening (regla de la empresa)" : "Candidatura recibida desde el job board",
   });
+
+  // Recuperación de cuenta: invitado (sin sesión) cuya ficha aún no está ligada a ninguna
+  // cuenta → email para que cree su contraseña y siga la candidatura. Fire-and-forget:
+  // no bloquea ni rompe la respuesta si Resend no está configurado o falla.
+  if (!userId && !existing?.user_id) {
+    const base = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
+    const locale = typeof body.locale === "string" && body.locale ? body.locale : "es-ve";
+    const companyName = (job.company as { name?: string } | null)?.name ?? "la empresa";
+    const url = `${base}/${locale}/cuenta/entrar?email=${encodeURIComponent(email)}`;
+    const { subject, html } = candidateActivationEmail({ locale, jobTitle: job.title, company: companyName, url });
+    void sendEmail({ to: email, subject, html });
+  }
 
   return NextResponse.json({
     ok: true, application_id: application.id,
