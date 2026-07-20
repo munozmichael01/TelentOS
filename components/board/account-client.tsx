@@ -64,7 +64,7 @@ export function AccountClient({ locale }: { locale: string }) {
         fetch("/api/board/saved").then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch("/api/board/alerts").then((r) => (r.ok ? r.json() : null)).catch(() => null),
       ]);
-      if (p) { setProfile(p.profile); setSourced(p.sourced ?? {}); setSkills((p.skills?.length ? p.skills : p.sourced?.skills) ?? []); setCompleteness(p.completeness); setApplications(p.applications ?? []); }
+      if (p) { setProfile(p.profile); setSourced(p.sourced ?? {}); setSkills((p.skills?.length ? p.skills : p.sourced?.skills) ?? []); setCompleteness(p.completeness); setApplications(p.applications ?? []); if (p.profile) setPrefsOn({ email: p.profile.notify_email !== false, push: p.profile.notify_push !== false, digest: !!p.profile.notify_digest, visible: p.profile.profile_visible !== false }); }
       if (s) setSaved(s.saved ?? []);
       if (a) { setAlerts(a.alerts ?? []); setAlertOn(Object.fromEntries(((a.alerts ?? []) as Alert[]).map((x) => [x.id, x.active !== false]))); }
       setLoading(false);
@@ -155,6 +155,12 @@ export function AccountClient({ locale }: { locale: string }) {
     if (!r.ok) setAlertOn((m) => ({ ...m, [id]: !next })); // revertir si falla
   }
 
+  const PREF_FIELD = { email: "notify_email", push: "notify_push", digest: "notify_digest", visible: "profile_visible" } as const;
+  async function savePref(key: keyof typeof PREF_FIELD, next: boolean) {
+    setPrefsOn((p) => ({ ...p, [key]: next })); // optimista, persiste en el perfil
+    fetch("/api/board/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ [PREF_FIELD[key]]: next }) }).catch(() => {});
+  }
+
   async function logout() {
     await createClient().auth.signOut();
     router.push("/cuenta/entrar");
@@ -177,7 +183,7 @@ export function AccountClient({ locale }: { locale: string }) {
       <BoardTabBar active={tab} onSelect={setTab} badges={{ applications: applications.length }} />
       {editOpen && <EditSheet form={form} setForm={setForm} saving={savingEdit} onClose={() => setEditOpen(false)} onSave={saveProfile} t={t} />}
       {newAlertOpen && <NewAlertSheet name={alertName} setName={setAlertName} freq={alertFreq} setFreq={setAlertFreq} onClose={() => setNewAlertOpen(false)} onCreate={createAlert} t={t} />}
-      {settingsOpen && <SettingsSheet prefs={prefsOn} setPrefs={setPrefsOn} onClose={() => setSettingsOpen(false)} onLogout={logout} t={t} />}
+      {settingsOpen && <SettingsSheet prefs={prefsOn} onPref={savePref} onClose={() => setSettingsOpen(false)} onLogout={logout} t={t} />}
       {detailId && <ApplicationDetailSheet detail={appDetail} fallback={applications.find((a) => a.id === detailId) ?? null} loading={detailLoading} onClose={closeApplicationDetail} t={t} loc={loc} />}
     </BoardRoot>
   );
@@ -346,9 +352,9 @@ function NewAlertSheet({ name, setName, freq, setFreq, onClose, onCreate, t }: {
   return <Sheet onClose={onClose}><div style={{ padding: "14px 18px 6px" }}><div style={sheetHandle} /><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{t("alerts.new")}</span></div><div style={{ padding: "8px 18px 20px", display: "flex", flexDirection: "column", gap: 14 }}><Field label={t("alerts.name")} value={name} onChange={setName} placeholder={t("alerts.placeholder")} /><BoardField label={t("alerts.frequency")}><div style={{ display: "flex", gap: 7 }}>{opts.map(([key, label]) => <button key={key} onClick={() => setFreq(key)} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: freq === key ? 700 : 600, fontSize: 13, borderRadius: 999, padding: "8px 14px", cursor: "pointer", border: `1.5px solid ${freq === key ? "#1A1A17" : "#E7E1D4"}`, background: freq === key ? "#DCEFE4" : "#FCFAF6", color: freq === key ? "#0E5C4A" : "#54504A" }}>{label}</button>)}</div></BoardField><HardButton onClick={onCreate} variant="brand" full>{t("account.createAlert")}</HardButton></div></Sheet>;
 }
 
-function SettingsSheet({ prefs, setPrefs, onClose, onLogout, t }: { prefs: { email: boolean; push: boolean; digest: boolean; visible: boolean }; setPrefs: React.Dispatch<React.SetStateAction<{ email: boolean; push: boolean; digest: boolean; visible: boolean }>>; onClose: () => void; onLogout: () => void; t: ReturnType<typeof useTranslations> }) {
+function SettingsSheet({ prefs, onPref, onClose, onLogout, t }: { prefs: { email: boolean; push: boolean; digest: boolean; visible: boolean }; onPref: (key: "email" | "push" | "digest" | "visible", next: boolean) => void; onClose: () => void; onLogout: () => void; t: ReturnType<typeof useTranslations> }) {
   const rows = [{ id: "email", label: t("account.emailNews"), desc: t("account.emailNewsDesc") }, { id: "push", label: t("account.pushNotifications"), desc: t("account.pushNotificationsDesc") }, { id: "digest", label: t("account.weeklyDigest"), desc: t("account.weeklyDigestDesc") }] as const;
-  return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 10px", borderBottom: "1px solid var(--line)" }}><div style={sheetHandle} /><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{t("account.settings")}</span></div><div style={{ padding: "14px 18px 20px" }}><MonoLabel style={{ marginBottom: 10 }}>{t("account.notifications")}</MonoLabel><div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden", marginBottom: 18 }}>{rows.map((r) => <PrefRow key={r.id} label={r.label} desc={r.desc} on={prefs[r.id]} onClick={() => setPrefs((p) => ({ ...p, [r.id]: !p[r.id] }))} />)}</div><div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: "13px 14px", marginBottom: 18 }}><div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{t("account.profileVisible")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.profileVisibleDesc")}</div></div><Toggle on={prefs.visible} onClick={() => setPrefs((p) => ({ ...p, visible: !p.visible }))} /></div><button onClick={onLogout} className="jb-tap" style={{ width: "100%", fontFamily: ARCHIVO, fontWeight: 700, fontSize: 14, color: "var(--accent)", background: "var(--surface)", border: "1.5px solid #F2C4B9", borderRadius: 12, padding: 12, cursor: "pointer" }}>{t("account.logout")}</button></div></Sheet>;
+  return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 10px", borderBottom: "1px solid var(--line)" }}><div style={sheetHandle} /><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{t("account.settings")}</span></div><div style={{ padding: "14px 18px 20px" }}><MonoLabel style={{ marginBottom: 10 }}>{t("account.notifications")}</MonoLabel><div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden", marginBottom: 18 }}>{rows.map((r) => <PrefRow key={r.id} label={r.label} desc={r.desc} on={prefs[r.id]} onClick={() => onPref(r.id, !prefs[r.id])} />)}</div><div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: "13px 14px", marginBottom: 18 }}><div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{t("account.profileVisible")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.profileVisibleDesc")}</div></div><Toggle on={prefs.visible} onClick={() => onPref("visible", !prefs.visible)} /></div><button onClick={onLogout} className="jb-tap" style={{ width: "100%", fontFamily: ARCHIVO, fontWeight: 700, fontSize: 14, color: "var(--accent)", background: "var(--surface)", border: "1.5px solid #F2C4B9", borderRadius: 12, padding: 12, cursor: "pointer" }}>{t("account.logout")}</button></div></Sheet>;
 }
 
 function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) { return <BoardField label={label}><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} style={inputStyle} /></BoardField>; }

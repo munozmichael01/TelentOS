@@ -156,6 +156,10 @@ export async function PUT(req: Request) {
     pref_modality: has("pref_modality") ? strArr(body.pref_modality) : (existing?.pref_modality ?? []),
     pref_locations: has("pref_locations") ? strArr(body.pref_locations) : (existing?.pref_locations ?? []),
     pref_contract: has("pref_contract") ? strArr(body.pref_contract) : (existing?.pref_contract ?? []),
+    notify_email: has("notify_email") ? !!body.notify_email : (existing?.notify_email ?? true),
+    notify_push: has("notify_push") ? !!body.notify_push : (existing?.notify_push ?? true),
+    notify_digest: has("notify_digest") ? !!body.notify_digest : (existing?.notify_digest ?? false),
+    profile_visible: has("profile_visible") ? !!body.profile_visible : (existing?.profile_visible ?? true),
     updated_at: new Date().toISOString(),
   };
   const { data: profile, error } = await admin
