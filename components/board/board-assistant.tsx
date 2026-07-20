@@ -141,6 +141,7 @@ export function BoardAssistant({ locale }: { locale: string }) {
                               <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{j.company?.name}{j.city ? ` · ${j.city}` : ""}</div>
                               <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, letterSpacing: "-.2px", lineHeight: 1.1, marginTop: 2 }}>{j.title}</div>
                             </div>
+                            {typeof (j as { fit?: number }).fit === "number" && <span style={{ flexShrink: 0, fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "#46540F", background: "var(--lime)", border: "1px solid #1A1A17", borderRadius: 7, padding: "3px 7px" }}>{(j as { fit?: number }).fit}% fit</span>}
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
                             {formatSalary(j, locale) && <span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--brand)" }}>{formatSalary(j, locale)}</span>}
