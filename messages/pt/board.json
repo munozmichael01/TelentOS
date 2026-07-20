@@ -347,7 +347,21 @@
     "noJobs": "Sem vagas ativas agora. Crie um alerta e avisamos você.",
     "notify": "Avise-me de novas vagas",
     "notifying": "Avisaremos você de novas vagas",
-    "loginToNotify": "Entre para receber alertas"
+    "loginToNotify": "Entre para receber alertas",
+    "follow": "Seguir empresa",
+    "following": "Seguindo",
+    "notifyTitle": "Criar alerta",
+    "notifySub": "Avisamos quando {company} publicar uma nova vaga.",
+    "criteria": "Critérios",
+    "frequency": "Frequência",
+    "freq_instant": "Na hora",
+    "freq_daily": "Diário",
+    "freq_weekly": "Semanal",
+    "activate": "Ativar alerta",
+    "alertCreated": "Alerta criado",
+    "alertCreatedDesc": "Avisaremos sobre novas vagas em {company} ({freq}).",
+    "done": "Pronto",
+    "share": "Compartilhar"
   },
   "hub": {
     "titleCat": "Vagas de {category}",

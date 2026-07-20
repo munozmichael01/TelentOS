@@ -347,7 +347,21 @@
     "noJobs": "No hay ofertas activas ahora mismo. Crea una alerta y te avisamos.",
     "notify": "Avisarme de nuevas ofertas",
     "notifying": "Te avisaremos de nuevas ofertas",
-    "loginToNotify": "Inicia sesión para recibir alertas"
+    "loginToNotify": "Inicia sesión para recibir alertas",
+    "follow": "Seguir empresa",
+    "following": "Siguiendo",
+    "notifyTitle": "Crear alerta",
+    "notifySub": "Te avisamos cuando {company} publique una oferta nueva.",
+    "criteria": "Criterios",
+    "frequency": "Frecuencia",
+    "freq_instant": "Al instante",
+    "freq_daily": "Diario",
+    "freq_weekly": "Semanal",
+    "activate": "Activar alerta",
+    "alertCreated": "Alerta creada",
+    "alertCreatedDesc": "Te avisaremos de nuevas ofertas de {company} ({freq}).",
+    "done": "Listo",
+    "share": "Compartir"
   },
   "hub": {
     "titleCat": "Empleos de {category}",

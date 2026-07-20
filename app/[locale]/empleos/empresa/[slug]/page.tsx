@@ -51,7 +51,9 @@ export default async function EmployerPage({ params }: { params: { locale: strin
 
   return (
     <div style={{ "--brand": "#0E5C4A", "--accent": "#F1543F", "--soft": "#79746B", "--line": "#E7E1D4", "--surface": "#FCFAF6", "--bg": "#F4F0E8", "--brandSoft": "#DCEFE4", background: "#F4F0E8", minHeight: "100vh", fontFamily: "'Hanken Grotesk',system-ui,sans-serif", color: "#1A1A17", WebkitFontSmoothing: "antialiased" } as React.CSSProperties}>
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "16px 16px 60px" }}>
+      {/* cover (gradiente derivado del logo — sin campo de portada real) */}
+      <div style={{ height: 104, background: `linear-gradient(135deg, ${logo.bg}, var(--brand))` }} />
+      <div style={{ maxWidth: 720, margin: "-40px auto 0", padding: "0 16px 60px", position: "relative" }}>
         <Link href="/empleos" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 12, fontWeight: 700, color: "var(--brand)" }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
           {t("employer.back")}
@@ -77,7 +79,7 @@ export default async function EmployerPage({ params }: { params: { locale: strin
           <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#3A3833", margin: 0, whiteSpace: "pre-wrap" }}>{company.description}</p>
         </>}
 
-        <div style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "var(--soft)", margin: "24px 0 11px" }}>{t("employer.openings")}</div>
+        <div style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "var(--soft)", margin: "24px 0 11px" }}>{t("employer.openings")} · {total}</div>
         {jobs.length === 0 ? (
           <p style={{ fontSize: 13.5, color: "var(--soft)", lineHeight: 1.5 }}>{t("employer.noJobs")}</p>
         ) : (
@@ -91,7 +93,10 @@ export default async function EmployerPage({ params }: { params: { locale: strin
                       <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, letterSpacing: "-.3px", lineHeight: 1.15 }}>{j.title}</div>
                       <div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{[j.city, relativeDate(j.created_at, locale)].filter(Boolean).join(" · ")}</div>
                     </div>
-                    {j.modality && <span style={{ fontSize: 11, fontWeight: 700, color: m.color, background: m.bg, border: `1px solid ${m.border}`, borderRadius: 7, padding: "3px 8px", flexShrink: 0 }}>{t(`modality.${j.modality}`)}</span>}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                      {j.category && <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "#54504A", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 7, padding: "3px 8px" }}>{j.category}</span>}
+                      {j.modality && <span style={{ fontSize: 11, fontWeight: 700, color: m.color, background: m.bg, border: `1px solid ${m.border}`, borderRadius: 7, padding: "3px 8px" }}>{t(`modality.${j.modality}`)}</span>}
+                    </div>
                   </div>
                   {formatSalary(j, locale) && <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "var(--brand)", marginTop: 8 }}>{formatSalary(j, locale)}</div>}
                 </Link>

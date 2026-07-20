@@ -347,7 +347,21 @@
     "noJobs": "No active openings right now. Create an alert and we'll notify you.",
     "notify": "Notify me of new jobs",
     "notifying": "We'll notify you of new jobs",
-    "loginToNotify": "Sign in to get alerts"
+    "loginToNotify": "Sign in to get alerts",
+    "follow": "Follow company",
+    "following": "Following",
+    "notifyTitle": "Create alert",
+    "notifySub": "We will notify you when {company} posts a new job.",
+    "criteria": "Criteria",
+    "frequency": "Frequency",
+    "freq_instant": "Instant",
+    "freq_daily": "Daily",
+    "freq_weekly": "Weekly",
+    "activate": "Activate alert",
+    "alertCreated": "Alert created",
+    "alertCreatedDesc": "We will notify you about new jobs at {company} ({freq}).",
+    "done": "Done",
+    "share": "Share"
   },
   "hub": {
     "titleCat": "{category} jobs",
