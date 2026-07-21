@@ -149,6 +149,9 @@ export async function PUT(req: Request) {
       : (existing?.experience_years ?? null),
     education: has("education") ? (Array.isArray(body.education) ? body.education : []) : (existing?.education ?? []),
     languages: has("languages") ? (Array.isArray(body.languages) ? body.languages : []) : (existing?.languages ?? []),
+    experiences: has("experiences") ? (Array.isArray(body.experiences) ? body.experiences : []) : (existing?.experiences ?? []),
+    links: has("links") ? (Array.isArray(body.links) ? body.links : []) : (existing?.links ?? []),
+    avatar_url: has("avatar_url") ? (body.avatar_url || null) : (existing?.avatar_url ?? null),
     pref_salary_min: has("pref_salary_min")
       ? (typeof body.pref_salary_min === "number" ? body.pref_salary_min : null)
       : (existing?.pref_salary_min ?? null),

@@ -257,7 +257,39 @@
     "completeDone": "¡Tu perfil está completo!",
     "completeDoneHint": "Ya puedes aplicar en un toque.",
     "completeWithAi": "Completar mi perfil con IA",
-    "refineWithAi": "Afinar mi perfil con IA"
+    "refineWithAi": "Afinar mi perfil con IA",
+    "cvReplace": "Reemplazar",
+    "photoUpload": "Subir foto",
+    "emptyLinks": "Añade tu portafolio, LinkedIn u otros enlaces.",
+    "field": {
+      "role": "Cargo",
+      "company": "Empresa",
+      "start": "Desde",
+      "end": "Hasta",
+      "current": "Trabajo actual",
+      "degree": "Título",
+      "institution": "Institución",
+      "startYear": "Año inicio",
+      "endYear": "Año fin",
+      "language": "Idioma",
+      "level": "Nivel",
+      "linkType": "Tipo",
+      "url": "URL",
+      "linkLabel": "Etiqueta (opcional)"
+    },
+    "editor": {
+      "expNew": "Añadir experiencia",
+      "expEdit": "Editar experiencia",
+      "eduNew": "Añadir formación",
+      "eduEdit": "Editar formación",
+      "langNew": "Añadir idioma",
+      "langEdit": "Editar idioma",
+      "linkNew": "Añadir enlace",
+      "linkEdit": "Editar enlace"
+    },
+    "viewOriginalOffer": "Ver oferta original",
+    "applicationProgress": "Progreso de tu candidatura",
+    "viewDetail": "Ver detalle"
   },
   "auth": {
     "signinTitle": "Bienvenida de nuevo",

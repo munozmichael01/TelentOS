@@ -257,7 +257,39 @@
     "completeDone": "Your profile is complete!",
     "completeDoneHint": "You can now apply in one tap.",
     "completeWithAi": "Complete my profile with AI",
-    "refineWithAi": "Refine my profile with AI"
+    "refineWithAi": "Refine my profile with AI",
+    "cvReplace": "Replace",
+    "photoUpload": "Upload photo",
+    "emptyLinks": "Add your portfolio, LinkedIn or other links.",
+    "field": {
+      "role": "Role",
+      "company": "Company",
+      "start": "From",
+      "end": "To",
+      "current": "Current job",
+      "degree": "Degree",
+      "institution": "Institution",
+      "startYear": "Start year",
+      "endYear": "End year",
+      "language": "Language",
+      "level": "Level",
+      "linkType": "Type",
+      "url": "URL",
+      "linkLabel": "Label (optional)"
+    },
+    "editor": {
+      "expNew": "Add experience",
+      "expEdit": "Edit experience",
+      "eduNew": "Add education",
+      "eduEdit": "Edit education",
+      "langNew": "Add language",
+      "langEdit": "Edit language",
+      "linkNew": "Add link",
+      "linkEdit": "Edit link"
+    },
+    "viewOriginalOffer": "View original job",
+    "applicationProgress": "Your application progress",
+    "viewDetail": "View detail"
   },
   "auth": {
     "signinTitle": "Welcome back",
