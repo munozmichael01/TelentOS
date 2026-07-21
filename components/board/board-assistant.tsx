@@ -14,7 +14,7 @@ const ROOT: CSSProperties = {
   "--soft": "#79746B", "--line": "#E7E1D4", "--surface": "#FCFAF6", "--bg": "#F4F0E8",
   "--brandSoft": "#DCEFE4", "--limeSoft": "#EAF7C4",
   fontFamily: "'Hanken Grotesk',system-ui,sans-serif", color: "#1A1A17", background: "#F4F0E8",
-  minHeight: "100vh", display: "flex", flexDirection: "column", WebkitFontSmoothing: "antialiased",
+  WebkitFontSmoothing: "antialiased",
 } as CSSProperties;
 
 type Filters = { q?: string; location?: string; modality?: string; category?: string; contract?: string; salaryMin?: number };
@@ -94,7 +94,9 @@ export function BoardAssistant({ locale }: { locale: string }) {
   }
 
   return (
-    <div style={ROOT}>
+    <div style={ROOT} className="jb-asst-shell">
+      <AssistantRail t={t} />
+      <div className="jb-asst-main">
       {/* header */}
       <header style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid var(--line)", background: "var(--surface)" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", width: "100%", display: "flex", alignItems: "center", gap: 10 }}>
@@ -148,10 +150,16 @@ export function BoardAssistant({ locale }: { locale: string }) {
                             {j.modality && <span style={{ fontSize: 10.5, fontWeight: 700, color: md.color, background: md.bg, border: `1px solid ${md.border}`, borderRadius: 6, padding: "2px 7px" }}>{j.modality}</span>}
                           </div>
                           <div style={{ display: "flex", gap: 8, marginTop: 11 }}>
-                            <button onClick={() => easyApply(j)} disabled={applying === j.id || applied[j.id]} className="jb-hard" style={{ flex: 1, textAlign: "center", fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: applied[j.id] ? "#fff" : "var(--ink)", background: applied[j.id] ? "var(--brand)" : "var(--lime)", border: "2px solid var(--ink)", borderRadius: 10, padding: 9, boxShadow: "2px 2px 0 var(--ink)", cursor: applied[j.id] ? "default" : "pointer" }}>
-                              {applied[j.id] ? `✓ ${t("applied")}` : applying === j.id ? "…" : t("easyApply")}
-                            </button>
-                            <Link href={{ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(j) } }} className="jb-hard" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 10, padding: "9px 14px", boxShadow: "2px 2px 0 var(--ink)" }}>{t("view")}</Link>
+                            {applied[j.id] ? (
+                              <span style={{ flex: 1, textAlign: "center", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 11, padding: 9 }}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke="var(--brand)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>{t("applied")}
+                              </span>
+                            ) : (
+                              <button onClick={() => easyApply(j)} disabled={applying === j.id} className="jb-hard" style={{ flex: 1, textAlign: "center", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 11, padding: 9, boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer" }}>
+                                {applying === j.id ? "…" : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" fill="#fff" /></svg>{t("easyApply")}</>}
+                              </button>
+                            )}
+                            <Link href={{ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(j) } }} className="jb-hard" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 11, padding: "9px 14px", boxShadow: "2px 2px 0 var(--ink)" }}>{t("view")}</Link>
                           </div>
                         </div>
                       );
@@ -189,6 +197,42 @@ export function BoardAssistant({ locale }: { locale: string }) {
           </div>
         </div>
       </div>
+      </div>
     </div>
+  );
+}
+
+// Rail de marca del agente (solo desktop): tinta, identidad, qué puede hacer, garantía.
+function AssistantRail({ t }: { t: ReturnType<typeof useTranslations> }) {
+  const caps = [
+    { k: "cap1", icon: <path d="M11 4a7 7 0 105.6 11.2L21 19M18 11a7 7 0 10-14 0 7 7 0 0014 0Z" /> },
+    { k: "cap2", icon: <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" strokeLinejoin="round" /> },
+    { k: "cap3", icon: <><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6Z" strokeLinejoin="round" /><path d="M10 19a2 2 0 004 0" /></> },
+  ];
+  return (
+    <aside className="jb-asst-rail" style={{ background: "var(--ink)", color: "#F4F0E8", padding: "40px 32px", flexDirection: "column", gap: 26 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+        <span style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(198,242,78,.14)", display: "flex", alignItems: "center", justifyContent: "center" }}><SparkIcon size={22} /></span>
+        <div>
+          <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 18, letterSpacing: "-.4px" }}>{t("title")}</div>
+          <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--lime)" }}>{t("tagline")}</div>
+        </div>
+      </div>
+      <div>
+        <div style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .6, color: "#8C877E", marginBottom: 12 }}>{t("railWhat")}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {caps.map((c) => (
+            <div key={c.k} style={{ display: "flex", alignItems: "center", gap: 11 }}>
+              <span style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(198,242,78,.12)", color: "var(--lime)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">{c.icon}</svg></span>
+              <span style={{ fontSize: 14, color: "#E8E4DB" }}>{t(c.k)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10.5, color: "#8C877E" }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#8C877E" strokeWidth="1.8" /><path d="M8 11V8a4 4 0 018 0v3" stroke="#8C877E" strokeWidth="1.8" /></svg>
+        {t("railReadonly")}
+      </div>
+    </aside>
   );
 }

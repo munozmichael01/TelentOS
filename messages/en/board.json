@@ -300,10 +300,16 @@
       "Remote design > $1,500",
       "Product in Caracas",
       "Junior roles",
-      "Best paid"
+      "Best paid",
+      "Create an alert for this search"
     ],
-    "easyApply": "Easy apply",
-    "applied": "Sent"
+    "easyApply": "1 tap",
+    "applied": "Sent",
+    "railWhat": "What I can do",
+    "cap1": "Interpret your search",
+    "cap2": "Apply in one tap",
+    "cap3": "Create job alerts",
+    "railReadonly": "Read-only · never posts or shares"
   },
   "builder": {
     "eyebrow": "Profile assistant",
