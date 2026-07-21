@@ -60,7 +60,8 @@
   },
   "toast": {
     "saved": "Saved to your jobs",
-    "unsaved": "Removed from saved"
+    "unsaved": "Removed from saved",
+    "applied": "Application sent · in 1 tap"
   },
   "detail": {
     "back": "All jobs",
