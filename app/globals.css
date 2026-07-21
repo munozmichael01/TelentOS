@@ -258,3 +258,12 @@
 .jb-job { transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
 .jb-job:hover { transform: translateY(-2px); border-color: #D2C9B6; box-shadow: 0 12px 24px -16px rgba(26,26,23,.5); }
 .jb-job:active { transform: translateY(0); }
+
+/* Auth — split responsive: mobile una columna; desktop form 600px + panel de marca */
+.jb-auth-root { display: flex; min-height: 100vh; }
+.jb-auth-form { flex: 1 1 auto; display: flex; justify-content: center; padding: 22px 16px; }
+.jb-auth-panel { display: none; }
+@media (min-width: 1024px) {
+  .jb-auth-form { flex: 0 0 600px; align-items: center; padding: 40px 48px; }
+  .jb-auth-panel { display: flex; flex: 1 1 auto; }
+}

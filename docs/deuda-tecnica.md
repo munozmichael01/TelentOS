@@ -43,3 +43,6 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 | DS-emojis | Barrido de emojis genéricos del chrome → iconos SVG del DS + regla en CLAUDE.md | `653f6cd`, `159de2` (pista B), `77bc08e` |
 | AUD-limit1 | Barrido de `.limit(1)` en `companies` → `getCompanyId()`/`getCompany()` por membresía (40 usos, 23 rutas) | 2026-07-14 |
 | AUD-M5b | Blindado el modelo *1 user = 1 empresa*: unique en `company_members.user_id` + guard de invitación (rechaza email que ya pertenece a otra empresa) | `0035` |
+
+## Backlog producto — Job Board
+- **"Publicar en incógnito" (rol confidencial):** flag POR-OFERTA (`jobs.board_hidden` o similar) para que una empresa oculte una oferta puntual del board público, manteniéndola en su career site. NO un toggle por-empresa (decisión 2026-07-19: todas las ofertas van al board por defecto = keystone). Caso borde para enterprise; sin construir aún.
