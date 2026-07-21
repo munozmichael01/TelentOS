@@ -279,7 +279,13 @@
     "terms": "Al continuar aceptas los Términos y la Política de Privacidad de TalentOS.",
     "soon": "Disponible pronto",
     "errGeneric": "Algo salió mal. Inténtalo de nuevo.",
-    "errCredentials": "Email o contraseña incorrectos."
+    "errCredentials": "Email o contraseña incorrectos.",
+    "panelTitle": "Tu próximo empleo, en un toque.",
+    "perkProfile": "Perfil con IA en segundos",
+    "perkOneTap": "Aplica de un toque",
+    "perkAlerts": "Alertas de ofertas afines",
+    "socialProof": "+12.000 candidatos ya se registraron",
+    "emailVerified": "Verificado desde tu correo"
   },
   "assistant": {
     "cta": "Asistente IA",

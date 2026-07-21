@@ -279,7 +279,13 @@
     "terms": "By continuing you accept TalentOS's Terms and Privacy Policy.",
     "soon": "Coming soon",
     "errGeneric": "Something went wrong. Please try again.",
-    "errCredentials": "Incorrect email or password."
+    "errCredentials": "Incorrect email or password.",
+    "panelTitle": "Your next job, in one tap.",
+    "perkProfile": "AI profile in seconds",
+    "perkOneTap": "Apply in one tap",
+    "perkAlerts": "Alerts for matching jobs",
+    "socialProof": "+12,000 candidates already joined",
+    "emailVerified": "Verified from your email"
   },
   "assistant": {
     "cta": "AI assistant",
