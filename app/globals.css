@@ -292,7 +292,7 @@
 .jb-board-split { display: block; }
 .jb-board-list { width: 100%; }
 .jb-board-detail { display: none; }
-@media (min-width: 1240px) {
+@media (min-width: 1024px) {
   .jb-board-main { max-width: 1240px; padding: 24px 24px 40px; }
   .jb-board-split { display: flex; gap: 20px; align-items: flex-start; }
   .jb-board-list { flex: 0 0 430px; width: 430px; }
