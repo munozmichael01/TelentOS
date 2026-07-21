@@ -11,17 +11,27 @@
     "placeholder": "well-paid remote design in Caracas",
     "submit": "Search",
     "filters": "Filters",
-    "interpreted": "How we read your search"
+    "interpreted": "How we read your search",
+    "placeholderTop": "Role, company or city",
+    "allFilters": "All filters",
+    "createAlert": "Create alert for this search",
+    "alertActive": "Alert active",
+    "alertCreated": "Alert created · daily"
   },
   "sort": {
     "relevance": "Relevance",
     "recent": "Recent",
-    "salary": "Salary"
+    "salary": "Salary",
+    "label": "Sort"
   },
   "results": {
     "count": "{count, plural, =0 {No jobs} one {# job} other {# jobs}}",
     "selectPrompt": "Select a job",
-    "selectHint": "Pick a job from the list to see the details here."
+    "selectHint": "Pick a job from the list to see the details here.",
+    "results": "{count, plural, one {# result} other {# results}}",
+    "ofRole": "for",
+    "inCity": "in",
+    "pageOf": "Page {page} of {total}"
   },
   "card": {
     "new": "New",
@@ -44,7 +54,28 @@
     "contract": "Contract type",
     "company": "Company",
     "location": "Location",
-    "locationPlaceholder": "Type a city"
+    "locationPlaceholder": "Type a city",
+    "noOptions": "No options",
+    "clearAll": "Clear all",
+    "viewN": "See {count, plural, one {# job} other {# jobs}}",
+    "group": {
+      "area": "Area",
+      "modality": "Modality",
+      "salary": "Salary",
+      "contract": "Contract",
+      "company": "Company",
+      "date": "Date"
+    },
+    "salaryBand": {
+      "lt1000": "< $1,000",
+      "b1000": "$1,000–2,000",
+      "b2000": "> $2,000"
+    },
+    "dateBand": {
+      "24h": "Last 24h",
+      "week": "Last week",
+      "month": "Last month"
+    }
   },
   "modality": {
     "remoto": "Remote",
@@ -503,5 +534,9 @@
     "title": "{count, plural, one {# company hiring} other {# companies hiring}}",
     "empty": "No companies with active jobs yet.",
     "openings": "{count, plural, one {# job} other {# jobs}}"
+  },
+  "crumb": {
+    "home": "Home",
+    "jobs": "Jobs"
   }
 }
