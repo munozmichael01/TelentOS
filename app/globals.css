@@ -276,3 +276,12 @@
   .jb-asst-shell { flex-direction: row; }
   .jb-asst-rail { display: flex; flex: 0 0 300px; }
 }
+
+/* Perfil IA — split desktop: intake 520px + preview en vivo (tinta). Mobile: 1 col, preview oculto */
+.jb-pib-shell { width: 100%; }
+.jb-pib-preview { display: none; }
+@media (min-width: 1024px) {
+  .jb-pib-shell { display: flex; gap: 28px; align-items: flex-start; max-width: 1040px; margin: 0 auto; }
+  .jb-pib-intake { flex: 0 0 480px; max-width: 480px !important; }
+  .jb-pib-preview { display: flex; flex: 1 1 auto; }
+}

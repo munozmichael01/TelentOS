@@ -348,7 +348,11 @@
     "error": "No pude generar el perfil. Inténtalo de nuevo.",
     "skip": "Lo haré luego",
     "city": "Ciudad",
-    "phone": "Teléfono"
+    "phone": "Teléfono",
+    "preview": "Vista previa",
+    "previewRole": "Tu perfil",
+    "previewAboutNotice": "Se redactará al generar tu perfil.",
+    "completeness": "Perfil {pct}% completo"
   },
   "employer": {
     "back": "Todas las ofertas",
