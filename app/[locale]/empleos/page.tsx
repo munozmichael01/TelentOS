@@ -44,6 +44,9 @@ export default async function BoardPage({
     pageSize: 20,
   });
 
+  const { data: { user } } = await supabase.auth.getUser();
+  const authed = user?.app_metadata?.audience === "candidate";
+
   return (
     <BoardClient
       initialJobs={initial.jobs}
@@ -52,6 +55,7 @@ export default async function BoardPage({
       initialQuery={searchParams.q ?? ""}
       categories={getCategories(params.locale)}
       country={countryForLocale(params.locale)}
+      authed={authed}
     />
   );
 }

@@ -7,7 +7,7 @@ type Tab = "search" | "applications" | "saved" | "alerts" | "profile";
 
 // Navegación inferior única del board. En /empleos navega con links; en /cuenta
 // conmuta los sub-tabs localmente para evitar una segunda nav superior.
-export function BoardTabBar({ active, onSelect, badges }: { active: Tab; onSelect?: (tab: Exclude<Tab, "search">) => void; badges?: Partial<Record<Tab, number>> }) {
+export function BoardTabBar({ active, onSelect, badges, className }: { active: Tab; onSelect?: (tab: Exclude<Tab, "search">) => void; badges?: Partial<Record<Tab, number>>; className?: string }) {
   const t = useTranslations("Board.tabs");
   const items: { key: Tab; href: "/empleos" | "/cuenta"; label: string; icon: JSX.Element }[] = [
     { key: "search", href: "/empleos", label: t("search"), icon: <path d="M11 4a7 7 0 105.6 11.2L21 19M18 11a7 7 0 10-14 0 7 7 0 0014 0Z" /> },
@@ -32,7 +32,7 @@ export function BoardTabBar({ active, onSelect, badges }: { active: Tab; onSelec
   );
 
   return (
-    <nav style={{ position: "fixed", left: 0, right: 0, bottom: 0, height: 64, background: "rgba(252,250,246,.97)", backdropFilter: "blur(10px)", borderTop: "1px solid var(--line)", display: "flex", alignItems: "stretch", padding: "0 6px", zIndex: 28 }}>
+    <nav className={className} style={{ position: "fixed", left: 0, right: 0, bottom: 0, height: 64, background: "rgba(252,250,246,.97)", backdropFilter: "blur(10px)", borderTop: "1px solid var(--line)", display: "flex", alignItems: "stretch", padding: "0 6px", zIndex: 28 }}>
       <div style={{ maxWidth: 720, margin: "0 auto", width: "100%", display: "flex" }}>
         {items.map((it) => {
           const on = it.key === active;

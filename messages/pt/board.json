@@ -493,5 +493,15 @@
     "emptyText": "Crie um alerta para receber novas vagas compatíveis.",
     "default": "Alerta",
     "match": "match"
+  },
+  "nav": {
+    "companies": "Empresas",
+    "alerts": "Alertas",
+    "account": "Minha conta"
+  },
+  "companies": {
+    "title": "{count, plural, one {# empresa contratando} other {# empresas contratando}}",
+    "empty": "Ainda não há empresas com vagas ativas.",
+    "openings": "{count, plural, one {# vaga} other {# vagas}}"
   }
 }
