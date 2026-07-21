@@ -75,8 +75,18 @@ export async function POST(req: Request) {
     }
   }
 
+  // Narración FIABLE desde el conteo real: el LLM interpreta (filtros/intake), pero el
+  // resumen de resultados lo damos aquí para no prometer "buscando…" ni desalinear el
+  // texto con las tarjetas. El answer del LLM se usa solo para la pregunta de intake.
+  let answer = result.output.answer;
+  if (!result.output.intake_needed) {
+    answer = total > 0
+      ? (total === 1 ? "Encontré 1 oferta que encaja." : `Encontré ${total} ofertas que encajan.`)
+      : "No encontré ofertas con esos criterios. Prueba ampliar: quita la ubicación o cambia la modalidad.";
+  }
+
   return NextResponse.json({
-    answer: result.output.answer,
+    answer,
     filters: result.output.filters,
     intake_needed: result.output.intake_needed,
     suggested_refinements: result.output.suggested_refinements,

@@ -478,6 +478,20 @@ export function ProfileBuilder({ locale }: { locale: string }) {
               <p style={{ fontSize: 14, lineHeight: 1.5, color: "#3A3833", margin: 0 }}>{existingCv ? t("introUpdate") : t("intro")}</p>
             </div>
 
+            {/* CV — vía preferente arriba (el parseo es lo que mejor completa el perfil) */}
+            <input ref={fileRef} type="file" accept="application/pdf,text/plain" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} style={{ display: "none" }} />
+            <button onClick={() => fileRef.current?.click()} className="jb-hard" style={{ width: "100%", cursor: "pointer", background: "var(--limeSoft)", border: "2px dashed #C6D96A", borderRadius: 16, padding: "22px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
+              <span style={{ width: 48, height: 48, borderRadius: 14, background: "var(--lime)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5" stroke="#2C3907" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M5 16v3a1 1 0 001 1h12a1 1 0 001-1v-3" stroke="#2C3907" strokeWidth="2" strokeLinecap="round" /></svg>
+              </span>
+              <span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15.5, color: "#2C3907" }}>{cvName ? `${t("cvUploaded")}: ${cvName}` : existingCv ? t("cvQuestionUpdate") : t("cvUploadBig")}</span>
+              <span style={{ fontFamily: MONO, fontSize: 10, color: "#5A6B21" }}>{t("cvUploadHint")}</span>
+            </button>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0" }}>
+              <span style={{ flex: 1, height: 1, background: "var(--line)" }} /><span style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)" }}>{t("orTellUs")}</span><span style={{ flex: 1, height: 1, background: "var(--line)" }} />
+            </div>
+
             <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <label style={label}>{t("role")}</label>
@@ -519,27 +533,6 @@ export function ProfileBuilder({ locale }: { locale: string }) {
                 </label>
                 <textarea className="jb-in" value={pitch} onChange={(e) => setPitch(e.target.value)} placeholder={t("pitchPlaceholder")} style={{ ...inputStyle, minHeight: 66, resize: "none" }}></textarea>
               </div>
-            </div>
-
-            {/* CV Upload section */}
-            <input ref={fileRef} type="file" accept="application/pdf,text/plain" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} style={{ display: "none" }} />
-            <div
-              onClick={() => fileRef.current?.click()}
-              style={{ display: "flex", alignItems: "center", gap: 9, margin: "16px 0", padding: "12px 14px", background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 12, cursor: "pointer" }}
-            >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <path d="M12 16V4M7 9l5-5 5 5" stroke="#46540F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M5 16v3a1 1 0 001 1h12a1 1 0 001-1v-3" stroke="#46540F" strokeWidth="2"/>
-              </svg>
-              <span style={{ fontSize: 12.5, color: "#46540F", lineHeight: 1.4 }}>
-                {cvName ? (
-                  <><b>{t("cvUploaded")}:</b> {cvName}</>
-                ) : existingCv ? (
-                  <><b>{t("cvQuestionUpdate")}</b></>
-                ) : (
-                  <><b>{t("cvQuestion")}</b></>
-                )}
-              </span>
             </div>
 
             <button

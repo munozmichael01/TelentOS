@@ -352,7 +352,10 @@
     "preview": "Vista previa",
     "previewRole": "Tu perfil",
     "previewAboutNotice": "Se redactará al generar tu perfil.",
-    "completeness": "Perfil {pct}% completo"
+    "completeness": "Perfil {pct}% completo",
+    "cvUploadBig": "Sube tu CV y armo tu perfil",
+    "cvUploadHint": "PDF o texto · lo parseo, tú confirmas",
+    "orTellUs": "o cuéntanos tú"
   },
   "employer": {
     "back": "Todas las ofertas",
