@@ -413,7 +413,18 @@
     "completeness": "Profile {pct}% complete",
     "cvUploadBig": "Upload your CV and I build your profile",
     "cvUploadHint": "PDF or text · I parse it, you confirm",
-    "orTellUs": "or tell us yourself"
+    "orTellUs": "or tell us yourself",
+    "locationRequired": "Location",
+    "locationPlaceholder": "Which city?",
+    "recentExperience": "Most recent experience",
+    "recentRolePlaceholder": "Role",
+    "recentCompanyPlaceholder": "Company",
+    "confirmSkills": "Confirm your skills",
+    "gateHint": "Complete role, experience and location",
+    "parsingTitle": "Reading your CV",
+    "parsingReassure": "Extracting experience and skills · nothing published",
+    "completeMissing": "Add experience, education and languages (or upload your CV) to reach 100%.",
+    "aiWritten": "AI-written"
   },
   "employer": {
     "back": "All jobs",

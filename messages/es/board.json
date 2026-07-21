@@ -413,7 +413,18 @@
     "completeness": "Perfil {pct}% completo",
     "cvUploadBig": "Sube tu CV y armo tu perfil",
     "cvUploadHint": "PDF o texto · lo parseo, tú confirmas",
-    "orTellUs": "o cuéntanos tú"
+    "orTellUs": "o cuéntanos tú",
+    "locationRequired": "Ubicación",
+    "locationPlaceholder": "¿En qué ciudad?",
+    "recentExperience": "Experiencia más reciente",
+    "recentRolePlaceholder": "Cargo",
+    "recentCompanyPlaceholder": "Empresa",
+    "confirmSkills": "Confirma tus skills",
+    "gateHint": "Completa rol, experiencia y ubicación",
+    "parsingTitle": "Leyendo tu CV",
+    "parsingReassure": "Extrayendo experiencia y skills · sin publicar nada",
+    "completeMissing": "Añade experiencia, educación e idiomas (o sube tu CV) para llegar al 100%.",
+    "aiWritten": "redactado por IA"
   },
   "employer": {
     "back": "Todas las ofertas",
