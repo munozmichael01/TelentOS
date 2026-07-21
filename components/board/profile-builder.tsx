@@ -26,6 +26,13 @@ export function ProfileBuilder({ locale }: { locale: string }) {
   const [pitch, setPitch] = useState("");
   const [cv, setCv] = useState<File | null>(null);
   const [cvName, setCvName] = useState("");
+  // Campos del mockup que faltaban en el intake: ubicación (obligatoria), experiencia
+  // reciente (cargo+empresa) y skills sembradas por categoría del rol (confirmar).
+  const [cityIn, setCityIn] = useState("");
+  const [countryIn, setCountryIn] = useState(locale === "pt" ? "BR" : locale === "en" ? "US" : "VE");
+  const [lastTitle, setLastTitle] = useState("");
+  const [lastCompany, setLastCompany] = useState("");
+  const [pickedSkills, setPickedSkills] = useState<string[]>([]);
   
   // Existing CV status from API
   const [existingCv, setExistingCv] = useState(false);
@@ -66,6 +73,22 @@ export function ProfileBuilder({ locale }: { locale: string }) {
   const roleChips = ["Product Designer", "Ingeniería", "Producto", "Datos", "Marketing", "Ventas", "Operaciones"];
   const expChips = ["Junior", "1–3 años", "3–5 años", "5+ años"];
   const modChips: Modality[] = ["remoto", "hibrido", "presencial"];
+  // Skills sembradas por categoría del rol elegido (el candidato confirma/añade).
+  const ROLE_SKILLS: Record<string, string[]> = {
+    "Product Designer": ["Figma", "UX research", "Prototyping", "Design systems", "UI"],
+    "Ingeniería": ["React", "Node.js", "SQL", "Git", "APIs"],
+    "Producto": ["Roadmapping", "Analytics", "Discovery", "A/B testing", "Backlog"],
+    "Datos": ["SQL", "Python", "Power BI", "ETL", "Estadística"],
+    "Marketing": ["SEO", "Ads", "Contenido", "Analytics", "Email"],
+    "Ventas": ["CRM", "Prospección", "Negociación", "Closing", "Cuentas"],
+    "Operaciones": ["Excel", "Procesos", "KPIs", "Logística", "Proveedores"],
+  };
+  const seededSkills = ROLE_SKILLS[role] ?? [];
+  const canGenerate = !!cv || (!!role.trim() && !!exp && !!cityIn.trim());
+  const toggleSkill = (s: string) => setPickedSkills((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
+  // Completitud estimada de la propuesta (dinámica, como el mockup — no un 85% fijo).
+  const reviewDone = [gen.headline, gen.about, gen.skills.length > 0, gen.city, (gen.experiences?.length ?? 0) > 0, gen.education.length > 0].filter(Boolean).length;
+  const reviewPct = Math.round((reviewDone / 6) * 100);
 
   const genSteps = [
     t("generatingAnalys"),
@@ -162,23 +185,27 @@ export function ProfileBuilder({ locale }: { locale: string }) {
         if (r?.output) enriched = r.output;
       }
 
-      const headline = parsed?.experiences?.[0]?.title || enriched?.headline || role || "";
+      const headline = parsed?.experiences?.[0]?.title || enriched?.headline || lastTitle || role || "";
       const about = parsed?.summary || enriched?.about || pitch || "";
-      const skills = (Array.isArray(parsed?.skills) && parsed.skills.length)
+      const baseSkills = (Array.isArray(parsed?.skills) && parsed.skills.length)
         ? parsed.skills
         : (Array.isArray(enriched?.skills) ? enriched!.skills! : []);
+      // Une skills del CV/agente con las confirmadas por el candidato en el intake.
+      const skills = Array.from(new Set([...baseSkills, ...pickedSkills]));
+      // Experiencia reciente capturada a mano (si no vino del CV).
+      const manualExp = lastTitle.trim() ? [{ title: lastTitle.trim(), company: lastCompany.trim() || null, is_current: true }] : [];
 
       setGen({
         headline,
         about,
         skills,
         experience_years: expYears,
-        city: parsed?.city || null,
+        city: parsed?.city || cityIn.trim() || null,
         phone: parsed?.phone || null,
-        country_code: parsed?.country_code || null,
+        country_code: parsed?.country_code || countryIn || null,
         languages: parsed?.languages || [],
         education: parsed?.education || [],
-        experiences: parsed?.experiences || [],
+        experiences: (parsed?.experiences && parsed.experiences.length) ? parsed.experiences : manualExp,
       });
 
       await new Promise((resolve) => setTimeout(resolve, 2400));
@@ -203,7 +230,9 @@ export function ProfileBuilder({ locale }: { locale: string }) {
       experience_years: gen.experience_years,
       languages: gen.languages,
       education: gen.education,
+      experiences: gen.experiences ?? [],
       pref_modality: modality ? [modality] : [],
+      pref_locations: gen.city ? [gen.city] : [],
       skills: gen.skills,
     };
 
@@ -286,6 +315,9 @@ export function ProfileBuilder({ locale }: { locale: string }) {
         
         @keyframes jb-bar { from { width: 6%; } to { width: 100%; } }
         .jb-bar { animation: jb-bar 2.2s cubic-bezier(.4,0,.2,1) forwards; }
+
+        @keyframes jb-scan { 0% { top: 8%; } 50% { top: 88%; } 100% { top: 8%; } }
+        .jb-scan { animation: jb-scan 1.4s ease-in-out infinite; }
       `}</style>
       <div className="jb-pib-shell">
       <div style={{ width: "100%", maxWidth: 414 }} className="jb-pib-intake">
@@ -307,6 +339,19 @@ export function ProfileBuilder({ locale }: { locale: string }) {
             </div>
             <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 25, letterSpacing: "-.9px", margin: "0 0 8px" }}>¡Perfil guardado!</h2>
             <p style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--soft)", margin: "0 auto 22px", maxWidth: 290 }}>Redireccionando...</p>
+          </div>
+        ) : step === "generating" && cv ? (
+          /* Parsing del CV — scanner tranquilizador (mockup): "sin publicar nada" */
+          <div className="jb-fade" style={{ padding: "36px 22px", textAlign: "center" }}>
+            <div style={{ position: "relative", width: 132, height: 168, margin: "0 auto 22px", background: "var(--ink)", borderRadius: 14, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="#6E7A46" strokeWidth="1.6" strokeLinejoin="round" /><path d="M14 3v4h4" stroke="#6E7A46" strokeWidth="1.6" strokeLinejoin="round" /><path d="M9 12h6M9 15h6M9 18h3" stroke="#6E7A46" strokeWidth="1.4" strokeLinecap="round" /></svg>
+              <div className="jb-scan" style={{ position: "absolute", left: 0, right: 0, height: 3, background: "var(--lime)", boxShadow: "0 0 12px 2px rgba(198,242,78,.6)" }} />
+            </div>
+            <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 20, letterSpacing: "-.5px", marginBottom: 6 }}>
+              {t("parsingTitle")}<span className="jb-d1">.</span><span className="jb-d2">.</span><span className="jb-d3">.</span>
+            </div>
+            {cvName && <p style={{ fontFamily: MONO, fontSize: 11, color: "var(--soft)", margin: "0 0 10px" }}>{cvName}</p>}
+            <p style={{ fontSize: 12.5, color: "var(--brand)", margin: "0 auto", maxWidth: 280 }}>{t("parsingReassure")}</p>
           </div>
         ) : step === "generating" ? (
           <div className="jb-fade" style={{ padding: "40px 22px", textAlign: "center" }}>
@@ -337,7 +382,7 @@ export function ProfileBuilder({ locale }: { locale: string }) {
                 <input value={gen.headline} onChange={(e) => setGen({ ...gen, headline: e.target.value })} style={inputStyle} />
               </div>
               <div>
-                <label style={label}>{t("aboutAi")}</label>
+                <label style={label}>{t("about")} <AiTag>{t("aiWritten")}</AiTag></label>
                 <textarea value={gen.about} onChange={(e) => setGen({ ...gen, about: e.target.value })} rows={4} style={{ ...inputStyle, resize: "vertical" }} />
               </div>
             </div>
@@ -443,13 +488,13 @@ export function ProfileBuilder({ locale }: { locale: string }) {
               <div style={{ position: "relative", width: 44, height: 44, flexShrink: 0 }}>
                 <svg width="44" height="44" viewBox="0 0 44 44">
                   <circle cx="22" cy="22" r="18" fill="none" stroke="#BEE0CE" strokeWidth="5"/>
-                  <circle cx="22" cy="22" r="18" fill="none" stroke="#0E5C4A" strokeWidth="5" strokeLinecap="round" strokeDasharray="113" strokeDashoffset="17" transform="rotate(-90 22 22)"/>
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="#0E5C4A" strokeWidth="5" strokeLinecap="round" strokeDasharray="113" strokeDashoffset={Math.round(113 * (1 - reviewPct / 100))} transform="rotate(-90 22 22)"/>
                 </svg>
-                <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 12, color: "var(--brand)" }}>85%</span>
+                <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 12, color: "var(--brand)" }}>{reviewPct}%</span>
               </div>
               <div>
-                <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: "#0A4638" }}>{t("complete", { pct: 85 })}</div>
-                <div style={{ fontSize: 12.5, color: "#2C5247", lineHeight: 1.4 }}>{t("disclaimer")}</div>
+                <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: "#0A4638" }}>{t("complete", { pct: reviewPct })}</div>
+                <div style={{ fontSize: 12.5, color: "#2C5247", lineHeight: 1.4 }}>{t("completeMissing")}</div>
               </div>
             </div>
 
@@ -528,6 +573,30 @@ export function ProfileBuilder({ locale }: { locale: string }) {
               </div>
 
               <div>
+                <label style={label}>{t("locationRequired")}</label>
+                <CityAutocomplete value={cityIn} country={countryIn} onChange={(city, meta) => { setCityIn(city); if (meta?.country) setCountryIn(meta.country); }} placeholder={t("locationPlaceholder")} inputStyle={inputStyle} />
+              </div>
+
+              <div>
+                <label style={label}>{t("recentExperience")} <span style={{ textTransform: "none", color: "#B0AAA0" }}>{t("pitchOptional")}</span></label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <input value={lastTitle} onChange={(e) => setLastTitle(e.target.value)} placeholder={t("recentRolePlaceholder")} style={inputStyle} />
+                  <input value={lastCompany} onChange={(e) => setLastCompany(e.target.value)} placeholder={t("recentCompanyPlaceholder")} style={inputStyle} />
+                </div>
+              </div>
+
+              {seededSkills.length > 0 && (
+                <div>
+                  <label style={label}>{t("confirmSkills")}</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                    {seededSkills.map((s) => (
+                      <button key={s} type="button" onClick={() => toggleSkill(s)} style={chipStyle(pickedSkills.includes(s))}>{s}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
                 <label style={label}>
                   {t("pitch")} <span style={{ textTransform: "none", color: "#B0AAA0" }}>{t("pitchOptional")}</span>
                 </label>
@@ -537,7 +606,7 @@ export function ProfileBuilder({ locale }: { locale: string }) {
 
             <button
               onClick={generate}
-              disabled={!role.trim() && !cv}
+              disabled={!canGenerate}
               className="jb-hard"
               style={{
                 width: "100%",
@@ -549,19 +618,19 @@ export function ProfileBuilder({ locale }: { locale: string }) {
                 fontWeight: 800,
                 fontSize: 15,
                 color: "#fff",
-                background: (role.trim() || cv) ? "var(--accent)" : "#C7B9B0",
+                background: canGenerate ? "var(--accent)" : "#C7B9B0",
                 border: "2px solid var(--ink)",
                 borderRadius: 11,
                 padding: 14,
                 boxShadow: "3px 3px 0 var(--ink)",
-                cursor: (role.trim() || cv) ? "pointer" : "not-allowed"
+                cursor: canGenerate ? "pointer" : "not-allowed"
               }}
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/></svg>
               {t("generate")}
             </button>
-            <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", textAlign: "center", marginTop: 10 }}>
-              {t("disclaimer")}
+            <div style={{ fontFamily: MONO, fontSize: 9.5, color: canGenerate ? "var(--soft)" : "var(--accent)", textAlign: "center", marginTop: 10 }}>
+              {canGenerate ? t("disclaimer") : t("gateHint")}
             </div>
           </div>
         )}
