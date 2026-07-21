@@ -319,6 +319,16 @@
 @keyframes jbShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 @keyframes jbSpin { to { transform: rotate(360deg); } }
 
+/* Board top-nav — mobile: logo + cuenta, tab bar inferior. Desktop (≥1024): nav Empresas/
+   Alertas + avatar, sin tab bar; header alineado al ancho del board. */
+.jb-board-headwrap { max-width: 720px; }
+.jb-topnav { display: none; }
+@media (min-width: 1024px) {
+  .jb-board-headwrap { max-width: 1240px; }
+  .jb-topnav { display: flex; }
+  .jb-board-tabbar { display: none !important; }
+}
+
 /* Apply — split desktop: formulario 720px + preview de la oferta. Mobile: 1 columna. */
 .jb-apply-shell { display: block; }
 .jb-apply-preview { display: none; }

@@ -40,10 +40,10 @@ type Filters = { categoryKey?: string; location?: string; modality?: "presencial
 type NlChip = { k: string; v: string };
 
 export function BoardClient({
-  initialJobs, initialTotal, initialFacets, initialQuery, categories, country,
+  initialJobs, initialTotal, initialFacets, initialQuery, categories, country, authed = false,
 }: {
   initialJobs: BoardJob[]; initialTotal: number; initialFacets: BoardFacets; initialQuery: string;
-  categories: BoardCategory[]; country: string;
+  categories: BoardCategory[]; country: string; authed?: boolean;
 }) {
   const t = useTranslations("Board");
   const locale = useLocale();
@@ -216,18 +216,33 @@ export function BoardClient({
 
   return (
     <div style={ROOT}>
-      {/* Header */}
+      {/* Header — logo + top-nav (Empresas/Alertas/cuenta) en desktop; solo logo+cuenta en mobile */}
       <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(244,240,232,.94)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--line)", padding: "12px 16px" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", alignItems: "center", gap: 9 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 var(--ink)" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round" /></svg>
-          </div>
-          <span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 16, letterSpacing: "-.5px" }}>
-            TalentOS <span style={{ color: "var(--brand)" }}>{t("brand")}</span>
-          </span>
-          <Link href="/cuenta/entrar" style={{ marginLeft: "auto", fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--ink)", background: "var(--surface)", border: "1.5px solid var(--ink)", borderRadius: 9, padding: "6px 12px", boxShadow: "2px 2px 0 var(--ink)" }}>
-            {t("login")}
+        <div className="jb-board-headwrap" style={{ margin: "0 auto", display: "flex", alignItems: "center", gap: 9 }}>
+          <Link href="/empleos" style={{ display: "flex", alignItems: "center", gap: 9, color: "var(--ink)" }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 var(--ink)", flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round" /></svg>
+            </div>
+            <span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 16, letterSpacing: "-.5px" }}>
+              TalentOS <span style={{ color: "var(--brand)" }}>{t("brand")}</span>
+            </span>
           </Link>
+          {/* Nav + cuenta, agrupados a la derecha (nav visible solo en desktop) */}
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 20 }}>
+            <nav className="jb-topnav" style={{ alignItems: "center", gap: 22 }}>
+              <Link href="/empleos/empresas" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)" }}>{t("nav.companies")}</Link>
+              <Link href="/cuenta" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)" }}>{t("nav.alerts")}</Link>
+            </nav>
+            {authed ? (
+              <Link href="/cuenta" aria-label={t("nav.account")} style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--brand)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 var(--ink)", flexShrink: 0 }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#C6F24E" strokeWidth="2" /><path d="M5 20c1-4 4.5-5 7-5s6 1 7 5" stroke="#C6F24E" strokeWidth="2" strokeLinecap="round" /></svg>
+              </Link>
+            ) : (
+              <Link href="/cuenta/entrar" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--ink)", background: "var(--surface)", border: "1.5px solid var(--ink)", borderRadius: 9, padding: "6px 12px", boxShadow: "2px 2px 0 var(--ink)", flexShrink: 0 }}>
+                {t("login")}
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 
@@ -388,7 +403,7 @@ export function BoardClient({
       </Link>
 
       {/* Navegación inferior (candidato) */}
-      <BoardTabBar active="search" />
+      <BoardTabBar active="search" className="jb-board-tabbar" />
 
       {/* Filter sheet */}
       {filtersOpen && (

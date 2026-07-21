@@ -41,6 +41,7 @@ export const pathnames = {
   "/cuenta/entrar": { "es-ve": "/cuenta/entrar", "en-us": "/account/sign-in", "pt-br": "/conta/entrar" },
   "/cuenta/perfil": { "es-ve": "/cuenta/perfil", "en-us": "/account/profile", "pt-br": "/conta/perfil" },
   "/empleos/asistente": { "es-ve": "/empleos/asistente", "en-us": "/jobs/assistant", "pt-br": "/vagas/assistente" },
+  "/empleos/empresas": { "es-ve": "/empleos/empresas", "en-us": "/jobs/companies", "pt-br": "/vagas/empresas" },
   "/empleos/empresa/[slug]": { "es-ve": "/empleos/empresa/[slug]", "en-us": "/jobs/company/[slug]", "pt-br": "/vagas/empresa/[slug]" },
   "/empleos/[categoria]": { "es-ve": "/empleos/[categoria]", "en-us": "/jobs/[categoria]", "pt-br": "/vagas/[categoria]" },
   "/empleos/[categoria]/[ubicacion]": { "es-ve": "/empleos/[categoria]/[ubicacion]", "en-us": "/jobs/[categoria]/[ubicacion]", "pt-br": "/vagas/[categoria]/[ubicacion]" },

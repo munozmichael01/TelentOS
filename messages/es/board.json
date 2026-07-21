@@ -493,5 +493,15 @@
     "emptyText": "Crea una alerta para recibir ofertas nuevas que encajen.",
     "default": "Alerta",
     "match": "match"
+  },
+  "nav": {
+    "companies": "Empresas",
+    "alerts": "Alertas",
+    "account": "Mi cuenta"
+  },
+  "companies": {
+    "title": "{count, plural, one {# empresa contratando} other {# empresas contratando}}",
+    "empty": "Aún no hay empresas con ofertas activas.",
+    "openings": "{count, plural, one {# oferta} other {# ofertas}}"
   }
 }

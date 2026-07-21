@@ -493,5 +493,15 @@
     "emptyText": "Create an alert to receive new matching jobs.",
     "default": "Alert",
     "match": "match"
+  },
+  "nav": {
+    "companies": "Companies",
+    "alerts": "Alerts",
+    "account": "My account"
+  },
+  "companies": {
+    "title": "{count, plural, one {# company hiring} other {# companies hiring}}",
+    "empty": "No companies with active jobs yet.",
+    "openings": "{count, plural, one {# job} other {# jobs}}"
   }
 }
