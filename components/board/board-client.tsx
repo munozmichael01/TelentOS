@@ -1,12 +1,27 @@
 "use client";
 
-import { useState, useTransition, type CSSProperties } from "react";
+import { useState, useEffect, useTransition, type CSSProperties } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { BoardJob, BoardFacets, BoardSort } from "@/lib/job-board/search";
 import type { BoardCategory, BoardCity } from "@/lib/board/geo";
 import { modalityStyle, formatSalary, logoFor, relativeDate, isNew, jobSlug } from "@/lib/board/format";
 import { BoardTabBar } from "@/components/board/tab-bar";
+import { OfferDetailPanel } from "@/components/board/offer-detail-panel";
+
+// ≥1240px activamos el split lista+detalle (LinkedIn-style). Por debajo, la tarjeta
+// navega a la página de oferta (comportamiento mobile intacto).
+function useIsDesktop() {
+  const [d, setD] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1240px)");
+    const on = () => setD(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return d;
+}
 
 const ARCHIVO = "'Archivo',sans-serif";
 const MONO = "'Space Mono',monospace";
@@ -130,6 +145,61 @@ export function BoardClient({
     flash(isSaved ? t("toast.unsaved") : t("toast.saved"));
   }
 
+  const isDesktop = useIsDesktop();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [applied, setApplied] = useState<Record<string, boolean>>({});
+  const [applying, setApplying] = useState<Record<string, boolean>>({});
+
+  // Desktop: mantener seleccionada la oferta activa (o la primera) para el panel inline.
+  // Mobile: sin selección (la tarjeta navega).
+  useEffect(() => {
+    if (!isDesktop) { setSelectedId(null); return; }
+    setSelectedId((prev) => (prev && jobs.some((j) => j.id === prev) ? prev : jobs[0]?.id ?? null));
+  }, [isDesktop, jobs]);
+
+  // Navegación por teclado sobre la lista (solo desktop): ↑/↓ mueve la selección, Enter abre.
+  useEffect(() => {
+    if (!isDesktop) return;
+    function onKey(e: KeyboardEvent) {
+      const el = document.activeElement;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
+      if (!jobs.length) return;
+      const idx = jobs.findIndex((j) => j.id === selectedId);
+      if (e.key === "Enter") {
+        const j = jobs[idx];
+        if (j) router.push({ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(j) } });
+        return;
+      }
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      e.preventDefault();
+      const next = idx === -1 ? 0 : e.key === "ArrowDown" ? Math.min(idx + 1, jobs.length - 1) : Math.max(idx - 1, 0);
+      const id = jobs[next].id;
+      setSelectedId(id);
+      document.getElementById(`jbcard-${id}`)?.scrollIntoView({ block: "nearest" });
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isDesktop, jobs, selectedId, router]);
+
+  // Aplicar 1-toque desde la tarjeta: el endpoint resuelve (perfil completo → aplica;
+  // incompleto/screening → wizard; sin sesión → login). Honesto: es un botón que aplica.
+  async function quickApply(e: React.MouseEvent, j: BoardJob) {
+    e.preventDefault(); e.stopPropagation();
+    if (applied[j.id] || applying[j.id]) return;
+    setApplying((s) => ({ ...s, [j.id]: true }));
+    const slug = jobSlug(j);
+    const res = await fetch("/api/board/apply/one-tap", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId: j.id }),
+    }).then((r) => r.json().then((d) => ({ status: r.status, d })).catch(() => ({ status: r.status, d: null }))).catch(() => null);
+    setApplying((s) => { const n = { ...s }; delete n[j.id]; return n; });
+    if (!res) { flash(t("apply.error")); return; }
+    if (res.status === 401) { router.push("/cuenta/entrar"); return; }
+    if (res.d?.needsWizard) { router.push({ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug } }); return; }
+    if (res.status === 200 && res.d?.ok) { setApplied((s) => ({ ...s, [j.id]: true })); flash(t("detail.applied")); return; }
+    if (res.status === 409) { setApplied((s) => ({ ...s, [j.id]: true })); return; }
+    flash(t("apply.error"));
+  }
+
   const activeFilters = (Object.keys(filters) as (keyof Filters)[]).filter((k) => filters[k]);
   const sorts: BoardSort[] = ["relevance", "recent", "salary"];
 
@@ -150,7 +220,7 @@ export function BoardClient({
         </div>
       </header>
 
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px 80px" }}>
+      <main className="jb-board-main">
         {/* Hero + búsqueda */}
         <div style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: 1.5, textTransform: "uppercase", color: "var(--brand)", marginBottom: 9 }}>{t("hero.eyebrow")}</div>
         <h1 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 32, lineHeight: 1, letterSpacing: "-1.4px", margin: "0 0 16px" }}>
@@ -192,6 +262,8 @@ export function BoardClient({
           </div>
         )}
 
+        <div className="jb-board-split">
+         <div className="jb-board-list">
         {/* Sort + count */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0 6px" }}>
           <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--soft)" }}>
@@ -225,7 +297,7 @@ export function BoardClient({
             const logo = logoFor(j.company?.name);
             const salary = formatSalary(j, locale);
             return (
-              <Link key={j.id} href={{ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(j) } }} style={{ display: "block", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: 15, color: "inherit" }} className="jb-job">
+              <Link key={j.id} id={`jbcard-${j.id}`} href={{ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(j) } }} onClick={(e) => { if (isDesktop) { e.preventDefault(); setSelectedId(j.id); } }} style={{ display: "block", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: 15, color: "inherit", cursor: "pointer" }} className={`jb-job${isDesktop && selectedId === j.id ? " jb-board-card-active" : ""}`}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                   <span style={{ width: 42, height: 42, borderRadius: 12, background: logo.bg, color: logo.color, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 15, flexShrink: 0 }}>{logo.initials}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -252,7 +324,15 @@ export function BoardClient({
                     <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: "var(--brand)" }}>{salary || t("card.salaryTBD")}</div>
                     <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 1 }}>{relativeDate(j.created_at, locale)}</div>
                   </div>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 10, padding: "7px 12px", boxShadow: "2px 2px 0 var(--ink)" }}>{t("card.apply")}</span>
+                  {applied[j.id] ? (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 10, padding: "7px 12px" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="var(--brand)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>{t("detail.applied")}
+                    </span>
+                  ) : (
+                    <button onClick={(e) => quickApply(e, j)} disabled={!!applying[j.id]} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--lime)", border: "2px solid var(--ink)", borderRadius: 10, padding: "7px 12px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer", opacity: applying[j.id] ? 0.7 : 1 }}>
+                      {applying[j.id] ? t("apply.sending") : <>{t("card.apply")} <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M13 3l-1.5 8H18l-7 10 1.5-8H6l7-10Z" fill="var(--ink)" /></svg></>}
+                    </button>
+                  )}
                 </div>
               </Link>
             );
@@ -265,7 +345,21 @@ export function BoardClient({
               <button onClick={() => { setFilters({}); setQuery(""); setNlChips([]); startTransition(() => fetchJobs({}, sort, "")); }} style={{ marginTop: 14, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "var(--brand)", background: "none", border: "none", cursor: "pointer" }}>{t("empty.reset")}</button>
             </div>
           )}
-        </div>
+         </div>
+         </div>{/* /jb-board-list */}
+
+         {/* Panel de detalle inline — solo desktop (CSS oculta en mobile) */}
+         <aside className="jb-board-detail" aria-live="polite">
+           {selectedId
+             ? <OfferDetailPanel key={selectedId} jobId={selectedId} locale={locale} />
+             : (
+               <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--soft)" }}>
+                 <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 16, color: "var(--ink)", marginBottom: 6 }}>{t("results.selectPrompt")}</div>
+                 <div style={{ fontSize: 13.5, lineHeight: 1.5 }}>{t("results.selectHint")}</div>
+               </div>
+             )}
+         </aside>
+        </div>{/* /jb-board-split */}
       </main>
 
       {/* FAB: asistente IA (la página se auto-protege si no hay sesión). Sobre la tab bar. */}

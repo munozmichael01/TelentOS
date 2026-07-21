@@ -19,7 +19,9 @@
     "salary": "Salary"
   },
   "results": {
-    "count": "{count, plural, =0 {No jobs} one {# job} other {# jobs}}"
+    "count": "{count, plural, =0 {No jobs} one {# job} other {# jobs}}",
+    "selectPrompt": "Select a job",
+    "selectHint": "Pick a job from the list to see the details here."
   },
   "card": {
     "new": "New",
@@ -74,7 +76,9 @@
     "required": "Required",
     "desirable": "Nice to have",
     "oneTap": "Apply in one tap",
-    "applied": "Applied!"
+    "applied": "Applied!",
+    "openFull": "Open full posting",
+    "save": "Save"
   },
   "apply": {
     "title": "Apply to {job}",

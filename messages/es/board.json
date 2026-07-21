@@ -19,7 +19,9 @@
     "salary": "Salario"
   },
   "results": {
-    "count": "{count, plural, =0 {Sin ofertas} one {# oferta} other {# ofertas}}"
+    "count": "{count, plural, =0 {Sin ofertas} one {# oferta} other {# ofertas}}",
+    "selectPrompt": "Selecciona una oferta",
+    "selectHint": "Elige una oferta de la lista para ver el detalle aquí."
   },
   "card": {
     "new": "Nuevo",
@@ -74,7 +76,9 @@
     "required": "Excluyente",
     "desirable": "Deseable",
     "oneTap": "Aplicar en un toque",
-    "applied": "¡Aplicado!"
+    "applied": "¡Aplicado!",
+    "openFull": "Ver oferta completa",
+    "save": "Guardar"
   },
   "apply": {
     "title": "Aplica a {job}",
