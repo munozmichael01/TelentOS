@@ -318,3 +318,17 @@
 
 @keyframes jbShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 @keyframes jbSpin { to { transform: rotate(360deg); } }
+
+/* Apply — split desktop: formulario 720px + preview de la oferta. Mobile: 1 columna. */
+.jb-apply-shell { display: block; }
+.jb-apply-preview { display: none; }
+.jb-apply-action { position: fixed; left: 0; right: 0; bottom: 0; }
+@media (min-width: 1024px) {
+  .jb-apply-shell { display: flex; gap: 28px; max-width: 1160px; margin: 0 auto; align-items: flex-start; padding: 0 24px; }
+  .jb-apply-main { flex: 0 0 720px; max-width: 720px; min-height: 0 !important; }
+  .jb-apply-preview { display: block; flex: 1 1 auto; min-width: 0; padding: 24px 4px; }
+  .jb-apply-action { position: sticky; left: auto; right: auto; }
+}
+/* Scanner del parseo de CV (línea lima recorriendo el documento) */
+.jb-scan { animation: jbScan 1.4s ease-in-out infinite; }
+@keyframes jbScan { 0% { top: 8%; } 50% { top: 84%; } 100% { top: 8%; } }

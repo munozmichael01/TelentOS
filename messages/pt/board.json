@@ -160,7 +160,14 @@
     "acctError": "Não foi possível concluir. Tente novamente.",
     "acctPwHint": "A senha deve ter ao menos 8 caracteres.",
     "acctSkip": "Agora não, continuar navegando",
-    "useAnotherCv": "Usar outro CV"
+    "useAnotherCv": "Usar outro CV",
+    "matchForYou": "Match {met} de {total}",
+    "freeToApply": "Candidatar-se é grátis",
+    "salaryOpen": "A combinar",
+    "answerRequiredHint": "Responda as perguntas obrigatórias",
+    "soon": "Em breve",
+    "cvReplace": "Substituir",
+    "basic": "Básico"
   },
   "account": {
     "title": "Minha conta",

@@ -160,7 +160,14 @@
     "acctError": "Couldn’t complete. Please try again.",
     "acctPwHint": "Password must be at least 8 characters.",
     "acctSkip": "Not now, keep browsing",
-    "useAnotherCv": "Use another CV"
+    "useAnotherCv": "Use another CV",
+    "matchForYou": "Match {met} of {total}",
+    "freeToApply": "Applying is free",
+    "salaryOpen": "Negotiable",
+    "answerRequiredHint": "Answer the required questions",
+    "soon": "Coming soon",
+    "cvReplace": "Replace",
+    "basic": "Basic"
   },
   "account": {
     "title": "My account",
