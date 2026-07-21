@@ -263,9 +263,11 @@
 .jb-auth-root { display: flex; min-height: 100vh; }
 .jb-auth-form { flex: 1 1 auto; display: flex; justify-content: center; padding: 22px 16px; }
 .jb-auth-panel { display: none; }
+.jb-auth-social { flex-direction: column; }
 @media (min-width: 1024px) {
   .jb-auth-form { flex: 0 0 600px; align-items: center; padding: 40px 48px; }
   .jb-auth-panel { display: flex; flex: 1 1 auto; }
+  .jb-auth-social { flex-direction: row; }
 }
 
 /* Asistente — split responsive: mobile pantalla completa; desktop rail tinta + chat */
