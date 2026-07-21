@@ -21,8 +21,10 @@ type Alert = { id: string; criteria: Record<string, unknown>; active: boolean; f
 type Experience = { title?: string | null; company?: string | null; seniority?: string | null; start_date?: string | null; end_date?: string | null; is_current?: boolean | null };
 type Education = { degree?: string | null; institution?: string | null; field?: string | null; level?: string | null; start_year?: number | null; end_year?: number | null };
 type Language = { language?: string | null; level?: string | null };
+type LinkItem = { type: string; url: string; label?: string | null };
 type Sourced = { experiences?: Experience[]; education?: Education[]; languages?: Language[]; skills?: string[]; first_name?: string | null; last_name?: string | null; phone?: string | null; city?: string | null; country_code?: string | null; cv_url?: string | null };
-type Profile = { full_name?: string | null; first_name?: string | null; last_name?: string | null; email?: string | null; headline?: string | null; about?: string | null; phone?: string | null; city?: string | null; country_code?: string | null; pref_salary_min?: number | null; pref_currency?: string | null; pref_modality?: string[] | null; pref_locations?: string[] | null; pref_contract?: string[] | null };
+type Profile = { full_name?: string | null; first_name?: string | null; last_name?: string | null; email?: string | null; headline?: string | null; about?: string | null; phone?: string | null; city?: string | null; country_code?: string | null; pref_salary_min?: number | null; pref_currency?: string | null; pref_modality?: string[] | null; pref_locations?: string[] | null; pref_contract?: string[] | null; experiences?: Experience[] | null; education?: Education[] | null; languages?: Language[] | null; links?: LinkItem[] | null; avatar_url?: string | null };
+type ItemType = "exp" | "edu" | "lang" | "link";
 type Completeness = { pct: number; complete: boolean; missing: string[] };
 
 type FormState = { first_name: string; last_name: string; headline: string; about: string; phone: string; city: string; country_code: string; pref_salary_min: string; pref_currency: string; pref_modality: string; pref_locations: string; pref_contract: string; skills: string };
@@ -56,6 +58,14 @@ export function AccountClient({ locale }: { locale: string }) {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [appDetail, setAppDetail] = useState<ApplicationDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  // Arrays editables (persisten en el perfil). Se siembran del perfil guardado o, si aún
+  // no hay, de lo parseado del CV (sourced). El primer add/edit los persiste como propios.
+  const [exp, setExp] = useState<Experience[]>([]);
+  const [edu, setEdu] = useState<Education[]>([]);
+  const [langs, setLangs] = useState<Language[]>([]);
+  const [links, setLinks] = useState<LinkItem[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [editor, setEditor] = useState<{ type: ItemType; index: number | null } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -64,12 +74,41 @@ export function AccountClient({ locale }: { locale: string }) {
         fetch("/api/board/saved").then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch("/api/board/alerts").then((r) => (r.ok ? r.json() : null)).catch(() => null),
       ]);
-      if (p) { setProfile(p.profile); setSourced(p.sourced ?? {}); setSkills((p.skills?.length ? p.skills : p.sourced?.skills) ?? []); setCompleteness(p.completeness); setApplications(p.applications ?? []); if (p.profile) setPrefsOn({ email: p.profile.notify_email !== false, push: p.profile.notify_push !== false, digest: !!p.profile.notify_digest, visible: p.profile.profile_visible !== false }); }
+      if (p) {
+        setProfile(p.profile); setSourced(p.sourced ?? {}); setSkills((p.skills?.length ? p.skills : p.sourced?.skills) ?? []); setCompleteness(p.completeness); setApplications(p.applications ?? []);
+        const seed = <T,>(own?: T[] | null, cv?: T[] | null) => (own && own.length ? own : cv ?? []);
+        setExp(seed<Experience>(p.profile?.experiences, p.sourced?.experiences));
+        setEdu(seed<Education>(p.profile?.education, p.sourced?.education));
+        setLangs(seed<Language>(p.profile?.languages, p.sourced?.languages));
+        setLinks(Array.isArray(p.profile?.links) ? p.profile.links : []);
+        setAvatarUrl(p.profile?.avatar_url ?? null);
+        if (p.profile) setPrefsOn({ email: p.profile.notify_email !== false, push: p.profile.notify_push !== false, digest: !!p.profile.notify_digest, visible: p.profile.profile_visible !== false });
+      }
       if (s) setSaved(s.saved ?? []);
       if (a) { setAlerts(a.alerts ?? []); setAlertOn(Object.fromEntries(((a.alerts ?? []) as Alert[]).map((x) => [x.id, x.active !== false]))); }
       setLoading(false);
     })();
   }, []);
+
+  // Persiste un cambio parcial del perfil y refresca completitud.
+  async function persistProfile(patch: Record<string, unknown>) {
+    const res = await fetch("/api/board/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    if (res) { setProfile(res.profile); setCompleteness(res.completeness); }
+  }
+  const ITEM_META = { exp: { arr: exp, set: setExp, field: "experiences" }, edu: { arr: edu, set: setEdu, field: "education" }, lang: { arr: langs, set: setLangs, field: "languages" }, link: { arr: links, set: setLinks, field: "links" } } as const;
+  function saveItem(type: ItemType, index: number | null, draft: Record<string, unknown>) {
+    const m = ITEM_META[type];
+    const next = index == null ? [...m.arr, draft] : m.arr.map((x, i) => (i === index ? draft : x));
+    (m.set as (v: unknown[]) => void)(next);
+    setEditor(null);
+    persistProfile({ [m.field]: next });
+  }
+  function removeItem(type: ItemType, index: number) {
+    const m = ITEM_META[type];
+    const next = m.arr.filter((_, i) => i !== index);
+    (m.set as (v: unknown[]) => void)(next);
+    persistProfile({ [m.field]: next });
+  }
 
   const display = useMemo(() => buildDisplay(profile, sourced, skills), [profile, sourced, skills]);
 
@@ -173,17 +212,18 @@ export function AccountClient({ locale }: { locale: string }) {
       <main style={pageStyle}>
         {loading ? <div style={{ textAlign: "center", color: "var(--soft)", padding: 44, fontSize: 14 }}>...</div> : (
           <>
-            {tab === "profile" && <ProfileTab display={display} completeness={completeness} onEdit={openEdit} onSettings={() => setSettingsOpen(true)} t={t} loc={loc} />}
+            {tab === "profile" && <ProfileTab display={display} completeness={completeness} exp={exp} edu={edu} langs={langs} links={links} avatarUrl={avatarUrl} onEdit={openEdit} onSettings={() => setSettingsOpen(true)} onAddItem={(ty) => setEditor({ type: ty, index: null })} onEditItem={(ty, i) => setEditor({ type: ty, index: i })} onRemoveItem={removeItem} onAvatar={setAvatarUrl} onCv={() => { fetch("/api/board/profile").then((r) => (r.ok ? r.json() : null)).then((p) => { if (p) { setSourced(p.sourced ?? {}); setCompleteness(p.completeness); } }); }} t={t} loc={loc} />}
             {tab === "applications" && <ApplicationsTracker t={t} applications={applications} loc={loc} onOpen={openApplicationDetail} />}
             {tab === "saved" && <SavedTab saved={saved} onRemove={removeSaved} t={t} loc={loc} />}
             {tab === "alerts" && <AlertsTab alerts={alerts} alertOn={alertOn} onToggle={toggleAlert} onNew={() => setNewAlertOpen(true)} onDelete={deleteAlert} t={t} />}
           </>
         )}
       </main>
-      <BoardTabBar active={tab} onSelect={setTab} badges={{ applications: applications.length }} />
+      <BoardTabBar active={tab} onSelect={setTab} badges={{ applications: applications.filter((a) => statusStyle(a).kind === "action").length }} />
       {editOpen && <EditSheet form={form} setForm={setForm} saving={savingEdit} onClose={() => setEditOpen(false)} onSave={saveProfile} t={t} />}
       {newAlertOpen && <NewAlertSheet name={alertName} setName={setAlertName} freq={alertFreq} setFreq={setAlertFreq} onClose={() => setNewAlertOpen(false)} onCreate={createAlert} t={t} />}
       {settingsOpen && <SettingsSheet prefs={prefsOn} onPref={savePref} onClose={() => setSettingsOpen(false)} onLogout={logout} t={t} />}
+      {editor && <ItemEditor type={editor.type} item={editor.index != null ? ITEM_META[editor.type].arr[editor.index] : null} onClose={() => setEditor(null)} onSave={(d) => saveItem(editor.type, editor.index, d)} t={t} />}
       {detailId && <ApplicationDetailSheet detail={appDetail} fallback={applications.find((a) => a.id === detailId) ?? null} loading={detailLoading} onClose={closeApplicationDetail} t={t} loc={loc} />}
     </BoardRoot>
   );
@@ -207,7 +247,7 @@ function Header({ title, onSettings }: { title: string; onSettings: () => void }
   );
 }
 
-function ProfileTab({ display, completeness, onEdit, onSettings, t, loc }: { display: ReturnType<typeof buildDisplay>; completeness: Completeness | null; onEdit: () => void; onSettings: () => void; t: ReturnType<typeof useTranslations>; loc: string }) {
+function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, onEdit, onSettings, onAddItem, onEditItem, onRemoveItem, onAvatar, onCv, t, loc }: { display: ReturnType<typeof buildDisplay>; completeness: Completeness | null; exp: Experience[]; edu: Education[]; langs: Language[]; links: LinkItem[]; avatarUrl: string | null; onEdit: () => void; onSettings: () => void; onAddItem: (t: ItemType) => void; onEditItem: (t: ItemType, i: number) => void; onRemoveItem: (t: ItemType, i: number) => void; onAvatar: (url: string | null) => void; onCv: () => void; t: ReturnType<typeof useTranslations>; loc: string }) {
   const pct = completeness?.pct ?? 0;
   const complete = completeness?.complete ?? false;
   const pending = display.checks.filter((c) => !c.done);
@@ -215,7 +255,7 @@ function ProfileTab({ display, completeness, onEdit, onSettings, t, loc }: { dis
   return (
     <div className="jb-fade">
       <section style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 16 }}>
-        <span style={{ width: 56, height: 56, borderRadius: 17, background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", color: "#063D31", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, flexShrink: 0, boxShadow: "2px 2px 0 var(--ink)" }}>{initials(display.name)}</span>
+        <AvatarUpload url={avatarUrl} name={display.name} onChange={onAvatar} t={t} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 21, letterSpacing: "-.6px", lineHeight: 1 }}>{display.name || t("account.unnamed")}</div>
           <div style={{ fontSize: 13, color: "#54504A", marginTop: 3 }}>{display.headline || t("account.noHeadline")}</div>
@@ -241,13 +281,14 @@ function ProfileTab({ display, completeness, onEdit, onSettings, t, loc }: { dis
         )}
       </section>
 
-      {display.cvUrl && <Section title={t("account.cvTitle")}><CvCard t={t} name={display.cvName} /></Section>}
+      {display.cvUrl && <Section title={t("account.cvTitle")}><CvCard t={t} name={display.cvName} onReplaced={onCv} /></Section>}
       <Section title={t("account.aboutTitle")} action={t("account.edit")} onAction={onEdit}><p style={{ fontSize: 13.5, lineHeight: 1.6, color: "#3A3833", margin: 0 }}>{display.about || t("account.emptyAbout")}</p></Section>
       <Section title={t("account.lookingFor")} action={t("account.edit")} onAction={onEdit}><PrefsView display={display} t={t} loc={loc} /></Section>
-      <ExperienceSection rows={display.experiences} t={t} onEdit={onEdit} />
-      <EducationSection rows={display.education} t={t} onEdit={onEdit} />
-      <LanguageSection rows={display.languages} t={t} />
+      <ExperienceSection rows={exp} t={t} onAdd={() => onAddItem("exp")} onEdit={(i) => onEditItem("exp", i)} onRemove={(i) => onRemoveItem("exp", i)} />
+      <EducationSection rows={edu} t={t} onAdd={() => onAddItem("edu")} onEdit={(i) => onEditItem("edu", i)} onRemove={(i) => onRemoveItem("edu", i)} />
+      <LanguageSection rows={langs} t={t} onAdd={() => onAddItem("lang")} onEdit={(i) => onEditItem("lang", i)} onRemove={(i) => onRemoveItem("lang", i)} />
       <Section title={t("account.skillsTitle")}><div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{display.skills.map((s) => <span key={s} style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 10px" }}>{s}</span>)}<button onClick={onEdit} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}>{t("account.add")}</button></div></Section>
+      <LinksSection rows={links} t={t} onAdd={() => onAddItem("link")} onEdit={(i) => onEditItem("link", i)} onRemove={(i) => onRemoveItem("link", i)} />
       <div style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 6 }}><HardButton href="/empleos" variant="brand" full><SearchIcon />{t("account.searchForMe")}</HardButton><HardButton href="/cuenta/perfil" variant="lime" full><SparkIcon />{complete ? t("account.refineWithAi") : t("account.completeWithAi")}</HardButton><button onClick={onSettings} className="jb-tap" style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: 11, cursor: "pointer" }}>{t("account.settingsAndNotifications")}</button></div>
     </div>
   );
@@ -257,15 +298,26 @@ function Section({ title, children, action, onAction }: { title: string; childre
   return <section style={{ marginBottom: 14 }}><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}><MonoLabel>{title}</MonoLabel>{action && <button onClick={onAction} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--brand)", padding: "2px 4px", background: "transparent", border: 0, cursor: "pointer" }}>{action}</button>}</div><div style={cardStyle}>{children}</div></section>;
 }
 
-function CvCard({ t, name }: { t: ReturnType<typeof useTranslations>; name: string | null }) {
+function CvCard({ t, name, onReplaced }: { t: ReturnType<typeof useTranslations>; name: string | null; onReplaced: () => void }) {
   const [busy, setBusy] = useState(false);
+  const [replacing, setReplacing] = useState(false);
   async function open() {
     setBusy(true);
     const r = await fetch("/api/board/cv").then((x) => (x.ok ? x.json() : null)).catch(() => null);
     setBusy(false);
     if (r?.url) window.open(r.url, "_blank", "noopener");
   }
-  return <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 38, height: 46, borderRadius: 8, background: "var(--brandSoft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><FileIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name || t("account.cvFile")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.cvMeta")}</div></div><button onClick={open} disabled={busy} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}>{busy ? "…" : t("account.cvView")}</button></div>;
+  async function replace(file: File) {
+    setReplacing(true);
+    const fd = new FormData(); fd.append("file", file);
+    const parsed = await fetch("/api/careers/parse-cv", { method: "POST", body: fd }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    if (parsed?.cv_path) {
+      await fetch("/api/board/cv", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cv_path: parsed.cv_path }) }).catch(() => {});
+      onReplaced();
+    }
+    setReplacing(false);
+  }
+  return <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 38, height: 46, borderRadius: 8, background: "var(--brandSoft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><FileIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name || t("account.cvFile")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.cvMeta")}</div></div><div style={{ display: "flex", gap: 6, flexShrink: 0 }}><button onClick={open} disabled={busy} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}>{busy ? "…" : t("account.cvView")}</button><label className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--soft)", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 10px", cursor: replacing ? "wait" : "pointer" }}><input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => { const f = e.target.files?.[0]; if (f) replace(f); }} style={{ display: "none" }} />{replacing ? "…" : t("account.cvReplace")}</label></div></div>;
 }
 
 function PrefsView({ display, t, loc }: { display: ReturnType<typeof buildDisplay>; t: ReturnType<typeof useTranslations>; loc: string }) {
@@ -278,16 +330,50 @@ function PrefsView({ display, t, loc }: { display: ReturnType<typeof buildDispla
   return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{prefs.map((p) => <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 11 }}><span style={{ width: 28, height: 28, borderRadius: 8, background: "var(--bg)", color: "var(--soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{p.icon}</span><span style={{ fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: .4, color: "var(--soft)", width: 78, flexShrink: 0 }}>{p.label}</span><span style={{ fontSize: 13.5, fontWeight: 600, color: "#3A3833" }}>{p.value}</span></div>)}</div>;
 }
 
-function ExperienceSection({ rows, t, onEdit }: { rows: Experience[]; t: ReturnType<typeof useTranslations>; onEdit: () => void }) {
-  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.experienceTitle")} action={t("account.add")} onAction={onEdit} />{rows.length === 0 ? <EmptyInline text={t("account.emptyExperience")} /> : <div style={{ position: "relative", paddingLeft: 6 }}>{rows.map((e, i) => <div key={`${e.title}-${e.company}-${i}`} style={{ display: "flex", gap: 13 }}><div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}><CompanyLogo name={e.company || e.title} size={38} />{i < rows.length - 1 && <span style={{ flex: 1, width: 2, background: "var(--line)", margin: "4px 0" }} />}</div><div style={{ flex: 1, minWidth: 0, paddingBottom: 16 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14.5, letterSpacing: "-.2px" }}>{e.title || t("account.untitledRole")}</div><div style={{ fontSize: 12.5, color: "#54504A", marginTop: 1 }}>{e.company || t("account.noCompany")}</div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{period(e.start_date, e.end_date, e.is_current, t)}</div></div></div>)}</div>}</section>;
+function ExperienceSection({ rows, t, onAdd, onEdit, onRemove }: { rows: Experience[]; t: ReturnType<typeof useTranslations>; onAdd: () => void; onEdit: (i: number) => void; onRemove: (i: number) => void }) {
+  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.experienceTitle")} action={t("account.add")} onAction={onAdd} />{rows.length === 0 ? <EmptyInline text={t("account.emptyExperience")} /> : <div style={{ position: "relative", paddingLeft: 6 }}>{rows.map((e, i) => <div key={i} style={{ display: "flex", gap: 13 }}><div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}><CompanyLogo name={e.company || e.title} size={38} />{i < rows.length - 1 && <span style={{ flex: 1, width: 2, background: "var(--line)", margin: "4px 0" }} />}</div><div style={{ flex: 1, minWidth: 0, paddingBottom: 16 }}><div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14.5, letterSpacing: "-.2px" }}>{e.title || t("account.untitledRole")}</div><div style={{ fontSize: 12.5, color: "#54504A", marginTop: 1 }}>{e.company || t("account.noCompany")}</div></div><RowActions onEdit={() => onEdit(i)} onRemove={() => onRemove(i)} /></div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{period(e.start_date, e.end_date, e.is_current, t)}</div></div></div>)}</div>}</section>;
 }
 
-function EducationSection({ rows, t, onEdit }: { rows: Education[]; t: ReturnType<typeof useTranslations>; onEdit: () => void }) {
-  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.educationTitle")} action={t("account.add")} onAction={onEdit} />{rows.length === 0 ? <EmptyInline text={t("account.emptyEducation")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>{rows.map((ed, i) => <div key={`${ed.degree}-${ed.institution}-${i}`} style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: "12px 13px" }}><span style={{ width: 34, height: 34, borderRadius: 10, background: "var(--limeSoft)", color: "#46540F", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><EducationIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14 }}>{ed.degree || ed.field || t("account.education")}</div><div style={{ fontSize: 12.5, color: "#54504A", marginTop: 1 }}>{ed.institution || t("account.noInstitution")}</div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{yearPeriod(ed.start_year, ed.end_year)}</div></div></div>)}</div>}</section>;
+function EducationSection({ rows, t, onAdd, onEdit, onRemove }: { rows: Education[]; t: ReturnType<typeof useTranslations>; onAdd: () => void; onEdit: (i: number) => void; onRemove: (i: number) => void }) {
+  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.educationTitle")} action={t("account.add")} onAction={onAdd} />{rows.length === 0 ? <EmptyInline text={t("account.emptyEducation")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>{rows.map((ed, i) => <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: "12px 13px" }}><span style={{ width: 34, height: 34, borderRadius: 10, background: "var(--limeSoft)", color: "#46540F", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><EducationIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14 }}>{ed.degree || ed.field || t("account.education")}</div><div style={{ fontSize: 12.5, color: "#54504A", marginTop: 1 }}>{ed.institution || t("account.noInstitution")}</div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{yearPeriod(ed.start_year, ed.end_year)}</div></div><RowActions onEdit={() => onEdit(i)} onRemove={() => onRemove(i)} /></div>)}</div>}</section>;
 }
 
-function LanguageSection({ rows, t }: { rows: Language[]; t: ReturnType<typeof useTranslations> }) {
-  return <section style={{ marginBottom: 14 }}><MonoLabel style={{ marginBottom: 11 }}>{t("account.languagesTitle")}</MonoLabel>{rows.length === 0 ? <EmptyInline text={t("account.emptyLanguages")} /> : <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: "6px 14px" }}>{rows.map((l, i) => <div key={`${l.language}-${i}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i === rows.length - 1 ? "1px solid transparent" : "1px solid var(--line)" }}><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13.5, flex: 1 }}>{l.language || t("account.language")}</span><Dots level={l.level} /><span style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", width: 70, textAlign: "right" }}>{l.level || t("account.basic")}</span></div>)}</div>}</section>;
+function LanguageSection({ rows, t, onAdd, onEdit, onRemove }: { rows: Language[]; t: ReturnType<typeof useTranslations>; onAdd: () => void; onEdit: (i: number) => void; onRemove: (i: number) => void }) {
+  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.languagesTitle")} action={t("account.add")} onAction={onAdd} />{rows.length === 0 ? <EmptyInline text={t("account.emptyLanguages")} /> : <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: "6px 14px" }}>{rows.map((l, i) => <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i === rows.length - 1 ? "1px solid transparent" : "1px solid var(--line)" }}><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13.5, flex: 1 }}>{l.language || t("account.language")}</span><Dots level={l.level} /><span style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", width: 58, textAlign: "right" }}>{l.level || t("account.basic")}</span><RowActions onEdit={() => onEdit(i)} onRemove={() => onRemove(i)} /></div>)}</div>}</section>;
+}
+
+function LinksSection({ rows, t, onAdd, onEdit, onRemove }: { rows: LinkItem[]; t: ReturnType<typeof useTranslations>; onAdd: () => void; onEdit: (i: number) => void; onRemove: (i: number) => void }) {
+  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.linksTitle")} action={t("account.add")} onAction={onAdd} />{rows.length === 0 ? <EmptyInline text={t("account.emptyLinks")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{rows.map((lk, i) => <div key={i} style={{ display: "flex", alignItems: "center", gap: 11, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "11px 13px" }}><span style={{ width: 30, height: 30, borderRadius: 9, background: "var(--bg)", color: "var(--soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><ExternalIcon /></span><a href={normalizeUrl(lk.url)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 0, color: "inherit", textDecoration: "none" }}><div style={{ fontSize: 13, fontWeight: 700 }}>{lk.label || linkTypeLabel(lk.type)}</div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--brand)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lk.url}</div></a><RowActions onEdit={() => onEdit(i)} onRemove={() => onRemove(i)} /></div>)}</div>}</section>;
+}
+
+function AvatarUpload({ url, name, onChange, t }: { url: string | null; name: string; onChange: (url: string | null) => void; t: ReturnType<typeof useTranslations> }) {
+  const [busy, setBusy] = useState(false);
+  async function upload(file: File) {
+    setBusy(true);
+    const fd = new FormData(); fd.append("file", file);
+    const r = await fetch("/api/board/avatar", { method: "POST", body: fd }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    setBusy(false);
+    if (r?.url) onChange(r.url);
+  }
+  return (
+    <div style={{ position: "relative", width: 56, height: 56, flexShrink: 0 }}>
+      {url
+        ? <img src={url} alt={name} style={{ width: 56, height: 56, borderRadius: 17, objectFit: "cover", boxShadow: "2px 2px 0 var(--ink)" }} />
+        : <span style={{ width: 56, height: 56, borderRadius: 17, background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", color: "#063D31", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, boxShadow: "2px 2px 0 var(--ink)" }}>{initials(name)}</span>}
+      <label className="jb-tap" style={{ position: "absolute", right: -4, bottom: -4, width: 24, height: 24, borderRadius: "50%", background: "var(--ink)", border: "2px solid var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", cursor: busy ? "wait" : "pointer" }} aria-label={t("account.photoUpload")}>
+        <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }} style={{ display: "none" }} />
+        {busy ? <span style={{ width: 10, height: 10, border: "2px solid #C6F24E", borderTopColor: "transparent", borderRadius: "50%", animation: "jbSpin .7s linear infinite" }} /> : <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 8h3l2-2h6l2 2h3v12H4V8Z" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="13" r="3" stroke="#C6F24E" strokeWidth="2" /></svg>}
+      </label>
+    </div>
+  );
+}
+
+function RowActions({ onEdit, onRemove }: { onEdit: () => void; onRemove: () => void }) {
+  const s: CSSProperties = { width: 28, height: 28, borderRadius: 8, background: "transparent", border: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, color: "var(--soft)" };
+  return <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
+    <button onClick={onEdit} className="jb-tap" aria-label="edit" style={s}><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 00-3-3L5 17v3Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg></button>
+    <button onClick={onRemove} className="jb-tap" aria-label="remove" style={s}><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+  </div>;
 }
 
 function SavedTab({ saved, onRemove, t, loc }: { saved: Saved[]; onRemove: (row: Saved) => void; t: ReturnType<typeof useTranslations>; loc: string }) {
@@ -300,14 +386,14 @@ function AlertsTab({ alerts, alertOn, onToggle, onNew, onDelete, t }: { alerts: 
 
 function ApplicationsTracker({ t, applications, loc, onOpen }: { t: ReturnType<typeof useTranslations>; applications: Application[]; loc: string; onOpen: (id: string) => void }) {
   const actionCount = applications.filter((a) => statusStyle(a).kind === "action").length;
-  return <div className="jb-fade"><h1 style={titleStyle}>{t("account.applicationsTitle")}</h1>{actionCount > 0 && <div className="jb-pop" style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 15, padding: "15px 16px", marginBottom: 16 }}><div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}><span style={{ width: 24, height: 24, borderRadius: 7, background: "rgba(198,242,78,.18)", display: "flex", alignItems: "center", justifyContent: "center" }}><EditIcon /></span><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13 }}>{t("account.applicationsTitle")}</span><AiTag>{actionCount}</AiTag></div><p style={{ fontSize: 13, lineHeight: 1.5, color: "#E4E0D8", margin: 0 }}>{applications.find((a) => statusStyle(a).kind === "action")?.feedback?.reason ?? t("account.completeHint")}</p></div>}{applications.length === 0 ? <EmptyPanel title={t("account.emptyApplications")} text={t("account.emptyApplications")} cta={t("account.browse")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>{applications.map((a) => <ApplicationCard key={a.id} app={a} loc={loc} onOpen={() => onOpen(a.id)} />)}</div>}</div>;
+  return <div className="jb-fade"><h1 style={titleStyle}>{t("account.applicationsTitle")}</h1>{actionCount > 0 && <div className="jb-pop" style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 15, padding: "15px 16px", marginBottom: 16 }}><div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}><span style={{ width: 24, height: 24, borderRadius: 7, background: "rgba(198,242,78,.18)", display: "flex", alignItems: "center", justifyContent: "center" }}><EditIcon /></span><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13 }}>{t("account.applicationsTitle")}</span><AiTag>{actionCount}</AiTag></div><p style={{ fontSize: 13, lineHeight: 1.5, color: "#E4E0D8", margin: 0 }}>{applications.find((a) => statusStyle(a).kind === "action")?.feedback?.reason ?? t("account.completeHint")}</p></div>}{applications.length === 0 ? <EmptyPanel title={t("account.emptyApplications")} text={t("account.emptyApplications")} cta={t("account.browse")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>{applications.map((a) => <ApplicationCard key={a.id} app={a} loc={loc} t={t} onOpen={() => onOpen(a.id)} />)}</div>}</div>;
 }
 
-function ApplicationCard({ app, loc, onOpen }: { app: Application; loc: string; onOpen: () => void }) {
+function ApplicationCard({ app, loc, t, onOpen }: { app: Application; loc: string; t: ReturnType<typeof useTranslations>; onOpen: () => void }) {
   if (!app.job) return null;
   const st = statusStyle(app);
   const stageLabel = app.stage?.name || statusLabel(app.status);
-  return <button onClick={onOpen} className="jb-card jb-pop" style={{ width: "100%", textAlign: "left", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: 15, cursor: "pointer" }}><div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 13 }}><CompanyLogo name={app.job.company?.name} logoUrl={app.job.company?.logo_url} size={40} /><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)" }}>{app.job.company?.name || "-"}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, letterSpacing: "-.3px", lineHeight: 1.1, marginTop: 2 }}>{app.job.title}</div></div><span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .4, color: st.color, background: st.bg, border: `1px solid ${st.border}`, borderRadius: 999, padding: "4px 9px", whiteSpace: "nowrap", flexShrink: 0 }}>{st.label}</span></div><StageTrack app={app} /><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "3px 0 9px" }}><span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{stageLabel}</span><span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{relativeDate(app.created_at, loc)}</span></div>{app.feedback?.reason && <FeedbackBox app={app} />}{app.fit_score != null && <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--brand)", marginTop: 10 }}>Fit {app.fit_score}</div>}</button>;
+  return <button onClick={onOpen} className="jb-card jb-pop" style={{ width: "100%", textAlign: "left", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: 15, cursor: "pointer" }}><div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 13 }}><CompanyLogo name={app.job.company?.name} logoUrl={app.job.company?.logo_url} size={40} /><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)" }}>{app.job.company?.name || "-"}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, letterSpacing: "-.3px", lineHeight: 1.1, marginTop: 2 }}>{app.job.title}</div></div><span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .4, color: st.color, background: st.bg, border: `1px solid ${st.border}`, borderRadius: 999, padding: "4px 9px", whiteSpace: "nowrap", flexShrink: 0 }}>{st.label}</span></div><StageTrack app={app} /><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "3px 0 9px" }}><span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{stageLabel}</span><span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{relativeDate(app.created_at, loc)}</span></div>{app.feedback?.reason && <FeedbackBox app={app} />}<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 11, paddingTop: 11, borderTop: "1px solid var(--line)" }}><span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{t("account.appliedOn", { date: relativeDate(app.created_at, loc) })}</span><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--brand)" }}>{t("account.viewDetail")} →</span></div></button>;
 }
 
 function StageTrack({ app }: { app: Application }) {
@@ -324,7 +410,7 @@ function FeedbackBox({ app }: { app: Application }) {
 function ApplicationDetailSheet({ detail, fallback, loading, onClose, t, loc }: { detail: ApplicationDetail | null; fallback: Application | null; loading: boolean; onClose: () => void; t: ReturnType<typeof useTranslations>; loc: string }) {
   const app = detail?.application ?? fallback;
   const st = app ? statusStyle(app) : null;
-  return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 12px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div style={sheetHandle} />{app?.job && <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}><CompanyLogo name={app.job.company?.name} logoUrl={app.job.company?.logo_url} size={44} /><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)" }}>{app.job.company?.name}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 18, letterSpacing: "-.4px", lineHeight: 1.1, marginTop: 2 }}>{app.job.title}</div></div>{st && <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .4, color: st.color, background: st.bg, border: `1px solid ${st.border}`, borderRadius: 999, padding: "4px 9px", whiteSpace: "nowrap", flexShrink: 0 }}>{st.label}</span>}</div>}</div><div style={{ padding: "16px 18px 8px" }}>{loading ? <div style={{ color: "var(--soft)", padding: 20, textAlign: "center" }}>...</div> : <><MonoLabel style={{ marginBottom: 14 }}>Progreso de tu candidatura</MonoLabel>{detail?.timeline?.length ? <Timeline rows={detail.timeline} loc={loc} /> : app ? <FallbackTimeline app={app} loc={loc} /> : null}{app?.feedback?.reason && <FeedbackBox app={app} />}</>}</div><div style={{ position: "sticky", bottom: 0, background: "var(--bg)", borderTop: "1px solid var(--line)", padding: "12px 18px 18px", display: "flex", flexDirection: "column", gap: 9 }}><HardButton onClick={onClose} variant={st?.kind === "good" ? "lime" : st?.kind === "action" ? "accent" : "brand"} full>{app?.job ? "Ver oferta original" : t("account.cancel")}</HardButton><button onClick={onClose} className="jb-tap" style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "transparent", border: 0, padding: 6, cursor: "pointer" }}>{t("account.cancel")}</button></div></Sheet>;
+  return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 12px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div style={sheetHandle} />{app?.job && <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}><CompanyLogo name={app.job.company?.name} logoUrl={app.job.company?.logo_url} size={44} /><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)" }}>{app.job.company?.name}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 18, letterSpacing: "-.4px", lineHeight: 1.1, marginTop: 2 }}>{app.job.title}</div></div>{st && <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .4, color: st.color, background: st.bg, border: `1px solid ${st.border}`, borderRadius: 999, padding: "4px 9px", whiteSpace: "nowrap", flexShrink: 0 }}>{st.label}</span>}</div>}</div><div style={{ padding: "16px 18px 8px" }}>{loading ? <div style={{ color: "var(--soft)", padding: 20, textAlign: "center" }}>...</div> : <><MonoLabel style={{ marginBottom: 14 }}>{t("account.applicationProgress")}</MonoLabel>{detail?.timeline?.length ? <Timeline rows={detail.timeline} loc={loc} /> : app ? <FallbackTimeline app={app} loc={loc} /> : null}{app?.feedback?.reason && <FeedbackBox app={app} />}</>}</div><div style={{ position: "sticky", bottom: 0, background: "var(--bg)", borderTop: "1px solid var(--line)", padding: "12px 18px 18px", display: "flex", flexDirection: "column", gap: 9 }}>{app?.job ? <HardButton href={`/${loc}/empleos/oferta/${jobSlug(app.job)}`} variant={st?.kind === "good" ? "lime" : st?.kind === "action" ? "accent" : "brand"} full>{t("account.viewOriginalOffer")}</HardButton> : null}<button onClick={onClose} className="jb-tap" style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "transparent", border: 0, padding: 6, cursor: "pointer" }}>{t("account.cancel")}</button></div></Sheet>;
 }
 
 function Timeline({ rows, loc }: { rows: ApplicationTimelineEvent[]; loc: string }) {
@@ -356,6 +442,64 @@ function SettingsSheet({ prefs, onPref, onClose, onLogout, t }: { prefs: { email
   const rows = [{ id: "email", label: t("account.emailNews"), desc: t("account.emailNewsDesc") }, { id: "push", label: t("account.pushNotifications"), desc: t("account.pushNotificationsDesc") }, { id: "digest", label: t("account.weeklyDigest"), desc: t("account.weeklyDigestDesc") }] as const;
   return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 10px", borderBottom: "1px solid var(--line)" }}><div style={sheetHandle} /><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{t("account.settings")}</span></div><div style={{ padding: "14px 18px 20px" }}><MonoLabel style={{ marginBottom: 10 }}>{t("account.notifications")}</MonoLabel><div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden", marginBottom: 18 }}>{rows.map((r) => <PrefRow key={r.id} label={r.label} desc={r.desc} on={prefs[r.id]} onClick={() => onPref(r.id, !prefs[r.id])} />)}</div><div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: "13px 14px", marginBottom: 18 }}><div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{t("account.profileVisible")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.profileVisibleDesc")}</div></div><Toggle on={prefs.visible} onClick={() => onPref("visible", !prefs.visible)} /></div><button onClick={onLogout} className="jb-tap" style={{ width: "100%", fontFamily: ARCHIVO, fontWeight: 700, fontSize: 14, color: "var(--accent)", background: "var(--surface)", border: "1.5px solid #F2C4B9", borderRadius: 12, padding: 12, cursor: "pointer" }}>{t("account.logout")}</button></div></Sheet>;
 }
+
+// Editor de un ítem (experiencia / educación / idioma / enlace). Campos por tipo; guarda
+// el objeto completo → el padre lo persiste en su array del perfil.
+function ItemEditor({ type, item, onClose, onSave, t }: { type: ItemType; item: Record<string, unknown> | null; onClose: () => void; onSave: (draft: Record<string, unknown>) => void; t: ReturnType<typeof useTranslations> }) {
+  const [d, setD] = useState<Record<string, unknown>>(item ? { ...item } : defaultItem(type));
+  const set = (k: string, v: unknown) => setD((prev) => ({ ...prev, [k]: v }));
+  const str = (k: string) => (d[k] == null ? "" : String(d[k]));
+  const title = t(`account.editor.${type}${item ? "Edit" : "New"}`);
+  const langLevels = ["Básico", "Intermedio", "Avanzado", "Nativo"];
+  const linkTypes = ["portfolio", "linkedin", "github", "behance", "website"];
+  return <Sheet onClose={onClose}>
+    <div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 10px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div style={sheetHandle} /><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{title}</span></div>
+    <div style={{ padding: "16px 18px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+      {type === "exp" && <>
+        <Field label={t("account.field.role")} value={str("title")} onChange={(v) => set("title", v)} />
+        <Field label={t("account.field.company")} value={str("company")} onChange={(v) => set("company", v)} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.field.start")} value={str("start_date")} onChange={(v) => set("start_date", v)} placeholder="2022" /><Field label={t("account.field.end")} value={str("end_date")} onChange={(v) => set("end_date", v)} placeholder="2024" /></div>
+        <label style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13.5, cursor: "pointer" }}><input type="checkbox" checked={!!d.is_current} onChange={(e) => set("is_current", e.target.checked)} />{t("account.field.current")}</label>
+      </>}
+      {type === "edu" && <>
+        <Field label={t("account.field.degree")} value={str("degree")} onChange={(v) => set("degree", v)} />
+        <Field label={t("account.field.institution")} value={str("institution")} onChange={(v) => set("institution", v)} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.field.startYear")} value={str("start_year")} onChange={(v) => set("start_year", v.replace(/[^0-9]/g, "") ? Number(v.replace(/[^0-9]/g, "")) : "")} placeholder="2018" /><Field label={t("account.field.endYear")} value={str("end_year")} onChange={(v) => set("end_year", v.replace(/[^0-9]/g, "") ? Number(v.replace(/[^0-9]/g, "")) : "")} placeholder="2022" /></div>
+      </>}
+      {type === "lang" && <>
+        <Field label={t("account.field.language")} value={str("language")} onChange={(v) => set("language", v)} />
+        <BoardField label={t("account.field.level")}><div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>{langLevels.map((lv) => <button key={lv} onClick={() => set("level", lv)} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: str("level") === lv ? 700 : 600, fontSize: 13, borderRadius: 999, padding: "8px 14px", cursor: "pointer", border: `1.5px solid ${str("level") === lv ? "#1A1A17" : "#E7E1D4"}`, background: str("level") === lv ? "#DCEFE4" : "#FCFAF6", color: str("level") === lv ? "#0E5C4A" : "#54504A" }}>{lv}</button>)}</div></BoardField>
+      </>}
+      {type === "link" && <>
+        <BoardField label={t("account.field.linkType")}><div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>{linkTypes.map((lt) => <button key={lt} onClick={() => set("type", lt)} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: str("type") === lt ? 700 : 600, fontSize: 13, borderRadius: 999, padding: "8px 13px", cursor: "pointer", border: `1.5px solid ${str("type") === lt ? "#1A1A17" : "#E7E1D4"}`, background: str("type") === lt ? "#DCEFE4" : "#FCFAF6", color: str("type") === lt ? "#0E5C4A" : "#54504A" }}>{linkTypeLabel(lt)}</button>)}</div></BoardField>
+        <Field label={t("account.field.url")} value={str("url")} onChange={(v) => set("url", v)} placeholder="https://…" />
+        <Field label={t("account.field.linkLabel")} value={str("label")} onChange={(v) => set("label", v)} placeholder={linkTypeLabel(str("type") || "website")} />
+      </>}
+      <HardButton onClick={() => onSave(cleanItem(type, d))} variant="brand" full disabled={!itemValid(type, d)}>{t("account.save")}</HardButton>
+    </div>
+  </Sheet>;
+}
+
+function defaultItem(type: ItemType): Record<string, unknown> {
+  if (type === "exp") return { title: "", company: "", start_date: "", end_date: "", is_current: false };
+  if (type === "edu") return { degree: "", institution: "", start_year: "", end_year: "" };
+  if (type === "lang") return { language: "", level: "Intermedio" };
+  return { type: "website", url: "", label: "" };
+}
+function itemValid(type: ItemType, d: Record<string, unknown>) {
+  if (type === "exp") return !!String(d.title || "").trim();
+  if (type === "edu") return !!String(d.degree || d.institution || "").trim();
+  if (type === "lang") return !!String(d.language || "").trim();
+  return !!String(d.url || "").trim();
+}
+function cleanItem(type: ItemType, d: Record<string, unknown>): Record<string, unknown> {
+  if (type === "edu") return { ...d, start_year: d.start_year ? Number(d.start_year) : null, end_year: d.end_year ? Number(d.end_year) : null };
+  if (type === "link") return { type: d.type || "website", url: String(d.url || "").trim(), label: String(d.label || "").trim() || null };
+  return d;
+}
+function linkTypeLabel(type: string) { const m: Record<string, string> = { portfolio: "Portafolio", linkedin: "LinkedIn", github: "GitHub", behance: "Behance", website: "Sitio web" }; return m[type] ?? type; }
+function normalizeUrl(url: string) { const u = (url || "").trim(); return /^https?:\/\//i.test(u) ? u : `https://${u}`; }
+function ExternalIcon() { return <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
 
 function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) { return <BoardField label={label}><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} style={inputStyle} /></BoardField>; }
 function Sheet({ children, onClose }: { children: ReactNode; onClose: () => void }) { return <div onClick={onClose} className="jb-fade" style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(26,26,23,.4)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}><div onClick={(e) => e.stopPropagation()} className="jb-sheet" style={{ width: "100%", maxWidth: 560, maxHeight: "88%", overflowY: "auto", background: "var(--bg)", borderRadius: "22px 22px 0 0", borderTop: "2px solid var(--ink)" }}>{children}</div></div>; }
