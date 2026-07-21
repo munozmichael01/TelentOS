@@ -19,7 +19,9 @@
     "salary": "Salário"
   },
   "results": {
-    "count": "{count, plural, =0 {Sem vagas} one {# vaga} other {# vagas}}"
+    "count": "{count, plural, =0 {Sem vagas} one {# vaga} other {# vagas}}",
+    "selectPrompt": "Selecione uma vaga",
+    "selectHint": "Escolha uma vaga da lista para ver os detalhes aqui."
   },
   "card": {
     "new": "Nova",
@@ -74,7 +76,9 @@
     "required": "Excludente",
     "desirable": "Desejável",
     "oneTap": "Candidatar num toque",
-    "applied": "Candidatado!"
+    "applied": "Candidatado!",
+    "openFull": "Ver vaga completa",
+    "save": "Salvar"
   },
   "apply": {
     "title": "Candidatar-se a {job}",

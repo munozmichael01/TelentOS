@@ -285,3 +285,26 @@
   .jb-pib-intake { flex: 0 0 480px; max-width: 480px !important; }
   .jb-pib-preview { display: flex; flex: 1 1 auto; }
 }
+
+/* Board — split lista+detalle (LinkedIn-style). Mobile: 1 columna, tarjeta→página de oferta,
+   panel de detalle oculto. Desktop ≥1240: head full-width + lista 430px + detalle sticky flex. */
+.jb-board-main { max-width: 720px; margin: 0 auto; padding: 20px 16px 84px; }
+.jb-board-split { display: block; }
+.jb-board-list { width: 100%; }
+.jb-board-detail { display: none; }
+@media (min-width: 1240px) {
+  .jb-board-main { max-width: 1240px; padding: 24px 24px 40px; }
+  .jb-board-split { display: flex; gap: 20px; align-items: flex-start; }
+  .jb-board-list { flex: 0 0 430px; width: 430px; }
+  .jb-board-detail {
+    display: block; flex: 1 1 auto; min-width: 0;
+    position: sticky; top: 76px; align-self: flex-start;
+    height: calc(100vh - 100px);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+  }
+  /* En desktop la tarjeta seleccionable no "flota"; el estado activo lo marca el borde. */
+  .jb-board-list .jb-job:hover { transform: none; box-shadow: 0 8px 20px -16px rgba(26,26,23,.4); }
+  .jb-board-card-active { border-color: var(--brand) !important; box-shadow: 3px 3px 0 var(--brand) !important; }
+}
+
+@keyframes jbShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
