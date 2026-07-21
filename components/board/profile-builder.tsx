@@ -287,7 +287,8 @@ export function ProfileBuilder({ locale }: { locale: string }) {
         @keyframes jb-bar { from { width: 6%; } to { width: 100%; } }
         .jb-bar { animation: jb-bar 2.2s cubic-bezier(.4,0,.2,1) forwards; }
       `}</style>
-      <div style={{ width: "100%", maxWidth: 414 }}>
+      <div className="jb-pib-shell">
+      <div style={{ width: "100%", maxWidth: 414 }} className="jb-pib-intake">
         {/* header */}
         <header style={{ padding: "8px 0 12px", borderBottom: "1px solid var(--line)", background: "rgba(244,240,232,.9)", display: "flex", alignItems: "center", gap: 10 }}>
           <button onClick={() => { if (step === "review") setStep("intake"); else router.push("/cuenta"); }} className="jb-tap" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", outline: "none" }}>
@@ -572,6 +573,40 @@ export function ProfileBuilder({ locale }: { locale: string }) {
           </div>
         )}
       </div>
+      <ProfilePreview role={role} exp={exp} modality={modality} gen={gen} step={step} pct={pct} t={t} />
+      </div>
     </BoardRoot>
+  );
+}
+
+// Preview en vivo (solo desktop): panel tinta que refleja el intake; "Sobre mí" se avisa
+// hasta generar. Solo lectura — no interfiere con las fases.
+function ProfilePreview({ role, exp, modality, gen, step, pct, t }: { role: string; exp: string; modality: string | null; gen: { headline: string; about: string; skills: string[]; city: string | null }; step: string; pct: number | null; t: ReturnType<typeof useTranslations> }) {
+  const generated = step === "review" || step === "done";
+  const chip = (v: string) => <span key={v} style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--lime)", background: "rgba(198,242,78,.12)", border: "1px solid rgba(198,242,78,.25)", borderRadius: 8, padding: "4px 9px" }}>{v}</span>;
+  return (
+    <aside className="jb-pib-preview" style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 20, padding: "34px 30px", flexDirection: "column", gap: 20, alignSelf: "flex-start", position: "sticky", top: 24 }}>
+      <div style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .6, color: "#8C877E", display: "flex", alignItems: "center", gap: 7 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z" stroke="#C6F24E" strokeWidth="1.7" strokeLinejoin="round" /></svg>{t("preview")}
+      </div>
+      <div>
+        <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 24, letterSpacing: "-.8px", lineHeight: 1.05 }}>{gen.headline || role || t("previewRole")}</div>
+        <div style={{ fontFamily: MONO, fontSize: 11, color: "#B7B2A8", marginTop: 6, display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {gen.city && <span>{gen.city}</span>}{exp && <span>· {exp}</span>}{modality && <span>· {modality}</span>}
+        </div>
+      </div>
+      <div>
+        <div style={{ fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: .5, color: "#8C877E", marginBottom: 8 }}>{t("aboutAi")}</div>
+        {generated && gen.about
+          ? <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "#D8D4CB", margin: 0 }}>{gen.about}</p>
+          : <p style={{ fontSize: 12.5, lineHeight: 1.5, color: "#8C877E", margin: 0, fontStyle: "italic" }}>{t("previewAboutNotice")}</p>}
+      </div>
+      {gen.skills?.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{gen.skills.slice(0, 10).map(chip)}</div>
+      )}
+      {generated && pct != null && (
+        <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--lime)" }}>{t("completeness", { pct })}</div>
+      )}
+    </aside>
   );
 }

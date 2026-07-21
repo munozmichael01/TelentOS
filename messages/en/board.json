@@ -348,7 +348,11 @@
     "error": "I couldn't generate the profile. Please try again.",
     "skip": "I'll do it later",
     "city": "City",
-    "phone": "Phone"
+    "phone": "Phone",
+    "preview": "Live preview",
+    "previewRole": "Your profile",
+    "previewAboutNotice": "Will be written when you generate your profile.",
+    "completeness": "Profile {pct}% complete"
   },
   "employer": {
     "back": "All jobs",
