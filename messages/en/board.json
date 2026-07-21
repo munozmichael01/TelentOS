@@ -307,23 +307,30 @@
     "tagline": "Only searches jobs for you",
     "greeting": "Hi! I'm your search assistant. Tell me what job you're after in your own words — field, city, salary, work mode — and I'll bring you the best matches. I only search: I never post or share anything.",
     "placeholder": "e.g. remote design above $1,500",
-    "view": "View job",
+    "view": "View",
     "empty": "I couldn't find jobs for that right now. Try broadening your search.",
     "error": "I couldn't process your search. Please try again.",
     "suggestions": [
       "Remote design > $1,500",
       "Product in Caracas",
-      "Junior roles",
-      "Best paid",
-      "Create an alert for this search"
+      "Junior jobs",
+      "Best paid"
     ],
-    "easyApply": "1 tap",
-    "applied": "Sent",
+    "easyApply": "Apply in 1 tap",
+    "applied": "Applied",
     "railWhat": "What I can do",
     "cap1": "Interpret your search",
     "cap2": "Apply in one tap",
-    "cap3": "Create job alerts",
-    "railReadonly": "Read-only · never posts or shares"
+    "cap3": "See your fit for each job",
+    "railReadonly": "Read-only · never posts or shares",
+    "cap1Desc": "Area, city, salary and modality in plain language.",
+    "cap2Desc": "Apply without leaving the chat, with your profile.",
+    "cap3Desc": "Scores how well you match, based on your profile.",
+    "railBack": "Back to the board",
+    "railIntro": "Tell me what you want and I bring real jobs. I never publish or share anything.",
+    "railStatus": "Read-only · finds jobs",
+    "railFooter": "The agent proposes · you decide",
+    "interpretedLead": "Here's what I understood from your search."
   },
   "builder": {
     "eyebrow": "Profile assistant",

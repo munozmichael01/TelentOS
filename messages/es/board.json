@@ -307,23 +307,30 @@
     "tagline": "Solo busca ofertas por ti",
     "greeting": "¡Hola! Soy tu asistente de búsqueda. Dime qué trabajo buscas en tus palabras — área, ciudad, salario, modalidad — y te traigo las mejores ofertas. Solo busco: no publico ni comparto nada.",
     "placeholder": "Ej. diseño remoto arriba de $1.500",
-    "view": "Ver oferta",
+    "view": "Ver",
     "empty": "No encontré ofertas para eso ahora mismo. Prueba a ampliar la búsqueda.",
     "error": "No pude procesar tu búsqueda. Inténtalo de nuevo.",
     "suggestions": [
       "Diseño remoto > $1.500",
       "Producto en Caracas",
       "Trabajos junior",
-      "Mejor pagados",
-      "Crear alerta de esta búsqueda"
+      "Mejor pagados"
     ],
-    "easyApply": "1 toque",
-    "applied": "Enviada",
+    "easyApply": "Aplicar en 1 toque",
+    "applied": "Aplicada",
     "railWhat": "Qué puedo hacer",
     "cap1": "Interpretar tu búsqueda",
     "cap2": "Aplicar en un toque",
-    "cap3": "Crear alertas de ofertas",
-    "railReadonly": "Solo lectura · nunca publica ni comparte"
+    "cap3": "Ver tu fit con cada oferta",
+    "railReadonly": "Solo lectura · nunca publica ni comparte",
+    "cap1Desc": "Área, ciudad, salario y modalidad en lenguaje natural.",
+    "cap2Desc": "Aplica sin salir del chat, con tu perfil.",
+    "cap3Desc": "Calcula qué tan bien encajas según tu perfil.",
+    "railBack": "Volver al board",
+    "railIntro": "Dime qué buscas y te traigo ofertas reales. No publico ni comparto nada.",
+    "railStatus": "Solo lectura · busca ofertas",
+    "railFooter": "El agente propone · tú decides",
+    "interpretedLead": "Esto es lo que entendí de tu búsqueda."
   },
   "builder": {
     "eyebrow": "Asistente de perfil",

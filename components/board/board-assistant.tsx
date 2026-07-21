@@ -131,7 +131,7 @@ export function BoardAssistant({ locale }: { locale: string }) {
                   </div>
                 )}
                 {m.jobs && m.jobs.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 11 }}>
+                  <div className="jb-asst-jobs" style={{ display: "grid", gap: 9, marginTop: 11 }}>
                     {m.jobs.slice(0, 4).map((j) => {
                       const logo = logoFor(j.company?.name);
                       const md = modalityStyle(j.modality);
@@ -143,7 +143,7 @@ export function BoardAssistant({ locale }: { locale: string }) {
                               <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{j.company?.name}{j.city ? ` · ${j.city}` : ""}</div>
                               <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, letterSpacing: "-.2px", lineHeight: 1.1, marginTop: 2 }}>{j.title}</div>
                             </div>
-                            {typeof (j as { fit?: number }).fit === "number" && <span style={{ flexShrink: 0, fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "#46540F", background: "var(--lime)", border: "1px solid #1A1A17", borderRadius: 7, padding: "3px 7px" }}>{(j as { fit?: number }).fit}% fit</span>}
+                            {typeof (j as { fit?: number }).fit === "number" && <span style={{ flexShrink: 0, fontFamily: MONO, fontSize: 9.5, fontWeight: 700, color: "#46540F", background: "var(--limeSoft)", borderRadius: 6, padding: "3px 7px" }}>{(j as { fit?: number }).fit}% fit</span>}
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
                             {formatSalary(j, locale) && <span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--brand)" }}>{formatSalary(j, locale)}</span>}
@@ -156,7 +156,7 @@ export function BoardAssistant({ locale }: { locale: string }) {
                               </span>
                             ) : (
                               <button onClick={() => easyApply(j)} disabled={applying === j.id} className="jb-hard" style={{ flex: 1, textAlign: "center", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 11, padding: 9, boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer" }}>
-                                {applying === j.id ? "…" : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" fill="#fff" /></svg>{t("easyApply")}</>}
+                                {applying === j.id ? "…" : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" /></svg>{t("easyApply")}</>}
                               </button>
                             )}
                             <Link href={{ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(j) } }} className="jb-hard" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 11, padding: "9px 14px", boxShadow: "2px 2px 0 var(--ink)" }}>{t("view")}</Link>
@@ -173,7 +173,9 @@ export function BoardAssistant({ locale }: { locale: string }) {
           {typing && (
             <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
               <span style={{ width: 28, height: 28, borderRadius: 9, background: "var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SparkIcon /></span>
-              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "4px 14px 14px 14px", padding: "13px 15px", color: "var(--soft)", fontSize: 20, lineHeight: 0, letterSpacing: 2 }}>···</div>
+              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "4px 14px 14px 14px", padding: "15px 16px", display: "flex", gap: 4 }}>
+                <span className="jb-dot" /><span className="jb-dot" /><span className="jb-dot" />
+              </div>
             </div>
           )}
         </div>
@@ -205,33 +207,43 @@ export function BoardAssistant({ locale }: { locale: string }) {
 // Rail de marca del agente (solo desktop): tinta, identidad, qué puede hacer, garantía.
 function AssistantRail({ t }: { t: ReturnType<typeof useTranslations> }) {
   const caps = [
-    { k: "cap1", icon: <path d="M11 4a7 7 0 105.6 11.2L21 19M18 11a7 7 0 10-14 0 7 7 0 0014 0Z" /> },
-    { k: "cap2", icon: <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" strokeLinejoin="round" /> },
-    { k: "cap3", icon: <><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6Z" strokeLinejoin="round" /><path d="M10 19a2 2 0 004 0" /></> },
+    { k: "cap1", d: "cap1Desc", icon: <path d="M11 4a7 7 0 105.6 11.2L21 19M18 11a7 7 0 10-14 0 7 7 0 0014 0Z" /> },
+    { k: "cap2", d: "cap2Desc", icon: <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" strokeLinejoin="round" /> },
+    { k: "cap3", d: "cap3Desc", icon: <path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5L12 3Z" strokeLinejoin="round" /> },
   ];
   return (
-    <aside className="jb-asst-rail" style={{ background: "var(--ink)", color: "#F4F0E8", padding: "40px 32px", flexDirection: "column", gap: 26 }}>
+    <aside className="jb-asst-rail" style={{ background: "var(--ink)", color: "#F4F0E8", padding: "36px 32px", flexDirection: "column", gap: 22 }}>
+      <Link href="/empleos" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--lime)" }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>{t("railBack")}
+      </Link>
       <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
         <span style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(198,242,78,.14)", display: "flex", alignItems: "center", justifyContent: "center" }}><SparkIcon size={22} /></span>
-        <div>
-          <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 18, letterSpacing: "-.4px" }}>{t("title")}</div>
-          <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--lime)" }}>{t("tagline")}</div>
-        </div>
+        <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 22, letterSpacing: "-.5px", lineHeight: 1.05 }}>{t("title")}</div>
+      </div>
+      <p style={{ fontSize: 14, lineHeight: 1.5, color: "#B7B2A8", margin: 0 }}>{t("railIntro")}</p>
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 10.5, color: "var(--lime)" }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--lime)" }} />{t("railStatus")}
       </div>
       <div>
         <div style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .6, color: "#8C877E", marginBottom: 12 }}>{t("railWhat")}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {caps.map((c) => (
-            <div key={c.k} style={{ display: "flex", alignItems: "center", gap: 11 }}>
+            <div key={c.k} style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
               <span style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(198,242,78,.12)", color: "var(--lime)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">{c.icon}</svg></span>
-              <span style={{ fontSize: 14, color: "#E8E4DB" }}>{t(c.k)}</span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#E8E4DB" }}>{t(c.k)}</div>
+                <div style={{ fontSize: 12.5, color: "#8C877E", lineHeight: 1.4 }}>{t(c.d)}</div>
+              </div>
             </div>
           ))}
         </div>
       </div>
-      <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10.5, color: "#8C877E" }}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#8C877E" strokeWidth="1.8" /><path d="M8 11V8a4 4 0 018 0v3" stroke="#8C877E" strokeWidth="1.8" /></svg>
-        {t("railReadonly")}
+      <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10.5, color: "#8C877E" }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#8C877E" strokeWidth="1.8" /><path d="M8 11V8a4 4 0 018 0v3" stroke="#8C877E" strokeWidth="1.8" /></svg>
+          {t("railReadonly")}
+        </div>
+        <div style={{ fontFamily: MONO, fontSize: 10.5, color: "#8C877E", paddingTop: 10, borderTop: "1px solid rgba(244,240,232,.12)" }}>{t("railFooter")}</div>
       </div>
     </aside>
   );
