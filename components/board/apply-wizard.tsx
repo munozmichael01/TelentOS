@@ -8,6 +8,8 @@ import { ARCHIVO, MONO, BoardRoot, HardButton, AiTag, MonoLabel, CompanyLogo, St
 import { CityAutocomplete } from "@/components/board/city-autocomplete";
 
 type Job = { id: string; title: string; modality: string | null; city: string | null; company: string; logoUrl: string | null; salary: string };
+type PreviewSkill = { name: string; requirement: "excluyente" | "deseable" };
+type Preview = { description: string | null; employmentType: string | null; skills: PreviewSkill[]; reqs: string[]; match: { met: number; total: number } | null };
 type Question = { id: string; type: string; prompt: string; options: string[]; required: boolean };
 type Exp = { title: string; company: string | null; seniority?: string | null; start_date: string | null; end_date: string | null; is_current?: boolean };
 type Edu = { degree: string; institution: string | null; field?: string | null; level?: string | null; start_year: number | null; end_year: number | null };
@@ -19,10 +21,13 @@ const label: CSSProperties = { fontFamily: MONO, fontSize: 10, textTransform: "u
 // (ahorra la llamada a OpenAI). Solo su propio dispositivo, sin lookup en servidor.
 const GUEST_KEY = "talentos_board_guest_profile";
 
-export function ApplyWizard({ job, screening, slug, locale, authed = false }: { job: Job; screening: Question[]; slug: string; locale: string; authed?: boolean }) {
+export function ApplyWizard({ job, preview, screening, slug, locale, authed = false }: { job: Job; preview?: Preview; screening: Question[]; slug: string; locale: string; authed?: boolean }) {
   const t = useTranslations("Board.apply");
+  const tDetail = useTranslations("Board.detail");
+  const tModality = useTranslations("Board.modality");
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [socialSoon, setSocialSoon] = useState(false);
 
   const hasScreening = screening.length > 0;
   const totalSteps = hasScreening ? 4 : 3;
@@ -173,9 +178,13 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
   else if (step === 2) { actionLabel = hasScreening ? t("continue") : t("submitApply"); actionDisabled = !canContinue2; actionVariant = canContinue2 ? "accent" : "disabled"; }
   else if (step === 3) { actionLabel = screeningComplete ? t("submitApply") : t("answerRequired"); actionDisabled = !screeningComplete; actionVariant = screeningComplete ? "accent" : "disabled"; }
   const showAction = (step === 2 || step === 3) && !isDone;
+  // Hint contextual bajo el botón (según el paso).
+  const actionHint = btn !== "idle" ? "" : step === 2 ? t("freeToApply") : (step === 3 && !screeningComplete) ? t("answerRequiredHint") : "";
 
   return (
-    <BoardRoot style={{ display: "flex", flexDirection: "column" }}>
+    <BoardRoot>
+      <div className="jb-apply-shell">
+      <div className="jb-apply-main" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       {/* header + progress */}
       <header style={{ padding: "10px 16px 12px", borderBottom: "1px solid var(--line)", background: "rgba(244,240,232,.9)", position: "sticky", top: 0, zIndex: 20 }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
@@ -218,23 +227,30 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
                   <div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)", marginTop: 5 }}>{t("cvUploadHint")}</div>
                 </button>
               ) : (
-                <div style={{ background: "var(--ink)", borderRadius: 16, padding: "22px 20px", color: "#F4F0E8" }}>
-                  <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "#fff" }}>{t("parsing")}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: "#B7B2A8", margin: "3px 0 12px" }}>{cvName}</div>
-                  <div style={{ height: 6, borderRadius: 999, background: "#38352E", overflow: "hidden" }}><div className="jb-fillbar" style={{ height: "100%", width: "60%", background: "var(--lime)" }} /></div>
-                  <div style={{ fontFamily: MONO, fontSize: 9.5, color: "#8C877E", marginTop: 9 }}>{t("parsingHint")}</div>
+                <div style={{ background: "var(--ink)", borderRadius: 16, padding: "22px 20px", color: "#F4F0E8", display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{ position: "relative", width: 60, height: 76, flexShrink: 0, background: "#0F0E0C", borderRadius: 9, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="#6E7A46" strokeWidth="1.6" strokeLinejoin="round" /><path d="M14 3v4h4" stroke="#6E7A46" strokeWidth="1.6" strokeLinejoin="round" /><path d="M9 12h6M9 15h6M9 18h3" stroke="#6E7A46" strokeWidth="1.4" strokeLinecap="round" /></svg>
+                    <div className="jb-scan" style={{ position: "absolute", left: 0, right: 0, height: 3, background: "var(--lime)", boxShadow: "0 0 10px 2px rgba(198,242,78,.6)" }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "#fff" }}>{t("parsing")}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 10, color: "#B7B2A8", margin: "3px 0 10px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cvName}</div>
+                    <div style={{ height: 6, borderRadius: 999, background: "#38352E", overflow: "hidden" }}><div className="jb-fillbar" style={{ height: "100%", width: "60%", background: "var(--lime)" }} /></div>
+                    <div style={{ fontFamily: MONO, fontSize: 9.5, color: "#8C877E", marginTop: 9 }}>{t("parsingHint")}</div>
+                  </div>
                 </div>
               )}
               <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0" }}>
                 <span style={{ flex: 1, height: 1, background: "var(--line)" }} /><span style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)" }}>{t("orAuto")}</span><span style={{ flex: 1, height: 1, background: "var(--line)" }} />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                <HardButton variant="surface" onClick={() => { setFromCV(false); setStep(2); }} full style={{ fontSize: 14 }}>
+                <HardButton variant="surface" onClick={() => setSocialSoon(true)} full style={{ fontSize: 14 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21.6 12.2c0-.6-.1-1.2-.2-1.8H12v3.4h5.4c-.2 1.2-.9 2.3-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.1Z" fill="#4285F4" /><path d="M12 22c2.7 0 5-1 6.6-2.7l-3.2-2.5c-.9.6-2 .9-3.4.9-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6C4.7 19.8 8.1 22 12 22Z" fill="#34A853" /><path d="M6.4 13.6c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7H3.1C2.4 8.5 2 10.2 2 12s.4 3.5 1.1 5l3.3-2.6Z" fill="#FBBC05" /><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 2.9 14.7 2 12 2 8.1 2 4.7 4.2 3.1 7.5l3.3 2.6C7.2 7.6 9.4 5.9 12 5.9Z" fill="#EA4335" /></svg>{t("withGoogle")}
                 </HardButton>
-                <HardButton variant="surface" onClick={() => { setFromCV(false); setStep(2); }} full style={{ fontSize: 14 }}>
+                <HardButton variant="surface" onClick={() => setSocialSoon(true)} full style={{ fontSize: 14 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.4 3H3.6A.6.6 0 003 3.6v16.8a.6.6 0 00.6.6h16.8a.6.6 0 00.6-.6V3.6a.6.6 0 00-.6-.6ZM8.3 18.3H5.5V9.4h2.8v8.9ZM6.9 8.2a1.6 1.6 0 110-3.3 1.6 1.6 0 010 3.3Zm11.4 10.1h-2.8v-4.3c0-1 0-2.4-1.4-2.4s-1.7 1.1-1.7 2.3v4.4H9.6V9.4h2.7v1.2h.04c.4-.7 1.3-1.5 2.6-1.5 2.8 0 3.3 1.9 3.3 4.3v4.9Z" /></svg>{t("withLinkedin")}
                 </HardButton>
+                {socialSoon && <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--soft)", textAlign: "center" }}>{t("soon")}</div>}
                 <button onClick={() => { setFromCV(false); setStep(2); }} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: 13, color: "var(--soft)", background: "transparent", border: "none", padding: 8, cursor: "pointer" }}>{t("manual")}</button>
               </div>
             </div>
@@ -249,12 +265,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
                   <div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: "#2C3907" }}>{t("autofillBanner")}</div><div style={{ fontSize: 12, color: "#46540F", marginTop: 1 }}>{t("autofillHint")}</div></div>
                 </div>
               )}
-              {fromCV && (
-                <button onClick={() => setStep(1)} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 12.5, color: "var(--soft)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 14 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  {t("useAnotherCv")}
-                </button>
-              )}
+              {fromCV && cvName && <CvMiniCard name={cvName} onReplace={onFile} t={t} />}
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div><label style={label}>{t("firstName")}{fromCV && form.firstName && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.firstName} onChange={(e) => set("firstName", e.target.value)} placeholder={t("firstNamePlaceholder")} style={inputStyle} /></div>
@@ -296,7 +307,7 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
 
                 {fromCV && parsed.exp.length > 0 && <ParsedBlock title={t("experience")} tag={t("fromCV")} items={parsed.exp.map((e) => ({ main: e.title, sub: [e.company, [e.start_date, e.is_current ? "actual" : e.end_date].filter(Boolean).join(" — ")].filter(Boolean).join(" · ") }))} />}
                 {fromCV && parsed.edu.length > 0 && <ParsedBlock title={t("education")} tag={t("fromCV")} items={parsed.edu.map((e) => ({ main: e.degree, sub: [e.institution, [e.start_year, e.end_year].filter(Boolean).join(" — ")].filter(Boolean).join(" · ") }))} />}
-                {fromCV && parsed.langs.length > 0 && <ParsedBlock title={t("languages")} tag={t("fromCV")} items={parsed.langs.map((l) => ({ main: l.language, sub: l.level ?? "" }))} />}
+                {fromCV && parsed.langs.length > 0 && <LanguagesBlock langs={parsed.langs} tag={t("fromCV")} title={t("languages")} basic={t("basic")} />}
               </div>
             </div>
           )}
@@ -370,15 +381,110 @@ export function ApplyWizard({ job, screening, slug, locale, authed = false }: { 
         </div>
       </div>
 
-      {/* sticky action */}
+      {/* sticky action — fija abajo en mobile; anclada bajo el formulario en desktop */}
       {showAction && (
-        <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, background: "rgba(252,250,246,.96)", backdropFilter: "blur(8px)", borderTop: "1px solid var(--line)", padding: "12px 16px 16px", zIndex: 20 }}>
+        <div className="jb-apply-action" style={{ background: "rgba(252,250,246,.96)", backdropFilter: "blur(8px)", borderTop: "1px solid var(--line)", padding: "12px 16px 16px", zIndex: 20 }}>
           <div style={{ maxWidth: 560, margin: "0 auto" }}>
+            {actionHint && <p style={{ fontFamily: MONO, fontSize: 10, color: actionDisabled && step === 3 ? "var(--accent)" : "var(--soft)", textAlign: "center", margin: "0 0 8px" }}>{actionHint}</p>}
             <HardButton variant={actionVariant} full disabled={actionDisabled} onClick={primary}>{actionLabel}</HardButton>
           </div>
         </div>
       )}
+      </div>{/* /jb-apply-main */}
+
+      {preview && <OfferPreview job={job} preview={preview} t={t} tDetail={tDetail} tModality={tModality} />}
+      </div>{/* /jb-apply-shell */}
     </BoardRoot>
+  );
+}
+
+// Preview de la oferta (solo desktop): lo que el candidato está aplicando, a la vista.
+function OfferPreview({ job, preview, t, tDetail, tModality }: { job: Job; preview: Preview; t: ReturnType<typeof useTranslations>; tDetail: ReturnType<typeof useTranslations>; tModality: ReturnType<typeof useTranslations> }) {
+  return (
+    <aside className="jb-apply-preview">
+      <div style={{ position: "sticky", top: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <CompanyLogo name={job.company} logoUrl={job.logoUrl} size={48} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--brand)", fontWeight: 700 }}>{job.company}</div>
+            <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 21, lineHeight: 1.08, letterSpacing: "-.6px", margin: "3px 0 0" }}>{job.title}</h2>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+          {job.city && <span style={{ fontSize: 11.5, fontWeight: 600, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "4px 9px" }}>{job.city}</span>}
+          {job.modality && <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "4px 9px" }}>{tModality(job.modality)}</span>}
+          {preview.employmentType && <span style={{ fontSize: 11.5, fontWeight: 600, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "4px 9px" }}>{preview.employmentType}</span>}
+        </div>
+        {(job.salary || preview.match) && (
+          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <MonoLabel style={{ fontSize: 9.5 }}>{tDetail("salary")}</MonoLabel>
+              <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 17, letterSpacing: "-.4px", color: "var(--brand)", marginTop: 2 }}>{job.salary || t("salaryOpen")}</div>
+            </div>
+            {preview.match && <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#46540F", background: "var(--limeSoft)", borderRadius: 8, padding: "5px 9px" }}>{t("matchForYou", { met: preview.match.met, total: preview.match.total })}</span>}
+          </div>
+        )}
+        {preview.description && <div>
+          <MonoLabel style={{ marginBottom: 7 }}>{tDetail("about")}</MonoLabel>
+          <p style={{ fontSize: 13, lineHeight: 1.55, color: "#3A3833", margin: 0, whiteSpace: "pre-wrap", maxHeight: 220, overflow: "hidden" }}>{preview.description}</p>
+        </div>}
+        {(preview.reqs.length > 0 || preview.skills.length > 0) && <div>
+          <MonoLabel style={{ marginBottom: 8 }}>{tDetail("looking")}</MonoLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: preview.skills.length ? 11 : 0 }}>
+            {preview.reqs.map((r, i) => (
+              <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10" fill="var(--brandSoft)" /><path d="M8 12.5l2.5 2.5 5-5.5" stroke="var(--brand)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span style={{ fontSize: 12.5, lineHeight: 1.4, color: "#3A3833" }}>{r}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {preview.skills.map((s) => (
+              <span key={s.name} style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: s.requirement === "excluyente" ? "#0E5C4A" : "#54504A", background: s.requirement === "excluyente" ? "var(--brandSoft)" : "var(--surface)", border: `1px solid ${s.requirement === "excluyente" ? "#BEE0CE" : "var(--line)"}`, borderRadius: 7, padding: "3px 8px" }}>{s.name}</span>
+            ))}
+          </div>
+        </div>}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10.5, color: "var(--soft)", paddingTop: 4 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke="var(--brand)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>{t("freeToApply")}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function CvMiniCard({ name, onReplace, t }: { name: string; onReplace: (f: File | null) => void; t: ReturnType<typeof useTranslations> }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 11, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "10px 12px", marginBottom: 14 }}>
+      <span style={{ width: 34, height: 42, borderRadius: 7, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><path d="M14 3v4h4" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg>
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
+        <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 1 }}>{t("cvAttached")}</div>
+      </div>
+      <label className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer", flexShrink: 0 }}>
+        <input type="file" accept="application/pdf,text/plain" onChange={(e) => onReplace(e.target.files?.[0] ?? null)} style={{ display: "none" }} />
+        {t("cvReplace")}
+      </label>
+    </div>
+  );
+}
+
+function LanguagesBlock({ langs, tag, title, basic }: { langs: Lang[]; tag: string; title: string; basic: string }) {
+  const dots = (level?: string | null) => { const k = (level ?? "").toLowerCase(); if (/nat|c2/.test(k)) return 5; if (/avan|c1|b2/.test(k)) return 4; if (/inter|b1/.test(k)) return 3; if (/bas|a2|a1/.test(k)) return 2; return 2; };
+  return (
+    <div>
+      <label style={label}>{title} <AiTag>{tag}</AiTag></label>
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "4px 12px" }}>
+        {langs.map((l, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: i < langs.length - 1 ? "1px solid var(--line)" : "none" }}>
+            <span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, flex: 1 }}>{l.language}</span>
+            <div style={{ display: "flex", gap: 4 }}>{Array.from({ length: 5 }, (_, d) => <span key={d} style={{ width: 7, height: 7, borderRadius: "50%", background: d < dots(l.level) ? "#0E5C4A" : "#E0DACC" }} />)}</div>
+            <span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", width: 66, textAlign: "right" }}>{l.level || basic}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

@@ -160,7 +160,14 @@
     "acctError": "No se pudo completar. Inténtalo de nuevo.",
     "acctPwHint": "La contraseña debe tener al menos 8 caracteres.",
     "acctSkip": "Ahora no, seguir explorando",
-    "useAnotherCv": "Usar otro CV"
+    "useAnotherCv": "Usar otro CV",
+    "matchForYou": "Match {met} de {total}",
+    "freeToApply": "Aplicar es gratis",
+    "salaryOpen": "A convenir",
+    "answerRequiredHint": "Responde las preguntas obligatorias",
+    "soon": "Próximamente",
+    "cvReplace": "Reemplazar",
+    "basic": "Básico"
   },
   "account": {
     "title": "Mi cuenta",
