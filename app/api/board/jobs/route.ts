@@ -13,6 +13,9 @@ export async function GET(req: Request) {
     return v ? Number(v) || undefined : undefined;
   };
   const modality = g("modality");
+  // Multi-select: llegan como CSV (categoryKeys=a,b). Vacío → undefined.
+  const arr = (k: string) => { const v = url.searchParams.get(k); const a = v ? v.split(",").filter(Boolean) : []; return a.length ? a : undefined; };
+  const dp = g("datePosted");
   const params: BoardSearchParams = {
     q: g("q"),
     location: g("location"),
@@ -22,6 +25,11 @@ export async function GET(req: Request) {
     contract: g("contract"),
     salaryMin: num("salaryMin"),
     companyId: g("companyId"),
+    categoryKeys: arr("categoryKeys"),
+    modalities: arr("modalities"),
+    contracts: arr("contracts"),
+    companyIds: arr("companyIds"),
+    datePosted: dp === "24h" || dp === "week" || dp === "month" ? dp : undefined,
     sort: (g("sort") as BoardSort) ?? "relevance",
     page: num("page"),
     pageSize: num("pageSize"),

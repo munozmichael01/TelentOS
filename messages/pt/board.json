@@ -11,17 +11,27 @@
     "placeholder": "design remoto bem pago em Caracas",
     "submit": "Buscar",
     "filters": "Filtros",
-    "interpreted": "Como interpretamos sua busca"
+    "interpreted": "Como interpretamos sua busca",
+    "placeholderTop": "Cargo, empresa ou cidade",
+    "allFilters": "Todos os filtros",
+    "createAlert": "Criar alerta desta busca",
+    "alertActive": "Alerta ativo",
+    "alertCreated": "Alerta criado · aviso diário"
   },
   "sort": {
     "relevance": "Relevância",
     "recent": "Recente",
-    "salary": "Salário"
+    "salary": "Salário",
+    "label": "Ordenar"
   },
   "results": {
     "count": "{count, plural, =0 {Sem vagas} one {# vaga} other {# vagas}}",
     "selectPrompt": "Selecione uma vaga",
-    "selectHint": "Escolha uma vaga da lista para ver os detalhes aqui."
+    "selectHint": "Escolha uma vaga da lista para ver os detalhes aqui.",
+    "results": "{count, plural, one {# resultado} other {# resultados}}",
+    "ofRole": "de",
+    "inCity": "em",
+    "pageOf": "Página {page} de {total}"
   },
   "card": {
     "new": "Nova",
@@ -44,7 +54,28 @@
     "contract": "Tipo de contrato",
     "company": "Empresa",
     "location": "Localização",
-    "locationPlaceholder": "Digite uma cidade"
+    "locationPlaceholder": "Digite uma cidade",
+    "noOptions": "Sem opções",
+    "clearAll": "Limpar tudo",
+    "viewN": "Ver {count, plural, one {# vaga} other {# vagas}}",
+    "group": {
+      "area": "Área",
+      "modality": "Modalidade",
+      "salary": "Salário",
+      "contract": "Contrato",
+      "company": "Empresa",
+      "date": "Data"
+    },
+    "salaryBand": {
+      "lt1000": "< $1.000",
+      "b1000": "$1.000–2.000",
+      "b2000": "> $2.000"
+    },
+    "dateBand": {
+      "24h": "Últimas 24h",
+      "week": "Última semana",
+      "month": "Último mês"
+    }
   },
   "modality": {
     "remoto": "Remoto",
@@ -503,5 +534,9 @@
     "title": "{count, plural, one {# empresa contratando} other {# empresas contratando}}",
     "empty": "Ainda não há empresas com vagas ativas.",
     "openings": "{count, plural, one {# vaga} other {# vagas}}"
+  },
+  "crumb": {
+    "home": "Início",
+    "jobs": "Vagas"
   }
 }

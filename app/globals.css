@@ -323,10 +323,25 @@
    Alertas + avatar, sin tab bar; header alineado al ancho del board. */
 .jb-board-headwrap { max-width: 720px; }
 .jb-topnav { display: none; }
+.jb-topsearch { display: none; }
+.jb-hero { display: block; }
+.jb-filterstrip { display: none; }
+.jb-sort-mobile { display: flex; }
+/* "Todos los filtros": bottom-sheet en mobile */
+.jb-filtermodal { align-items: flex-end; }
+.jb-filtermodal-panel { border-radius: 22px 22px 0 0; border-bottom: 0; }
 @media (min-width: 1024px) {
   .jb-board-headwrap { max-width: 1240px; }
   .jb-topnav { display: flex; }
+  .jb-topsearch { display: flex; }
+  .jb-hero { display: none; }
   .jb-board-tabbar { display: none !important; }
+  /* Barra de filtros desktop */
+  .jb-filterstrip { display: flex; align-items: flex-start; gap: 10px; padding: 4px 0 14px; flex-wrap: wrap; }
+  .jb-sort-mobile { display: none; }
+  /* Modal de filtros centrado en desktop */
+  .jb-filtermodal { align-items: center; padding: 24px; }
+  .jb-filtermodal-panel { border-radius: 20px; box-shadow: 10px 10px 0 rgba(26,26,23,.18); }
 }
 
 /* Apply — split desktop: formulario 720px + preview de la oferta. Mobile: 1 columna. */

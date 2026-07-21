@@ -15,6 +15,12 @@ export type BoardSearchParams = {
   contract?: string; // employment_type
   salaryMin?: number;
   companyId?: string;
+  // Multi-select (barra de filtros desktop): OR dentro del grupo, AND entre grupos.
+  categoryKeys?: string[];
+  modalities?: string[];
+  contracts?: string[];
+  companyIds?: string[];
+  datePosted?: "24h" | "week" | "month";
   sort?: BoardSort;
   page?: number;
   pageSize?: number;
@@ -40,7 +46,7 @@ export type BoardJob = {
   hasRequiredScreening: boolean;
 };
 
-export type BoardFacet = { value: string; count: number };
+export type BoardFacet = { value: string; count: number; id?: string };
 export type BoardFacets = { category: BoardFacet[]; modality: BoardFacet[]; contract: BoardFacet[]; company: BoardFacet[] };
 
 const SELECT =
@@ -57,6 +63,16 @@ function applyFilters<T>(q: T, p: BoardSearchParams): T {
   if (p.contract) query = query.eq("employment_type", p.contract);
   if (p.companyId) query = query.eq("company_id", p.companyId);
   if (p.salaryMin) query = query.gte("salary_max", p.salaryMin);
+  // Multi-select (arrays): OR dentro del grupo vía IN.
+  if (p.categoryKeys?.length) query = query.in("category_key", p.categoryKeys);
+  if (p.modalities?.length) query = query.in("modality", p.modalities);
+  if (p.contracts?.length) query = query.in("employment_type", p.contracts);
+  if (p.companyIds?.length) query = query.in("company_id", p.companyIds);
+  if (p.datePosted) {
+    const days = p.datePosted === "24h" ? 1 : p.datePosted === "week" ? 7 : 30;
+    const cutoff = new Date(Date.now() - days * 86400000).toISOString();
+    query = query.gte("created_at", cutoff);
+  }
   return query;
 }
 
@@ -89,9 +105,11 @@ export async function searchJobs(
   }
   const jobs: BoardJob[] = jobRows.map((j) => ({ ...j, hasRequiredScreening: requiredSet.has(j.id) }));
 
-  // Facetas: se cuentan sobre TODO el set filtrado (columnas ligeras) — ok para el
-  // volumen actual; a escala se sustituye por conteos en DB.
-  const facetQ = applyFilters(supabase.from("jobs").select("category, modality, employment_type, company:companies(name)"), params);
+  // Facetas: conteos por opción sobre la base (texto/ubicación/fecha), SIN aplicar las
+  // selecciones de grupo — así cada chip muestra cuántas ofertas hay por opción de forma
+  // estable. Ok para el volumen actual; a escala, conteos en DB.
+  const facetBase: BoardSearchParams = { q: params.q, location: params.location, categoryKey: params.categoryKey, category: params.category, datePosted: params.datePosted };
+  const facetQ = applyFilters(supabase.from("jobs").select("category_key, modality, employment_type, company:companies(id, name)"), facetBase);
   const { data: facetRows } = await facetQ;
   const facets = buildFacets((facetRows ?? []) as Record<string, unknown>[]);
 
@@ -107,10 +125,22 @@ function buildFacets(rows: Record<string, unknown>[]): BoardFacets {
     }
     return Array.from(m.entries()).map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count);
   };
+  // Empresa: la faceta necesita id (para filtrar) + nombre (para mostrar).
+  const companyMap = new Map<string, { name: string; count: number }>();
+  for (const r of rows) {
+    const c = r.company as { id?: string; name?: string } | null;
+    if (c?.id && c.name) {
+      const cur = companyMap.get(c.id);
+      if (cur) cur.count++;
+      else companyMap.set(c.id, { name: c.name, count: 1 });
+    }
+  }
+  const company: BoardFacet[] = Array.from(companyMap.entries())
+    .map(([id, { name, count }]) => ({ value: name, count, id })).sort((a, b) => b.count - a.count);
   return {
-    category: tally((r) => r.category as string),
+    category: tally((r) => r.category_key as string),
     modality: tally((r) => r.modality as string),
     contract: tally((r) => r.employment_type as string),
-    company: tally((r) => (r.company as { name?: string } | null)?.name),
+    company,
   };
 }

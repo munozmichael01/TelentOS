@@ -11,17 +11,27 @@
     "placeholder": "diseño remoto bien pagado en Caracas",
     "submit": "Buscar",
     "filters": "Filtros",
-    "interpreted": "Interpretamos tu búsqueda"
+    "interpreted": "Interpretamos tu búsqueda",
+    "placeholderTop": "Cargo, empresa o ciudad",
+    "allFilters": "Todos los filtros",
+    "createAlert": "Crear alerta de esta búsqueda",
+    "alertActive": "Alerta activa",
+    "alertCreated": "Alerta creada · aviso diario"
   },
   "sort": {
     "relevance": "Relevancia",
     "recent": "Reciente",
-    "salary": "Salario"
+    "salary": "Salario",
+    "label": "Orden"
   },
   "results": {
     "count": "{count, plural, =0 {Sin ofertas} one {# oferta} other {# ofertas}}",
     "selectPrompt": "Selecciona una oferta",
-    "selectHint": "Elige una oferta de la lista para ver el detalle aquí."
+    "selectHint": "Elige una oferta de la lista para ver el detalle aquí.",
+    "results": "{count, plural, one {# resultado} other {# resultados}}",
+    "ofRole": "de",
+    "inCity": "en",
+    "pageOf": "Página {page} de {total}"
   },
   "card": {
     "new": "Nuevo",
@@ -44,7 +54,28 @@
     "contract": "Tipo de contrato",
     "company": "Empresa",
     "location": "Ubicación",
-    "locationPlaceholder": "Escribe una ciudad"
+    "locationPlaceholder": "Escribe una ciudad",
+    "noOptions": "Sin opciones",
+    "clearAll": "Limpiar todo",
+    "viewN": "Ver {count, plural, one {# oferta} other {# ofertas}}",
+    "group": {
+      "area": "Área",
+      "modality": "Modalidad",
+      "salary": "Salario",
+      "contract": "Contrato",
+      "company": "Empresa",
+      "date": "Fecha"
+    },
+    "salaryBand": {
+      "lt1000": "< $1.000",
+      "b1000": "$1.000–2.000",
+      "b2000": "> $2.000"
+    },
+    "dateBand": {
+      "24h": "Últimas 24h",
+      "week": "Última semana",
+      "month": "Último mes"
+    }
   },
   "modality": {
     "remoto": "Remoto",
@@ -503,5 +534,9 @@
     "title": "{count, plural, one {# empresa contratando} other {# empresas contratando}}",
     "empty": "Aún no hay empresas con ofertas activas.",
     "openings": "{count, plural, one {# oferta} other {# ofertas}}"
+  },
+  "crumb": {
+    "home": "Inicio",
+    "jobs": "Empleos"
   }
 }
