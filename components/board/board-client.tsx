@@ -9,12 +9,13 @@ import { modalityStyle, formatSalary, logoFor, relativeDate, isNew, jobSlug } fr
 import { BoardTabBar } from "@/components/board/tab-bar";
 import { OfferDetailPanel } from "@/components/board/offer-detail-panel";
 
-// ≥1240px activamos el split lista+detalle (LinkedIn-style). Por debajo, la tarjeta
-// navega a la página de oferta (comportamiento mobile intacto).
+// ≥1024px activamos el split lista+detalle (LinkedIn-style). Por debajo, la tarjeta
+// navega a la página de oferta (comportamiento mobile intacto). Coincide con el
+// breakpoint de las otras pantallas del board y con el split de la spec (tablet+desktop).
 function useIsDesktop() {
   const [d, setD] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1240px)");
+    const mq = window.matchMedia("(min-width: 1024px)");
     const on = () => setD(mq.matches);
     on();
     mq.addEventListener("change", on);
