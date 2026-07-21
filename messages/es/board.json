@@ -250,9 +250,14 @@
       "cv": "CV",
       "experience": "Experiencia",
       "languages": "Idiomas",
-      "portfolio": "Portafolio"
+      "portfolio": "Portafolio",
+      "about": "Sobre mí"
     },
-    "cvView": "Ver CV"
+    "cvView": "Ver CV",
+    "completeDone": "¡Tu perfil está completo!",
+    "completeDoneHint": "Ya puedes aplicar en un toque.",
+    "completeWithAi": "Completar mi perfil con IA",
+    "refineWithAi": "Afinar mi perfil con IA"
   },
   "auth": {
     "signinTitle": "Bienvenida de nuevo",
