@@ -267,3 +267,12 @@
   .jb-auth-form { flex: 0 0 600px; align-items: center; padding: 40px 48px; }
   .jb-auth-panel { display: flex; flex: 1 1 auto; }
 }
+
+/* Asistente — split responsive: mobile pantalla completa; desktop rail tinta + chat */
+.jb-asst-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.jb-asst-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; height: 100vh; }
+.jb-asst-rail { display: none; }
+@media (min-width: 1024px) {
+  .jb-asst-shell { flex-direction: row; }
+  .jb-asst-rail { display: flex; flex: 0 0 300px; }
+}

@@ -300,10 +300,16 @@
       "Diseño remoto > $1.500",
       "Producto en Caracas",
       "Trabajos junior",
-      "Mejor pagados"
+      "Mejor pagados",
+      "Crear alerta de esta búsqueda"
     ],
-    "easyApply": "Easy apply",
-    "applied": "Enviada"
+    "easyApply": "1 toque",
+    "applied": "Enviada",
+    "railWhat": "Qué puedo hacer",
+    "cap1": "Interpretar tu búsqueda",
+    "cap2": "Aplicar en un toque",
+    "cap3": "Crear alertas de ofertas",
+    "railReadonly": "Solo lectura · nunca publica ni comparte"
   },
   "builder": {
     "eyebrow": "Asistente de perfil",
