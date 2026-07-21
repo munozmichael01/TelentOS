@@ -60,7 +60,8 @@
   },
   "toast": {
     "saved": "Guardada en tus ofertas",
-    "unsaved": "Quitada de guardadas"
+    "unsaved": "Quitada de guardadas",
+    "applied": "Candidatura enviada · en 1 toque"
   },
   "detail": {
     "back": "Todas las ofertas",

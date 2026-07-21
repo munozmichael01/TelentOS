@@ -60,7 +60,8 @@
   },
   "toast": {
     "saved": "Salva nas suas vagas",
-    "unsaved": "Removida das salvas"
+    "unsaved": "Removida das salvas",
+    "applied": "Candidatura enviada · em 1 toque"
   },
   "detail": {
     "back": "Todas as vagas",

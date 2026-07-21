@@ -35,6 +35,9 @@ export type BoardJob = {
   category: string | null;
   created_at: string;
   company: { id: string; name: string; slug: string | null; logo_url: string | null } | null;
+  // ¿La oferta exige screening obligatorio? Decide en la card "1 toque" (sin screening)
+  // vs "Aplicar" (abre el flujo completo). Se resuelve por oferta en la propia búsqueda.
+  hasRequiredScreening: boolean;
 };
 
 export type BoardFacet = { value: string; count: number };
@@ -73,13 +76,26 @@ export async function searchJobs(
   const { data, count, error } = await q;
   if (error) throw new Error(error.message);
 
+  const jobRows = (data ?? []) as unknown as Omit<BoardJob, "hasRequiredScreening">[];
+  // Screening obligatorio por oferta (para el gating del botón de la card). Una sola query
+  // acotada a los IDs de la página. Si la RLS lo oculta al visitante, queda false (el flujo
+  // de aplicar lo re-verifica en servidor de todos modos).
+  const requiredSet = new Set<string>();
+  if (jobRows.length) {
+    const ids = jobRows.map((j) => j.id);
+    const { data: sc } = await supabase
+      .from("screening_questions").select("job_id").eq("required", true).in("job_id", ids);
+    for (const r of sc ?? []) requiredSet.add((r as { job_id: string }).job_id);
+  }
+  const jobs: BoardJob[] = jobRows.map((j) => ({ ...j, hasRequiredScreening: requiredSet.has(j.id) }));
+
   // Facetas: se cuentan sobre TODO el set filtrado (columnas ligeras) — ok para el
   // volumen actual; a escala se sustituye por conteos en DB.
   const facetQ = applyFilters(supabase.from("jobs").select("category, modality, employment_type, company:companies(name)"), params);
   const { data: facetRows } = await facetQ;
   const facets = buildFacets((facetRows ?? []) as Record<string, unknown>[]);
 
-  return { jobs: (data ?? []) as unknown as BoardJob[], total: count ?? 0, facets };
+  return { jobs, total: count ?? 0, facets };
 }
 
 function buildFacets(rows: Record<string, unknown>[]): BoardFacets {

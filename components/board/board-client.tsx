@@ -150,6 +150,15 @@ export function BoardClient({
   const [applied, setApplied] = useState<Record<string, boolean>>({});
   const [applying, setApplying] = useState<Record<string, boolean>>({});
 
+  // El board es ANÓNIMO por defecto. El "1 toque" (⚡) solo se ofrece a un candidato
+  // logueado con perfil completo; en cualquier otro caso la card muestra "Aplicar" y abre
+  // el flujo. Perfil completo es global; el screening es por oferta (viene en cada BoardJob).
+  const [hasProfile, setHasProfile] = useState(false);
+  useEffect(() => {
+    fetch("/api/board/profile").then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.completeness?.complete) setHasProfile(true); }).catch(() => {});
+  }, []);
+
   // Desktop: mantener seleccionada la oferta activa (o la primera) para el panel inline.
   // Mobile: sin selección (la tarjeta navega).
   useEffect(() => {
@@ -181,9 +190,10 @@ export function BoardClient({
     return () => window.removeEventListener("keydown", onKey);
   }, [isDesktop, jobs, selectedId, router]);
 
-  // Aplicar 1-toque desde la tarjeta: el endpoint resuelve (perfil completo → aplica;
-  // incompleto/screening → wizard; sin sesión → login). Honesto: es un botón que aplica.
-  async function quickApply(e: React.MouseEvent, j: BoardJob) {
+  // Aplicar en 1 toque desde la card — SOLO en modo "quick" (perfil completo ∧ sin
+  // screening). Aplica al instante con la ficha del candidato. Los demás casos NO llaman
+  // aquí: son un enlace al flujo Apply (modo "full"). stopPropagation para no seleccionar.
+  async function oneTapFromCard(e: React.MouseEvent, j: BoardJob) {
     e.preventDefault(); e.stopPropagation();
     if (applied[j.id] || applying[j.id]) return;
     setApplying((s) => ({ ...s, [j.id]: true }));
@@ -194,9 +204,9 @@ export function BoardClient({
     setApplying((s) => { const n = { ...s }; delete n[j.id]; return n; });
     if (!res) { flash(t("apply.error")); return; }
     if (res.status === 401) { router.push("/cuenta/entrar"); return; }
+    // Cambió el estado (screening/perfil) desde la carga → cae al flujo completo.
     if (res.d?.needsWizard) { router.push({ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug } }); return; }
-    if (res.status === 200 && res.d?.ok) { setApplied((s) => ({ ...s, [j.id]: true })); flash(t("detail.applied")); return; }
-    if (res.status === 409) { setApplied((s) => ({ ...s, [j.id]: true })); return; }
+    if ((res.status === 200 && res.d?.ok) || res.status === 409) { setApplied((s) => ({ ...s, [j.id]: true })); flash(t("toast.applied")); return; }
     flash(t("apply.error"));
   }
 
@@ -325,12 +335,20 @@ export function BoardClient({
                     <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 1 }}>{relativeDate(j.created_at, locale)}</div>
                   </div>
                   {applied[j.id] ? (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 10, padding: "7px 12px" }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="var(--brand)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>{t("detail.applied")}
+                    // Aplicada — verde suave, sin sombra (confirmación)
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)", background: "var(--brandSoft)", border: "1.5px solid #BEE0CE", borderRadius: 10, padding: "7px 12px" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke="var(--brand)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>{t("card.applied")}
                     </span>
+                  ) : hasProfile && !j.hasRequiredScreening ? (
+                    // 1 toque — solo perfil completo ∧ oferta sin screening (coral + rayo)
+                    <button onClick={(e) => oneTapFromCard(e, j)} disabled={!!applying[j.id]} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 10, padding: "7px 12px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer", opacity: applying[j.id] ? 0.7 : 1 }}>
+                      {applying[j.id] ? t("apply.sending") : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" /></svg>{t("card.quickApply")}</>}
+                    </button>
                   ) : (
-                    <button onClick={(e) => quickApply(e, j)} disabled={!!applying[j.id]} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--lime)", border: "2px solid var(--ink)", borderRadius: 10, padding: "7px 12px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer", opacity: applying[j.id] ? 0.7 : 1 }}>
-                      {applying[j.id] ? t("apply.sending") : <>{t("card.apply")} <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M13 3l-1.5 8H18l-7 10 1.5-8H6l7-10Z" fill="var(--ink)" /></svg></>}
+                    // Aplicar — por defecto (incl. anónimo): abre el flujo Apply, sin icono.
+                    // <button> (no <a>): la card ya es un <a> y anidar anchors rompe la hidratación.
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push({ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug: jobSlug(j) } }); }} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 10, padding: "7px 12px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer" }}>
+                      {t("card.apply")}
                     </button>
                   )}
                 </div>
