@@ -80,8 +80,12 @@ export async function POST(req: Request) {
   // texto con las tarjetas. El answer del LLM se usa solo para la pregunta de intake.
   let answer = result.output.answer;
   if (!result.output.intake_needed) {
+    // Si el agente interpretó facetas (ubicación/modalidad/área/…), reconoce el paso de
+    // interpretación antes del conteo (mockup: "Esto es lo que entendí de tu búsqueda.").
+    const interpreted = Object.values(result.output.filters ?? {}).some((v) => v != null && v !== "");
+    const lead = interpreted && total > 0 ? "Esto es lo que entendí de tu búsqueda. " : "";
     answer = total > 0
-      ? (total === 1 ? "Encontré 1 oferta que encaja." : `Encontré ${total} ofertas que encajan.`)
+      ? `${lead}${total === 1 ? "Encontré 1 oferta que encaja." : `Encontré ${total} ofertas que encajan.`}`
       : "No encontré ofertas con esos criterios. Prueba ampliar: quita la ubicación o cambia la modalidad.";
   }
 
