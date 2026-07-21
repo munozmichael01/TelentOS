@@ -352,7 +352,10 @@
     "preview": "Live preview",
     "previewRole": "Your profile",
     "previewAboutNotice": "Will be written when you generate your profile.",
-    "completeness": "Profile {pct}% complete"
+    "completeness": "Profile {pct}% complete",
+    "cvUploadBig": "Upload your CV and I build your profile",
+    "cvUploadHint": "PDF or text · I parse it, you confirm",
+    "orTellUs": "or tell us yourself"
   },
   "employer": {
     "back": "All jobs",

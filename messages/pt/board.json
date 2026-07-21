@@ -352,7 +352,10 @@
     "preview": "Prévia",
     "previewRole": "Seu perfil",
     "previewAboutNotice": "Será redigido ao gerar seu perfil.",
-    "completeness": "Perfil {pct}% completo"
+    "completeness": "Perfil {pct}% completo",
+    "cvUploadBig": "Envie seu CV e monto seu perfil",
+    "cvUploadHint": "PDF ou texto · eu processo, você confirma",
+    "orTellUs": "ou conte você"
   },
   "employer": {
     "back": "Todas as vagas",
