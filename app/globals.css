@@ -285,6 +285,12 @@
 .jb-acct-topbar { display: none; }
 .jb-acct-sidebar { display: none; }
 .jb-acct-grid2, .jb-acct-grid3, .jb-prefs-grid { display: flex; flex-direction: column; gap: 11px; }
+/* Perfil: en el DOM el CV va tras "Qué busco" (orden desktop del mockup); en mobile
+   el mockup lo quiere justo tras la completitud → lo subimos por order. */
+.jb-acct-profile { display: flex; flex-direction: column; }
+.jb-acct-profile .jb-ord-a { order: -3; }
+.jb-acct-profile .jb-ord-b { order: -2; }
+.jb-acct-profile .jb-ord-cv { order: -1; }
 .jb-prefs-grid { gap: 10px; }
 .jb-acct-ia-desktop { display: none; }
 @media (min-width: 1024px) {
@@ -302,6 +308,8 @@
   .jb-acct-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
   .jb-prefs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .jb-acct-name { font-size: 28px !important; letter-spacing: -1px !important; }
+  /* Desktop: CV tras "Qué busco" (orden del DOM) */
+  .jb-acct-profile .jb-ord-a, .jb-acct-profile .jb-ord-b, .jb-acct-profile .jb-ord-cv { order: 0; }
   /* Sheets → modal centrado (border tinta, sombra dura, sin handle) */
   .jb-sheet-overlay { align-items: center !important; padding: 40px; }
   .jb-sheet-panel { border-radius: 20px !important; border: 2px solid var(--ink) !important; box-shadow: 10px 10px 0 rgba(26,26,23,.18); max-width: 560px !important; }

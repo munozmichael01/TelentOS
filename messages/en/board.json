@@ -265,7 +265,7 @@
     "linkedin": "LinkedIn",
     "website": "Website",
     "addLinkHint": "Add link",
-    "add": "+ Add",
+    "add": "Add",
     "searchForMe": "Find jobs for me",
     "improveWithAi": "Improve my profile with AI",
     "settingsAndNotifications": "Settings and notifications",
@@ -346,7 +346,11 @@
     "viewDetail": "View detail",
     "searchJobs": "Search jobs",
     "aiCtaComplete": "Complete with AI",
-    "aiCtaRefine": "Refine with AI"
+    "aiCtaRefine": "Refine with AI",
+    "skillsPlaceholder": "Add a skill and press Enter",
+    "suggested": "Suggested",
+    "cvUpload": "Upload CV",
+    "cvEmpty": "You haven't uploaded your CV yet — it's what completes your profile most."
   },
   "auth": {
     "signinTitle": "Welcome back",

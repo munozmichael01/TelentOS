@@ -209,7 +209,7 @@ export function AccountClient({ locale }: { locale: string }) {
   const actionCount = applications.filter((a) => statusStyle(a).kind === "action").length;
   const content = loading ? <div style={{ textAlign: "center", color: "var(--soft)", padding: 44, fontSize: 14 }}>...</div> : (
     <>
-      {tab === "profile" && <ProfileTab display={display} completeness={completeness} exp={exp} edu={edu} langs={langs} links={links} avatarUrl={avatarUrl} onEdit={openEdit} onSettings={() => setSettingsOpen(true)} onAddItem={(ty) => setEditor({ type: ty, index: null })} onEditItem={(ty, i) => setEditor({ type: ty, index: i })} onRemoveItem={removeItem} onAvatar={setAvatarUrl} onCv={() => { fetch("/api/board/profile").then((r) => (r.ok ? r.json() : null)).then((p) => { if (p) { setSourced(p.sourced ?? {}); setCompleteness(p.completeness); } }); }} t={t} loc={loc} />}
+      {tab === "profile" && <ProfileTab display={display} completeness={completeness} exp={exp} edu={edu} langs={langs} links={links} avatarUrl={avatarUrl} onEdit={openEdit} onSettings={() => setSettingsOpen(true)} onAddItem={(ty) => setEditor({ type: ty, index: null })} onEditItem={(ty, i) => setEditor({ type: ty, index: i })} onRemoveItem={removeItem} onAvatar={setAvatarUrl} onSkills={(next) => { setSkills(next); persistProfile({ skills: next }); }} onCv={() => { fetch("/api/board/profile").then((r) => (r.ok ? r.json() : null)).then((p) => { if (p) { setSourced(p.sourced ?? {}); setCompleteness(p.completeness); } }); }} t={t} loc={loc} />}
       {tab === "applications" && <ApplicationsTracker t={t} applications={applications} loc={loc} onOpen={openApplicationDetail} />}
       {tab === "saved" && <SavedTab saved={saved} onRemove={removeSaved} t={t} loc={loc} />}
       {tab === "alerts" && <AlertsTab alerts={alerts} alertOn={alertOn} onToggle={toggleAlert} onNew={() => setNewAlertOpen(true)} onDelete={deleteAlert} t={t} />}
@@ -304,24 +304,24 @@ function Header({ title, onSettings }: { title: string; onSettings: () => void }
   );
 }
 
-function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, onEdit, onSettings, onAddItem, onEditItem, onRemoveItem, onAvatar, onCv, t, loc }: { display: ReturnType<typeof buildDisplay>; completeness: Completeness | null; exp: Experience[]; edu: Education[]; langs: Language[]; links: LinkItem[]; avatarUrl: string | null; onEdit: () => void; onSettings: () => void; onAddItem: (t: ItemType) => void; onEditItem: (t: ItemType, i: number) => void; onRemoveItem: (t: ItemType, i: number) => void; onAvatar: (url: string | null) => void; onCv: () => void; t: ReturnType<typeof useTranslations>; loc: string }) {
+function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, onEdit, onSettings, onAddItem, onEditItem, onRemoveItem, onAvatar, onCv, onSkills, t, loc }: { display: ReturnType<typeof buildDisplay>; completeness: Completeness | null; exp: Experience[]; edu: Education[]; langs: Language[]; links: LinkItem[]; avatarUrl: string | null; onEdit: () => void; onSettings: () => void; onAddItem: (t: ItemType) => void; onEditItem: (t: ItemType, i: number) => void; onRemoveItem: (t: ItemType, i: number) => void; onAvatar: (url: string | null) => void; onCv: () => void; onSkills: (next: string[]) => void; t: ReturnType<typeof useTranslations>; loc: string }) {
   const pct = completeness?.pct ?? 0;
   const complete = completeness?.complete ?? false;
   const pending = display.checks.filter((c) => !c.done);
   const dash = Math.round(151 * (1 - pct / 100));
   return (
-    <div className="jb-fade">
-      <section style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 16 }}>
+    <div className="jb-fade jb-acct-profile">
+      <section className="jb-ord-a" style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 16 }}>
         <AvatarUpload url={avatarUrl} name={display.name} onChange={onAvatar} t={t} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="jb-acct-name" style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 21, letterSpacing: "-.6px", lineHeight: 1 }}>{display.name || t("account.unnamed")}</div>
           <div style={{ fontSize: 13, color: "#54504A", marginTop: 3 }}>{display.headline || t("account.noHeadline")}</div>
           <div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}><PinIcon />{display.location || t("account.noLocation")}</div>
         </div>
-        <IconButton onClick={onEdit} label={t("account.edit")}><EditIcon /></IconButton>
+        <button onClick={onEdit} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 11, padding: "10px 15px", boxShadow: "3px 3px 0 var(--ink)", cursor: "pointer", flexShrink: 0 }}><EditIcon />{t("account.edit")}</button>
       </section>
 
-      <section style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 16, padding: 16, marginBottom: 14 }}>
+      <section className="jb-ord-b" style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 16, padding: 16, marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ position: "relative", width: 56, height: 56, flexShrink: 0 }}>
             <svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="#38352E" strokeWidth="6"/><circle cx="28" cy="28" r="24" fill="none" stroke="#C6F24E" strokeWidth="6" strokeLinecap="round" transform="rotate(-90 28 28)" strokeDasharray="151" strokeDashoffset={dash}/></svg>
@@ -338,13 +338,13 @@ function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, 
         )}
       </section>
 
-      {display.cvUrl && <Section title={t("account.cvTitle")}><CvCard t={t} name={display.cvName} onReplaced={onCv} /></Section>}
       <Section title={t("account.aboutTitle")} action={t("account.edit")} onAction={onEdit}><p style={{ fontSize: 13.5, lineHeight: 1.6, color: "#3A3833", margin: 0 }}>{display.about || t("account.emptyAbout")}</p></Section>
       <Section title={t("account.lookingFor")} action={t("account.edit")} onAction={onEdit}><PrefsView display={display} t={t} loc={loc} /></Section>
+      <Section className="jb-ord-cv" title={t("account.cvTitle")}><CvCard t={t} name={display.cvName} hasCv={!!display.cvUrl} onReplaced={onCv} /></Section>
       <ExperienceSection rows={exp} t={t} onAdd={() => onAddItem("exp")} onEdit={(i) => onEditItem("exp", i)} onRemove={(i) => onRemoveItem("exp", i)} />
       <EducationSection rows={edu} t={t} onAdd={() => onAddItem("edu")} onEdit={(i) => onEditItem("edu", i)} onRemove={(i) => onRemoveItem("edu", i)} />
       <LanguageSection rows={langs} t={t} onAdd={() => onAddItem("lang")} onEdit={(i) => onEditItem("lang", i)} onRemove={(i) => onRemoveItem("lang", i)} />
-      <Section title={t("account.skillsTitle")}><div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{display.skills.map((s) => <span key={s} style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 10px" }}>{s}</span>)}<button onClick={onEdit} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}>{t("account.add")}</button></div></Section>
+      <SkillsSection skills={display.skills} onChange={onSkills} t={t} />
       <LinksSection rows={links} t={t} onAdd={() => onAddItem("link")} onEdit={(i) => onEditItem("link", i)} onRemove={(i) => onRemoveItem("link", i)} />
       {/* Tarjeta IA — solo desktop (mockup): tinta + chispa + CTA lima condicional */}
       <div className="jb-acct-ia-desktop" style={{ alignItems: "center", gap: 16, background: "var(--ink)", color: "#F4F0E8", borderRadius: 14, padding: "20px 22px", marginTop: 6 }}>
@@ -361,11 +361,43 @@ function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, 
   );
 }
 
-function Section({ title, children, action, onAction }: { title: string; children: ReactNode; action?: string; onAction?: () => void }) {
-  return <section style={{ marginBottom: 14 }}><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}><MonoLabel>{title}</MonoLabel>{action && <button onClick={onAction} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--brand)", padding: "2px 4px", background: "transparent", border: 0, cursor: "pointer" }}>{action}</button>}</div><div style={cardStyle}>{children}</div></section>;
+const SUGGESTED_SKILLS = ["Figma", "UX research", "Prototyping", "Design systems", "Node.js", "SQL", "Excel", "Comunicación", "Liderazgo", "Inglés"];
+function SkillsSection({ skills, onChange, t }: { skills: string[]; onChange: (next: string[]) => void; t: ReturnType<typeof useTranslations> }) {
+  const [draft, setDraft] = useState("");
+  const add = (v: string) => { const x = v.trim(); if (!x || skills.some((s) => s.toLowerCase() === x.toLowerCase())) { setDraft(""); return; } onChange([...skills, x]); setDraft(""); };
+  const remove = (v: string) => onChange(skills.filter((s) => s !== v));
+  const suggested = SUGGESTED_SKILLS.filter((x) => !skills.some((s) => s.toLowerCase() === x.toLowerCase())).slice(0, 5);
+  return (
+    <Section title={t("account.skillsTitle")}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {skills.map((s) => (
+          <span key={s} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 8px 6px 11px" }}>
+            {s}
+            <button onClick={() => remove(s)} aria-label={`remove ${s}`} style={{ background: "none", border: 0, padding: 0, cursor: "pointer", display: "flex" }}><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="var(--soft)" strokeWidth="2.6" strokeLinecap="round" /></svg></button>
+          </span>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 7, marginTop: 10, maxWidth: 420 }}>
+        <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(draft); } }} placeholder={t("account.skillsPlaceholder")} style={{ ...inputStyle, flex: 1 }} />
+        <HardButton variant="brand" onClick={() => add(draft)} style={{ fontSize: 13, padding: "0 16px" }}>{t("account.add")}</HardButton>
+      </div>
+      {suggested.length > 0 && (
+        <div style={{ marginTop: 10 }}>
+          <MonoLabel style={{ fontSize: 9, marginBottom: 6 }}>{t("account.suggested")}</MonoLabel>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {suggested.map((sg) => <button key={sg} onClick={() => add(sg)} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px dashed #BEE0CE", borderRadius: 8, padding: "6px 9px", cursor: "pointer" }}>+ {sg}</button>)}
+          </div>
+        </div>
+      )}
+    </Section>
+  );
 }
 
-function CvCard({ t, name, onReplaced }: { t: ReturnType<typeof useTranslations>; name: string | null; onReplaced: () => void }) {
+function Section({ title, children, action, onAction, className }: { title: string; children: ReactNode; action?: string; onAction?: () => void; className?: string }) {
+  return <section className={className} style={{ marginBottom: 14 }}><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}><MonoLabel>{title}</MonoLabel>{action && <button onClick={onAction} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--brand)", padding: "2px 4px", background: "transparent", border: 0, cursor: "pointer" }}>{action}</button>}</div><div style={cardStyle}>{children}</div></section>;
+}
+
+function CvCard({ t, name, hasCv = true, onReplaced }: { t: ReturnType<typeof useTranslations>; name: string | null; hasCv?: boolean; onReplaced: () => void }) {
   const [busy, setBusy] = useState(false);
   const [replacing, setReplacing] = useState(false);
   async function open() {
@@ -384,6 +416,14 @@ function CvCard({ t, name, onReplaced }: { t: ReturnType<typeof useTranslations>
     }
     setReplacing(false);
   }
+  if (!hasCv) return (
+    <label className="jb-tap" style={{ display: "flex", alignItems: "center", gap: 12, cursor: replacing ? "wait" : "pointer" }}>
+      <input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => { const f = e.target.files?.[0]; if (f) replace(f); }} style={{ display: "none" }} />
+      <span style={{ width: 38, height: 46, borderRadius: 8, background: "var(--limeSoft)", border: "1.5px dashed #C6D96A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><FileIcon /></span>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, lineHeight: 1.45, color: "var(--soft)" }}>{t("account.cvEmpty")}</span>
+      <span className="jb-hard" style={{ flexShrink: 0, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--ink)", background: "var(--lime)", border: "2px solid var(--ink)", borderRadius: 9, padding: "8px 13px", boxShadow: "2px 2px 0 var(--ink)" }}>{replacing ? "…" : t("account.cvUpload")}</span>
+    </label>
+  );
   return <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 38, height: 46, borderRadius: 8, background: "var(--brandSoft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><FileIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name || t("account.cvFile")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.cvMeta")}</div></div><div style={{ display: "flex", gap: 6, flexShrink: 0 }}><button onClick={open} disabled={busy} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}>{busy ? "…" : t("account.cvView")}</button><label className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--soft)", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 10px", cursor: replacing ? "wait" : "pointer" }}><input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => { const f = e.target.files?.[0]; if (f) replace(f); }} style={{ display: "none" }} />{replacing ? "…" : t("account.cvReplace")}</label></div></div>;
 }
 
@@ -394,7 +434,7 @@ function PrefsView({ display, t, loc }: { display: ReturnType<typeof buildDispla
     { label: t("account.modality"), value: display.modality || t("account.open"), icon: <ScreenIcon /> },
     { label: t("account.location"), value: display.prefLocation || display.location || t("account.open"), icon: <PinIcon /> },
   ];
-  return <div className="jb-prefs-grid">{prefs.map((p) => <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 11 }}><span style={{ width: 28, height: 28, borderRadius: 8, background: "var(--bg)", color: "var(--soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{p.icon}</span><span style={{ fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: .4, color: "var(--soft)", width: 78, flexShrink: 0 }}>{p.label}</span><span style={{ fontSize: 13.5, fontWeight: 600, color: "#3A3833" }}>{p.value}</span></div>)}</div>;
+  return <div className="jb-prefs-grid">{prefs.map((p) => <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 11 }}><span style={{ width: 30, height: 30, borderRadius: 8, background: "var(--bg)", color: "var(--soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{p.icon}</span><span style={{ minWidth: 0 }}><span style={{ display: "block", fontFamily: MONO, fontSize: 9, textTransform: "uppercase", letterSpacing: .4, color: "var(--soft)" }}>{p.label}</span><span style={{ display: "block", fontSize: 14.5, fontWeight: 700, color: "var(--ink)", marginTop: 2 }}>{p.value}</span></span></div>)}</div>;
 }
 
 function ExperienceSection({ rows, t, onAdd, onEdit, onRemove }: { rows: Experience[]; t: ReturnType<typeof useTranslations>; onAdd: () => void; onEdit: (i: number) => void; onRemove: (i: number) => void }) {
@@ -427,17 +467,17 @@ function AvatarUpload({ url, name, onChange, t }: { url: string | null; name: st
       {url
         ? <img src={url} alt={name} style={{ width: 56, height: 56, borderRadius: 17, objectFit: "cover", boxShadow: "2px 2px 0 var(--ink)" }} />
         : <span style={{ width: 56, height: 56, borderRadius: 17, background: "linear-gradient(135deg,#8FE3D0,#4FBFA6)", color: "#063D31", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, boxShadow: "2px 2px 0 var(--ink)" }}>{initials(name)}</span>}
-      <label className="jb-tap" style={{ position: "absolute", right: -4, bottom: -4, width: 24, height: 24, borderRadius: "50%", background: "var(--ink)", border: "2px solid var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", cursor: busy ? "wait" : "pointer" }} aria-label={t("account.photoUpload")}>
+      <label className="jb-tap" style={{ position: "absolute", right: -4, bottom: -4, width: 28, height: 28, borderRadius: 8, background: "var(--surface)", border: "2px solid var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", cursor: busy ? "wait" : "pointer" }} aria-label={t("account.photoUpload")}>
         <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }} style={{ display: "none" }} />
-        {busy ? <span style={{ width: 10, height: 10, border: "2px solid #C6F24E", borderTopColor: "transparent", borderRadius: "50%", animation: "jbSpin .7s linear infinite" }} /> : <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 8h3l2-2h6l2 2h3v12H4V8Z" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="13" r="3" stroke="#C6F24E" strokeWidth="2" /></svg>}
+        {busy ? <span style={{ width: 10, height: 10, border: "2px solid var(--ink)", borderTopColor: "transparent", borderRadius: "50%", animation: "jbSpin .7s linear infinite" }} /> : <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 8h3l2-2h6l2 2h3v12H4V8Z" stroke="var(--ink)" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="13" r="3" stroke="var(--ink)" strokeWidth="2" /></svg>}
       </label>
     </div>
   );
 }
 
 function RowActions({ onEdit, onRemove }: { onEdit: () => void; onRemove: () => void }) {
-  const s: CSSProperties = { width: 28, height: 28, borderRadius: 8, background: "transparent", border: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, color: "var(--soft)" };
-  return <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
+  const s: CSSProperties = { width: 30, height: 30, borderRadius: 8, background: "var(--bg)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, color: "var(--soft)" };
+  return <div style={{ display: "flex", flexDirection: "row", gap: 6, flexShrink: 0, alignItems: "center" }}>
     <button onClick={onEdit} className="jb-tap" aria-label="edit" style={s}><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 00-3-3L5 17v3Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg></button>
     <button onClick={onRemove} className="jb-tap" aria-label="remove" style={s}><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
   </div>;
