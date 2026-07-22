@@ -111,12 +111,15 @@ export async function POST(req: Request) {
   // Perfil estructurado validado por el candidato en la modal (opcional).
   const validated = parseCvProfile(formData.get("cv_profile") ? String(formData.get("cv_profile")) : null);
 
-  // Dedupe de candidato por email
-  const { data: existingCandidate } = await supabase
+  // Dedupe de candidato por email. Puede haber VARIAS fichas con el mismo email
+  // (una por empresa/históricas) — maybeSingle() reventaría con 500; tomamos la más reciente.
+  const { data: existingCandidates } = await supabase
     .from("candidates")
     .select("id, phone, location, cv_url, skills, experience_years, summary, city, country_code")
     .ilike("email", email)
-    .maybeSingle();
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const existingCandidate = existingCandidates?.[0] ?? null;
 
   const phone = String(formData.get("phone") ?? "").trim() || null;
 

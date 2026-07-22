@@ -8,6 +8,9 @@ export type BoardSort = "relevance" | "recent" | "salary";
 
 export type BoardSearchParams = {
   q?: string; // palabra clave (título/descripción)
+  // Búsqueda amplia por tokens (OR entre todos): fallback cuando la frase exacta (q)
+  // no matchea nada — p. ej. "product owner" → ["product", "owner"] pega con "Producto".
+  qTokens?: string[];
   location?: string; // ciudad/texto
   category?: string; // free-text legacy
   categoryKey?: string; // categoría canónica (data/taxonomy/categories.json)
@@ -56,6 +59,10 @@ function applyFilters<T>(q: T, p: BoardSearchParams): T {
   // @ts-expect-error — encadenado de PostgREST tipado laxo
   let query = q.eq("status", "active");
   if (p.q) query = query.or(`title.ilike.%${p.q}%,description.ilike.%${p.q}%`);
+  else if (p.qTokens?.length) {
+    const parts = p.qTokens.flatMap((tk) => [`title.ilike.%${tk}%`, `description.ilike.%${tk}%`]);
+    query = query.or(parts.join(","));
+  }
   if (p.location) query = query.or(`city.ilike.%${p.location}%,location.ilike.%${p.location}%`);
   if (p.category) query = query.eq("category", p.category);
   if (p.categoryKey) query = query.eq("category_key", p.categoryKey);
