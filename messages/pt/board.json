@@ -343,7 +343,10 @@
     },
     "viewOriginalOffer": "Ver vaga original",
     "applicationProgress": "Progresso da sua candidatura",
-    "viewDetail": "Ver detalhe"
+    "viewDetail": "Ver detalhe",
+    "searchJobs": "Buscar vagas",
+    "aiCtaComplete": "Completar com IA",
+    "aiCtaRefine": "Refinar com IA"
   },
   "auth": {
     "signinTitle": "Bem-vinda de volta",
