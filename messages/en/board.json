@@ -343,7 +343,10 @@
     },
     "viewOriginalOffer": "View original job",
     "applicationProgress": "Your application progress",
-    "viewDetail": "View detail"
+    "viewDetail": "View detail",
+    "searchJobs": "Search jobs",
+    "aiCtaComplete": "Complete with AI",
+    "aiCtaRefine": "Refine with AI"
   },
   "auth": {
     "signinTitle": "Welcome back",

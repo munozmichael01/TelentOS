@@ -280,6 +280,34 @@
   .jb-asst-rail { display: flex; flex: 0 0 320px; }
   .jb-asst-jobs { grid-template-columns: 1fr 1fr; }
 }
+/* Mi cuenta — shell desktop (mockup): top bar 64px + sidebar 270px + main scroll.
+   Mobile intacto (header sticky + tab bar + sheets desde abajo). */
+.jb-acct-topbar { display: none; }
+.jb-acct-sidebar { display: none; }
+.jb-acct-grid2, .jb-acct-grid3, .jb-prefs-grid { display: flex; flex-direction: column; gap: 11px; }
+.jb-prefs-grid { gap: 10px; }
+.jb-acct-ia-desktop { display: none; }
+@media (min-width: 1024px) {
+  .jb-acct-topbar { display: flex; }
+  .jb-acct-header-mobile { display: none; }
+  .jb-acct-tabbar { display: none !important; }
+  .jb-acct-footer-mobile { display: none !important; }
+  .jb-acct-ia-desktop { display: flex; }
+  .jb-acct-body { display: flex; align-items: stretch; height: calc(100vh - 64px); }
+  .jb-acct-sidebar { display: flex; flex-direction: column; width: 270px; flex-shrink: 0; border-right: 1px solid var(--line); background: var(--surface); padding: 22px 16px; overflow-y: auto; }
+  .jb-acct-scroll { flex: 1; overflow-y: auto; min-width: 0; }
+  .jb-acct-narrow { max-width: 760px !important; padding: 32px 40px 60px !important; }
+  .jb-acct-wide { max-width: 1060px !important; padding: 32px 40px 48px !important; }
+  .jb-acct-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .jb-acct-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .jb-prefs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .jb-acct-name { font-size: 28px !important; letter-spacing: -1px !important; }
+  /* Sheets → modal centrado (border tinta, sombra dura, sin handle) */
+  .jb-sheet-overlay { align-items: center !important; padding: 40px; }
+  .jb-sheet-panel { border-radius: 20px !important; border: 2px solid var(--ink) !important; box-shadow: 10px 10px 0 rgba(26,26,23,.18); max-width: 560px !important; }
+  .jb-sheet-handle { display: none; }
+}
+
 /* Puntos "pensando" del asistente */
 .jb-dot { width: 7px; height: 7px; border-radius: 50%; background: #B4AEA3; animation: jbDot 1.2s infinite ease-in-out; }
 .jb-dot:nth-child(2) { animation-delay: .15s; }
