@@ -265,7 +265,7 @@
     "linkedin": "LinkedIn",
     "website": "Site",
     "addLinkHint": "Adicionar link",
-    "add": "+ Adicionar",
+    "add": "Adicionar",
     "searchForMe": "Buscar vagas para mim",
     "improveWithAi": "Melhorar meu perfil com IA",
     "settingsAndNotifications": "Ajustes e notificações",
@@ -346,7 +346,11 @@
     "viewDetail": "Ver detalhe",
     "searchJobs": "Buscar vagas",
     "aiCtaComplete": "Completar com IA",
-    "aiCtaRefine": "Refinar com IA"
+    "aiCtaRefine": "Refinar com IA",
+    "skillsPlaceholder": "Adicione uma skill e pressione Enter",
+    "suggested": "Sugeridas",
+    "cvUpload": "Enviar CV",
+    "cvEmpty": "Você ainda não enviou seu CV — é o que mais completa seu perfil."
   },
   "auth": {
     "signinTitle": "Bem-vinda de volta",
