@@ -86,8 +86,24 @@ export function BoardClient({
   const [savedSearch, setSavedSearch] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Autocomplete estructurado del buscador (desktop + mobile).
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [citySug, setCitySug] = useState<{ name: string; admin1?: string }[]>([]);
 
   const catLabel = (key?: string) => categories.find((c) => c.key === key)?.label ?? key ?? "";
+
+  async function fetchCities(q: string) {
+    if (!q.trim()) { setCitySug([]); return; }
+    const r = await fetch(`/api/board/cities?country=${country}&q=${encodeURIComponent(q)}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    setCitySug(r?.cities ?? []);
+  }
+  // Cierre por clic fuera (respeta zonas data-keep-open).
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onDown = (e: MouseEvent) => { const el = e.target as HTMLElement; if (el?.closest?.("[data-keep-open]")) return; setSearchOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [searchOpen]);
 
   function flash(msg: string) {
     setToast(msg);
@@ -280,6 +296,69 @@ export function BoardClient({
   const activeArea = sel.area[0] ? catLabel(sel.area[0]) : null;
   const activeCity = location.trim() || null;
 
+  // ── Autocomplete estructurado ────────────────────────────────────────────
+  function onQueryChange(v: string) { setQuery(v); setSearchOpen(true); fetchCities(v); }
+  const qlc = query.trim().toLowerCase();
+  const areaSug = qlc ? categories.filter((c) => c.label.toLowerCase().includes(qlc)).slice(0, 3) : [];
+  const citySugF = qlc ? citySug.slice(0, 3) : [];
+  const compSug = qlc ? facets.company.filter((c) => c.value.toLowerCase().includes(qlc)).slice(0, 3) : [];
+  const combo = (() => {
+    if (!qlc) return null;
+    const area = categories.find((c) => qlc.includes(c.label.toLowerCase()));
+    const city = citySug.find((c) => qlc.includes(c.name.toLowerCase()));
+    return area && city ? { areaKey: area.key, areaLabel: area.label, city: city.name } : null;
+  })();
+  const hasStructured = !!combo || areaSug.length > 0 || citySugF.length > 0 || compSug.length > 0;
+
+  function applyStructured(next: Sel, loc: string) {
+    setSel(next); setLocation(loc); setQuery(""); setNlChips([]); setSearchOpen(false); setPage(1);
+    startTransition(() => fetchJobs(next, sort, "", loc, 1));
+  }
+  const selectArea = (key: string) => applyStructured({ ...emptySel(), area: [key] }, "");
+  const selectCity = (name: string) => applyStructured(emptySel(), name);
+  const selectCompany = (id: string) => applyStructured({ ...emptySel(), company: [id] }, "");
+  const selectCombo = (areaKey: string, city: string) => applyStructured({ ...emptySel(), area: [areaKey] }, city);
+  function selectContextual() { setSearchOpen(false); runSearch(); }
+
+  const SUGG_ICON: Record<string, { bg: string; c: string; path: JSX.Element }> = {
+    area: { bg: "#DCEFE4", c: "#0E5C4A", path: <path d="M3 7h18M6 12h12M10 17h4" strokeWidth="2" strokeLinecap="round" /> },
+    city: { bg: "#F8E7C4", c: "#946312", path: <><path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12Z" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="9" r="2.4" strokeWidth="2" /></> },
+    company: { bg: "#E7E0F2", c: "#5A4C86", path: <path d="M4 20V7l8-4 8 4v13M9 20v-5h6v5" strokeWidth="2" strokeLinejoin="round" /> },
+  };
+  function suggRow(type: "area" | "city" | "company", label: string, meta: string, onClick: () => void) {
+    const ic = SUGG_ICON[type];
+    return (
+      <div key={`${type}-${label}`} data-val={label} onMouseDown={(e) => { e.preventDefault(); onClick(); }} className="jb-tap" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 8, cursor: "pointer" }}>
+        <span style={{ width: 26, height: 26, borderRadius: 7, background: ic.bg, color: ic.c, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">{ic.path}</svg></span>
+        <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{label}</span>
+        <span style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)" }}>{meta}</span>
+      </div>
+    );
+  }
+  function autocomplete() {
+    if (!searchOpen || query.trim().length === 0) return null;
+    return (
+      <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--surface)", border: "1.5px solid var(--ink)", borderRadius: 12, boxShadow: "5px 5px 0 rgba(26,26,23,.12)", zIndex: 46, padding: 6, maxHeight: 360, overflowY: "auto", textAlign: "left" }}>
+        {combo && <>
+          <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", letterSpacing: .5, color: "var(--brand)", padding: "6px 12px 4px" }}>{t("search.structured")}</div>
+          <div data-val={`${combo.areaLabel} en ${combo.city}`} onMouseDown={(e) => { e.preventDefault(); selectCombo(combo.areaKey, combo.city); }} className="jb-tap" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, cursor: "pointer", borderBottom: "1px solid var(--line)" }}>
+            <span style={{ width: 26, height: 26, borderRadius: 7, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h18M6 12h12M10 17h4" strokeWidth="2" strokeLinecap="round" /></svg></span>
+            <span style={{ flex: 1, fontSize: 14 }}><b>{combo.areaLabel}</b> {t("results.inCity")} <b>{combo.city}</b></span>
+            <span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--brand)" }}>{t("search.metaCombo")}</span>
+          </div>
+        </>}
+        {areaSug.length > 0 && <><div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "var(--soft)", padding: "6px 12px 2px" }}>{t("search.groupAreas")}</div>{areaSug.map((c) => suggRow("area", c.label, t("search.metaArea"), () => selectArea(c.key)))}</>}
+        {citySugF.length > 0 && <><div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "var(--soft)", padding: "6px 12px 2px" }}>{t("search.groupCities")}</div>{citySugF.map((c) => suggRow("city", c.name, t("search.metaCity"), () => selectCity(c.name)))}</>}
+        {compSug.length > 0 && <><div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "var(--soft)", padding: "6px 12px 2px" }}>{t("search.groupCompanies")}</div>{compSug.map((c) => suggRow("company", c.value, t("search.metaCompany"), () => c.id && selectCompany(c.id)))}</>}
+        <div data-val={query} onMouseDown={(e) => { e.preventDefault(); selectContextual(); }} className="jb-tap" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 12px", borderRadius: 8, cursor: "pointer", borderTop: hasStructured ? "1px solid var(--line)" : "none", marginTop: hasStructured ? 2 : 0 }}>
+          <span style={{ width: 26, height: 26, borderRadius: 7, background: "var(--limeSoft)", color: "#46540F", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z" stroke="#46540F" strokeWidth="1.7" strokeLinejoin="round" /></svg></span>
+          <span style={{ flex: 1, fontSize: 14 }}>{t("search.searchAll")} <b>“{query}”</b></span>
+          <span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{t("search.metaContextual")}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={ROOT}>
       {/* Header — logo + top-nav (Empresas/Alertas/cuenta) en desktop; solo logo+cuenta en mobile */}
@@ -294,10 +373,11 @@ export function BoardClient({
             </span>
           </Link>
           {/* Buscador compacto en la barra superior — solo desktop (mobile lo tiene en el hero) */}
-          <div className="jb-topsearch" style={{ flex: 1, maxWidth: 520, alignItems: "center", gap: 9, background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 11, boxShadow: "2px 2px 0 var(--ink)", padding: "7px 12px" }}>
+          <div className="jb-topsearch" data-keep-open style={{ position: "relative", flex: 1, maxWidth: 520, alignItems: "center", gap: 9, background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 11, boxShadow: "2px 2px 0 var(--ink)", padding: "7px 12px" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="7" stroke="var(--soft)" strokeWidth="2" /><path d="M20 20l-3.5-3.5" stroke="var(--soft)" strokeWidth="2" strokeLinecap="round" /></svg>
-            <input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") runSearch(); }} placeholder={t("search.placeholderTop")} style={{ flex: 1, minWidth: 0, fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 14.5, color: "var(--ink)", background: "transparent", border: "none", outline: "none" }} />
-            <button onClick={runSearch} disabled={pending} className="jb-hard" style={{ flexShrink: 0, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 9, padding: "6px 15px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer", opacity: pending ? 0.7 : 1 }}>{t("search.submit")}</button>
+            <input value={query} onChange={(e) => onQueryChange(e.target.value)} onFocus={() => setSearchOpen(true)} onKeyDown={(e) => { if (e.key === "Enter") { setSearchOpen(false); runSearch(); } }} placeholder={t("search.placeholderTop")} style={{ flex: 1, minWidth: 0, fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 14.5, color: "var(--ink)", background: "transparent", border: "none", outline: "none" }} />
+            <button onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); runSearch(); }} disabled={pending} className="jb-hard" style={{ flexShrink: 0, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 9, padding: "6px 15px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer", opacity: pending ? 0.7 : 1 }}>{t("search.submit")}</button>
+            {autocomplete()}
           </div>
           {/* Nav + cuenta, agrupados a la derecha (nav visible solo en desktop) */}
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 20 }}>
@@ -326,15 +406,17 @@ export function BoardClient({
           {t("hero.title")} <span style={{ fontStyle: "italic", color: "var(--accent)" }}>{t("hero.titleAccent")}</span> {t("hero.titleEnd")}
         </h1>
 
-        <div style={{ background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 14, boxShadow: "3px 3px 0 var(--ink)", padding: "11px 13px", display: "flex", alignItems: "center", gap: 10 }}>
+        <div data-keep-open style={{ position: "relative", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 14, boxShadow: "3px 3px 0 var(--ink)", padding: "11px 13px", display: "flex", alignItems: "center", gap: 10 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="7" stroke="var(--soft)" strokeWidth="2" /><path d="M20 20l-3.5-3.5" stroke="var(--soft)" strokeWidth="2" strokeLinecap="round" /></svg>
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") runSearch(); }}
+            onChange={(e) => onQueryChange(e.target.value)}
+            onFocus={() => setSearchOpen(true)}
+            onKeyDown={(e) => { if (e.key === "Enter") { setSearchOpen(false); runSearch(); } }}
             placeholder={t("search.placeholder")}
             style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 15, color: "var(--ink)", background: "transparent", border: "none", outline: "none" }}
           />
+          {autocomplete()}
         </div>
         <div style={{ display: "flex", gap: 7, marginTop: 9 }}>
           <button onClick={runSearch} disabled={pending} className="jb-hard" style={{ flex: 1, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 11, padding: 11, boxShadow: "3px 3px 0 var(--ink)", cursor: "pointer", opacity: pending ? 0.7 : 1 }}>
