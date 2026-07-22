@@ -16,7 +16,17 @@
     "allFilters": "All filters",
     "createAlert": "Create alert for this search",
     "alertActive": "Alert active",
-    "alertCreated": "Alert created · daily"
+    "alertCreated": "Alert created · daily",
+    "structured": "Structured search",
+    "groupAreas": "Areas",
+    "groupCities": "Cities",
+    "groupCompanies": "Companies",
+    "metaArea": "area",
+    "metaCity": "city",
+    "metaCompany": "company",
+    "metaCombo": "area · city",
+    "metaContextual": "contextual",
+    "searchAll": "Search"
   },
   "sort": {
     "relevance": "Relevance",
