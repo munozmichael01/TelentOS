@@ -66,7 +66,13 @@ export async function POST(req: Request) {
   const edus = education.success ? education.data : [];
   const langs = languages.success ? languages.data : [];
   const educationLevel = highestEducationLevel(edus.map((e) => e.level)) ?? ((c.education_level as EducationLevel | null) ?? null);
-  const { data: existing } = await admin.from("candidates").select("id, user_id").ilike("email", email).maybeSingle();
+  // El email puede existir en VARIAS fichas (una por empresa, o históricas). maybeSingle()
+  // con >1 fila revienta con 500 — bug real reportado en prod. Preferimos la ficha ya
+  // vinculada a esta cuenta; si no, la más reciente.
+  const { data: existingRows } = await admin.from("candidates")
+    .select("id, user_id").ilike("email", email)
+    .order("created_at", { ascending: false }).limit(10);
+  const existing = (userId && existingRows?.find((r) => r.user_id === userId)) || existingRows?.[0] || null;
 
   let candidateId = existing?.id as string | undefined;
   if (!candidateId) {

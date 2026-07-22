@@ -120,7 +120,11 @@
     "oneTap": "Candidatar num toque",
     "applied": "Candidatado!",
     "openFull": "Ver vaga completa",
-    "save": "Salvar"
+    "save": "Salvar",
+    "matchLabel": "Match para você",
+    "matchValue": "{n} de {total}",
+    "matchSub": "preferências atendidas",
+    "applyInline": "Candidatar-se a esta vaga"
   },
   "apply": {
     "title": "Candidatar-se a {job}",

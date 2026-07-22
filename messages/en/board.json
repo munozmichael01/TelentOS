@@ -120,7 +120,11 @@
     "oneTap": "Apply in one tap",
     "applied": "Applied!",
     "openFull": "Open full posting",
-    "save": "Save"
+    "save": "Save",
+    "matchLabel": "Match for you",
+    "matchValue": "{n} of {total}",
+    "matchSub": "preferences met",
+    "applyInline": "Apply to this job"
   },
   "apply": {
     "title": "Apply to {job}",

@@ -2,10 +2,29 @@ import { NextResponse } from "next/server";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { jsonError } from "@/lib/api";
 import { runBoardAssistant } from "@/agents/agent-board-assistant";
-import { searchJobs } from "@/lib/job-board/search";
+import { searchJobs, type BoardSearchParams } from "@/lib/job-board/search";
+import { getCategories } from "@/lib/board/categories";
 import { resolveSkillIds } from "@/lib/skills";
 import { computeRecruiterFit, type JobSkillReq } from "@/lib/job-board/fit";
 import type { EducationLevel, SeniorityLevel } from "@/lib/types";
+
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const STOP = new Set(["para", "with", "como", "sobre", "trabajo", "empleo", "oferta", "ofertas", "junior", "senior"]);
+const tokensOf = (s: string) => norm(s).split(/[^a-z0-9]+/).filter((w) => w.length > 3 && !STOP.has(w));
+
+// Mapea texto libre ("product owner", "diseño") a categorías canónicas por afinidad
+// de tokens con el label ("product"→"Producto, UX y diseño digital").
+function resolveCategoryKeys(text: string): string[] {
+  const toks = tokensOf(text);
+  if (!toks.length) return [];
+  const out: string[] = [];
+  for (const c of getCategories("es-ve")) {
+    const labelToks = tokensOf(c.label);
+    const hit = toks.some((t) => labelToks.some((l) => l.startsWith(t) || t.startsWith(l)));
+    if (hit) out.push(c.key);
+  }
+  return out;
+}
 
 // Asistente del board — GATED a candidato logueado (decisión de producto). El agente
 // ordena el intake y narra; aquí re-ejecutamos la búsqueda determinista con sus filtros
@@ -33,8 +52,30 @@ export async function POST(req: Request) {
   // (salvo que pida más intake, en cuyo caso aún no hay filtros que ejecutar).
   let jobs: unknown[] = [];
   let total = 0;
+  let widened = false;
   if (!result.output.intake_needed) {
-    const res = await searchJobs(supabase, { ...result.output.filters, pageSize: 12 });
+    // La categoría del LLM es free-text; a la búsqueda solo le sirve la canónica.
+    const f = result.output.filters;
+    const catKeys = f.category ? resolveCategoryKeys(f.category) : [];
+    const base: BoardSearchParams = {
+      q: f.q, location: f.location, modality: f.modality, contract: f.contract,
+      salaryMin: f.salaryMin, categoryKeys: catKeys.length ? catKeys : undefined, pageSize: 12,
+    };
+    let res = await searchJobs(supabase, base);
+    // 0 resultados con frase exacta → amplía: tokens del q (OR) + categorías detectadas
+    // desde el propio q. "product owner" → token "product" pega con "Producto…".
+    if (res.total === 0 && f.q) {
+      const toks = tokensOf(f.q);
+      const catFromQ = resolveCategoryKeys(f.q);
+      if (toks.length || catFromQ.length) {
+        res = await searchJobs(supabase, {
+          ...base, q: undefined,
+          qTokens: toks.length ? toks : undefined,
+          categoryKeys: catFromQ.length ? catFromQ : base.categoryKeys,
+        });
+        widened = res.total > 0;
+      }
+    }
     jobs = res.jobs;
     total = res.total;
 
@@ -83,7 +124,9 @@ export async function POST(req: Request) {
     // Si el agente interpretó facetas (ubicación/modalidad/área/…), reconoce el paso de
     // interpretación antes del conteo (mockup: "Esto es lo que entendí de tu búsqueda.").
     const interpreted = Object.values(result.output.filters ?? {}).some((v) => v != null && v !== "");
-    const lead = interpreted && total > 0 ? "Esto es lo que entendí de tu búsqueda. " : "";
+    const lead = widened
+      ? "No encontré coincidencias exactas, pero esto es lo más cercano. "
+      : interpreted && total > 0 ? "Esto es lo que entendí de tu búsqueda. " : "";
     answer = total > 0
       ? `${lead}${total === 1 ? "Encontré 1 oferta que encaja." : `Encontré ${total} ofertas que encajan.`}`
       : "No encontré ofertas con esos criterios. Prueba ampliar: quita la ubicación o cambia la modalidad.";

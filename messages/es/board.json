@@ -120,7 +120,11 @@
     "oneTap": "Aplicar en un toque",
     "applied": "¡Aplicado!",
     "openFull": "Ver oferta completa",
-    "save": "Guardar"
+    "save": "Guardar",
+    "matchLabel": "Match para ti",
+    "matchValue": "{n} de {total}",
+    "matchSub": "preferencias cumplidas",
+    "applyInline": "Aplicar a esta oferta"
   },
   "apply": {
     "title": "Aplica a {job}",
