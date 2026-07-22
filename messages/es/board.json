@@ -24,9 +24,11 @@
     "metaArea": "área",
     "metaCity": "ciudad",
     "metaCompany": "empresa",
-    "metaCombo": "área · ciudad",
+    "metaCombo": "cargo · ciudad",
     "metaContextual": "contextual",
-    "searchAll": "Buscar"
+    "searchAll": "Buscar",
+    "groupTitles": "Cargos",
+    "metaTitle": "cargo"
   },
   "sort": {
     "relevance": "Relevancia",
@@ -388,7 +390,8 @@
     "perkOneTapDesc": "Sin volver a llenar formularios en cada oferta.",
     "perkAlertsDesc": "Te avisamos cuando entra la vacante correcta.",
     "socialProofCount": "+12.000 candidatos",
-    "socialProofRest": "ya encontraron trabajo con TalentOS."
+    "socialProofRest": "ya encontraron trabajo con TalentOS.",
+    "companySessionNote": "Tienes una sesión de empresa abierta. Al entrar como candidato se cerrará esa sesión."
   },
   "assistant": {
     "cta": "Asistente IA",

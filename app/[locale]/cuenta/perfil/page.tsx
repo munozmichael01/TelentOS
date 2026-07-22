@@ -8,6 +8,6 @@ import { ProfileBuilder } from "@/components/board/profile-builder";
 export default async function ProfileBuilderPage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
   const { data: { user } } = await createClient().auth.getUser();
-  if (!user) redirect({ href: "/cuenta/entrar", locale: params.locale });
+  if (user?.app_metadata?.audience !== "candidate") redirect({ href: "/cuenta/entrar", locale: params.locale });
   return <ProfileBuilder locale={params.locale} />;
 }
