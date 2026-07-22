@@ -8,6 +8,6 @@ import { BoardAssistant } from "@/components/board/board-assistant";
 export default async function AssistantPage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
   const { data: { user } } = await createClient().auth.getUser();
-  if (!user) redirect({ href: "/cuenta/entrar", locale: params.locale });
+  if (user?.app_metadata?.audience !== "candidate") redirect({ href: "/cuenta/entrar", locale: params.locale });
   return <BoardAssistant locale={params.locale} />;
 }

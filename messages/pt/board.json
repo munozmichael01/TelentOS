@@ -24,9 +24,11 @@
     "metaArea": "área",
     "metaCity": "cidade",
     "metaCompany": "empresa",
-    "metaCombo": "área · cidade",
+    "metaCombo": "cargo · cidade",
     "metaContextual": "contextual",
-    "searchAll": "Buscar"
+    "searchAll": "Buscar",
+    "groupTitles": "Cargos",
+    "metaTitle": "cargo"
   },
   "sort": {
     "relevance": "Relevância",
@@ -388,7 +390,8 @@
     "perkOneTapDesc": "Sem preencher formulários em cada vaga.",
     "perkAlertsDesc": "Avisamos quando a vaga certa aparece.",
     "socialProofCount": "+12.000 candidatos",
-    "socialProofRest": "já encontraram trabalho com a TalentOS."
+    "socialProofRest": "já encontraram trabalho com a TalentOS.",
+    "companySessionNote": "Você tem uma sessão de empresa aberta. Entrar como candidato vai substituí-la."
   },
   "assistant": {
     "cta": "Assistente IA",

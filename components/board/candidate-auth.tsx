@@ -20,7 +20,7 @@ const ROOT: CSSProperties = {
 const input: CSSProperties = { width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 15, color: "#1A1A17", background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: 11, padding: "12px 13px", outline: "none", boxSizing: "border-box" };
 const labelStyle: CSSProperties = { fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "#79746B", display: "block", marginBottom: 6 };
 
-export function CandidateAuth({ locale }: { locale: string }) {
+export function CandidateAuth({ locale, companySession = false }: { locale: string; companySession?: boolean }) {
   const t = useTranslations("Board.auth");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -86,6 +86,12 @@ export function CandidateAuth({ locale }: { locale: string }) {
           <span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 18, letterSpacing: "-.5px" }}>TalentOS <span style={{ color: "var(--brand)" }}>Empleos</span></span>
         </Link>
 
+        {companySession && (
+          <div style={{ marginTop: 18, display: "flex", gap: 9, background: "#F8E7C4", border: "1px solid #EBD4A0", borderRadius: 12, padding: "11px 13px" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="9" stroke="#946312" strokeWidth="2" /><path d="M12 8v5M12 16h.01" stroke="#946312" strokeWidth="2" strokeLinecap="round" /></svg>
+            <p style={{ fontSize: 12.5, lineHeight: 1.5, color: "#7A5210", margin: 0 }}>{t("companySessionNote")}</p>
+          </div>
+        )}
         <h1 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 29, lineHeight: 1.02, letterSpacing: "-1.2px", margin: "26px 0 6px" }}>{signup ? t("signupTitle") : t("signinTitle")}</h1>
         <p style={{ fontSize: 14.5, lineHeight: 1.5, color: "var(--soft)", margin: "0 0 20px" }}>{signup ? t("signupSub") : t("signinSub")}</p>
 

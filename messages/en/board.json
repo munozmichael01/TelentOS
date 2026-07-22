@@ -24,9 +24,11 @@
     "metaArea": "area",
     "metaCity": "city",
     "metaCompany": "company",
-    "metaCombo": "area · city",
+    "metaCombo": "role · city",
     "metaContextual": "contextual",
-    "searchAll": "Search"
+    "searchAll": "Search",
+    "groupTitles": "Roles",
+    "metaTitle": "role"
   },
   "sort": {
     "relevance": "Relevance",
@@ -388,7 +390,8 @@
     "perkOneTapDesc": "No more filling forms on every job.",
     "perkAlertsDesc": "We ping you when the right role opens.",
     "socialProofCount": "+12,000 candidates",
-    "socialProofRest": "already found work with TalentOS."
+    "socialProofRest": "already found work with TalentOS.",
+    "companySessionNote": "You have a company session open. Signing in as a candidate will replace it."
   },
   "assistant": {
     "cta": "AI assistant",

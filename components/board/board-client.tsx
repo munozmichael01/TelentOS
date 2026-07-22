@@ -89,6 +89,7 @@ export function BoardClient({
   // Autocomplete estructurado del buscador (desktop + mobile).
   const [searchOpen, setSearchOpen] = useState(false);
   const [citySug, setCitySug] = useState<{ name: string; admin1?: string }[]>([]);
+  const [titleSug, setTitleSug] = useState<string[]>([]);
 
   const catLabel = (key?: string) => categories.find((c) => c.key === key)?.label ?? key ?? "";
 
@@ -96,6 +97,11 @@ export function BoardClient({
     if (!q.trim()) { setCitySug([]); return; }
     const r = await fetch(`/api/board/cities?country=${country}&q=${encodeURIComponent(q)}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
     setCitySug(r?.cities ?? []);
+  }
+  async function fetchTitles(q: string) {
+    if (!q.trim()) { setTitleSug([]); return; }
+    const r = await fetch(`/api/board/titles?q=${encodeURIComponent(q)}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    setTitleSug(r?.titles ?? []);
   }
   // Cierre por clic fuera (respeta zonas data-keep-open).
   useEffect(() => {
@@ -297,35 +303,37 @@ export function BoardClient({
   const activeCity = location.trim() || null;
 
   // ── Autocomplete estructurado ────────────────────────────────────────────
-  function onQueryChange(v: string) { setQuery(v); setSearchOpen(true); fetchCities(v); }
+  function onQueryChange(v: string) { setQuery(v); setSearchOpen(true); fetchCities(v); fetchTitles(v); }
   const qlc = query.trim().toLowerCase();
-  const areaSug = qlc ? categories.filter((c) => c.label.toLowerCase().includes(qlc)).slice(0, 3) : [];
+  const titleSugF = qlc ? titleSug.slice(0, 3) : [];
   const citySugF = qlc ? citySug.slice(0, 3) : [];
   const compSug = qlc ? facets.company.filter((c) => c.value.toLowerCase().includes(qlc)).slice(0, 3) : [];
+  // Combo "Cargo en Ciudad" cuando el texto contiene ambas señales (mockup).
   const combo = (() => {
     if (!qlc) return null;
-    const area = categories.find((c) => qlc.includes(c.label.toLowerCase()));
+    const title = titleSug.find((tt) => qlc.includes(tt.toLowerCase()) || tt.toLowerCase().includes(qlc.split(" en ")[0]?.trim() ?? " "));
     const city = citySug.find((c) => qlc.includes(c.name.toLowerCase()));
-    return area && city ? { areaKey: area.key, areaLabel: area.label, city: city.name } : null;
+    return title && city ? { title, city: city.name } : null;
   })();
-  const hasStructured = !!combo || areaSug.length > 0 || citySugF.length > 0 || compSug.length > 0;
+  const hasStructured = !!combo || titleSugF.length > 0 || citySugF.length > 0 || compSug.length > 0;
 
-  function applyStructured(next: Sel, loc: string) {
-    setSel(next); setLocation(loc); setQuery(""); setNlChips([]); setSearchOpen(false); setPage(1);
-    startTransition(() => fetchJobs(next, sort, "", loc, 1));
+  // Sugerencia estructurada → filtro exacto, sin call-out interpretado (spec).
+  function applyStructured(next: Sel, loc: string, q = "") {
+    setSel(next); setLocation(loc); setQuery(q); setNlChips([]); setSearchOpen(false); setPage(1);
+    startTransition(() => fetchJobs(next, sort, q, loc, 1));
   }
-  const selectArea = (key: string) => applyStructured({ ...emptySel(), area: [key] }, "");
+  const selectTitle = (title: string) => applyStructured(emptySel(), "", title);
   const selectCity = (name: string) => applyStructured(emptySel(), name);
   const selectCompany = (id: string) => applyStructured({ ...emptySel(), company: [id] }, "");
-  const selectCombo = (areaKey: string, city: string) => applyStructured({ ...emptySel(), area: [areaKey] }, city);
+  const selectCombo = (title: string, city: string) => applyStructured(emptySel(), city, title);
   function selectContextual() { setSearchOpen(false); runSearch(); }
 
   const SUGG_ICON: Record<string, { bg: string; c: string; path: JSX.Element }> = {
-    area: { bg: "#DCEFE4", c: "#0E5C4A", path: <path d="M3 7h18M6 12h12M10 17h4" strokeWidth="2" strokeLinecap="round" /> },
+    title: { bg: "#DCEFE4", c: "#0E5C4A", path: <><rect x="3" y="7" width="18" height="13" rx="2" strokeWidth="2" /><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" strokeWidth="2" /></> },
     city: { bg: "#F8E7C4", c: "#946312", path: <><path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12Z" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="9" r="2.4" strokeWidth="2" /></> },
     company: { bg: "#E7E0F2", c: "#5A4C86", path: <path d="M4 20V7l8-4 8 4v13M9 20v-5h6v5" strokeWidth="2" strokeLinejoin="round" /> },
   };
-  function suggRow(type: "area" | "city" | "company", label: string, meta: string, onClick: () => void) {
+  function suggRow(type: "title" | "city" | "company", label: string, meta: string, onClick: () => void) {
     const ic = SUGG_ICON[type];
     return (
       <div key={`${type}-${label}`} data-val={label} onMouseDown={(e) => { e.preventDefault(); onClick(); }} className="jb-tap" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 8, cursor: "pointer" }}>
@@ -341,13 +349,13 @@ export function BoardClient({
       <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--surface)", border: "1.5px solid var(--ink)", borderRadius: 12, boxShadow: "5px 5px 0 rgba(26,26,23,.12)", zIndex: 46, padding: 6, maxHeight: 360, overflowY: "auto", textAlign: "left" }}>
         {combo && <>
           <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", letterSpacing: .5, color: "var(--brand)", padding: "6px 12px 4px" }}>{t("search.structured")}</div>
-          <div data-val={`${combo.areaLabel} en ${combo.city}`} onMouseDown={(e) => { e.preventDefault(); selectCombo(combo.areaKey, combo.city); }} className="jb-tap" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, cursor: "pointer", borderBottom: "1px solid var(--line)" }}>
-            <span style={{ width: 26, height: 26, borderRadius: 7, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h18M6 12h12M10 17h4" strokeWidth="2" strokeLinecap="round" /></svg></span>
-            <span style={{ flex: 1, fontSize: 14 }}><b>{combo.areaLabel}</b> {t("results.inCity")} <b>{combo.city}</b></span>
+          <div data-val={`${combo.title} en ${combo.city}`} onMouseDown={(e) => { e.preventDefault(); selectCombo(combo.title, combo.city); }} className="jb-tap" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, cursor: "pointer", borderBottom: "1px solid var(--line)" }}>
+            <span style={{ width: 26, height: 26, borderRadius: 7, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="7" width="18" height="13" rx="2" strokeWidth="2" /><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" strokeWidth="2" /></svg></span>
+            <span style={{ flex: 1, fontSize: 14 }}><b>{combo.title}</b> {t("results.inCity")} <b>{combo.city}</b></span>
             <span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--brand)" }}>{t("search.metaCombo")}</span>
           </div>
         </>}
-        {areaSug.length > 0 && <><div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "var(--soft)", padding: "6px 12px 2px" }}>{t("search.groupAreas")}</div>{areaSug.map((c) => suggRow("area", c.label, t("search.metaArea"), () => selectArea(c.key)))}</>}
+        {titleSugF.length > 0 && <><div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "var(--soft)", padding: "6px 12px 2px" }}>{t("search.groupTitles")}</div>{titleSugF.map((tt) => suggRow("title", tt, t("search.metaTitle"), () => selectTitle(tt)))}</>}
         {citySugF.length > 0 && <><div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "var(--soft)", padding: "6px 12px 2px" }}>{t("search.groupCities")}</div>{citySugF.map((c) => suggRow("city", c.name, t("search.metaCity"), () => selectCity(c.name)))}</>}
         {compSug.length > 0 && <><div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "var(--soft)", padding: "6px 12px 2px" }}>{t("search.groupCompanies")}</div>{compSug.map((c) => suggRow("company", c.value, t("search.metaCompany"), () => c.id && selectCompany(c.id)))}</>}
         <div data-val={query} onMouseDown={(e) => { e.preventDefault(); selectContextual(); }} className="jb-tap" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 12px", borderRadius: 8, cursor: "pointer", borderTop: hasStructured ? "1px solid var(--line)" : "none", marginTop: hasStructured ? 2 : 0 }}>
