@@ -377,13 +377,35 @@
 .jb-dot:nth-child(3) { animation-delay: .3s; }
 @keyframes jbDot { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
 
-/* Perfil IA — split desktop: intake 520px + preview en vivo (tinta). Mobile: 1 col, preview oculto */
-.jb-pib-shell { width: 100%; }
-.jb-pib-preview { display: none; }
+/* Perfil IA — split PERMANENTE desktop: header full-width + intake 540px (border-right, siempre
+   visible) + panel de tinta que cambia por fase. Mobile: 1 columna, fases apiladas, footer sticky. */
+.jb-pib-page { display: flex; flex-direction: column; min-height: 100vh; }
+.jb-pib-header { display: flex; align-items: center; gap: 10px; padding: 8px 16px 12px; border-bottom: 1px solid var(--line); background: rgba(244,240,232,.9); flex-shrink: 0; }
+.jb-pib-back { width: 34px; height: 34px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; cursor: pointer; outline: none; flex-shrink: 0; }
+.jb-pib-logo { display: none; width: 34px; height: 34px; border-radius: 10px; background: var(--brand); align-items: center; justify-content: center; box-shadow: 2px 2px 0 var(--ink); flex-shrink: 0; }
+.jb-pib-hdr-note { display: none; }
+.jb-pib-body { flex: 1; min-height: 0; }
+.jb-pib-intake { padding: 16px; max-width: 480px; margin: 0 auto; }
+.jb-pib-intake--phased { display: none; }
+.jb-pib-lead { display: none; }
+.jb-pib-panel { display: none; }
+.jb-pib-mobilephase { display: block; }
+.jb-pib-lbl-desk { display: none; }
+.jb-pib-footer { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(252,250,246,.96); backdrop-filter: blur(8px); border-top: 1px solid var(--line); padding: 12px 16px 16px; z-index: 30; }
+.jb-pib-footer-inner { max-width: 480px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 9px; }
 @media (min-width: 1024px) {
-  .jb-pib-shell { display: flex; gap: 28px; align-items: flex-start; max-width: 1040px; margin: 0 auto; }
-  .jb-pib-intake { flex: 0 0 480px; max-width: 480px !important; }
-  .jb-pib-preview { display: flex; flex: 1 1 auto; }
+  .jb-pib-header { padding: 0 26px; height: 64px; gap: 14px; background: var(--surface); }
+  .jb-pib-back { width: 36px; height: 36px; background: var(--bg); box-shadow: 2px 2px 0 var(--ink); }
+  .jb-pib-logo { display: flex; }
+  .jb-pib-hdr-note { display: inline; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--soft); }
+  .jb-pib-body { display: flex; align-items: stretch; }
+  .jb-pib-intake { flex: 0 0 540px; max-width: 540px; margin: 0; border-right: 1px solid var(--line); padding: 34px 40px; overflow-y: auto; }
+  .jb-pib-intake--phased { display: block; }
+  .jb-pib-lead { display: block; }
+  .jb-pib-panel { display: flex; flex: 1 1 auto; flex-direction: column; background: var(--ink); padding: 34px 44px; overflow-y: auto; }
+  .jb-pib-mobilephase { display: none; }
+  .jb-pib-lbl-desk { display: inline; }
+  .jb-pib-lbl-mob { display: none; }
 }
 
 /* Board — split lista+detalle (LinkedIn-style). Mobile: 1 columna, tarjeta→página de oferta,
