@@ -48,6 +48,41 @@ export async function POST(req: Request) {
 
   const result = await runBoardAssistant({ query, history });
 
+  // Crear alerta desde el chat: si el usuario lo pide explícitamente (alerta / avísame /
+  // notifícame), persistimos una JobAlert con los filtros interpretados. La escritura la
+  // hace ESTE handler como acción explícita del usuario (misma ruta que el botón "Crear
+  // alerta" del board) — el agente solo interpreta, nunca escribe en la BBDD. RLS
+  // `job_alerts_own` scopa por user.id. Aparece en Mi cuenta › Alertas.
+  if (/alert|avis|notif/.test(norm(query))) {
+    const f = result.output.filters ?? {};
+    const criteria: Record<string, unknown> = {};
+    if (f.q) criteria.q = f.q;
+    if (f.location) criteria.location = f.location;
+    if (f.modality) criteria.modality = f.modality;
+    if (f.contract) criteria.contract = f.contract;
+    if (f.category) criteria.category = f.category;
+    if (typeof f.salaryMin === "number") criteria.salaryMin = f.salaryMin;
+    // Sin facetas claras: guarda el texto (sin las palabras de la orden) como término.
+    if (Object.keys(criteria).length === 0) {
+      const cleaned = query
+        .replace(/\b(cr[eé]a\w*|crear|una|un|de\s+esta|esta|b[uú]squeda|alerta|av[ií]sa\w*|av[ií]same|notif\w*|para)\b/gi, " ")
+        .replace(/\s+/g, " ").trim();
+      criteria.q = cleaned || query;
+    }
+    const { error: alertErr } = await supabase
+      .from("job_alerts")
+      .insert({ user_id: user.id, criteria, active: true, frequency: "daily" });
+    if (alertErr) {
+      return NextResponse.json({ answer: "No pude crear la alerta ahora mismo. Inténtalo de nuevo.", filters: f, jobs: [], total: 0 });
+    }
+    return NextResponse.json({
+      answer: "Listo, guardé tu búsqueda como alerta. Te aviso apenas entren ofertas que coincidan.",
+      filters: f,
+      alert: { criteria, frequency: "daily" },
+      jobs: [], total: 0,
+    });
+  }
+
   // JobCards autoritativos: búsqueda determinista con los filtros finales del agente
   // (salvo que pida más intake, en cuyo caso aún no hay filtros que ejecutar).
   let jobs: unknown[] = [];

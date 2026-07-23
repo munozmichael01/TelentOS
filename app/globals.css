@@ -291,15 +291,39 @@
   .jb-auth-tail { margin-top: 20px; }
 }
 
-/* Asistente — split responsive: mobile pantalla completa; desktop rail tinta + chat */
+/* Asistente — split responsive: mobile pantalla completa; desktop rail tinta + chat.
+   Base = valores móviles; en ≥1024px se aplican la tipografía y el espaciado desktop
+   (mockup Desktop Asistente): la identidad vive solo en el rail, no en una topbar. */
 .jb-asst-shell { min-height: 100vh; display: flex; flex-direction: column; }
 .jb-asst-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; height: 100vh; }
 .jb-asst-rail { display: none; }
-.jb-asst-jobs { grid-template-columns: 1fr; }
+.jb-asst-topbar { display: flex; }
+.jb-asst-scroll { padding: 16px 14px; }
+.jb-asst-thread { gap: 14px; padding: 0; }
+.jb-asst-bot-avatar { width: 28px; height: 28px; border-radius: 9px; }
+.jb-asst-bubble-bot { font-size: 13.5px; border-radius: 4px 14px 14px 14px; padding: 11px 13px; }
+.jb-asst-bubble-user { font-size: 13.5px; border-radius: 14px 14px 4px 14px; padding: 10px 13px; max-width: 80%; }
+.jb-asst-chips { margin-top: 9px; }
+.jb-asst-jobs { grid-template-columns: 1fr; gap: 9px; }
+.jb-asst-jobcard { padding: 13px; }
+.jb-asst-jobtitle { font-size: 14px; }
+.jb-asst-suggest { flex-wrap: nowrap; overflow-x: auto; }
+.jb-asst-send { width: 38px; height: 38px; }
 @media (min-width: 1024px) {
   .jb-asst-shell { flex-direction: row; }
-  .jb-asst-rail { display: flex; flex: 0 0 320px; }
-  .jb-asst-jobs { grid-template-columns: 1fr 1fr; }
+  .jb-asst-rail { display: flex; flex: 0 0 340px; }
+  .jb-asst-topbar { display: none; }
+  .jb-asst-scroll { padding: 32px 0; }
+  .jb-asst-thread { gap: 18px; padding: 0 32px; }
+  .jb-asst-bot-avatar { width: 32px; height: 32px; border-radius: 10px; }
+  .jb-asst-bubble-bot { font-size: 14.5px; border-radius: 5px 16px 16px 16px; padding: 13px 16px; }
+  .jb-asst-bubble-user { font-size: 14.5px; border-radius: 16px 16px 5px 16px; padding: 11px 15px; max-width: 76%; }
+  .jb-asst-chips { margin-top: 11px; }
+  .jb-asst-jobs { grid-template-columns: 1fr 1fr; gap: 11px; }
+  .jb-asst-jobcard { padding: 14px; }
+  .jb-asst-jobtitle { font-size: 14.5px; }
+  .jb-asst-suggest { flex-wrap: wrap; overflow-x: visible; }
+  .jb-asst-send { width: 42px; height: 42px; }
 }
 /* Mi cuenta — shell desktop (mockup): top bar 64px + sidebar 270px + main scroll.
    Mobile intacto (header sticky + tab bar + sheets desde abajo). */
