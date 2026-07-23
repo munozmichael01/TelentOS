@@ -9,7 +9,13 @@
 // interpretación + fit real. Los checks son RESILIENTES a datos cambiantes: validan
 // FORMA y franqueza (hay conteo, las ofertas salen de search y nunca se inventan, no
 // promete "buscando…"), no cifras exactas ni ofertas concretas.
+import { createRequire } from "node:module";
 import { admin, OWNER, sessionCookie, post, report } from "./_eval-common.mjs";
+
+// Claves canónicas de categoría: cuando el asistente interpreta un área, debe devolver la
+// CLAVE (anclado a la taxonomía), no texto libre.
+const require = createRequire(import.meta.url);
+const CANONICAL = new Set(require("../data/taxonomy/categories.json").categories.map((c) => c.key));
 
 // El caso de alerta persiste una JobAlert real (aún sin dedup). Marca de inicio para
 // borrar SOLO las alertas que cree esta corrida y no ensuciar la cuenta.
@@ -29,6 +35,8 @@ const CASES = [
       conteo: typeof j.total === "number",
       soloDeSearch: Array.isArray(j.jobs) && j.jobs.length <= j.total,
       sinFuturo: !FUTURE.test(j.answer ?? ""),
+      // grounding: si interpreta categoría, es una CLAVE canónica (no texto libre)
+      categoríaEsClave: !j.filters?.category || CANONICAL.has(j.filters.category),
     }),
   },
   {

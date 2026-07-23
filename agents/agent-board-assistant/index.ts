@@ -3,6 +3,16 @@ import { runAgent, type AgentResult } from "@/agents/core";
 import { SYSTEM_PROMPT } from "./prompt";
 import { tools, runBoardSearch } from "./tools";
 import { BoardSearchFiltersSchema, heuristicParse } from "@/agents/agent-board-search";
+import { getCategories } from "@/lib/board/categories";
+
+// Ancla la interpretación: el LLM ve la taxonomía canónica y devuelve la CLAVE en
+// `category` (no texto libre), evitando el mapeo difuso a posteriori. Se compone una vez.
+const SYSTEM_WITH_TAXONOMY =
+  SYSTEM_PROMPT +
+  "\n\nCATEGORÍAS canónicas del board. En 'category' devuelve la CLAVE exacta de esta lista " +
+  "cuando el rol/área encaje (p. ej. 'product owner' → product_design); si ninguna encaja, " +
+  "OMITE 'category' (no inventes una clave):\n" +
+  getCategories("es-ve").map((c) => `- ${c.key}: ${c.label}`).join("\n");
 
 // Asistente conversacional del board (gated a logueado). Intake → búsqueda determinista
 // (search_board) → narración. El endpoint re-ejecuta searchJobs con estos filtros para
@@ -39,7 +49,7 @@ export async function runBoardAssistant(
   const priorMessages = input.history.map((m) => ({ role: m.role, content: m.content }));
   return runAgent<BoardAssistantResponse>({
     agent: "board-assistant",
-    system: SYSTEM_PROMPT,
+    system: SYSTEM_WITH_TAXONOMY,
     user: input.query,
     priorMessages,
     tools,
