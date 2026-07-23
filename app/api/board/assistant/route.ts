@@ -15,18 +15,33 @@ const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,
 const STOP = new Set(["para", "with", "como", "sobre", "trabajo", "empleo", "oferta", "ofertas", "junior", "senior"]);
 const tokensOf = (s: string) => norm(s).split(/[^a-z0-9]+/).filter((w) => w.length > 3 && !STOP.has(w));
 
-// Mapea texto libre ("product owner", "diseño") a categorías canónicas por afinidad
-// de tokens con el label ("product"→"Producto, UX y diseño digital").
+const CATEGORY_KEYS = new Set(getCategories("es-ve").map((c) => c.key));
+
+// Fallback difuso (texto libre → categorías canónicas por afinidad con el label). Endurecido:
+// un token cuenta como match si es IGUAL a un token del label, o si comparten prefijo con la
+// parte más corta ≥5 chars ("product"→"producto", "diseño"→"diseñador"), evitando el ruido de
+// prefijos de ≤4 chars ("venta"→"ventaja"). La vía primaria ya no pasa por aquí: el LLM devuelve
+// la CLAVE canónica directa (categoryKeysFrom la usa tal cual); esto solo cubre texto libre.
 function resolveCategoryKeys(text: string): string[] {
   const toks = tokensOf(text);
   if (!toks.length) return [];
   const out: string[] = [];
   for (const c of getCategories("es-ve")) {
     const labelToks = tokensOf(c.label);
-    const hit = toks.some((t) => labelToks.some((l) => l.startsWith(t) || t.startsWith(l)));
+    const hit = toks.some((t) => labelToks.some((l) => {
+      if (l === t) return true;
+      const [short, long] = l.length <= t.length ? [l, t] : [t, l];
+      return short.length >= 5 && long.startsWith(short);
+    }));
     if (hit) out.push(c.key);
   }
   return out;
+}
+
+// Resuelve el campo `category` del agente: si ya es una CLAVE canónica (el LLM está anclado
+// a la taxonomía), se usa tal cual; si es texto libre, cae al fallback difuso.
+function categoryKeysFrom(cat: string): string[] {
+  return CATEGORY_KEYS.has(cat) ? [cat] : resolveCategoryKeys(cat);
 }
 
 // Asistente del board — GATED a candidato logueado (decisión de producto). El agente
@@ -108,7 +123,7 @@ export async function POST(req: Request) {
   if (!result.output.intake_needed) {
     // La categoría del LLM es free-text; a la búsqueda solo le sirve la canónica.
     const f = result.output.filters;
-    const catKeys = f.category ? resolveCategoryKeys(f.category) : [];
+    const catKeys = f.category ? categoryKeysFrom(f.category) : [];
     const base: BoardSearchParams = {
       q: f.q, location: f.location, modality: f.modality, contract: f.contract,
       salaryMin: f.salaryMin, categoryKeys: catKeys.length ? catKeys : undefined, pageSize: 12,
