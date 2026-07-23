@@ -14,15 +14,19 @@ function offerHref(job: BoardJob) {
  * tags ciudad/modalidad/contrato, salario, fecha y slot de acción (aplicar/guardar).
  * Componente único — el diseño de la card vive aquí, no duplicado por pantalla.
  */
-export function JobCard({ job, locale, t, action, save }: {
+export function JobCard({ job, locale, t, action, save, id, onClick, active, modalityLabel }: {
   job: BoardJob; locale: string;
   t: { new: string; salaryTBD: string };
   action?: ReactNode; // botón aplicar (varía por contexto)
   save?: ReactNode;    // botón guardar
+  id?: string;         // ancla para scrollIntoView (navegación por teclado)
+  onClick?: (e: React.MouseEvent) => void; // p.ej. seleccionar en el split desktop
+  active?: boolean;    // resaltado de la oferta seleccionada (split desktop)
+  modalityLabel?: (m: string) => string;   // traduce la modalidad
 }) {
   const salary = formatSalary(job, locale);
   return (
-    <Link href={offerHref(job)} className="jb-job" style={{ display: "block", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: 15, color: "inherit" }}>
+    <Link href={offerHref(job)} id={id} onClick={onClick} className={`jb-job${active ? " jb-board-card-active" : ""}`} style={{ display: "block", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: 15, color: "inherit" }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
         <CompanyLogo name={job.company?.name} logoUrl={job.company?.logo_url} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -37,7 +41,7 @@ export function JobCard({ job, locale, t, action, save }: {
       {job.description && <div style={{ fontSize: 12.5, lineHeight: 1.45, color: "#6B665E", marginTop: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{job.description}</div>}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 }}>
         {job.city && <MetaTag>{job.city}</MetaTag>}
-        {job.modality && <ModalityTag modality={job.modality} label={job.modality} />}
+        {job.modality && <ModalityTag modality={job.modality} label={modalityLabel ? modalityLabel(job.modality) : job.modality} />}
         {job.employment_type && <MetaTag>{job.employment_type}</MetaTag>}
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 11, borderTop: "1px solid var(--line)" }}>

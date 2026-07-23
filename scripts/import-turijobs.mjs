@@ -47,6 +47,11 @@ const CAT_MAP = {
   "Consultoría y Formación": "learning_education", "Seguridad": "office_admin",
 };
 const catKey = (c) => CAT_MAP[c?.trim()] ?? "hospitality_food"; // el feed es todo hostelería
+const DEFAULT_STAGES = [
+  { name: "Aplicado", order_index: 0, is_terminal: false }, { name: "Screening", order_index: 1, is_terminal: false },
+  { name: "Entrevista", order_index: 2, is_terminal: false }, { name: "Oferta", order_index: 3, is_terminal: false },
+  { name: "Contratado", order_index: 4, is_terminal: true }, { name: "Descartado", order_index: 5, is_terminal: true },
+];
 
 const COUNTRY = { "40": "ES", "118": "PT", "3": "AD", "71": "IT", "5": "FR", "122": "GB", "120": "US", "68": "MX", "60": "DE", "48": "CH" };
 
@@ -143,6 +148,11 @@ async function main() {
       dedupe_hash: dedupeHash(title, city ?? region),
     });
     if (error) { console.error("job insert", title.slice(0, 30), error.message); skipped++; continue; }
+    // Pipeline por defecto (para que la oferta tenga kanban en el ATS)
+    const { data: inserted } = await db.from("jobs").select("id").eq("company_id", companyId).eq("external_id", extId).maybeSingle();
+    if (inserted?.id) {
+      await db.from("job_stages").insert(DEFAULT_STAGES.map((s) => ({ ...s, job_id: inserted.id })));
+    }
     created++;
     if (created % 200 === 0) console.log(`  … ${created} ofertas`);
   }

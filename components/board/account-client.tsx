@@ -18,8 +18,8 @@ type ApplicationTimelineEvent = { type?: string | null; from_stage?: string | nu
 type ApplicationDetail = { application: Application; timeline: ApplicationTimelineEvent[] };
 type Saved = { id: string; created_at: string; job: Job | null };
 type Alert = { id: string; criteria: Record<string, unknown>; active: boolean; frequency?: string; match_count?: number; created_at?: string | null };
-type Experience = { title?: string | null; company?: string | null; seniority?: string | null; start_date?: string | null; end_date?: string | null; is_current?: boolean | null };
-type Education = { degree?: string | null; institution?: string | null; field?: string | null; level?: string | null; start_year?: number | null; end_year?: number | null };
+type Experience = { title?: string | null; company?: string | null; location?: string | null; summary?: string | null; seniority?: string | null; start_date?: string | null; end_date?: string | null; is_current?: boolean | null };
+type Education = { degree?: string | null; institution?: string | null; field?: string | null; level?: string | null; eduType?: string | null; location?: string | null; start_year?: number | null; end_year?: number | null };
 type Language = { language?: string | null; level?: string | null };
 type LinkItem = { type: string; url: string; label?: string | null };
 type Sourced = { experiences?: Experience[]; education?: Education[]; languages?: Language[]; skills?: string[]; first_name?: string | null; last_name?: string | null; phone?: string | null; city?: string | null; country_code?: string | null; cv_url?: string | null };
@@ -27,7 +27,10 @@ type Profile = { full_name?: string | null; first_name?: string | null; last_nam
 type ItemType = "exp" | "edu" | "lang" | "link";
 type Completeness = { pct: number; complete: boolean; missing: string[] };
 
-type FormState = { first_name: string; last_name: string; headline: string; about: string; phone: string; city: string; country_code: string; pref_salary_min: string; pref_currency: string; pref_modality: string; pref_locations: string; pref_contract: string; skills: string };
+type FormState = { first_name: string; last_name: string; email: string; headline: string; about: string; phone: string; city: string; country_code: string; pref_salary_min: string; pref_currency: string; pref_modality: string; pref_locations: string; pref_contract: string; skills: string };
+// Modos del editor de perfil, cada "Editar" abre su propia sección (mockup: isBasic/isAbout/isPrefs).
+type EditMode = "basic" | "about" | "prefs";
+type AlertDraft = { jobTitle: string; location: string; frequency: string };
 
 const pageStyle: CSSProperties = { maxWidth: 720, margin: "0 auto", padding: "16px 16px 84px" };
 const cardStyle: CSSProperties = { background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: 14 };
@@ -48,12 +51,13 @@ export function AccountClient({ locale }: { locale: string }) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [alertOn, setAlertOn] = useState<Record<string, boolean>>({});
   const [editOpen, setEditOpen] = useState(false);
+  const [editMode, setEditMode] = useState<EditMode>("basic");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [newAlertOpen, setNewAlertOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm());
   const [savingEdit, setSavingEdit] = useState(false);
-  const [alertName, setAlertName] = useState("");
-  const [alertFreq, setAlertFreq] = useState("daily");
+  // Editor de alerta unificado: null = cerrado; {id: null} = nueva; {id} = editar existente.
+  const [alertEditor, setAlertEditor] = useState<{ id: string | null; draft: AlertDraft } | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [prefsOn, setPrefsOn] = useState({ email: true, push: true, digest: false, visible: true });
   const [detailId, setDetailId] = useState<string | null>(null);
   const [appDetail, setAppDetail] = useState<ApplicationDetail | null>(null);
@@ -112,10 +116,16 @@ export function AccountClient({ locale }: { locale: string }) {
 
   const display = useMemo(() => buildDisplay(profile, sourced, skills), [profile, sourced, skills]);
 
-  function openEdit() {
+  function flashToast(msg: string) {
+    setToast(msg);
+    window.setTimeout(() => setToast((cur) => (cur === msg ? null : cur)), 2400);
+  }
+
+  function openEdit(mode: EditMode = "basic") {
     setForm({
       first_name: profile?.first_name ?? sourced.first_name ?? splitName(profile?.full_name).first,
       last_name: profile?.last_name ?? sourced.last_name ?? splitName(profile?.full_name).last,
+      email: profile?.email ?? "",
       headline: profile?.headline ?? "",
       about: profile?.about ?? "",
       phone: profile?.phone ?? sourced.phone ?? "",
@@ -128,6 +138,7 @@ export function AccountClient({ locale }: { locale: string }) {
       pref_contract: (profile?.pref_contract ?? []).join(", "),
       skills: display.skills.join(", "),
     });
+    setEditMode(mode);
     setEditOpen(true);
   }
 
@@ -136,10 +147,15 @@ export function AccountClient({ locale }: { locale: string }) {
     const first = form.first_name.trim();
     const last = form.last_name.trim();
     const salary = Number(form.pref_salary_min.replace(/[^0-9.]/g, ""));
+    // Los tres modos comparten el mismo form (inicializado con los valores actuales), así los
+    // campos que no toca ese modo hacen round-trip sin borrarse. Skills se editan inline (SkillsSection),
+    // por eso no se envían aquí. Nota: "Título profesional" (basic) y "Rol que buscas" (prefs)
+    // mapean ambos a headline — el modelo no tiene un campo de rol deseado separado.
     const body = {
       first_name: first,
       last_name: last,
       full_name: [first, last].filter(Boolean).join(" "),
+      email: form.email,
       headline: form.headline,
       about: form.about,
       phone: form.phone,
@@ -150,17 +166,37 @@ export function AccountClient({ locale }: { locale: string }) {
       pref_modality: splitList(form.pref_modality),
       pref_locations: splitList(form.pref_locations),
       pref_contract: splitList(form.pref_contract),
-      skills: splitList(form.skills),
     };
     const res = await fetch("/api/board/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
     setSavingEdit(false);
-    if (res) { setProfile(res.profile); setSkills(res.skills ?? []); setCompleteness(res.completeness); setEditOpen(false); }
+    if (res) { setProfile(res.profile); setCompleteness(res.completeness); setEditOpen(false); }
   }
 
-  async function createAlert() {
-    if (!alertName.trim()) return;
-    const res = await fetch("/api/board/alerts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ criteria: { q: alertName.trim() }, frequency: alertFreq }) }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    if (res?.alert) { setAlerts((a) => [res.alert, ...a]); setAlertOn((m) => ({ ...m, [res.alert.id]: true })); setAlertName(""); setNewAlertOpen(false); }
+  function openNewAlert() { setAlertEditor({ id: null, draft: { jobTitle: "", location: "", frequency: "daily" } }); }
+  function openEditAlert(al: Alert) {
+    const c = al.criteria as { q?: string; location?: string };
+    setAlertEditor({ id: al.id, draft: { jobTitle: c.q ?? "", location: c.location ?? "", frequency: al.frequency ?? "daily" } });
+  }
+  async function saveAlert(draft: AlertDraft) {
+    const job = draft.jobTitle.trim();
+    if (!job) return;
+    const criteria: Record<string, unknown> = { q: job };
+    if (draft.location.trim()) criteria.location = draft.location.trim();
+    const editing = alertEditor?.id ?? null;
+    if (editing) {
+      const res = await fetch("/api/board/alerts", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: editing, criteria, frequency: draft.frequency }) }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      const updated = res?.alert as Alert | undefined;
+      setAlerts((a) => a.map((x) => (x.id === editing ? (updated ?? { ...x, criteria, frequency: draft.frequency }) : x)));
+    } else {
+      const res = await fetch("/api/board/alerts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ criteria, frequency: draft.frequency }) }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      if (res?.alert) { setAlerts((a) => [res.alert, ...a]); setAlertOn((m) => ({ ...m, [res.alert.id]: true })); }
+    }
+    setAlertEditor(null);
+  }
+  async function deleteAlertFromEditor() {
+    const id = alertEditor?.id;
+    setAlertEditor(null);
+    if (id) await deleteAlert(id);
   }
 
   async function openApplicationDetail(id: string) {
@@ -209,10 +245,10 @@ export function AccountClient({ locale }: { locale: string }) {
   const actionCount = applications.filter((a) => statusStyle(a).kind === "action").length;
   const content = loading ? <div style={{ textAlign: "center", color: "var(--soft)", padding: 44, fontSize: 14 }}>...</div> : (
     <>
-      {tab === "profile" && <ProfileTab display={display} completeness={completeness} exp={exp} edu={edu} langs={langs} links={links} avatarUrl={avatarUrl} onEdit={openEdit} onSettings={() => setSettingsOpen(true)} onAddItem={(ty) => setEditor({ type: ty, index: null })} onEditItem={(ty, i) => setEditor({ type: ty, index: i })} onRemoveItem={removeItem} onAvatar={setAvatarUrl} onSkills={(next) => { setSkills(next); persistProfile({ skills: next }); }} onCv={() => { fetch("/api/board/profile").then((r) => (r.ok ? r.json() : null)).then((p) => { if (p) { setSourced(p.sourced ?? {}); setCompleteness(p.completeness); } }); }} t={t} loc={loc} />}
+      {tab === "profile" && <ProfileTab display={display} completeness={completeness} exp={exp} edu={edu} langs={langs} links={links} avatarUrl={avatarUrl} onEdit={openEdit} onSettings={() => setSettingsOpen(true)} onAddItem={(ty) => setEditor({ type: ty, index: null })} onEditItem={(ty, i) => setEditor({ type: ty, index: i })} onRemoveItem={removeItem} onAvatar={setAvatarUrl} onSkills={(next) => { setSkills(next); persistProfile({ skills: next }); }} onCv={() => { fetch("/api/board/profile").then((r) => (r.ok ? r.json() : null)).then((p) => { if (p) { setSourced(p.sourced ?? {}); setCompleteness(p.completeness); } }); }} onToast={flashToast} t={t} loc={loc} />}
       {tab === "applications" && <ApplicationsTracker t={t} applications={applications} loc={loc} onOpen={openApplicationDetail} />}
       {tab === "saved" && <SavedTab saved={saved} onRemove={removeSaved} t={t} loc={loc} />}
-      {tab === "alerts" && <AlertsTab alerts={alerts} alertOn={alertOn} onToggle={toggleAlert} onNew={() => setNewAlertOpen(true)} onDelete={deleteAlert} t={t} />}
+      {tab === "alerts" && <AlertsTab alerts={alerts} alertOn={alertOn} onToggle={toggleAlert} onNew={openNewAlert} onEdit={openEditAlert} t={t} />}
     </>
   );
 
@@ -277,11 +313,12 @@ export function AccountClient({ locale }: { locale: string }) {
         </div>
       </div>
       <BoardTabBar active={tab} onSelect={setTab} badges={{ applications: actionCount }} className="jb-acct-tabbar" />
-      {editOpen && <EditSheet form={form} setForm={setForm} saving={savingEdit} onClose={() => setEditOpen(false)} onSave={saveProfile} t={t} />}
-      {newAlertOpen && <NewAlertSheet name={alertName} setName={setAlertName} freq={alertFreq} setFreq={setAlertFreq} onClose={() => setNewAlertOpen(false)} onCreate={createAlert} t={t} />}
+      {editOpen && <EditSheet mode={editMode} form={form} setForm={setForm} saving={savingEdit} avatarUrl={avatarUrl} onAvatar={setAvatarUrl} onClose={() => setEditOpen(false)} onSave={saveProfile} t={t} />}
+      {alertEditor && <AlertSheet editing={!!alertEditor.id} draft={alertEditor.draft} onClose={() => setAlertEditor(null)} onSave={saveAlert} onDelete={deleteAlertFromEditor} t={t} />}
       {settingsOpen && <SettingsSheet prefs={prefsOn} onPref={savePref} onClose={() => setSettingsOpen(false)} onLogout={logout} t={t} />}
       {editor && <ItemEditor type={editor.type} item={editor.index != null ? ITEM_META[editor.type].arr[editor.index] : null} onClose={() => setEditor(null)} onSave={(d) => saveItem(editor.type, editor.index, d)} t={t} />}
       {detailId && <ApplicationDetailSheet detail={appDetail} fallback={applications.find((a) => a.id === detailId) ?? null} loading={detailLoading} onClose={closeApplicationDetail} t={t} loc={loc} />}
+      {toast && <div className="jb-toast" role="status">{toast}</div>}
     </BoardRoot>
   );
 }
@@ -304,7 +341,7 @@ function Header({ title, onSettings }: { title: string; onSettings: () => void }
   );
 }
 
-function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, onEdit, onSettings, onAddItem, onEditItem, onRemoveItem, onAvatar, onCv, onSkills, t, loc }: { display: ReturnType<typeof buildDisplay>; completeness: Completeness | null; exp: Experience[]; edu: Education[]; langs: Language[]; links: LinkItem[]; avatarUrl: string | null; onEdit: () => void; onSettings: () => void; onAddItem: (t: ItemType) => void; onEditItem: (t: ItemType, i: number) => void; onRemoveItem: (t: ItemType, i: number) => void; onAvatar: (url: string | null) => void; onCv: () => void; onSkills: (next: string[]) => void; t: ReturnType<typeof useTranslations>; loc: string }) {
+function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, onEdit, onSettings, onAddItem, onEditItem, onRemoveItem, onAvatar, onCv, onSkills, onToast, t, loc }: { display: ReturnType<typeof buildDisplay>; completeness: Completeness | null; exp: Experience[]; edu: Education[]; langs: Language[]; links: LinkItem[]; avatarUrl: string | null; onEdit: (mode?: EditMode) => void; onSettings: () => void; onAddItem: (t: ItemType) => void; onEditItem: (t: ItemType, i: number) => void; onRemoveItem: (t: ItemType, i: number) => void; onAvatar: (url: string | null) => void; onCv: () => void; onSkills: (next: string[]) => void; onToast: (msg: string) => void; t: ReturnType<typeof useTranslations>; loc: string }) {
   const pct = completeness?.pct ?? 0;
   const complete = completeness?.complete ?? false;
   const pending = display.checks.filter((c) => !c.done);
@@ -318,7 +355,7 @@ function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, 
           <div style={{ fontSize: 13, color: "#54504A", marginTop: 3 }}>{display.headline || t("account.noHeadline")}</div>
           <div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}><PinIcon />{display.location || t("account.noLocation")}</div>
         </div>
-        <button onClick={onEdit} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 11, padding: "10px 15px", boxShadow: "3px 3px 0 var(--ink)", cursor: "pointer", flexShrink: 0 }}><EditIcon />{t("account.edit")}</button>
+        <button onClick={() => onEdit("basic")} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 11, padding: "10px 15px", boxShadow: "3px 3px 0 var(--ink)", cursor: "pointer", flexShrink: 0 }}><EditIcon />{t("account.edit")}</button>
       </section>
 
       <section className="jb-ord-b" style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 16, padding: 16, marginBottom: 14 }}>
@@ -334,13 +371,13 @@ function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, 
         </div>
         {/* Solo los pendientes, y cada chip abre el editor (no decorativos). Al 100%, sin chips. */}
         {!complete && pending.length > 0 && (
-          <div style={{ display: "flex", gap: 6, marginTop: 13, flexWrap: "wrap" }}>{pending.map((c) => <Chip key={c.key} tone="neutral" onClick={c.key === "experience" ? () => onAddItem("exp") : c.key === "languages" ? () => onAddItem("lang") : onEdit}><PlusTiny />{t(`account.check.${c.key}`)}</Chip>)}</div>
+          <div style={{ display: "flex", gap: 6, marginTop: 13, flexWrap: "wrap" }}>{pending.map((c) => <Chip key={c.key} tone="neutral" onClick={c.key === "experience" ? () => onAddItem("exp") : c.key === "languages" ? () => onAddItem("lang") : c.key === "portfolio" ? () => onAddItem("link") : () => onEdit("basic")}><PlusTiny />{t(`account.check.${c.key}`)}</Chip>)}</div>
         )}
       </section>
 
-      <Section title={t("account.aboutTitle")} action={t("account.edit")} onAction={onEdit}><p style={{ fontSize: 13.5, lineHeight: 1.6, color: "#3A3833", margin: 0 }}>{display.about || t("account.emptyAbout")}</p></Section>
-      <Section title={t("account.lookingFor")} action={t("account.edit")} onAction={onEdit}><PrefsView display={display} t={t} loc={loc} /></Section>
-      <Section className="jb-ord-cv" title={t("account.cvTitle")}><CvCard t={t} name={display.cvName} hasCv={!!display.cvUrl} onReplaced={onCv} /></Section>
+      <Section title={t("account.aboutTitle")} action={t("account.edit")} onAction={() => onEdit("about")}><p style={{ fontSize: 13.5, lineHeight: 1.6, color: "#3A3833", margin: 0 }}>{display.about || t("account.emptyAbout")}</p></Section>
+      <Section title={t("account.lookingFor")} action={t("account.edit")} onAction={() => onEdit("prefs")}><PrefsView display={display} t={t} loc={loc} /></Section>
+      <Section className="jb-ord-cv" title={t("account.cvTitle")}><CvCard t={t} name={display.cvName} hasCv={!!display.cvUrl} onReplaced={onCv} onToast={onToast} /></Section>
       <ExperienceSection rows={exp} t={t} onAdd={() => onAddItem("exp")} onEdit={(i) => onEditItem("exp", i)} onRemove={(i) => onRemoveItem("exp", i)} />
       <EducationSection rows={edu} t={t} onAdd={() => onAddItem("edu")} onEdit={(i) => onEditItem("edu", i)} onRemove={(i) => onRemoveItem("edu", i)} />
       <LanguageSection rows={langs} t={t} onAdd={() => onAddItem("lang")} onEdit={(i) => onEditItem("lang", i)} onRemove={(i) => onRemoveItem("lang", i)} />
@@ -351,7 +388,7 @@ function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, 
         <span style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(198,242,78,.15)", color: "var(--lime)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SparkIcon /></span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15 }}>{complete ? t("account.refineWithAi") : t("account.completeWithAi")}</div>
-          <div style={{ fontSize: 12.5, color: "#B7B2A8", marginTop: 2 }}>{complete ? t("account.completeDoneHint") : t("account.completeHint")}</div>
+          <div style={{ fontSize: 12.5, color: "#B7B2A8", marginTop: 2 }}>{complete ? t("account.aiSubtitleRefine") : t("account.aiSubtitleComplete")}</div>
         </div>
         <Link href="/cuenta/perfil" className="jb-hard" style={{ flexShrink: 0, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "var(--ink)", background: "var(--lime)", border: "2px solid var(--lime)", borderRadius: 11, padding: "10px 16px", boxShadow: "3px 3px 0 rgba(198,242,78,.35)" }}>{complete ? t("account.aiCtaRefine") : t("account.aiCtaComplete")}</Link>
       </div>
@@ -397,7 +434,7 @@ function Section({ title, children, action, onAction, className }: { title: stri
   return <section className={className} style={{ marginBottom: 14 }}><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}><MonoLabel>{title}</MonoLabel>{action && <button onClick={onAction} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--brand)", padding: "2px 4px", background: "transparent", border: 0, cursor: "pointer" }}>{action}</button>}</div><div style={cardStyle}>{children}</div></section>;
 }
 
-function CvCard({ t, name, hasCv = true, onReplaced }: { t: ReturnType<typeof useTranslations>; name: string | null; hasCv?: boolean; onReplaced: () => void }) {
+function CvCard({ t, name, hasCv = true, onReplaced, onToast }: { t: ReturnType<typeof useTranslations>; name: string | null; hasCv?: boolean; onReplaced: () => void; onToast?: (msg: string) => void }) {
   const [busy, setBusy] = useState(false);
   const [replacing, setReplacing] = useState(false);
   async function open() {
@@ -413,6 +450,7 @@ function CvCard({ t, name, hasCv = true, onReplaced }: { t: ReturnType<typeof us
     if (parsed?.cv_path) {
       await fetch("/api/board/cv", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cv_path: parsed.cv_path }) }).catch(() => {});
       onReplaced();
+      onToast?.(`${t("account.cvReplacedToast")} · ${file.name}`);
     }
     setReplacing(false);
   }
@@ -424,7 +462,7 @@ function CvCard({ t, name, hasCv = true, onReplaced }: { t: ReturnType<typeof us
       <span className="jb-hard" style={{ flexShrink: 0, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--ink)", background: "var(--lime)", border: "2px solid var(--ink)", borderRadius: 9, padding: "8px 13px", boxShadow: "2px 2px 0 var(--ink)" }}>{replacing ? "…" : t("account.cvUpload")}</span>
     </label>
   );
-  return <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 38, height: 46, borderRadius: 8, background: "var(--brandSoft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><FileIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name || t("account.cvFile")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.cvMeta")}</div></div><div style={{ display: "flex", gap: 6, flexShrink: 0 }}><button onClick={open} disabled={busy} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}>{busy ? "…" : t("account.cvView")}</button><label className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--soft)", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 10px", cursor: replacing ? "wait" : "pointer" }}><input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => { const f = e.target.files?.[0]; if (f) replace(f); }} style={{ display: "none" }} />{replacing ? "…" : t("account.cvReplace")}</label></div></div>;
+  return <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 38, height: 46, borderRadius: 8, background: "var(--brandSoft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><FileIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name || t("account.cvFile")}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{t("account.cvMeta")}</div></div><div style={{ display: "flex", gap: 6, flexShrink: 0 }}><button onClick={open} disabled={busy} className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}>{busy ? "…" : t("account.cvView")}</button><label className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--soft)", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 10px", cursor: replacing ? "wait" : "pointer" }}><input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => { const f = e.target.files?.[0]; if (f) replace(f); }} style={{ display: "none" }} />{replacing ? "…" : <><span className="jb-cv-lbl-full">{t("account.cvReplace")}</span><span className="jb-cv-lbl-short">{t("account.cvReplaceShort")}</span></>}</label></div></div>;
 }
 
 function PrefsView({ display, t, loc }: { display: ReturnType<typeof buildDisplay>; t: ReturnType<typeof useTranslations>; loc: string }) {
@@ -438,11 +476,11 @@ function PrefsView({ display, t, loc }: { display: ReturnType<typeof buildDispla
 }
 
 function ExperienceSection({ rows, t, onAdd, onEdit, onRemove }: { rows: Experience[]; t: ReturnType<typeof useTranslations>; onAdd: () => void; onEdit: (i: number) => void; onRemove: (i: number) => void }) {
-  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.experienceTitle")} action={t("account.add")} onAction={onAdd} />{rows.length === 0 ? <EmptyInline text={t("account.emptyExperience")} /> : <div style={{ position: "relative", paddingLeft: 6 }}>{rows.map((e, i) => <div key={i} style={{ display: "flex", gap: 13 }}><div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}><CompanyLogo name={e.company || e.title} size={38} />{i < rows.length - 1 && <span style={{ flex: 1, width: 2, background: "var(--line)", margin: "4px 0" }} />}</div><div style={{ flex: 1, minWidth: 0, paddingBottom: 16 }}><div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14.5, letterSpacing: "-.2px" }}>{e.title || t("account.untitledRole")}</div><div style={{ fontSize: 12.5, color: "#54504A", marginTop: 1 }}>{e.company || t("account.noCompany")}</div></div><RowActions onEdit={() => onEdit(i)} onRemove={() => onRemove(i)} /></div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{period(e.start_date, e.end_date, e.is_current, t)}</div></div></div>)}</div>}</section>;
+  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.experienceTitle")} action={t("account.add")} onAction={onAdd} />{rows.length === 0 ? <EmptyInline text={t("account.emptyExperience")} /> : <div style={{ position: "relative", paddingLeft: 6 }}>{rows.map((e, i) => <div key={i} style={{ display: "flex", gap: 13 }}><div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}><CompanyLogo name={e.company || e.title} size={38} />{i < rows.length - 1 && <span style={{ flex: 1, width: 2, background: "var(--line)", margin: "4px 0" }} />}</div><div style={{ flex: 1, minWidth: 0, paddingBottom: 16 }}><div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14.5, letterSpacing: "-.2px" }}>{e.title || t("account.untitledRole")}</div><div style={{ fontSize: 12.5, color: "#54504A", marginTop: 1 }}>{[e.company || t("account.noCompany"), e.location].filter(Boolean).join(" · ")}</div></div><RowActions onEdit={() => onEdit(i)} onRemove={() => onRemove(i)} /></div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{period(e.start_date, e.end_date, e.is_current, t)}</div>{e.summary && <p style={{ fontSize: 12.5, lineHeight: 1.5, color: "#54504A", margin: "7px 0 0" }}>{e.summary}</p>}</div></div>)}</div>}</section>;
 }
 
 function EducationSection({ rows, t, onAdd, onEdit, onRemove }: { rows: Education[]; t: ReturnType<typeof useTranslations>; onAdd: () => void; onEdit: (i: number) => void; onRemove: (i: number) => void }) {
-  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.educationTitle")} action={t("account.add")} onAction={onAdd} />{rows.length === 0 ? <EmptyInline text={t("account.emptyEducation")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>{rows.map((ed, i) => <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: "12px 13px" }}><span style={{ width: 34, height: 34, borderRadius: 10, background: "var(--limeSoft)", color: "#46540F", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><EducationIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14 }}>{ed.degree || ed.field || t("account.education")}</div><div style={{ fontSize: 12.5, color: "#54504A", marginTop: 1 }}>{ed.institution || t("account.noInstitution")}</div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{yearPeriod(ed.start_year, ed.end_year)}</div></div><RowActions onEdit={() => onEdit(i)} onRemove={() => onRemove(i)} /></div>)}</div>}</section>;
+  return <section style={{ marginBottom: 14 }}><HeaderLine title={t("account.educationTitle")} action={t("account.add")} onAction={onAdd} />{rows.length === 0 ? <EmptyInline text={t("account.emptyEducation")} /> : <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>{rows.map((ed, i) => <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: "12px 13px" }}><span style={{ width: 34, height: 34, borderRadius: 10, background: "var(--limeSoft)", color: "#46540F", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><EducationIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14 }}>{ed.degree || ed.field || t("account.education")}</div><div style={{ fontSize: 12.5, color: "#54504A", marginTop: 1 }}>{ed.institution || t("account.noInstitution")}</div><div style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", marginTop: 3 }}>{eduPeriodLine(ed)}</div></div><RowActions onEdit={() => onEdit(i)} onRemove={() => onRemove(i)} /></div>)}</div>}</section>;
 }
 
 function LanguageSection({ rows, t, onAdd, onEdit, onRemove }: { rows: Language[]; t: ReturnType<typeof useTranslations>; onAdd: () => void; onEdit: (i: number) => void; onRemove: (i: number) => void }) {
@@ -503,13 +541,20 @@ function SavedTab({ saved, onRemove, t, loc }: { saved: Saved[]; onRemove: (row:
 </div>)}</div>}</div>;
 }
 
-function AlertsTab({ alerts, alertOn, onToggle, onNew, onDelete, t }: { alerts: Alert[]; alertOn: Record<string, boolean>; onToggle: (id: string, next: boolean) => void; onNew: () => void; onDelete: (id: string) => void; t: ReturnType<typeof useTranslations> }) {
-  return <div className="jb-fade"><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}><h1 style={{ ...titleStyle, margin: 0 }}>{t("alerts.title")}</h1><HardButton onClick={onNew} style={{ padding: "7px 12px", fontSize: 12 }}><PlusTiny />{t("alerts.new")}</HardButton></div>{alerts.length === 0 ? <EmptyPanel title={t("alerts.emptyTitle")} text={t("alerts.emptyText")} /> : <div className="jb-acct-grid2">{alerts.map((al) => { const on = alertOn[al.id] !== false; const name = alertLabel(al.criteria, t("alerts.default")); return <div key={al.id} className="jb-pop" style={cardStyle}><div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}><span style={{ width: 34, height: 34, borderRadius: 10, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BellIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, lineHeight: 1.15 }}>{name}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 3 }}>{t("alerts." + (al.frequency || "weekly"))} · {t("alerts.newCount", { count: al.match_count ?? 0 })}</div></div><Toggle on={on} onClick={() => onToggle(al.id, !on)} /></div><div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 11 }}>{criteriaChips(al.criteria, t("alerts.match")).map((c) => <span key={c} style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "#54504A", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 7, padding: "3px 8px" }}>{c}</span>)}</div><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 11, paddingTop: 11, borderTop: "1px solid var(--line)" }}><Link href={{ pathname: "/empleos", query: { q: alertLabel(al.criteria, "") } }} style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)", textDecoration: "none" }}>{t("alerts.viewOffers", { count: al.match_count ?? 0 })} →</Link><button onClick={() => onDelete(al.id)} style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "var(--accent)", background: "transparent", border: 0, cursor: "pointer" }}>{t("account.delete")}</button></div></div>; })}</div>}<div style={{ marginTop: 14, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 12, padding: "12px 13px", fontSize: 12.5, lineHeight: 1.5, color: "#46540F" }}>{t("alerts.hint")}</div></div>;
+function AlertsTab({ alerts, alertOn, onToggle, onNew, onEdit, t }: { alerts: Alert[]; alertOn: Record<string, boolean>; onToggle: (id: string, next: boolean) => void; onNew: () => void; onEdit: (al: Alert) => void; t: ReturnType<typeof useTranslations> }) {
+  return <div className="jb-fade"><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}><h1 style={{ ...titleStyle, margin: 0 }}>{t("alerts.title")}</h1><HardButton onClick={onNew} style={{ padding: "7px 12px", fontSize: 12 }}><PlusTiny />{t("alerts.new")}</HardButton></div>{alerts.length === 0 ? <EmptyPanel title={t("alerts.emptyTitle")} text={t("alerts.emptyText")} /> : <div className="jb-acct-grid2">{alerts.map((al) => { const on = alertOn[al.id] !== false; const name = alertLabel(al.criteria, t("alerts.default")); return <div key={al.id} className="jb-pop" style={cardStyle}><div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}><span style={{ width: 34, height: 34, borderRadius: 10, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BellIcon /></span><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, lineHeight: 1.15 }}>{name}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 3 }}>{t("alerts." + (al.frequency || "weekly"))} · {t("alerts.newCount", { count: al.match_count ?? 0 })}</div></div><div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}><button onClick={() => onEdit(al)} className="jb-tap" aria-label={t("account.edit")} title={t("account.edit")} style={{ width: 30, height: 30, borderRadius: 8, background: "var(--bg)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--soft)" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 00-3-3L5 17v3Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg></button><Toggle on={on} onClick={() => onToggle(al.id, !on)} /></div></div><div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 11 }}>{criteriaChips(al.criteria, t("alerts.match")).map((c) => <span key={c} style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: "#54504A", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 7, padding: "3px 8px" }}>{c}</span>)}</div><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 11, paddingTop: 11, borderTop: "1px solid var(--line)" }}><Link href={{ pathname: "/empleos", query: { q: alertLabel(al.criteria, "") } }} style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)", textDecoration: "none" }}>{t("alerts.viewOffers", { count: al.match_count ?? 0 })} →</Link></div></div>; })}</div>}<div style={{ marginTop: 14, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 12, padding: "12px 13px", fontSize: 12.5, lineHeight: 1.5, color: "#46540F" }}>{t("alerts.hint")}</div></div>;
 }
 
 function ApplicationsTracker({ t, applications, loc, onOpen }: { t: ReturnType<typeof useTranslations>; applications: Application[]; loc: string; onOpen: (id: string) => void }) {
-  const actionCount = applications.filter((a) => statusStyle(a).kind === "action").length;
-  return <div className="jb-fade"><h1 style={titleStyle}>{t("account.applicationsTitle")}</h1>{actionCount > 0 && <div className="jb-pop" style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 15, padding: "15px 16px", marginBottom: 16 }}><div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}><span style={{ width: 24, height: 24, borderRadius: 7, background: "rgba(198,242,78,.18)", display: "flex", alignItems: "center", justifyContent: "center" }}><EditIcon /></span><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13 }}>{t("account.applicationsTitle")}</span><AiTag>{actionCount}</AiTag></div><p style={{ fontSize: 13, lineHeight: 1.5, color: "#E4E0D8", margin: 0 }}>{applications.find((a) => statusStyle(a).kind === "action")?.feedback?.reason ?? t("account.completeHint")}</p></div>}{applications.length === 0 ? <EmptyPanel title={t("account.emptyApplications")} text={t("account.emptyApplications")} cta={t("account.browse")} /> : <div className="jb-acct-grid2">{applications.map((a) => <ApplicationCard key={a.id} app={a} loc={loc} t={t} onOpen={() => onOpen(a.id)} />)}</div>}</div>;
+  const actionApp = applications.find((a) => statusStyle(a).kind === "action");
+  return <div className="jb-fade"><h1 style={{ ...titleStyle, marginBottom: 4 }}>{t("account.applicationsTitle")}</h1>
+    <p style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: .5, color: "var(--soft)", margin: "0 0 16px" }}>{t("account.appsCount", { count: applications.length })}</p>
+    {actionApp && <div className="jb-pop" style={{ background: "var(--ink)", color: "#F4F0E8", borderRadius: 15, padding: "15px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
+      <span style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(198,242,78,.18)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "var(--lime)" }}><SparkIcon /></span>
+      <div style={{ flex: 1, minWidth: 0 }}><div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13.5 }}>{t("account.suggestionTitle")}</span><span style={{ fontFamily: MONO, fontSize: 8.5, color: "#C6F24E", background: "rgba(198,242,78,.12)", border: "1px solid rgba(198,242,78,.3)", borderRadius: 999, padding: "2px 7px" }}>{t("account.proactive")}</span></div><p style={{ fontSize: 13, lineHeight: 1.5, color: "#E4E0D8", margin: "4px 0 0" }}>{actionApp.feedback?.reason ?? t("account.completeHint")}</p></div>
+      <button onClick={() => onOpen(actionApp.id)} className="jb-tap" style={{ flexShrink: 0, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--lime)", border: 0, borderRadius: 8, padding: "10px 15px", cursor: "pointer" }}>{t("account.suggestionCta")}</button>
+    </div>}
+    {applications.length === 0 ? <EmptyPanel title={t("account.emptyApplications")} text={t("account.emptyApplications")} cta={t("account.browse")} /> : <div className="jb-acct-grid2">{applications.map((a) => <ApplicationCard key={a.id} app={a} loc={loc} t={t} onOpen={() => onOpen(a.id)} />)}</div>}</div>;
 }
 
 function ApplicationCard({ app, loc, t, onOpen }: { app: Application; loc: string; t: ReturnType<typeof useTranslations>; onOpen: () => void }) {
@@ -533,7 +578,7 @@ function FeedbackBox({ app }: { app: Application }) {
 function ApplicationDetailSheet({ detail, fallback, loading, onClose, t, loc }: { detail: ApplicationDetail | null; fallback: Application | null; loading: boolean; onClose: () => void; t: ReturnType<typeof useTranslations>; loc: string }) {
   const app = detail?.application ?? fallback;
   const st = app ? statusStyle(app) : null;
-  return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 12px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div className="jb-sheet-handle" style={sheetHandle} />{app?.job && <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}><CompanyLogo name={app.job.company?.name} logoUrl={app.job.company?.logo_url} size={44} /><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)" }}>{app.job.company?.name}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 18, letterSpacing: "-.4px", lineHeight: 1.1, marginTop: 2 }}>{app.job.title}</div></div>{st && <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .4, color: st.color, background: st.bg, border: `1px solid ${st.border}`, borderRadius: 999, padding: "4px 9px", whiteSpace: "nowrap", flexShrink: 0 }}>{st.label}</span>}</div>}</div><div style={{ padding: "16px 18px 8px" }}>{loading ? <div style={{ color: "var(--soft)", padding: 20, textAlign: "center" }}>...</div> : <><MonoLabel style={{ marginBottom: 14 }}>{t("account.applicationProgress")}</MonoLabel>{detail?.timeline?.length ? <Timeline rows={detail.timeline} loc={loc} /> : app ? <FallbackTimeline app={app} loc={loc} /> : null}{app?.feedback?.reason && <FeedbackBox app={app} />}</>}</div><div style={{ position: "sticky", bottom: 0, background: "var(--bg)", borderTop: "1px solid var(--line)", padding: "12px 18px 18px", display: "flex", flexDirection: "column", gap: 9 }}>{app?.job ? <HardButton href={`/${loc}/empleos/oferta/${jobSlug(app.job)}`} variant={st?.kind === "good" ? "lime" : st?.kind === "action" ? "accent" : "brand"} full>{t("account.viewOriginalOffer")}</HardButton> : null}<button onClick={onClose} className="jb-tap" style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "transparent", border: 0, padding: 6, cursor: "pointer" }}>{t("account.cancel")}</button></div></Sheet>;
+  return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 12px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div className="jb-sheet-handle" style={sheetHandle} />{app?.job && <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}><CompanyLogo name={app.job.company?.name} logoUrl={app.job.company?.logo_url} size={44} /><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)" }}>{app.job.company?.name}</div><div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 18, letterSpacing: "-.4px", lineHeight: 1.1, marginTop: 2 }}>{app.job.title}</div></div>{st && <span className="jb-acct-detail-badge" style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .4, color: st.color, background: st.bg, border: `1px solid ${st.border}`, borderRadius: 999, padding: "4px 9px", whiteSpace: "nowrap", flexShrink: 0 }}>{st.label}</span>}</div>}</div><div style={{ padding: "16px 18px 8px" }}>{loading ? <div style={{ color: "var(--soft)", padding: 20, textAlign: "center" }}>...</div> : <><MonoLabel style={{ marginBottom: 14 }}>{t("account.applicationProgress")}</MonoLabel>{detail?.timeline?.length ? <Timeline rows={detail.timeline} loc={loc} /> : app ? <FallbackTimeline app={app} loc={loc} /> : null}{app?.feedback?.reason && <FeedbackBox app={app} />}</>}</div><div style={{ position: "sticky", bottom: 0, background: "var(--bg)", borderTop: "1px solid var(--line)", padding: "12px 18px 18px", display: "flex", flexDirection: "column", gap: 9 }}>{app?.job ? <HardButton href={`/${loc}/empleos/oferta/${jobSlug(app.job)}`} variant={st?.kind === "good" ? "lime" : st?.kind === "action" ? "accent" : "brand"} full>{t(`account.cta.${st?.kind ?? "info"}`)}</HardButton> : null}<button onClick={onClose} className="jb-tap" style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "transparent", border: 0, padding: 6, cursor: "pointer" }}>{t("account.cancel")}</button></div></Sheet>;
 }
 
 function Timeline({ rows, loc }: { rows: ApplicationTimelineEvent[]; loc: string }) {
@@ -550,15 +595,53 @@ function TimelineRow({ title, date, note, done, current, connector }: { title: s
   return <div style={{ display: "flex", gap: 13 }}><div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}><span style={{ width: 24, height: 24, borderRadius: "50%", background: done ? "#0E5C4A" : current ? "#C6F24E" : "#EDE8DC", border: `2px solid ${done ? "#0E5C4A" : current ? "#1A1A17" : "#E0DACC"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>{done ? <CheckTiny /> : <span style={{ width: 7, height: 7, borderRadius: "50%", background: current ? "#1A1A17" : "#CFC7B6", display: "block" }} />}</span>{connector && <span style={{ flex: 1, width: 2, background: done ? "#0E5C4A" : "#E0DACC", margin: "3px 0", minHeight: 22 }} />}</div><div style={{ flex: 1, minWidth: 0, paddingBottom: 14 }}><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: done || current ? "#1A1A17" : "#A39E94" }}>{title}</div><div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{date}</div>{note && <p style={{ fontSize: 12.5, lineHeight: 1.5, color: "#54504A", margin: "6px 0 0" }}>{note}</p>}</div></div>;
 }
 
-function EditSheet
-({ form, setForm, saving, onClose, onSave, t }: { form: FormState; setForm: (v: FormState) => void; saving: boolean; onClose: () => void; onSave: () => void; t: ReturnType<typeof useTranslations> }) {
+// Editor de perfil por modos (mockup: 3 editores distintos). basic = datos básicos + foto,
+// about = solo "Sobre mí", prefs = "Qué busco" (rol/salario/modalidad chips/ubicación).
+const MODALITY_OPTS = ["Remoto", "Híbrido", "Presencial"];
+function EditSheet({ mode, form, setForm, saving, avatarUrl, onAvatar, onClose, onSave, t }: { mode: EditMode; form: FormState; setForm: (v: FormState) => void; saving: boolean; avatarUrl: string | null; onAvatar: (url: string | null) => void; onClose: () => void; onSave: () => void; t: ReturnType<typeof useTranslations> }) {
   const update = (key: keyof FormState, value: string) => setForm({ ...form, [key]: value });
-  return <Sheet onClose={onClose}><div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 10px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div className="jb-sheet-handle" style={sheetHandle} /><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{t("account.editProfile")}</span><button onClick={onSave} disabled={saving} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", padding: 4, background: "transparent", border: 0, cursor: "pointer" }}>{saving ? t("account.saving") : t("account.save")}</button></div></div><div style={{ padding: "16px 18px 20px", display: "flex", flexDirection: "column", gap: 14 }}><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.firstName")} value={form.first_name} onChange={(v) => update("first_name", v)} /><Field label={t("account.lastName")} value={form.last_name} onChange={(v) => update("last_name", v)} /></div><Field label={t("account.headline")} value={form.headline} onChange={(v) => update("headline", v)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.phone")} value={form.phone} onChange={(v) => update("phone", v)} /><Field label={t("account.currency")} value={form.pref_currency} onChange={(v) => update("pref_currency", v)} /></div><BoardField label={t("account.city")}><CityAutocomplete value={form.city} country={form.country_code || "VE"} onChange={(city, meta) => setForm({ ...form, city, country_code: meta?.country ?? form.country_code })} placeholder={t("account.city")} inputStyle={inputStyle} /></BoardField><BoardField label={t("account.about")}><textarea value={form.about} onChange={(e) => update("about", e.target.value)} rows={4} style={{ ...inputStyle, resize: "vertical" }} /></BoardField><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.salaryMin")} value={form.pref_salary_min} onChange={(v) => update("pref_salary_min", v)} /><Field label={t("account.modality")} value={form.pref_modality} onChange={(v) => update("pref_modality", v)} /></div><Field label={t("account.prefLocations")} value={form.pref_locations} onChange={(v) => update("pref_locations", v)} /><Field label={t("account.skills")} value={form.skills} onChange={(v) => update("skills", v)} /><HardButton onClick={onSave} disabled={saving} variant="brand" full>{saving ? t("account.saving") : t("account.saveChanges")}</HardButton></div></Sheet>;
+  const title = mode === "about" ? t("account.aboutTitle") : mode === "prefs" ? t("account.lookingFor") : t("account.editProfile");
+  const modalitySel = splitList(form.pref_modality);
+  const toggleModality = (m: string) => { const has = modalitySel.some((x) => x.toLowerCase() === m.toLowerCase()); const next = has ? modalitySel.filter((x) => x.toLowerCase() !== m.toLowerCase()) : [...modalitySel, m]; setForm({ ...form, pref_modality: next.join(", ") }); };
+  return <Sheet onClose={onClose}>
+    <div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 10px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div className="jb-sheet-handle" style={sheetHandle} /><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{title}</span><button onClick={onSave} disabled={saving} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", padding: 4, background: "transparent", border: 0, cursor: "pointer" }}>{saving ? t("account.saving") : t("account.save")}</button></div></div>
+    <div style={{ padding: "16px 18px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+      {mode === "basic" && <>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, paddingBottom: 2 }}><AvatarUpload url={avatarUrl} name={[form.first_name, form.last_name].filter(Boolean).join(" ")} onChange={onAvatar} t={t} /><span style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)" }}>{t("account.photoUpload")}</span></div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.firstName")} value={form.first_name} onChange={(v) => update("first_name", v)} /><Field label={t("account.lastName")} value={form.last_name} onChange={(v) => update("last_name", v)} /></div>
+        <Field label={t("account.field.proTitle")} value={form.headline} onChange={(v) => update("headline", v)} placeholder={t("account.field.rolePh")} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.field.email")} value={form.email} onChange={(v) => update("email", v)} /><Field label={t("account.phone")} value={form.phone} onChange={(v) => update("phone", v)} /></div>
+        <BoardField label={t("account.location")}><CityAutocomplete value={form.city} country={form.country_code || "VE"} onChange={(city, meta) => setForm({ ...form, city, country_code: meta?.country ?? form.country_code })} placeholder={t("account.field.locationPh")} inputStyle={inputStyle} /></BoardField>
+      </>}
+      {mode === "about" && (
+        <BoardField label={t("account.aboutTitle")}><textarea value={form.about} onChange={(e) => update("about", e.target.value)} rows={6} placeholder={t("account.aboutPh")} style={{ ...inputStyle, resize: "vertical" }} /></BoardField>
+      )}
+      {mode === "prefs" && <>
+        <Field label={t("account.field.desiredRole")} value={form.headline} onChange={(v) => update("headline", v)} placeholder={t("account.field.rolePh")} />
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}><Field label={t("account.field.desiredSalary")} value={form.pref_salary_min} onChange={(v) => update("pref_salary_min", v)} placeholder={t("account.field.salaryPh")} /><Field label={t("account.currency")} value={form.pref_currency} onChange={(v) => update("pref_currency", v)} /></div>
+        <BoardField label={t("account.modality")}><div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{MODALITY_OPTS.map((m) => { const on = modalitySel.some((x) => x.toLowerCase() === m.toLowerCase()); return <button key={m} onClick={() => toggleModality(m)} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: on ? 700 : 600, fontSize: 13, borderRadius: 999, padding: "8px 14px", cursor: "pointer", border: `1.5px solid ${on ? "#1A1A17" : "#E7E1D4"}`, background: on ? "#DCEFE4" : "#FCFAF6", color: on ? "#0E5C4A" : "#54504A" }}>{m}</button>; })}</div></BoardField>
+        <Field label={t("account.field.prefLocation")} value={form.pref_locations} onChange={(v) => update("pref_locations", v)} placeholder={t("account.field.prefLocationPh")} />
+      </>}
+      <HardButton onClick={onSave} disabled={saving} variant="brand" full>{saving ? t("account.saving") : t("account.saveChanges")}</HardButton>
+    </div>
+  </Sheet>;
 }
 
-function NewAlertSheet({ name, setName, freq, setFreq, onClose, onCreate, t }: { name: string; setName: (v: string) => void; freq: string; setFreq: (v: string) => void; onClose: () => void; onCreate: () => void; t: ReturnType<typeof useTranslations> }) {
+// Editor de alerta unificado (nueva + editar): Puesto o empresa · Ubicación · Frecuencia.
+// Al editar muestra "Eliminar" dentro del editor (mockup deleteFromEditor).
+function AlertSheet({ editing, draft, onClose, onSave, onDelete, t }: { editing: boolean; draft: AlertDraft; onClose: () => void; onSave: (d: AlertDraft) => void; onDelete: () => void; t: ReturnType<typeof useTranslations> }) {
+  const [d, setD] = useState<AlertDraft>(draft);
+  const set = (k: keyof AlertDraft, v: string) => setD((prev) => ({ ...prev, [k]: v }));
   const opts = [["instant", t("alerts.instant")], ["daily", t("alerts.daily")], ["weekly", t("alerts.weekly")]] as const;
-  return <Sheet onClose={onClose}><div style={{ padding: "14px 18px 6px" }}><div className="jb-sheet-handle" style={sheetHandle} /><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{t("alerts.new")}</span></div><div style={{ padding: "8px 18px 20px", display: "flex", flexDirection: "column", gap: 14 }}><Field label={t("alerts.name")} value={name} onChange={setName} placeholder={t("alerts.placeholder")} /><BoardField label={t("alerts.frequency")}><div style={{ display: "flex", gap: 7 }}>{opts.map(([key, label]) => <button key={key} onClick={() => setFreq(key)} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: freq === key ? 700 : 600, fontSize: 13, borderRadius: 999, padding: "8px 14px", cursor: "pointer", border: `1.5px solid ${freq === key ? "#1A1A17" : "#E7E1D4"}`, background: freq === key ? "#DCEFE4" : "#FCFAF6", color: freq === key ? "#0E5C4A" : "#54504A" }}>{label}</button>)}</div></BoardField><HardButton onClick={onCreate} variant="brand" full>{t("account.createAlert")}</HardButton></div></Sheet>;
+  return <Sheet onClose={onClose}>
+    <div style={{ padding: "14px 18px 6px" }}><div className="jb-sheet-handle" style={sheetHandle} /><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{editing ? t("alerts.edit") : t("alerts.new")}</span></div>
+    <div style={{ padding: "8px 18px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <Field label={t("alerts.jobTitle")} value={d.jobTitle} onChange={(v) => set("jobTitle", v)} placeholder={t("alerts.jobTitlePh")} />
+      <Field label={t("account.location")} value={d.location} onChange={(v) => set("location", v)} placeholder={t("alerts.locationPh")} />
+      <BoardField label={t("alerts.frequency")}><div style={{ display: "flex", gap: 7 }}>{opts.map(([key, label]) => <button key={key} onClick={() => set("frequency", key)} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: d.frequency === key ? 700 : 600, fontSize: 13, borderRadius: 999, padding: "8px 14px", cursor: "pointer", border: `1.5px solid ${d.frequency === key ? "#1A1A17" : "#E7E1D4"}`, background: d.frequency === key ? "#DCEFE4" : "#FCFAF6", color: d.frequency === key ? "#0E5C4A" : "#54504A" }}>{label}</button>)}</div></BoardField>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 2 }}>{editing && <button onClick={onDelete} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 700, color: "var(--accent)", background: "none", border: 0, cursor: "pointer" }}>{t("account.delete")}</button>}<span style={{ flex: 1 }} /><HardButton onClick={() => onSave(d)} variant="brand" disabled={!d.jobTitle.trim()}>{editing ? t("account.saveChanges") : t("account.createAlert")}</HardButton></div>
+    </div>
+  </Sheet>;
 }
 
 function SettingsSheet({ prefs, onPref, onClose, onLogout, t }: { prefs: { email: boolean; push: boolean; digest: boolean; visible: boolean }; onPref: (key: "email" | "push" | "digest" | "visible", next: boolean) => void; onClose: () => void; onLogout: () => void; t: ReturnType<typeof useTranslations> }) {
@@ -579,14 +662,19 @@ function ItemEditor({ type, item, onClose, onSave, t }: { type: ItemType; item: 
     <div style={{ position: "sticky", top: 0, background: "var(--bg)", padding: "14px 18px 10px", borderBottom: "1px solid var(--line)", zIndex: 1 }}><div className="jb-sheet-handle" style={sheetHandle} /><span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.5px" }}>{title}</span></div>
     <div style={{ padding: "16px 18px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
       {type === "exp" && <>
-        <Field label={t("account.field.role")} value={str("title")} onChange={(v) => set("title", v)} />
-        <Field label={t("account.field.company")} value={str("company")} onChange={(v) => set("company", v)} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.field.start")} value={str("start_date")} onChange={(v) => set("start_date", v)} placeholder="2022" /><Field label={t("account.field.end")} value={str("end_date")} onChange={(v) => set("end_date", v)} placeholder="2024" /></div>
+        <Field label={t("account.field.role")} value={str("title")} onChange={(v) => set("title", v)} placeholder={t("account.field.rolePh")} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.field.company")} value={str("company")} onChange={(v) => set("company", v)} placeholder={t("account.field.companyPh")} /><Field label={t("account.field.location")} value={str("location")} onChange={(v) => set("location", v)} placeholder={t("account.field.locationPh")} /></div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.field.start")} value={str("start_date")} onChange={(v) => set("start_date", v)} placeholder="2022" /><Field label={t("account.field.end")} value={str("end_date")} onChange={(v) => set("end_date", v)} placeholder={t("account.field.current")} /></div>
+        <BoardField label={t("account.field.description")}><textarea value={str("summary")} onChange={(e) => set("summary", e.target.value)} rows={3} placeholder={t("account.field.descriptionPh")} style={{ ...inputStyle, resize: "vertical" }} /></BoardField>
         <label style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13.5, cursor: "pointer" }}><input type="checkbox" checked={!!d.is_current} onChange={(e) => set("is_current", e.target.checked)} />{t("account.field.current")}</label>
       </>}
       {type === "edu" && <>
-        <Field label={t("account.field.degree")} value={str("degree")} onChange={(v) => set("degree", v)} />
-        <Field label={t("account.field.institution")} value={str("institution")} onChange={(v) => set("institution", v)} />
+        <Field label={t("account.field.degree")} value={str("degree")} onChange={(v) => set("degree", v)} placeholder={t("account.field.degreePh")} />
+        <Field label={t("account.field.institution")} value={str("institution")} onChange={(v) => set("institution", v)} placeholder={t("account.field.institutionPh")} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <BoardField label={t("account.field.eduType")}><div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{EDU_TYPES.map((et) => <button key={et} onClick={() => set("eduType", et)} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: str("eduType") === et ? 700 : 600, fontSize: 12.5, borderRadius: 999, padding: "7px 12px", cursor: "pointer", border: `1.5px solid ${str("eduType") === et ? "#1A1A17" : "#E7E1D4"}`, background: str("eduType") === et ? "#DCEFE4" : "#FCFAF6", color: str("eduType") === et ? "#0E5C4A" : "#54504A" }}>{et}</button>)}</div></BoardField>
+          <Field label={t("account.field.location")} value={str("location")} onChange={(v) => set("location", v)} placeholder={t("account.field.eduLocationPh")} />
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Field label={t("account.field.startYear")} value={str("start_year")} onChange={(v) => set("start_year", v.replace(/[^0-9]/g, "") ? Number(v.replace(/[^0-9]/g, "")) : "")} placeholder="2018" /><Field label={t("account.field.endYear")} value={str("end_year")} onChange={(v) => set("end_year", v.replace(/[^0-9]/g, "") ? Number(v.replace(/[^0-9]/g, "")) : "")} placeholder="2022" /></div>
       </>}
       {type === "lang" && <>
@@ -603,9 +691,10 @@ function ItemEditor({ type, item, onClose, onSave, t }: { type: ItemType; item: 
   </Sheet>;
 }
 
+const EDU_TYPES = ["Grado", "Máster", "Certificación"];
 function defaultItem(type: ItemType): Record<string, unknown> {
-  if (type === "exp") return { title: "", company: "", start_date: "", end_date: "", is_current: false };
-  if (type === "edu") return { degree: "", institution: "", start_year: "", end_year: "" };
+  if (type === "exp") return { title: "", company: "", location: "", start_date: "", end_date: "", summary: "", is_current: false };
+  if (type === "edu") return { degree: "", institution: "", eduType: "Grado", location: "", start_year: "", end_year: "" };
   if (type === "lang") return { language: "", level: "Intermedio" };
   return { type: "website", url: "", label: "" };
 }
@@ -646,7 +735,8 @@ function buildDisplay(profile: Profile | null, sourced: Sourced, profileSkills: 
     skills, experiences: sourced.experiences ?? [], education: sourced.education ?? [], languages: sourced.languages ?? [],
     cvUrl: sourced.cv_url ?? null,
     cvName: sourced.cv_url ? (sourced.cv_url.split("/").pop() ?? "").replace(/^\d+-/, "") : null,
-    checks: [{ key: "cv", done: !!sourced.cv_url }, { key: "experience", done: (sourced.experiences?.length ?? 0) > 0 }, { key: "languages", done: (sourced.languages?.length ?? 0) > 0 }, { key: "about", done: !!profile?.about }],
+    // Chips pendientes (mockup): CV / Experiencia / Idiomas / Portafolio (= enlace web presente).
+    checks: [{ key: "cv", done: !!sourced.cv_url }, { key: "experience", done: (sourced.experiences?.length ?? 0) > 0 }, { key: "languages", done: (sourced.languages?.length ?? 0) > 0 }, { key: "portfolio", done: (profile?.links ?? []).some((l) => l.type === "portfolio" || l.type === "website") }],
   };
 }
 function normalizedPipeline(app: Application): AppStage[] {
@@ -676,13 +766,15 @@ function stageMove(row: ApplicationTimelineEvent) {
   return row.from_stage || row.to_stage || "";
 }
 
-function emptyForm(): FormState { return { first_name: "", last_name: "", headline: "", about: "", phone: "", city: "", country_code: "VE", pref_salary_min: "", pref_currency: "USD", pref_modality: "", pref_locations: "", pref_contract: "", skills: "" }; }
+function emptyForm(): FormState { return { first_name: "", last_name: "", email: "", headline: "", about: "", phone: "", city: "", country_code: "VE", pref_salary_min: "", pref_currency: "USD", pref_modality: "", pref_locations: "", pref_contract: "", skills: "" }; }
 function splitList(v: string) { return v.split(",").map((x) => x.trim()).filter(Boolean); }
 function splitName(v?: string | null) { const parts = (v ?? "").trim().split(/\s+/).filter(Boolean); return { first: parts[0] ?? "", last: parts.slice(1).join(" ") }; }
 function initials(name?: string | null) { const n = (name || "?").trim(); return n.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?"; }
 function defaultCountry(locale: string) { if (locale === "pt") return "BR"; if (locale === "en") return "US"; return "VE"; }
 function period(start?: string | null, end?: string | null, current?: boolean | null, t?: ReturnType<typeof useTranslations>) { const s = start ? new Date(start).getUTCFullYear() : null; const e = current ? t?.("account.current") : (end ? new Date(end).getUTCFullYear() : null); return [s, e].filter(Boolean).join(" - ") || "-"; }
 function yearPeriod(start?: number | null, end?: number | null) { return [start, end].filter(Boolean).join(" - ") || "-"; }
+// periodLine del mockup: "Tipo · Periodo · Ubicación" (omite los vacíos).
+function eduPeriodLine(ed: Education) { const yp = yearPeriod(ed.start_year, ed.end_year); return [ed.eduType, yp && yp !== "-" ? yp : null, ed.location].filter(Boolean).join(" · ") || "-"; }
 function levelScore(level?: string | null) { const key = (level ?? "").toLowerCase(); if (/native|nativo|c2/.test(key)) return 5; if (/c1|advanced|avanz/.test(key)) return 4; if (/b2|intermediate|intermedio/.test(key)) return 3; if (/b1|basic|basico|básico/.test(key)) return 2; return 1; }
 function alertLabel(criteria: Record<string, unknown>, fallback: string) { return String((criteria as { q?: string }).q ?? (Object.values(criteria).filter(Boolean).join(" · ") || fallback)); }
 function criteriaChips(criteria: Record<string, unknown>, fallback: string) { const chips = Object.values(criteria).filter((v) => v != null && v !== "").flatMap((v) => Array.isArray(v) ? v.map(String) : [String(v)]); return chips.length ? chips : [fallback]; }

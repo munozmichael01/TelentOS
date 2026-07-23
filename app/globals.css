@@ -263,22 +263,67 @@
 .jb-auth-root { display: flex; min-height: 100vh; }
 .jb-auth-form { flex: 1 1 auto; display: flex; justify-content: center; padding: 22px 16px; }
 .jb-auth-panel { display: none; }
-.jb-auth-social { flex-direction: column; }
+.jb-auth-social { flex-direction: column; gap: 9px; }
+/* Botones sociales: mobile lleva el verbo ("Registrarme con Google"); desktop solo el proveedor ("Google"). */
+.jb-auth-socialprov { display: none; }
+.jb-auth-emailform { gap: 12px; }
+.jb-auth-submit { border-radius: 12px; }
+.jb-auth-brand { margin-top: 12px; }
+.jb-auth-logo { width: 34px; height: 34px; }
+.jb-auth-logo svg { width: 17px; height: 17px; }
+.jb-auth-h1 { font-size: 29px; }
+/* Bloque guest + términos: en mobile se ancla al fondo del área scrolleable. */
+.jb-auth-tail { margin-top: auto; }
 @media (min-width: 1024px) {
   .jb-auth-form { flex: 0 0 600px; align-items: center; padding: 40px 48px; }
   .jb-auth-panel { display: flex; flex: 1 1 auto; }
-  .jb-auth-social { flex-direction: row; }
+  .jb-auth-social { flex-direction: row; gap: 10px; }
+  .jb-auth-socialverb { display: none; }
+  .jb-auth-socialprov { display: inline; }
+  /* Los perks viven en el panel de marca; la caja lima es exclusiva de mobile-signup. */
+  .jb-auth-perk { display: none !important; }
+  .jb-auth-emailform { gap: 13px; }
+  .jb-auth-submit { border-radius: 11px; }
+  .jb-auth-brand { margin-top: 0; }
+  .jb-auth-logo { width: 36px; height: 36px; }
+  .jb-auth-logo svg { width: 18px; height: 18px; }
+  .jb-auth-h1 { font-size: 30px; }
+  .jb-auth-tail { margin-top: 20px; }
 }
 
-/* Asistente — split responsive: mobile pantalla completa; desktop rail tinta + chat */
+/* Asistente — split responsive: mobile pantalla completa; desktop rail tinta + chat.
+   Base = valores móviles; en ≥1024px se aplican la tipografía y el espaciado desktop
+   (mockup Desktop Asistente): la identidad vive solo en el rail, no en una topbar. */
 .jb-asst-shell { min-height: 100vh; display: flex; flex-direction: column; }
 .jb-asst-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; height: 100vh; }
 .jb-asst-rail { display: none; }
-.jb-asst-jobs { grid-template-columns: 1fr; }
+.jb-asst-topbar { display: flex; }
+.jb-asst-scroll { padding: 16px 14px; }
+.jb-asst-thread { gap: 14px; padding: 0; }
+.jb-asst-bot-avatar { width: 28px; height: 28px; border-radius: 9px; }
+.jb-asst-bubble-bot { font-size: 13.5px; border-radius: 4px 14px 14px 14px; padding: 11px 13px; }
+.jb-asst-bubble-user { font-size: 13.5px; border-radius: 14px 14px 4px 14px; padding: 10px 13px; max-width: 80%; }
+.jb-asst-chips { margin-top: 9px; }
+.jb-asst-jobs { grid-template-columns: 1fr; gap: 9px; }
+.jb-asst-jobcard { padding: 13px; }
+.jb-asst-jobtitle { font-size: 14px; }
+.jb-asst-suggest { flex-wrap: nowrap; overflow-x: auto; }
+.jb-asst-send { width: 38px; height: 38px; }
 @media (min-width: 1024px) {
   .jb-asst-shell { flex-direction: row; }
-  .jb-asst-rail { display: flex; flex: 0 0 320px; }
-  .jb-asst-jobs { grid-template-columns: 1fr 1fr; }
+  .jb-asst-rail { display: flex; flex: 0 0 340px; }
+  .jb-asst-topbar { display: none; }
+  .jb-asst-scroll { padding: 32px 0; }
+  .jb-asst-thread { gap: 18px; padding: 0 32px; }
+  .jb-asst-bot-avatar { width: 32px; height: 32px; border-radius: 10px; }
+  .jb-asst-bubble-bot { font-size: 14.5px; border-radius: 5px 16px 16px 16px; padding: 13px 16px; }
+  .jb-asst-bubble-user { font-size: 14.5px; border-radius: 16px 16px 5px 16px; padding: 11px 15px; max-width: 76%; }
+  .jb-asst-chips { margin-top: 11px; }
+  .jb-asst-jobs { grid-template-columns: 1fr 1fr; gap: 11px; }
+  .jb-asst-jobcard { padding: 14px; }
+  .jb-asst-jobtitle { font-size: 14.5px; }
+  .jb-asst-suggest { flex-wrap: wrap; overflow-x: visible; }
+  .jb-asst-send { width: 42px; height: 42px; }
 }
 /* Mi cuenta — shell desktop (mockup): top bar 64px + sidebar 270px + main scroll.
    Mobile intacto (header sticky + tab bar + sheets desde abajo). */
@@ -293,7 +338,17 @@
 .jb-acct-profile .jb-ord-cv { order: -1; }
 .jb-prefs-grid { gap: 10px; }
 .jb-acct-ia-desktop { display: none; }
+/* CV: etiqueta del botón reemplazar — mobile "Cambiar", desktop "Reemplazar" (mockup). */
+.jb-cv-lbl-full { display: none; }
+.jb-cv-lbl-short { display: inline; }
+/* Toast de confirmación (p. ej. "CV reemplazado · …"). */
+.jb-toast { position: fixed; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 90; background: var(--ink); color: #F4F0E8; font-family: 'Hanken Grotesk', sans-serif; font-weight: 600; font-size: 13px; padding: 11px 16px; border-radius: 12px; box-shadow: 0 6px 20px rgba(26,26,23,.28); max-width: calc(100vw - 32px); }
 @media (min-width: 1024px) {
+  .jb-toast { bottom: 28px; }
+  .jb-cv-lbl-full { display: inline; }
+  .jb-cv-lbl-short { display: none; }
+  /* El badge de estado solo se muestra en el sheet mobile; el modal desktop no lo lleva. */
+  .jb-acct-detail-badge { display: none !important; }
   .jb-acct-topbar { display: flex; }
   .jb-acct-header-mobile { display: none; }
   .jb-acct-tabbar { display: none !important; }
@@ -322,13 +377,35 @@
 .jb-dot:nth-child(3) { animation-delay: .3s; }
 @keyframes jbDot { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
 
-/* Perfil IA — split desktop: intake 520px + preview en vivo (tinta). Mobile: 1 col, preview oculto */
-.jb-pib-shell { width: 100%; }
-.jb-pib-preview { display: none; }
+/* Perfil IA — split PERMANENTE desktop: header full-width + intake 540px (border-right, siempre
+   visible) + panel de tinta que cambia por fase. Mobile: 1 columna, fases apiladas, footer sticky. */
+.jb-pib-page { display: flex; flex-direction: column; min-height: 100vh; }
+.jb-pib-header { display: flex; align-items: center; gap: 10px; padding: 8px 16px 12px; border-bottom: 1px solid var(--line); background: rgba(244,240,232,.9); flex-shrink: 0; }
+.jb-pib-back { width: 34px; height: 34px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; cursor: pointer; outline: none; flex-shrink: 0; }
+.jb-pib-logo { display: none; width: 34px; height: 34px; border-radius: 10px; background: var(--brand); align-items: center; justify-content: center; box-shadow: 2px 2px 0 var(--ink); flex-shrink: 0; }
+.jb-pib-hdr-note { display: none; }
+.jb-pib-body { flex: 1; min-height: 0; }
+.jb-pib-intake { padding: 16px; max-width: 480px; margin: 0 auto; }
+.jb-pib-intake--phased { display: none; }
+.jb-pib-lead { display: none; }
+.jb-pib-panel { display: none; }
+.jb-pib-mobilephase { display: block; }
+.jb-pib-lbl-desk { display: none; }
+.jb-pib-footer { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(252,250,246,.96); backdrop-filter: blur(8px); border-top: 1px solid var(--line); padding: 12px 16px 16px; z-index: 30; }
+.jb-pib-footer-inner { max-width: 480px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 9px; }
 @media (min-width: 1024px) {
-  .jb-pib-shell { display: flex; gap: 28px; align-items: flex-start; max-width: 1040px; margin: 0 auto; }
-  .jb-pib-intake { flex: 0 0 480px; max-width: 480px !important; }
-  .jb-pib-preview { display: flex; flex: 1 1 auto; }
+  .jb-pib-header { padding: 0 26px; height: 64px; gap: 14px; background: var(--surface); }
+  .jb-pib-back { width: 36px; height: 36px; background: var(--bg); box-shadow: 2px 2px 0 var(--ink); }
+  .jb-pib-logo { display: flex; }
+  .jb-pib-hdr-note { display: inline; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--soft); }
+  .jb-pib-body { display: flex; align-items: stretch; }
+  .jb-pib-intake { flex: 0 0 540px; max-width: 540px; margin: 0; border-right: 1px solid var(--line); padding: 34px 40px; overflow-y: auto; }
+  .jb-pib-intake--phased { display: block; }
+  .jb-pib-lead { display: block; }
+  .jb-pib-panel { display: flex; flex: 1 1 auto; flex-direction: column; background: var(--ink); padding: 34px 44px; overflow-y: auto; }
+  .jb-pib-mobilephase { display: none; }
+  .jb-pib-lbl-desk { display: inline; }
+  .jb-pib-lbl-mob { display: none; }
 }
 
 /* Board — split lista+detalle (LinkedIn-style). Mobile: 1 columna, tarjeta→página de oferta,
@@ -363,6 +440,11 @@
 .jb-hero { display: block; }
 .jb-filterstrip { display: none; }
 .jb-sort-mobile { display: flex; }
+/* Alerta guardar-búsqueda: campana compacta en móvil, botón de texto en desktop. */
+.jb-alert-mobile { display: inline-flex; }
+.jb-alert-desktop { display: none; }
+/* Fila de facetas activas removibles — solo móvil (desktop lleva el conteo en los chips). */
+.jb-active-facets { display: flex; }
 /* "Todos los filtros": bottom-sheet en mobile */
 .jb-filtermodal { align-items: flex-end; }
 .jb-filtermodal-panel { border-radius: 22px 22px 0 0; border-bottom: 0; }
@@ -375,21 +457,103 @@
   /* Barra de filtros desktop */
   .jb-filterstrip { display: flex; align-items: flex-start; gap: 10px; padding: 4px 0 14px; flex-wrap: wrap; }
   .jb-sort-mobile { display: none; }
+  .jb-alert-mobile { display: none; }
+  .jb-alert-desktop { display: inline-flex; }
+  .jb-active-facets { display: none; }
   /* Modal de filtros centrado en desktop */
   .jb-filtermodal { align-items: center; padding: 24px; }
   .jb-filtermodal-panel { border-radius: 20px; box-shadow: 10px 10px 0 rgba(26,26,23,.18); }
 }
 
-/* Apply — split desktop: formulario 720px + preview de la oferta. Mobile: 1 columna. */
+/* Apply — mobile: 1 columna (header sticky arriba, acción fija abajo).
+   Desktop (≥1024): header full-width arriba + cuerpo de dos columnas (form 720 | preview). */
 .jb-apply-shell { display: block; }
+.jb-apply-body { display: block; }
 .jb-apply-preview { display: none; }
 .jb-apply-action { position: fixed; left: 0; right: 0; bottom: 0; }
+
+/* Header + progreso */
+.jb-apply-header { padding: 8px 16px 12px; border-bottom: 1px solid var(--line); background: rgba(244,240,232,.9); position: sticky; top: 0; z-index: 20; }
+.jb-apply-headrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.jb-apply-back { width: 34px; height: 34px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+.jb-apply-headtitle { flex: 1 1 auto; min-width: 0; }
+.jb-apply-headtitle .jb-apply-steptitle { font-family: 'Archivo',sans-serif; font-weight: 800; font-size: 15px; letter-spacing: -.3px; line-height: 1.1; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jb-apply-progress { display: flex; gap: 5px; flex-basis: 100%; margin-top: 11px; }
+.jb-apply-progress > span { flex: 1; height: 5px; border-radius: 999px; }
+
+/* Contenido del formulario y barra de acción */
+.jb-apply-formpad { max-width: 560px; margin: 0 auto; padding: 14px 16px 0; }
+.jb-apply-actioninner { max-width: 560px; margin: 0 auto; }
+.jb-apply-hint { display: none; }
+
+/* Utilidades responsive de una sola pieza */
+.jb-apply-desktoponly { display: none !important; }
+.jb-apply-mobileonly { display: inline; }
+
 @media (min-width: 1024px) {
-  .jb-apply-shell { display: flex; gap: 28px; max-width: 1160px; margin: 0 auto; align-items: flex-start; padding: 0 24px; }
-  .jb-apply-main { flex: 0 0 720px; max-width: 720px; min-height: 0 !important; }
-  .jb-apply-preview { display: block; flex: 1 1 auto; min-width: 0; padding: 24px 4px; }
-  .jb-apply-action { position: sticky; left: auto; right: auto; }
+  .jb-apply-shell { display: flex; flex-direction: column; min-height: 100vh; }
+  .jb-apply-body { display: flex; flex: 1; min-height: 0; }
+  .jb-apply-main { flex: 0 0 720px; max-width: 720px; min-height: 0 !important; border-right: 1px solid var(--line); }
+  .jb-apply-preview { display: block; flex: 1 1 auto; min-width: 0; background: var(--surface); }
+  .jb-apply-action { position: sticky; left: auto; right: auto; background: var(--surface) !important; padding: 16px 44px !important; }
+
+  .jb-apply-header { height: 64px; padding: 0 26px; display: flex; align-items: center; background: var(--surface); }
+  .jb-apply-headrow { flex-wrap: nowrap; gap: 16px; width: 100%; }
+  .jb-apply-back { width: 36px; height: 36px; background: var(--bg); border-color: var(--line); box-shadow: 2px 2px 0 var(--ink); }
+  .jb-apply-headtitle { flex: 0 0 auto; }
+  .jb-apply-headtitle .jb-apply-steptitle { font-size: 16px; }
+  .jb-apply-progress { flex: 1 1 auto; flex-basis: auto; margin-top: 0; gap: 6px; }
+  .jb-apply-progress > span { height: 6px; }
+
+  .jb-apply-formpad { max-width: none; margin: 0; padding: 36px 44px 24px; }
+  .jb-apply-actioninner { display: flex; align-items: center; gap: 16px; max-width: none; }
+  .jb-apply-actioninner .jb-hard { width: auto !important; padding: 13px 34px !important; }
+  .jb-apply-hint { display: block; flex: 1; font-size: 13px; color: var(--soft); margin: 0; }
+
+  .jb-apply-desktoponly { display: inline !important; }
+  .jb-apply-mobileonly { display: none !important; }
+  .jb-apply-desktopblock { display: block !important; }
+  .jb-apply-mobileblock { display: none !important; }
 }
+/* Bloques que solo existen en desktop (encabezado paso 2) — ocultos por defecto */
+.jb-apply-desktopblock { display: none; }
+.jb-apply-mobileblock { display: block; }
+
+/* Botones sociales: columna en mobile, grid 2 columnas en desktop */
+.jb-apply-social { display: flex; flex-direction: column; gap: 9px; }
+@media (min-width: 1024px) { .jb-apply-social { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; } }
+
+/* Spinner del botón de acción durante "Enviando…" */
+.jb-apply-spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.5); border-top-color: #fff; border-radius: 50%; display: inline-block; animation: jbSpin .8s linear infinite; }
+
+/* Badge de check final (paso Enviada): 74px mobile / 82px desktop */
+.jb-apply-donebadge { width: 74px; height: 74px; }
+@media (min-width: 1024px) { .jb-apply-donebadge { width: 82px; height: 82px; } }
+
+/* Fila de botones del paso final: apilada en mobile, en fila centrada en desktop */
+.jb-apply-donebtns { display: flex; flex-direction: column; gap: 9px; }
+@media (min-width: 1024px) { .jb-apply-donebtns { flex-direction: row; justify-content: center; align-items: center; } }
+
+/* Badge de icono del paso Screening: 34px mobile / 36px desktop */
+.jb-apply-screenbadge { width: 34px; height: 34px; }
+@media (min-width: 1024px) { .jb-apply-screenbadge { width: 36px; height: 36px; } }
+
+/* Escalado responsive de títulos de paso */
+.jb-apply-title-1 { font-size: 22px; }
+.jb-apply-title-3 { font-size: 21px; }
+.jb-apply-title-done { font-size: 25px; }
+@media (min-width: 1024px) {
+  .jb-apply-title-1 { font-size: 30px; letter-spacing: -1.1px; }
+  .jb-apply-title-3 { font-size: 26px; letter-spacing: -.9px; }
+  .jb-apply-title-done { font-size: 30px; letter-spacing: -1.1px; }
+}
+
 /* Scanner del parseo de CV (línea lima recorriendo el documento) */
 .jb-scan { animation: jbScan 1.4s ease-in-out infinite; }
 @keyframes jbScan { 0% { top: 8%; } 50% { top: 84%; } 100% { top: 8%; } }
+/* Barra de progreso del parseo (0 → 100%) y trazo del check animado */
+.jb-fillbar { animation: jbFillbar 1.9s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes jbFillbar { from { width: 0; } to { width: 100%; } }
+.jb-checkline { stroke-dasharray: 26; animation: jbCheck .4s ease forwards; }
+@keyframes jbCheck { from { stroke-dashoffset: 26; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .jb-scan, .jb-fillbar, .jb-checkline { animation: none; } .jb-fillbar { width: 100%; } }

@@ -4,7 +4,18 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ARCHIVO, MONO, MonoLabel, CompanyLogo, ModalityTag } from "@/components/board/ui";
-import { formatSalary, relativeDate, jobSlug } from "@/lib/board/format";
+import { formatSalary, jobSlug } from "@/lib/board/format";
+
+const PERIODS = ["hour", "day", "week", "month", "year"];
+
+// Icono bookmark (guardar) — SVG de línea del DS. Trazo tinta, relleno verde al guardar.
+function BookmarkIcon({ saved }: { saved: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill={saved ? "#0E5C4A" : "none"}>
+      <path d="M6 4h12v17l-6-4-6 4V4Z" stroke={saved ? "#0E5C4A" : "#1A1A17"} strokeWidth="2" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 // Detalle de la oferta renderizado INLINE en el panel derecho del split (desktop).
 // Es autocontenido: pide /api/board/offer/[id] al cambiar jobId, muestra skeleton, y
@@ -28,29 +39,27 @@ export function OfferDetailPanel({ jobId, locale }: { jobId: string; locale: str
   const [loading, setLoading] = useState(true);
   const reqSeq = useRef(0);
 
-  // Estado de aplicar/guardar — se reinicia con cada oferta.
+  // Estado de guardar — se reinicia con cada oferta. El detalle desktop NO aplica en
+  // 1-toque (la conversión de 1-toque vive en la card de la lista, según el mockup): la
+  // barra sticky y el CTA inline enlazan siempre al flujo Apply.
   const [saved, setSaved] = useState(false);
-  const [canOneTap, setCanOneTap] = useState(false);
-  const [applyState, setApplyState] = useState<"idle" | "applying" | "applied">("idle");
-  const [err, setErr] = useState("");
   // Preferencias del candidato (solo logueado) para el tile "Match para ti N de 4".
   const [prefs, setPrefs] = useState<{ pref_modality?: string[] | null; pref_locations?: string[] | null; pref_salary_min?: number | null; headline?: string | null; city?: string | null } | null>(null);
 
   useEffect(() => {
     const seq = ++reqSeq.current;
     setLoading(true); setData(null);
-    setSaved(false); setCanOneTap(false); setApplyState("idle"); setErr("");
+    setSaved(false); setPrefs(null);
     fetch(`/api/board/offer/${jobId}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d: PanelData | null) => {
         if (seq !== reqSeq.current) return; // respuesta obsoleta (cambió la selección)
         setData(d); setLoading(false);
-        // Perfil (si hay sesión): habilita 1-toque y alimenta el match de preferencias.
+        // Perfil (si hay sesión): alimenta el match de preferencias del tile.
         if (d) {
           fetch("/api/board/profile").then((r) => (r.ok ? r.json() : null)).then((p) => {
             if (seq !== reqSeq.current || !p) return;
             if (p.profile) setPrefs(p.profile);
-            if (!d.hasRequiredScreening && p.completeness?.complete) setCanOneTap(true);
           }).catch(() => {});
         }
       })
@@ -67,18 +76,7 @@ export function OfferDetailPanel({ jobId, locale }: { jobId: string; locale: str
     else if (!res.ok) setSaved(!next);
   }
 
-  async function oneTap(slug: string) {
-    setApplyState("applying"); setErr("");
-    const res = await fetch("/api/board/apply/one-tap", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId }),
-    }).then((r) => r.json().then((j) => ({ status: r.status, j }))).catch(() => null);
-    if (res?.j?.needsWizard) { router.push({ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug } }); return; }
-    if (res?.status === 200 && res.j?.ok) { setApplyState("applied"); return; }
-    if (res?.status === 409) { setApplyState("applied"); return; }
-    setApplyState("idle"); setErr(t("apply.error"));
-  }
-
-  if (loading) return <PanelSkeleton />;
+  if (loading) return <PanelSkeleton t={t} />;
   if (!data) return (
     <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--soft)" }}>
       <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 16, color: "var(--ink)", marginBottom: 6 }}>{t("empty.title")}</div>
@@ -89,6 +87,10 @@ export function OfferDetailPanel({ jobId, locale }: { jobId: string; locale: str
   const { job, skills } = data;
   const salary = formatSalary(job, locale);
   const slug = jobSlug(job);
+  // Unidad/periodo del salario ("USD / mes") — mockup del tile de salario.
+  const salaryPeriod = job.salary_period && PERIODS.includes(job.salary_period) ? job.salary_period : "month";
+  const salaryUnit = `${job.salary_currency || "USD"} / ${t(`detail.period.${salaryPeriod}`)}`;
+  const applyHref = { pathname: "/empleos/oferta/[slug]/aplicar" as const, params: { slug } };
 
   // "Match para ti N de 4": preferencias cumplidas (modalidad · ubicación · salario · rol).
   // Solo si hay sesión con alguna preferencia definida; anónimo no lo ve (mockup).
@@ -111,7 +113,7 @@ export function OfferDetailPanel({ jobId, locale }: { jobId: string; locale: str
   if (job.education_level) reqs.push(t("detail.reqEducation", { level: CAP(job.education_level) }));
   if (job.seniority_level) reqs.push(t("detail.reqSeniority", { level: CAP(job.seniority_level) }));
 
-  const applyBtn = { flex: 1, textAlign: "center" as const, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14.5, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 12, padding: 12, boxShadow: "3px 3px 0 var(--ink)", textDecoration: "none", cursor: "pointer" } as const;
+  const applyBtn = { flexShrink: 0, textAlign: "center" as const, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14.5, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 11, padding: "12px 30px", boxShadow: "3px 3px 0 var(--ink)", textDecoration: "none", cursor: "pointer" } as const;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -125,9 +127,10 @@ export function OfferDetailPanel({ jobId, locale }: { jobId: string; locale: str
               : <div style={{ fontFamily: MONO, fontSize: 12, color: "var(--brand)", fontWeight: 700 }}>{job.company?.name}</div>}
             <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 23, lineHeight: 1.06, letterSpacing: "-.7px", margin: "3px 0 0" }}>{job.title}</h2>
           </div>
-          <Link href={{ pathname: "/empleos/oferta/[slug]", params: { slug } }} title={t("detail.openFull")} style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid var(--line)", color: "var(--soft)" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </Link>
+          {/* Guardar (bookmark) grande hard-shadow — mockup desktop, esquina superior derecha */}
+          <button onClick={toggleSave} aria-label={t("detail.save")} className="jb-hard" style={{ flexShrink: 0, width: 46, height: 46, borderRadius: 11, background: "var(--surface)", border: "2px solid var(--ink)", boxShadow: "3px 3px 0 var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <BookmarkIcon saved={saved} />
+          </button>
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
@@ -144,7 +147,7 @@ export function OfferDetailPanel({ jobId, locale }: { jobId: string; locale: str
               <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: "14px 15px" }}>
                 <MonoLabel style={{ fontSize: 9.5 }}>{t("detail.salary")}</MonoLabel>
                 <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 19, letterSpacing: "-.4px", color: "var(--brand)", marginTop: 3 }}>{salary}</div>
-                <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 2 }}>{relativeDate(job.created_at, locale)}</div>
+                <div style={{ fontSize: 12, color: "var(--soft)", marginTop: 2 }}>{salaryUnit}</div>
               </div>
             )}
             {/* Match de preferencias — solo candidato logueado con preferencias */}
@@ -161,64 +164,64 @@ export function OfferDetailPanel({ jobId, locale }: { jobId: string; locale: str
           </div>
         )}
 
-        {/* CTA de aplicar dentro del detalle (sin scroll), además de la barra inferior */}
-        {applyState !== "applied" && (
-          <button onClick={() => (canOneTap ? oneTap(slug) : router.push({ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug } }))} disabled={applyState === "applying"} className="jb-hard" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 11, padding: 14, boxShadow: "3px 3px 0 var(--ink)", cursor: "pointer", marginBottom: 18, opacity: applyState === "applying" ? .7 : 1 }}>
-            {applyState === "applying" ? t("apply.sending") : t("detail.applyInline")}
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </button>
-        )}
+        {/* CTA de aplicar dentro del detalle (sin scroll), además de la barra inferior.
+            Enlaza siempre al flujo Apply — el detalle desktop no tiene 1-toque (mockup). */}
+        <Link href={applyHref} className="jb-hard" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 11, padding: 14, boxShadow: "3px 3px 0 var(--ink)", cursor: "pointer", marginBottom: 18, textDecoration: "none" }}>
+          {t("detail.applyInline")}
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </Link>
 
         {job.description && <>
-          <MonoLabel style={{ marginBottom: 8 }}>{t("detail.about")}</MonoLabel>
-          <p style={{ fontSize: 14, lineHeight: 1.6, color: "#3A3833", margin: "0 0 18px", whiteSpace: "pre-wrap" }}>{job.description}</p>
+          <SectionHeading>{t("detail.about")}</SectionHeading>
+          <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#3A3833", margin: "0 0 18px", whiteSpace: "pre-wrap" }}>{job.description}</p>
         </>}
 
-        {(reqs.length > 0 || skills.length > 0) && <>
-          <MonoLabel style={{ marginBottom: 9 }}>{t("detail.looking")}</MonoLabel>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+        {reqs.length > 0 && <>
+          <SectionHeading>{t("detail.looking")}</SectionHeading>
+          <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 18 }}>
             {reqs.map((r, i) => (
               <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10" fill="var(--brandSoft)" /><path d="M8 12.5l2.5 2.5 5-5.5" stroke="var(--brand)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                <span style={{ fontSize: 13.5, lineHeight: 1.45, color: "#3A3833" }}>{r}</span>
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10" fill="var(--brandSoft)" /><path d="M8 12.5l2.5 2.5 5-5.5" stroke="var(--brand)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span style={{ fontSize: 14, lineHeight: 1.5, color: "#3A3833" }}>{r}</span>
               </div>
             ))}
           </div>
-          {skills.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {skills.map((s) => (
-                <span key={s.name} title={s.requirement === "excluyente" ? t("detail.required") : t("detail.desirable")} style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: s.requirement === "excluyente" ? "#0E5C4A" : "#54504A", background: s.requirement === "excluyente" ? "var(--brandSoft)" : "var(--surface)", border: `1px solid ${s.requirement === "excluyente" ? "#BEE0CE" : "var(--line)"}`, borderRadius: 7, padding: "4px 9px" }}>{s.name}</span>
-              ))}
-            </div>
-          )}
+        </>}
+
+        {skills.length > 0 && <>
+          <SectionHeading>{t("detail.skills")}</SectionHeading>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+            {skills.map((s) => (
+              <span key={s.name} title={s.requirement === "excluyente" ? t("detail.required") : t("detail.desirable")} style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: s.requirement === "excluyente" ? "#0E5C4A" : "#54504A", background: s.requirement === "excluyente" ? "var(--brandSoft)" : "var(--surface)", border: `1px solid ${s.requirement === "excluyente" ? "#BEE0CE" : "var(--line)"}`, borderRadius: 8, padding: "6px 11px" }}>{s.name}</span>
+            ))}
+          </div>
         </>}
       </div>
 
-      {/* Barra de aplicar — fija al pie del panel */}
-      <div style={{ borderTop: "1px solid var(--line)", background: "rgba(252,250,246,.96)", padding: "12px 24px" }}>
-        {err && <p style={{ fontSize: 12.5, color: "#BD4332", margin: "0 0 8px" }}>{err}</p>}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={toggleSave} aria-label={t("detail.save")} className="jb-hard" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 12, background: "var(--surface)", border: "2px solid var(--ink)", boxShadow: "3px 3px 0 var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill={saved ? "#0E5C4A" : "none"}><path d="M6 4h12v17l-6-4-6 4V4Z" stroke={saved ? "#0E5C4A" : "#1A1A17"} strokeWidth="2" strokeLinejoin="round" /></svg>
-          </button>
-          {applyState === "applied" ? (
-            <Link href="/cuenta" className="jb-hard" style={{ ...applyBtn, background: "var(--brand)" }}>{t("detail.applied")} →</Link>
-          ) : canOneTap ? (
-            <button onClick={() => oneTap(slug)} disabled={applyState === "applying"} className="jb-hard" style={{ ...applyBtn, opacity: applyState === "applying" ? .7 : 1 }}>
-              {applyState === "applying" ? t("apply.sending") : `${t("detail.oneTap")} ⚡`}
-            </button>
-          ) : (
-            <Link href={{ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug } }} className="jb-hard" style={applyBtn}>
-              {t("detail.apply")} →
-            </Link>
-          )}
+      {/* Barra sticky inferior — título+meta a la izquierda, guardar (bookmark) y "Aplicar →"
+          (coral). El detalle desktop no aplica en 1-toque (mockup). */}
+      <div style={{ borderTop: "1px solid var(--line)", background: "rgba(252,250,246,.96)", padding: "14px 24px", display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{job.title}</div>
+          <div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {[job.company?.name, job.modality && t(`modality.${job.modality}`), salary].filter(Boolean).join(" · ")}
+          </div>
         </div>
+        <button onClick={toggleSave} aria-label={t("detail.save")} className="jb-hard" style={{ width: 46, height: 46, flexShrink: 0, borderRadius: 11, background: "var(--surface)", border: "2px solid var(--ink)", boxShadow: "3px 3px 0 var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+          <BookmarkIcon saved={saved} />
+        </button>
+        <Link href={applyHref} className="jb-hard" style={applyBtn}>{t("detail.apply")} →</Link>
       </div>
     </div>
   );
 }
 
-function PanelSkeleton() {
+// Encabezado de sección del detalle desktop (Archivo 900 17px) — mockup.
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 17, marginBottom: 10 }}>{children}</div>;
+}
+
+function PanelSkeleton({ t }: { t: ReturnType<typeof useTranslations> }) {
   const bar = (w: number | string, h: number, mt = 0) => (
     <div style={{ width: w, height: h, marginTop: mt, borderRadius: 7, background: "linear-gradient(90deg,#EDE8DD,#F4F0E8,#EDE8DD)", backgroundSize: "200% 100%", animation: "jbShimmer 1.2s infinite" }} />
   );
@@ -232,6 +235,10 @@ function PanelSkeleton() {
       {bar("100%", 58, 14)}
       {bar(90, 11, 18)}
       {bar("100%", 13, 10)}{bar("96%", 13, 7)}{bar("88%", 13, 7)}{bar("70%", 13, 7)}
+      <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 26, fontFamily: MONO, fontSize: 11, color: "var(--soft)" }}>
+        <span style={{ width: 15, height: 15, border: "2px solid #D8D1C2", borderTopColor: "var(--brand)", borderRadius: "50%", display: "inline-block", animation: "jbSpin .8s linear infinite" }} />
+        {t("detail.loading")}
+      </div>
     </div>
   );
 }

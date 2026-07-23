@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
   );
   return {
     title: `${t("hero.title")} ${t("hero.titleAccent")} ${t("hero.titleEnd")} · TalentOS`,
-    description: t("hero.eyebrow"),
+    description: t("hero.metaDescription"),
     alternates: { languages },
   };
 }
