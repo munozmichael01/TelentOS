@@ -79,8 +79,8 @@ export function CandidateAuth({ locale, companySession = false }: { locale: stri
       <div className="jb-auth-form">
       <div style={{ width: "100%", maxWidth: 400, display: "flex", flexDirection: "column" }}>
         {/* brand */}
-        <Link href="/empleos" style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, color: "var(--ink)" }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 var(--ink)" }}>
+        <Link href="/empleos" className="jb-auth-brand" style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--ink)" }}>
+          <div className="jb-auth-logo" style={{ borderRadius: 10, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 var(--ink)" }}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round" /></svg>
           </div>
           <span style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 18, letterSpacing: "-.5px" }}>TalentOS <span style={{ color: "var(--brand)" }}>Empleos</span></span>
@@ -92,7 +92,7 @@ export function CandidateAuth({ locale, companySession = false }: { locale: stri
             <p style={{ fontSize: 12.5, lineHeight: 1.5, color: "#7A5210", margin: 0 }}>{t("companySessionNote")}</p>
           </div>
         )}
-        <h1 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 29, lineHeight: 1.02, letterSpacing: "-1.2px", margin: "26px 0 6px" }}>{signup ? t("signupTitle") : t("signinTitle")}</h1>
+        <h1 className="jb-auth-h1" style={{ fontFamily: ARCHIVO, fontWeight: 900, lineHeight: 1.02, letterSpacing: "-1.2px", margin: "26px 0 6px" }}>{signup ? t("signupTitle") : t("signinTitle")}</h1>
         <p style={{ fontSize: 14.5, lineHeight: 1.5, color: "var(--soft)", margin: "0 0 20px" }}>{signup ? t("signupSub") : t("signinSub")}</p>
 
         {/* segmented */}
@@ -103,13 +103,15 @@ export function CandidateAuth({ locale, companySession = false }: { locale: stri
 
         {/* social (OAuth se cablea aparte — de momento "Próximamente"). Mobile: columna;
             desktop: fila de 2 (.jb-auth-social). Verbo "Registrarme/Entrar" (no el CTA). */}
-        <div className="jb-auth-social" style={{ display: "flex", gap: 9, marginBottom: 16 }}>
+        <div className="jb-auth-social" style={{ display: "flex", marginBottom: 16 }}>
           {([["Google", "withGoogle"], ["LinkedIn", "withLinkedin"]] as const).map(([prov, key]) => (
-            <button key={prov} onClick={() => setSoon(true)} className="jb-hard" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 9, fontFamily: ARCHIVO, fontWeight: 700, fontSize: 14, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 11, padding: 12, boxShadow: "3px 3px 0 var(--ink)", cursor: "pointer" }}>
+            <button key={prov} onClick={() => setSoon(true)} className="jb-hard" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 9, fontFamily: ARCHIVO, fontWeight: 700, fontSize: 14, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 12, padding: 12, boxShadow: "3px 3px 0 var(--ink)", cursor: "pointer" }}>
               {prov === "Google"
                 ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21.6 12.2c0-.6-.1-1.2-.2-1.8H12v3.4h5.4c-.2 1.2-.9 2.3-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.1Z" fill="#4285F4" /><path d="M12 22c2.7 0 5-1 6.6-2.7l-3.2-2.5c-.9.6-2 .9-3.4.9-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6C4.7 19.8 8.1 22 12 22Z" fill="#34A853" /><path d="M6.4 13.6c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7H3.1C2.4 8.5 2 10.2 2 12s.4 3.5 1.1 5l3.3-2.6Z" fill="#FBBC05" /><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 2.9 14.7 2 12 2 8.1 2 4.7 4.2 3.1 7.5l3.3 2.6C7.2 7.6 9.4 5.9 12 5.9Z" fill="#EA4335" /></svg>
                 : <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.4 3H3.6A.6.6 0 003 3.6v16.8a.6.6 0 00.6.6h16.8a.6.6 0 00.6-.6V3.6a.6.6 0 00-.6-.6ZM8.3 18.3H5.5V9.4h2.8v8.9ZM6.9 8.2a1.6 1.6 0 110-3.3 1.6 1.6 0 010 3.3Zm11.4 10.1h-2.8v-4.3c0-1 0-2.4-1.4-2.4s-1.7 1.1-1.7 2.3v4.4H9.6V9.4h2.7v1.2h.04c.4-.7 1.3-1.5 2.6-1.5 2.8 0 3.3 1.9 3.3 4.3v4.9Z" /></svg>}
-              {signup ? t("socialVerbSignup") : t("socialVerbSignin")} {t(key)}
+              {/* Mobile: verbo + proveedor ("Registrarme con Google"). Desktop (≥1024px): solo el proveedor ("Google"). */}
+              <span className="jb-auth-socialverb">{signup ? t("socialVerbSignup") : t("socialVerbSignin")} {t(key)}</span>
+              <span className="jb-auth-socialprov">{prov}</span>
             </button>
           ))}
         </div>
@@ -121,7 +123,7 @@ export function CandidateAuth({ locale, companySession = false }: { locale: stri
           <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
         </div>
 
-        <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <form onSubmit={submit} className="jb-auth-emailform" style={{ display: "flex", flexDirection: "column" }}>
           {signup && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div>
@@ -156,13 +158,14 @@ export function CandidateAuth({ locale, companySession = false }: { locale: stri
 
           {error && <p style={{ fontSize: 13, color: "#BD4332", margin: "2px 0 0" }}>{error}</p>}
 
-          <button type="submit" disabled={loading} className="jb-hard" style={{ width: "100%", marginTop: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 11, padding: 14, boxShadow: "3px 3px 0 var(--ink)", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1 }}>
+          <button type="submit" disabled={loading} className="jb-hard jb-auth-submit" style={{ width: "100%", marginTop: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", padding: 14, boxShadow: "3px 3px 0 var(--ink)", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1 }}>
             {signup ? t("signupAction") : t("signinAction")}
           </button>
         </form>
 
+        {/* Caja lima "Al crear tu cuenta": exclusiva de mobile-signup — en desktop los perks viven en el panel de marca (.jb-auth-perk se oculta ≥1024px). */}
         {signup && (
-          <div style={{ marginTop: 16, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 13, padding: "13px 14px" }}>
+          <div className="jb-auth-perk" style={{ marginTop: 16, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 13, padding: "13px 14px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z" stroke="#46540F" strokeWidth="1.6" strokeLinejoin="round" /></svg>
               <span style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "#2C3907" }}>{t("perkHeading")}</span>
@@ -176,7 +179,7 @@ export function CandidateAuth({ locale, companySession = false }: { locale: stri
           <button onClick={() => { setMode(signup ? "signin" : "signup"); setError(""); }} style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "var(--brand)", background: "none", border: "none", cursor: "pointer" }}>{signup ? t("goSignin") : t("goSignup")}</button>
         </div>
 
-        <div style={{ marginTop: 24, textAlign: "center" }}>
+        <div className="jb-auth-tail" style={{ textAlign: "center" }}>
           <Link href="/empleos" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13, color: "var(--soft)" }}>{t("guest")}</Link>
           <p style={{ fontFamily: MONO, fontSize: 9, color: "#A39E94", lineHeight: 1.5, margin: "14px 0 0" }}>{t("terms")}</p>
         </div>

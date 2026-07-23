@@ -263,11 +263,32 @@
 .jb-auth-root { display: flex; min-height: 100vh; }
 .jb-auth-form { flex: 1 1 auto; display: flex; justify-content: center; padding: 22px 16px; }
 .jb-auth-panel { display: none; }
-.jb-auth-social { flex-direction: column; }
+.jb-auth-social { flex-direction: column; gap: 9px; }
+/* Botones sociales: mobile lleva el verbo ("Registrarme con Google"); desktop solo el proveedor ("Google"). */
+.jb-auth-socialprov { display: none; }
+.jb-auth-emailform { gap: 12px; }
+.jb-auth-submit { border-radius: 12px; }
+.jb-auth-brand { margin-top: 12px; }
+.jb-auth-logo { width: 34px; height: 34px; }
+.jb-auth-logo svg { width: 17px; height: 17px; }
+.jb-auth-h1 { font-size: 29px; }
+/* Bloque guest + términos: en mobile se ancla al fondo del área scrolleable. */
+.jb-auth-tail { margin-top: auto; }
 @media (min-width: 1024px) {
   .jb-auth-form { flex: 0 0 600px; align-items: center; padding: 40px 48px; }
   .jb-auth-panel { display: flex; flex: 1 1 auto; }
-  .jb-auth-social { flex-direction: row; }
+  .jb-auth-social { flex-direction: row; gap: 10px; }
+  .jb-auth-socialverb { display: none; }
+  .jb-auth-socialprov { display: inline; }
+  /* Los perks viven en el panel de marca; la caja lima es exclusiva de mobile-signup. */
+  .jb-auth-perk { display: none !important; }
+  .jb-auth-emailform { gap: 13px; }
+  .jb-auth-submit { border-radius: 11px; }
+  .jb-auth-brand { margin-top: 0; }
+  .jb-auth-logo { width: 36px; height: 36px; }
+  .jb-auth-logo svg { width: 18px; height: 18px; }
+  .jb-auth-h1 { font-size: 30px; }
+  .jb-auth-tail { margin-top: 20px; }
 }
 
 /* Asistente — split responsive: mobile pantalla completa; desktop rail tinta + chat */
