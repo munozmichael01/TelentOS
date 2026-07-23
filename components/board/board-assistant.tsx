@@ -101,7 +101,7 @@ export function BoardAssistant({ locale }: { locale: string }) {
     try {
       const res = await fetch("/api/board/assistant", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, history }),
+        body: JSON.stringify({ query, history, locale }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();

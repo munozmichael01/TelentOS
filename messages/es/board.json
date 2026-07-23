@@ -495,7 +495,12 @@
     "railIntro": "Dime qué buscas en tus palabras y te traigo las mejores ofertas del board. Solo busco por ti: no publico ni comparto nada.",
     "railStatus": "Solo lectura · busca ofertas",
     "railFooter": "El agente propone · tú decides",
-    "interpretedLead": "Esto es lo que entendí de tu búsqueda."
+    "interpretedLead": "Esto es lo que entendí de tu búsqueda.",
+    "foundN": "{count, plural, =1 {Encontré 1 oferta que encaja.} other {Encontré # ofertas que encajan.}}",
+    "widenedLead": "No encontré coincidencias exactas, pero esto es lo más cercano.",
+    "none": "No encontré ofertas con esos criterios. Prueba ampliar: quita la ubicación o cambia la modalidad.",
+    "alertCreatedText": "Listo, guardé tu búsqueda como alerta. Te aviso apenas entren ofertas que coincidan.",
+    "alertFailed": "No pude crear la alerta ahora mismo. Inténtalo de nuevo."
   },
   "builder": {
     "eyebrow": "Asistente de perfil",

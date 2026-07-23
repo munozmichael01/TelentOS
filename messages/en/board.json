@@ -495,7 +495,12 @@
     "railIntro": "Tell me what you want in your own words and I'll bring you the best jobs on the board. I only search for you: I never post or share anything.",
     "railStatus": "Read-only · finds jobs",
     "railFooter": "The agent proposes · you decide",
-    "interpretedLead": "Here's what I understood from your search."
+    "interpretedLead": "Here's what I understood from your search.",
+    "foundN": "{count, plural, =1 {Found 1 matching job.} other {Found # matching jobs.}}",
+    "widenedLead": "No exact matches, but here is the closest.",
+    "none": "No jobs matched those criteria. Try broadening: remove the location or change the work mode.",
+    "alertCreatedText": "Done — I saved your search as an alert. I will notify you as soon as matching jobs come in.",
+    "alertFailed": "I could not create the alert right now. Please try again."
   },
   "builder": {
     "eyebrow": "Profile assistant",

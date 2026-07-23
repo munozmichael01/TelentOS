@@ -495,7 +495,12 @@
     "railIntro": "Diga o que procura com suas palavras e trago as melhores vagas do board. Só busco para você: não publico nem compartilho nada.",
     "railStatus": "Somente leitura · busca vagas",
     "railFooter": "O agente propõe · você decide",
-    "interpretedLead": "Isto é o que entendi da sua busca."
+    "interpretedLead": "Isto é o que entendi da sua busca.",
+    "foundN": "{count, plural, =1 {Encontrei 1 vaga que combina.} other {Encontrei # vagas que combinam.}}",
+    "widenedLead": "Não encontrei correspondências exatas, mas isto é o mais próximo.",
+    "none": "Não encontrei vagas com esses critérios. Tente ampliar: remova a localização ou mude a modalidade.",
+    "alertCreatedText": "Pronto — guardei sua busca como alerta. Aviso assim que entrarem vagas que combinem.",
+    "alertFailed": "Não consegui criar o alerta agora. Tente novamente."
   },
   "builder": {
     "eyebrow": "Assistente de perfil",
