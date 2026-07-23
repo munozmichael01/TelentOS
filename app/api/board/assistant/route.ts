@@ -131,19 +131,29 @@ export async function POST(req: Request) {
     jobs = res.jobs;
     total = res.total;
 
-    // Fit por oferta: el perfil del candidato (su ficha ATS) vs cada oferta. Lo que hace
-    // que sea un "asistente" y no un listado. Solo si tiene ficha con datos.
     const jobRows = jobs as { id: string }[];
     if (jobRows.length) {
-      // Admin: candidates/job_skills tienen RLS por empresa; un candidato no las lee con RLS.
-      // Scopeado por user.id (que controlamos tras el guard de sesión).
+      // Admin: candidates/job_skills/applications tienen RLS por empresa; un candidato no
+      // las lee con RLS. Scopeado por user.id (que controlamos tras el guard de sesión).
       const admin = createAdminClient();
+      const ids = jobRows.map((j) => j.id);
+
+      // Ofertas a las que el usuario YA aplicó (histórico, no solo esta sesión): se marcan
+      // "ya aplicada" y se empujan al fondo (no se ocultan — el usuario ve su estado).
+      const { data: myApps } = await admin.from("applications")
+        .select("job_id, candidates!inner(user_id)")
+        .eq("candidates.user_id", user.id).in("job_id", ids);
+      const appliedSet = new Set((myApps ?? []).map((a) => a.job_id as string));
+
+      // Fit por oferta: el perfil del candidato (su ficha ATS) vs cada oferta. Lo que hace
+      // que sea un "asistente" y no un listado. Solo si tiene ficha con datos.
       const { data: cands } = await admin.from("candidates")
         .select("skills, experience_years, education_level, city, country_code, location")
         .eq("user_id", user.id).order("created_at", { ascending: false }).limit(1);
       const cand = cands?.[0];
+
+      const fitByJob = new Map<string, number>();
       if (cand) {
-        const ids = jobRows.map((j) => j.id);
         const [{ data: reqs }, { data: jSkills }, candSkillIds] = await Promise.all([
           admin.from("jobs").select("id, experience_min_years, education_level, seniority_level, country_code, city, location").in("id", ids),
           admin.from("job_skills").select("job_id, skill_id, requirement").in("job_id", ids),
@@ -156,15 +166,21 @@ export async function POST(req: Request) {
           arr.push({ skillId: s.skill_id, requirement: (s.requirement ?? "deseable") as JobSkillReq["requirement"] });
           skillsByJob.set(s.job_id, arr);
         }
-        jobs = jobRows.map((j) => {
+        for (const j of jobRows) {
           const r = reqById.get(j.id);
           const fit = computeRecruiterFit({
             job: { skills: skillsByJob.get(j.id) ?? [], experienceMinYears: r?.experience_min_years ?? 0, educationLevel: (r?.education_level ?? null) as EducationLevel | null, seniorityLevel: (r?.seniority_level ?? null) as SeniorityLevel | null, country: r?.country_code ?? null, city: r?.city ?? null, location: r?.location ?? null },
             candidate: { skillIds: candSkillIds, experienceYears: cand.experience_years ?? 0, educationLevel: (cand.education_level ?? null) as EducationLevel | null, seniorityLevel: null, country: cand.country_code ?? null, city: cand.city ?? null, location: cand.location ?? null },
           });
-          return { ...j, fit: fit.score };
-        });
+          fitByJob.set(j.id, fit.score);
+        }
       }
+
+      // Adjunta fit + applied y ORDENA: no-aplicadas primero, luego mejor fit primero.
+      // (Reordena el lote traído; el fit se calcula tras el fetch, no en el índice.)
+      jobs = jobRows
+        .map((j) => ({ ...j, fit: fitByJob.get(j.id), applied: appliedSet.has(j.id) }))
+        .sort((a, b) => (a.applied ? 1 : 0) - (b.applied ? 1 : 0) || (b.fit ?? -1) - (a.fit ?? -1));
     }
   }
 

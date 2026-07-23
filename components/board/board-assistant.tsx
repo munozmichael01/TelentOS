@@ -188,7 +188,7 @@ export function BoardAssistant({ locale }: { locale: string }) {
                             {j.modality && <span style={{ fontSize: 10.5, fontWeight: 700, color: md.color, background: md.bg, border: `1px solid ${md.border}`, borderRadius: 6, padding: "2px 7px" }}>{j.modality}</span>}
                           </div>
                           <div style={{ display: "flex", gap: 8, marginTop: 11 }}>
-                            {applied[j.id] ? (
+                            {(applied[j.id] || (j as { applied?: boolean }).applied) ? (
                               <span style={{ flex: 1, textAlign: "center", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 10, padding: 9 }}>
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke="var(--brand)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>{t("applied")}
                               </span>
