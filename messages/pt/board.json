@@ -329,7 +329,24 @@
       "level": "Nível",
       "linkType": "Tipo",
       "url": "URL",
-      "linkLabel": "Rótulo (opcional)"
+      "linkLabel": "Rótulo (opcional)",
+      "rolePh": "Ex. Product Designer Sênior",
+      "companyPh": "Ex. Fintech Labs",
+      "location": "Localização",
+      "locationPh": "Ex. Caracas ou Remoto",
+      "description": "Descrição",
+      "descriptionPh": "O que você fez e o que alcançou…",
+      "degreePh": "Ex. Bacharel em Design Gráfico",
+      "institutionPh": "Ex. Universidade Central da Venezuela",
+      "eduType": "Tipo",
+      "eduLocationPh": "Ex. Caracas",
+      "proTitle": "Título profissional",
+      "email": "Email",
+      "desiredRole": "Cargo que você busca",
+      "desiredSalary": "Salário desejado (USD/mês)",
+      "salaryPh": "Ex. A partir de $1.800",
+      "prefLocation": "Localização preferida",
+      "prefLocationPh": "Ex. Caracas ou remoto"
     },
     "editor": {
       "expNew": "Adicionar experiência",
@@ -350,7 +367,22 @@
     "skillsPlaceholder": "Adicione uma skill e pressione Enter",
     "suggested": "Sugeridas",
     "cvUpload": "Enviar CV",
-    "cvEmpty": "Você ainda não enviou seu CV — é o que mais completa seu perfil."
+    "cvEmpty": "Você ainda não enviou seu CV — é o que mais completa seu perfil.",
+    "cta": {
+      "action": "Concluir teste técnico",
+      "good": "Preparar para a entrevista",
+      "info": "Ver a vaga original",
+      "closed": "Ver 3 vagas similares"
+    },
+    "aboutPh": "Conte às empresas quem você é e o que te move…",
+    "aiSubtitleComplete": "Faremos algumas perguntas rápidas para preencher o que falta e redigir suas seções.",
+    "aiSubtitleRefine": "Reescrevemos seu resumo e sugerimos skills para você se destacar mais.",
+    "appsCount": "{count} empresas · acompanhamento em tempo real",
+    "suggestionTitle": "Uma sugestão para você",
+    "proactive": "proativo",
+    "suggestionCta": "Concluir teste",
+    "cvReplacedToast": "CV substituído",
+    "cvReplaceShort": "Trocar"
   },
   "auth": {
     "signinTitle": "Bem-vinda de volta",
@@ -556,7 +588,11 @@
     "emptyTitle": "Sem alertas",
     "emptyText": "Crie um alerta para receber novas vagas compatíveis.",
     "default": "Alerta",
-    "match": "match"
+    "match": "match",
+    "edit": "Editar alerta",
+    "jobTitle": "Cargo ou empresa",
+    "jobTitlePh": "Ex. Product Designer",
+    "locationPh": "Ex. Caracas ou Remoto"
   },
   "nav": {
     "companies": "Empresas",

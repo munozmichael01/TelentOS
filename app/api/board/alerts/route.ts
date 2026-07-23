@@ -65,6 +65,11 @@ export async function PATCH(req: Request) {
   const patch: Record<string, unknown> = {};
   if (typeof body.active === "boolean") patch.active = body.active;
   if (body.frequency !== undefined) patch.frequency = freqOf(body.frequency);
+  if (body.criteria !== undefined) {
+    const criteria = sanitizeCriteria(body.criteria);
+    if (Object.keys(criteria).length === 0) return jsonError("La alerta necesita al menos un criterio", 422);
+    patch.criteria = criteria;
+  }
   if (Object.keys(patch).length === 0) return jsonError("Nada que actualizar");
   const { data, error } = await supabase.from("job_alerts").update(patch).eq("user_id", user.id).eq("id", id).select("*").single();
   if (error) return jsonError(error.message, 500);

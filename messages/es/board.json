@@ -329,7 +329,24 @@
       "level": "Nivel",
       "linkType": "Tipo",
       "url": "URL",
-      "linkLabel": "Etiqueta (opcional)"
+      "linkLabel": "Etiqueta (opcional)",
+      "rolePh": "Ej. Product Designer Senior",
+      "companyPh": "Ej. Fintech Labs",
+      "location": "Ubicación",
+      "locationPh": "Ej. Caracas o Remoto",
+      "description": "Descripción",
+      "descriptionPh": "Qué hiciste y qué lograste…",
+      "degreePh": "Ej. Lic. en Diseño Gráfico",
+      "institutionPh": "Ej. Universidad Central de Venezuela",
+      "eduType": "Tipo",
+      "eduLocationPh": "Ej. Caracas",
+      "proTitle": "Título profesional",
+      "email": "Email",
+      "desiredRole": "Rol que buscas",
+      "desiredSalary": "Salario deseado (USD/mes)",
+      "salaryPh": "Ej. Desde $1.800",
+      "prefLocation": "Ubicación preferida",
+      "prefLocationPh": "Ej. Caracas o remoto"
     },
     "editor": {
       "expNew": "Añadir experiencia",
@@ -350,7 +367,22 @@
     "skillsPlaceholder": "Añade una skill y pulsa Enter",
     "suggested": "Sugeridas",
     "cvUpload": "Subir CV",
-    "cvEmpty": "Aún no has subido tu CV — es lo que más completa tu perfil."
+    "cvEmpty": "Aún no has subido tu CV — es lo que más completa tu perfil.",
+    "cta": {
+      "action": "Completar test técnico",
+      "good": "Prepararme para la entrevista",
+      "info": "Ver la oferta original",
+      "closed": "Ver 3 vacantes similares"
+    },
+    "aboutPh": "Cuéntale a las empresas quién eres y qué te mueve…",
+    "aiSubtitleComplete": "Te haremos unas preguntas rápidas para rellenar lo que falta y redactar tus secciones.",
+    "aiSubtitleRefine": "Reescribimos tu resumen y sugerimos skills para que destaques más.",
+    "appsCount": "{count} empresas · seguimiento en tiempo real",
+    "suggestionTitle": "Sugerencia para ti",
+    "proactive": "proactivo",
+    "suggestionCta": "Completar test",
+    "cvReplacedToast": "CV reemplazado",
+    "cvReplaceShort": "Cambiar"
   },
   "auth": {
     "signinTitle": "Bienvenida de nuevo",
@@ -556,7 +588,11 @@
     "emptyTitle": "Sin alertas",
     "emptyText": "Crea una alerta para recibir ofertas nuevas que encajen.",
     "default": "Alerta",
-    "match": "match"
+    "match": "match",
+    "edit": "Editar alerta",
+    "jobTitle": "Puesto o empresa",
+    "jobTitlePh": "Ej. Product Designer",
+    "locationPh": "Ej. Caracas o Remoto"
   },
   "nav": {
     "companies": "Empresas",

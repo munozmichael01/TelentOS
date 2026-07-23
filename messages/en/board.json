@@ -329,7 +329,24 @@
       "level": "Level",
       "linkType": "Type",
       "url": "URL",
-      "linkLabel": "Label (optional)"
+      "linkLabel": "Label (optional)",
+      "rolePh": "e.g. Senior Product Designer",
+      "companyPh": "e.g. Fintech Labs",
+      "location": "Location",
+      "locationPh": "e.g. Caracas or Remote",
+      "description": "Description",
+      "descriptionPh": "What you did and what you achieved…",
+      "degreePh": "e.g. BA in Graphic Design",
+      "institutionPh": "e.g. Central University of Venezuela",
+      "eduType": "Type",
+      "eduLocationPh": "e.g. Caracas",
+      "proTitle": "Professional title",
+      "email": "Email",
+      "desiredRole": "Role you're looking for",
+      "desiredSalary": "Desired salary (USD/mo)",
+      "salaryPh": "e.g. From $1,800",
+      "prefLocation": "Preferred location",
+      "prefLocationPh": "e.g. Caracas or remote"
     },
     "editor": {
       "expNew": "Add experience",
@@ -350,7 +367,22 @@
     "skillsPlaceholder": "Add a skill and press Enter",
     "suggested": "Suggested",
     "cvUpload": "Upload CV",
-    "cvEmpty": "You haven't uploaded your CV yet — it's what completes your profile most."
+    "cvEmpty": "You haven't uploaded your CV yet — it's what completes your profile most.",
+    "cta": {
+      "action": "Complete technical test",
+      "good": "Prepare for the interview",
+      "info": "View original offer",
+      "closed": "See 3 similar openings"
+    },
+    "aboutPh": "Tell companies who you are and what drives you…",
+    "aiSubtitleComplete": "We'll ask a few quick questions to fill in the gaps and draft your sections.",
+    "aiSubtitleRefine": "We'll rewrite your summary and suggest skills so you stand out more.",
+    "appsCount": "{count} companies · real-time tracking",
+    "suggestionTitle": "A suggestion for you",
+    "proactive": "proactive",
+    "suggestionCta": "Complete test",
+    "cvReplacedToast": "CV replaced",
+    "cvReplaceShort": "Change"
   },
   "auth": {
     "signinTitle": "Welcome back",
@@ -556,7 +588,11 @@
     "emptyTitle": "No alerts",
     "emptyText": "Create an alert to receive new matching jobs.",
     "default": "Alert",
-    "match": "match"
+    "match": "match",
+    "edit": "Edit alert",
+    "jobTitle": "Job title or company",
+    "jobTitlePh": "e.g. Product Designer",
+    "locationPh": "e.g. Caracas or Remote"
   },
   "nav": {
     "companies": "Companies",

@@ -338,7 +338,17 @@
 .jb-acct-profile .jb-ord-cv { order: -1; }
 .jb-prefs-grid { gap: 10px; }
 .jb-acct-ia-desktop { display: none; }
+/* CV: etiqueta del botón reemplazar — mobile "Cambiar", desktop "Reemplazar" (mockup). */
+.jb-cv-lbl-full { display: none; }
+.jb-cv-lbl-short { display: inline; }
+/* Toast de confirmación (p. ej. "CV reemplazado · …"). */
+.jb-toast { position: fixed; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 90; background: var(--ink); color: #F4F0E8; font-family: 'Hanken Grotesk', sans-serif; font-weight: 600; font-size: 13px; padding: 11px 16px; border-radius: 12px; box-shadow: 0 6px 20px rgba(26,26,23,.28); max-width: calc(100vw - 32px); }
 @media (min-width: 1024px) {
+  .jb-toast { bottom: 28px; }
+  .jb-cv-lbl-full { display: inline; }
+  .jb-cv-lbl-short { display: none; }
+  /* El badge de estado solo se muestra en el sheet mobile; el modal desktop no lo lleva. */
+  .jb-acct-detail-badge { display: none !important; }
   .jb-acct-topbar { display: flex; }
   .jb-acct-header-mobile { display: none; }
   .jb-acct-tabbar { display: none !important; }
