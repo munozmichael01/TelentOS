@@ -2,7 +2,8 @@
   "brand": "Jobs",
   "login": "Sign in",
   "hero": {
-    "eyebrow": "Find your next job",
+    "eyebrow": "Jobs in Venezuela",
+    "metaDescription": "Find your next job",
     "title": "Find your",
     "titleAccent": "next",
     "titleEnd": "job."
@@ -126,7 +127,15 @@
     "matchLabel": "Match for you",
     "matchValue": "{n} of {total}",
     "matchSub": "preferences met",
-    "applyInline": "Apply to this job"
+    "applyInline": "Apply to this job",
+    "loading": "Loading the job…",
+    "period": {
+      "hour": "hour",
+      "day": "day",
+      "week": "week",
+      "month": "month",
+      "year": "year"
+    }
   },
   "apply": {
     "title": "Apply to {job}",

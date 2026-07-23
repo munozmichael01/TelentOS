@@ -2,7 +2,8 @@
   "brand": "Empleos",
   "login": "Entrar",
   "hero": {
-    "eyebrow": "Encuentra tu próximo empleo",
+    "eyebrow": "Empleos en Venezuela",
+    "metaDescription": "Encuentra tu próximo empleo",
     "title": "Encuentra tu",
     "titleAccent": "próximo",
     "titleEnd": "trabajo."
@@ -126,7 +127,15 @@
     "matchLabel": "Match para ti",
     "matchValue": "{n} de {total}",
     "matchSub": "preferencias cumplidas",
-    "applyInline": "Aplicar a esta oferta"
+    "applyInline": "Aplicar a esta oferta",
+    "loading": "Cargando la oferta…",
+    "period": {
+      "hour": "hora",
+      "day": "día",
+      "week": "semana",
+      "month": "mes",
+      "year": "año"
+    }
   },
   "apply": {
     "title": "Aplica a {job}",

@@ -5,9 +5,10 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { BoardJob, BoardFacets, BoardSort } from "@/lib/job-board/search";
 import type { BoardCategory } from "@/lib/board/geo";
-import { modalityStyle, formatSalary, logoFor, relativeDate, isNew, jobSlug } from "@/lib/board/format";
+import { jobSlug } from "@/lib/board/format";
 import { BoardTabBar } from "@/components/board/tab-bar";
 import { OfferDetailPanel } from "@/components/board/offer-detail-panel";
+import { JobCard } from "@/components/board/job-card";
 
 // ≥1024px activamos el split lista+detalle (LinkedIn-style). Por debajo, la tarjeta
 // navega a la página de oferta (comportamiento mobile intacto). Coincide con el
@@ -47,6 +48,17 @@ function emptySel(): Sel { return { area: [], modality: [], salary: [], contract
 const SALARY_MIN: Record<string, number> = { lt1000: 0, "b1000": 1000, "b2000": 2000 };
 const SALARY_BANDS = [{ v: "lt1000", min: 0 }, { v: "b1000", min: 1000 }, { v: "b2000", min: 2000 }];
 const DATE_BANDS = ["24h", "week", "month"];
+
+// Campana de alerta (guardar búsqueda) — SVG de línea del DS.
+function BellIcon({ on, size = 13 }: { on: boolean; size?: number }) {
+  const c = on ? "#0E5C4A" : "currentColor";
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={on ? "#0E5C4A" : "none"}>
+      <path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke={c} strokeWidth="2" strokeLinejoin="round" />
+      <path d="M10 19a2 2 0 004 0" stroke={c} strokeWidth="2" />
+    </svg>
+  );
+}
 
 // Números de página a mostrar (‹ 1 2 3 … 16 ›).
 function pageDefs(cur: number, total: number): (number | "…")[] {
@@ -253,8 +265,9 @@ export function BoardClient({
       if (!jobs.length) return;
       const idx = jobs.findIndex((j) => j.id === selectedId);
       if (e.key === "Enter") {
+        // Spec §42 + JS del mockup: Enter APLICA a la oferta seleccionada.
         const j = jobs[idx];
-        if (j) router.push({ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(j) } });
+        if (j) router.push({ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug: jobSlug(j) } });
         return;
       }
       if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
@@ -301,6 +314,18 @@ export function BoardClient({
   // Cabecera SEO: cargo (área) + ciudad activos.
   const activeArea = sel.area[0] ? catLabel(sel.area[0]) : null;
   const activeCity = location.trim() || null;
+  const citySlug = (c: string) => c.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+  // Etiqueta legible de una faceta activa (para la fila removible en móvil).
+  function facetLabel(g: GroupKey, v: string): string {
+    if (g === "area") return catLabel(v);
+    if (g === "modality") return t(`modality.${v}`);
+    if (g === "salary") return t(`filters.salaryBand.${v}`);
+    if (g === "date") return t(`filters.dateBand.${v}`);
+    if (g === "company") return facets.company.find((c) => (c.id ?? c.value) === v)?.value ?? v;
+    return v; // contract
+  }
+  const activeFacets = GROUPS.flatMap((g) => sel[g].map((v) => ({ group: g, value: v, label: facetLabel(g, v) })));
 
   // ── Autocomplete estructurado ────────────────────────────────────────────
   function onQueryChange(v: string) { setQuery(v); setSearchOpen(true); fetchCities(v); fetchTitles(v); }
@@ -422,8 +447,13 @@ export function BoardClient({
             onFocus={() => setSearchOpen(true)}
             onKeyDown={(e) => { if (e.key === "Enter") { setSearchOpen(false); runSearch(); } }}
             placeholder={t("search.placeholder")}
-            style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 15, color: "var(--ink)", background: "transparent", border: "none", outline: "none" }}
+            style={{ flex: 1, minWidth: 0, fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 15, color: "var(--ink)", background: "transparent", border: "none", outline: "none" }}
           />
+          {query.trim().length > 0 && (
+            <span onClick={() => { setQuery(""); setNlChips([]); setSearchOpen(false); }} aria-label="clear" className="jb-tap" style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="var(--soft)" strokeWidth="2.4" strokeLinecap="round" /></svg>
+            </span>
+          )}
           {autocomplete()}
         </div>
         <div style={{ display: "flex", gap: 7, marginTop: 9 }}>
@@ -506,15 +536,29 @@ export function BoardClient({
           {activeArea && <> / {sel.area[0] ? <Link href={{ pathname: "/empleos/[categoria]", params: { categoria: sel.area[0] } }} style={{ color: "var(--soft)" }}>{activeArea}</Link> : activeArea}</>}
           {activeCity && <> / <span style={{ color: "var(--ink)" }}>{activeCity}</span></>}
         </nav>
-        <h1 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 21, letterSpacing: "-.6px", lineHeight: 1.2, margin: "9px 0 3px" }}>
+        {/* Encabezado de resultados: <h2> — el <h1> único de la página es el hero (móvil).
+            Cargo y ciudad son enlaces internos (link juice SEO, spec §32). */}
+        <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 21, letterSpacing: "-.6px", lineHeight: 1.2, margin: "9px 0 3px" }}>
           {t("results.count", { count: total })}{(activeArea || activeCity) && " "}
-          {activeArea && <>{t("results.ofRole")} <span style={{ color: "var(--brand)" }}>{activeArea}</span></>}
-          {activeCity && <>{" "}{t("results.inCity")} <span style={{ color: "var(--brand)" }}>{activeCity}</span></>}
-        </h1>
+          {activeArea && <>{t("results.ofRole")}{" "}
+            {sel.area[0]
+              ? <Link href={{ pathname: "/empleos/[categoria]", params: { categoria: sel.area[0] } }} style={{ color: "var(--brand)" }}>{activeArea}</Link>
+              : <span style={{ color: "var(--brand)" }}>{activeArea}</span>}
+          </>}
+          {activeCity && <>{" "}{t("results.inCity")}{" "}
+            {sel.area[0]
+              ? <Link href={{ pathname: "/empleos/[categoria]/[ubicacion]", params: { categoria: sel.area[0], ubicacion: citySlug(activeCity) } }} style={{ color: "var(--brand)" }}>{activeCity}</Link>
+              : <span style={{ color: "var(--brand)" }}>{activeCity}</span>}
+          </>}
+        </h2>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "0 0 12px" }}>
           <span style={{ fontFamily: MONO, fontSize: 11, color: "var(--soft)" }}>{t("results.results", { count: total })}</span>
-          <button onClick={saveSearch} className={savedSearch ? undefined : "jb-hard"} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 11.5, borderRadius: 10, padding: "6px 11px", cursor: "pointer", ...(savedSearch ? { color: "#0E5C4A", background: "var(--brandSoft)", border: "1.5px solid #1A1A17", boxShadow: "2px 2px 0 var(--ink)" } : { color: "#54504A", background: "var(--surface)", border: "1.5px solid var(--line)" }) }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill={savedSearch ? "#0E5C4A" : "none"}><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke={savedSearch ? "#0E5C4A" : "currentColor"} strokeWidth="2" strokeLinejoin="round" /><path d="M10 19a2 2 0 004 0" stroke={savedSearch ? "#0E5C4A" : "currentColor"} strokeWidth="2" /></svg>
+          {/* Desktop: botón de texto junto al conteo. Mobile: campana compacta (40x40). */}
+          <button onClick={saveSearch} aria-label={savedSearch ? t("search.alertActive") : t("search.createAlert")} title={savedSearch ? t("search.alertActive") : t("search.createAlert")} className={`jb-alert-mobile${savedSearch ? "" : " jb-hard"}`} style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 11, alignItems: "center", justifyContent: "center", cursor: "pointer", ...(savedSearch ? { color: "#0E5C4A", background: "var(--brandSoft)", border: "1.5px solid #1A1A17", boxShadow: "2px 2px 0 var(--ink)" } : { color: "#54504A", background: "var(--surface)", border: "1.5px solid var(--line)" }) }}>
+            <BellIcon on={savedSearch} size={17} />
+          </button>
+          <button onClick={saveSearch} className={`jb-alert-desktop${savedSearch ? "" : " jb-hard"}`} style={{ alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 11.5, borderRadius: 10, padding: "6px 11px", cursor: "pointer", ...(savedSearch ? { color: "#0E5C4A", background: "var(--brandSoft)", border: "1.5px solid #1A1A17", boxShadow: "2px 2px 0 var(--ink)" } : { color: "#54504A", background: "var(--surface)", border: "1.5px solid var(--line)" }) }}>
+            <BellIcon on={savedSearch} />
             {savedSearch ? t("search.alertActive") : t("search.createAlert")}
           </button>
         </div>
@@ -527,59 +571,56 @@ export function BoardClient({
           ))}
         </div>
 
-        {/* Resultados */}
+        {/* Facetas activas removibles — solo móvil (en desktop el conteo va en los chips
+            de la barra de filtros). Fila scrollable; cada chip quita su opción. */}
+        {activeFacets.length > 0 && (
+          <div className="jb-active-facets" style={{ gap: 6, overflowX: "auto", paddingBottom: 8 }}>
+            {activeFacets.map((f) => (
+              <button key={`${f.group}-${f.value}`} onClick={() => toggleOption(f.group, f.value)} className="jb-tap" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 999, padding: "5px 8px 5px 11px", cursor: "pointer", whiteSpace: "nowrap" }}>
+                {f.label}
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#0E5C4A" strokeWidth="2.6" strokeLinecap="round" /></svg>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Resultados — se componen con <JobCard> (el diseño vive en el componente). */}
         <div style={{ display: "flex", flexDirection: "column", gap: 11, marginTop: 8 }}>
           {jobs.map((j) => {
-            const m = modalityStyle(j.modality);
-            const logo = logoFor(j.company?.name);
-            const salary = formatSalary(j, locale);
+            // Botón de guardar (bookmark) — slot "save" de la card.
+            const saveBtn = (
+              <button onClick={(e) => toggleSave(e, j.id)} aria-label={t("detail.save")} style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "none", cursor: "pointer", margin: "-4px -4px 0 0" }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill={saved[j.id] ? "#0E5C4A" : "none"}><path d="M6 4h12v17l-6-4-6 4V4Z" stroke={saved[j.id] ? "#0E5C4A" : "#79746B"} strokeWidth="2" strokeLinejoin="round" /></svg>
+              </button>
+            );
+            // Slot "action" — 3 estados: aplicada / 1 toque (perfil completo ∧ sin screening) / aplicar.
+            const actionBtn = applied[j.id] ? (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)", background: "var(--brandSoft)", border: "1.5px solid #BEE0CE", borderRadius: 10, padding: "7px 12px" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke="var(--brand)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>{t("card.applied")}
+              </span>
+            ) : hasProfile && !j.hasRequiredScreening ? (
+              <button onClick={(e) => oneTapFromCard(e, j)} disabled={!!applying[j.id]} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 10, padding: "7px 12px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer", opacity: applying[j.id] ? 0.7 : 1 }}>
+                {applying[j.id] ? t("apply.sending") : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" /></svg>{t("card.quickApply")}</>}
+              </button>
+            ) : (
+              // <button> (no <a>): la card ya es un <a> y anidar anchors rompe la hidratación.
+              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push({ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug: jobSlug(j) } }); }} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 10, padding: "7px 12px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer" }}>
+                {t("card.apply")}
+              </button>
+            );
             return (
-              <Link key={j.id} id={`jbcard-${j.id}`} href={{ pathname: "/empleos/oferta/[slug]", params: { slug: jobSlug(j) } }} onClick={(e) => { if (isDesktop) { e.preventDefault(); setSelectedId(j.id); } }} style={{ display: "block", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: 15, color: "inherit", cursor: "pointer" }} className={`jb-job${isDesktop && selectedId === j.id ? " jb-board-card-active" : ""}`}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <span style={{ width: 42, height: 42, borderRadius: 12, background: logo.bg, color: logo.color, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ARCHIVO, fontWeight: 900, fontSize: 15, flexShrink: 0 }}>{logo.initials}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 11, color: "var(--soft)" }}>{j.company?.name}</span>
-                      {isNew(j.created_at) && <span style={{ fontFamily: MONO, fontSize: 8.5, fontWeight: 700, textTransform: "uppercase", color: "#46540F", background: "var(--limeSoft)", borderRadius: 5, padding: "1px 6px" }}>{t("card.new")}</span>}
-                    </div>
-                    <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 16, letterSpacing: "-.3px", lineHeight: 1.15, marginTop: 2 }}>{j.title}</div>
-                  </div>
-                  <button onClick={(e) => toggleSave(e, j.id)} aria-label="save" style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "none", cursor: "pointer", margin: "-4px -4px 0 0" }}>
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill={saved[j.id] ? "#0E5C4A" : "none"}><path d="M6 4h12v17l-6-4-6 4V4Z" stroke={saved[j.id] ? "#0E5C4A" : "#79746B"} strokeWidth="2" strokeLinejoin="round" /></svg>
-                  </button>
-                </div>
-                {j.description && <div style={{ fontSize: 12.5, lineHeight: 1.45, color: "#6B665E", marginTop: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{j.description}</div>}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 }}>
-                  {j.city && <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: "#54504A", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 8, padding: "4px 9px" }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12Z" stroke="var(--soft)" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="9" r="2.4" stroke="var(--soft)" strokeWidth="2" /></svg>{j.city}
-                  </span>}
-                  {j.modality && <span style={{ fontSize: 11.5, fontWeight: 700, color: m.color, background: m.bg, border: `1px solid ${m.border}`, borderRadius: 8, padding: "4px 9px" }}>{t(`modality.${j.modality}`)}</span>}
-                  {j.employment_type && <span style={{ fontSize: 11.5, fontWeight: 600, color: "#54504A", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 8, padding: "4px 9px" }}>{j.employment_type}</span>}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 11, borderTop: "1px solid var(--line)" }}>
-                  <div>
-                    <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: "var(--brand)" }}>{salary || t("card.salaryTBD")}</div>
-                    <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 1 }}>{relativeDate(j.created_at, locale)}</div>
-                  </div>
-                  {applied[j.id] ? (
-                    // Aplicada — verde suave, sin sombra (confirmación)
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--brand)", background: "var(--brandSoft)", border: "1.5px solid #BEE0CE", borderRadius: 10, padding: "7px 12px" }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke="var(--brand)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>{t("card.applied")}
-                    </span>
-                  ) : hasProfile && !j.hasRequiredScreening ? (
-                    // 1 toque — solo perfil completo ∧ oferta sin screening (coral + rayo)
-                    <button onClick={(e) => oneTapFromCard(e, j)} disabled={!!applying[j.id]} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 10, padding: "7px 12px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer", opacity: applying[j.id] ? 0.7 : 1 }}>
-                      {applying[j.id] ? t("apply.sending") : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" /></svg>{t("card.quickApply")}</>}
-                    </button>
-                  ) : (
-                    // Aplicar — por defecto (incl. anónimo): abre el flujo Apply, sin icono.
-                    // <button> (no <a>): la card ya es un <a> y anidar anchors rompe la hidratación.
-                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push({ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug: jobSlug(j) } }); }} className="jb-hard" style={{ display: "inline-flex", alignItems: "center", fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12.5, color: "var(--ink)", background: "var(--surface)", border: "2px solid var(--ink)", borderRadius: 10, padding: "7px 12px", boxShadow: "2px 2px 0 var(--ink)", cursor: "pointer" }}>
-                      {t("card.apply")}
-                    </button>
-                  )}
-                </div>
-              </Link>
+              <JobCard
+                key={j.id}
+                job={j}
+                locale={locale}
+                id={`jbcard-${j.id}`}
+                active={isDesktop && selectedId === j.id}
+                onClick={(e) => { if (isDesktop) { e.preventDefault(); setSelectedId(j.id); } }}
+                modalityLabel={(m) => t(`modality.${m}`)}
+                t={{ new: t("card.new"), salaryTBD: t("card.salaryTBD") }}
+                save={saveBtn}
+                action={actionBtn}
+              />
             );
           })}
 

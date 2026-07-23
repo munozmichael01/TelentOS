@@ -418,6 +418,11 @@
 .jb-hero { display: block; }
 .jb-filterstrip { display: none; }
 .jb-sort-mobile { display: flex; }
+/* Alerta guardar-búsqueda: campana compacta en móvil, botón de texto en desktop. */
+.jb-alert-mobile { display: inline-flex; }
+.jb-alert-desktop { display: none; }
+/* Fila de facetas activas removibles — solo móvil (desktop lleva el conteo en los chips). */
+.jb-active-facets { display: flex; }
 /* "Todos los filtros": bottom-sheet en mobile */
 .jb-filtermodal { align-items: flex-end; }
 .jb-filtermodal-panel { border-radius: 22px 22px 0 0; border-bottom: 0; }
@@ -430,6 +435,9 @@
   /* Barra de filtros desktop */
   .jb-filterstrip { display: flex; align-items: flex-start; gap: 10px; padding: 4px 0 14px; flex-wrap: wrap; }
   .jb-sort-mobile { display: none; }
+  .jb-alert-mobile { display: none; }
+  .jb-alert-desktop { display: inline-flex; }
+  .jb-active-facets { display: none; }
   /* Modal de filtros centrado en desktop */
   .jb-filtermodal { align-items: center; padding: 24px; }
   .jb-filtermodal-panel { border-radius: 20px; box-shadow: 10px 10px 0 rgba(26,26,23,.18); }

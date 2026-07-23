@@ -2,7 +2,8 @@
   "brand": "Vagas",
   "login": "Entrar",
   "hero": {
-    "eyebrow": "Encontre sua próxima vaga",
+    "eyebrow": "Vagas na Venezuela",
+    "metaDescription": "Encontre sua próxima vaga",
     "title": "Encontre sua",
     "titleAccent": "próxima",
     "titleEnd": "vaga."
@@ -126,7 +127,15 @@
     "matchLabel": "Match para você",
     "matchValue": "{n} de {total}",
     "matchSub": "preferências atendidas",
-    "applyInline": "Candidatar-se a esta vaga"
+    "applyInline": "Candidatar-se a esta vaga",
+    "loading": "Carregando a vaga…",
+    "period": {
+      "hour": "hora",
+      "day": "dia",
+      "week": "semana",
+      "month": "mês",
+      "year": "ano"
+    }
   },
   "apply": {
     "title": "Candidatar-se a {job}",
