@@ -40,6 +40,7 @@ export type BoardJob = {
   salary_min: number | null;
   salary_max: number | null;
   salary_currency: string | null;
+  salary_period: string | null;
   employment_type: string | null;
   category: string | null;
   created_at: string;
@@ -53,7 +54,7 @@ export type BoardFacet = { value: string; count: number; id?: string };
 export type BoardFacets = { category: BoardFacet[]; modality: BoardFacet[]; contract: BoardFacet[]; company: BoardFacet[] };
 
 const SELECT =
-  "id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, employment_type, category, created_at, company:companies(id, name, slug, logo_url)";
+  "id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, salary_period, employment_type, category, created_at, company:companies(id, name, slug, logo_url)";
 
 function applyFilters<T>(q: T, p: BoardSearchParams): T {
   // @ts-expect-error — encadenado de PostgREST tipado laxo
@@ -69,7 +70,8 @@ function applyFilters<T>(q: T, p: BoardSearchParams): T {
   if (p.modality) query = query.eq("modality", p.modality);
   if (p.contract) query = query.eq("employment_type", p.contract);
   if (p.companyId) query = query.eq("company_id", p.companyId);
-  if (p.salaryMin) query = query.gte("salary_max", p.salaryMin);
+  // Filtro de salario contra el equivalente MENSUAL normalizado (respeta la frecuencia).
+  if (p.salaryMin) query = query.gte("salary_month_max", p.salaryMin);
   // Multi-select (arrays): OR dentro del grupo vía IN.
   if (p.categoryKeys?.length) query = query.in("category_key", p.categoryKeys);
   if (p.modalities?.length) query = query.in("modality", p.modalities);
@@ -93,7 +95,7 @@ export async function searchJobs(
 
   // Resultados paginados
   let q = applyFilters(supabase.from("jobs").select(SELECT, { count: "exact" }), params);
-  if (params.sort === "salary") q = q.order("salary_max", { ascending: false, nullsFirst: false });
+  if (params.sort === "salary") q = q.order("salary_month_max", { ascending: false, nullsFirst: false });
   else q = q.order("created_at", { ascending: false }); // relevance≈recent por ahora
   q = q.range(from, from + pageSize - 1);
   const { data, count, error } = await q;

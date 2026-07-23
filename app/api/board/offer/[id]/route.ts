@@ -7,7 +7,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const supabase = createClient();
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, employment_type, category, created_at, education_level, seniority_level, experience_min_years, closes_at, category_key, company:companies(id, name, slug, logo_url)")
+    .select("id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, salary_period, employment_type, category, created_at, education_level, seniority_level, experience_min_years, closes_at, category_key, company:companies(id, name, slug, logo_url)")
     .eq("id", params.id).eq("status", "active").maybeSingle();
   if (!job) return jsonError("No encontrada", 404);
 
