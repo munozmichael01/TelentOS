@@ -68,6 +68,9 @@ const CASES = [
       soloDeSearch: Array.isArray(j.jobs) && j.jobs.length <= j.total,
       // fit presente cuando hay ofertas y el usuario tiene ficha (resiliente: solo si hay jobs)
       fitSiHayOfertas: !j.jobs?.length || j.jobs.every((o) => o.fit === undefined || typeof o.fit === "number"),
+      // marca de aplicadas + orden: ninguna NO-aplicada aparece tras una aplicada
+      appliedShape: !j.jobs?.length || j.jobs.every((o) => typeof o.applied === "boolean"),
+      aplicadasAlFondo: !j.jobs?.length || j.jobs.every((o, i, arr) => i === 0 || !(arr[i - 1].applied && !o.applied)),
     }),
   },
   {
