@@ -443,16 +443,95 @@
   .jb-filtermodal-panel { border-radius: 20px; box-shadow: 10px 10px 0 rgba(26,26,23,.18); }
 }
 
-/* Apply — split desktop: formulario 720px + preview de la oferta. Mobile: 1 columna. */
+/* Apply — mobile: 1 columna (header sticky arriba, acción fija abajo).
+   Desktop (≥1024): header full-width arriba + cuerpo de dos columnas (form 720 | preview). */
 .jb-apply-shell { display: block; }
+.jb-apply-body { display: block; }
 .jb-apply-preview { display: none; }
 .jb-apply-action { position: fixed; left: 0; right: 0; bottom: 0; }
+
+/* Header + progreso */
+.jb-apply-header { padding: 8px 16px 12px; border-bottom: 1px solid var(--line); background: rgba(244,240,232,.9); position: sticky; top: 0; z-index: 20; }
+.jb-apply-headrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.jb-apply-back { width: 34px; height: 34px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+.jb-apply-headtitle { flex: 1 1 auto; min-width: 0; }
+.jb-apply-headtitle .jb-apply-steptitle { font-family: 'Archivo',sans-serif; font-weight: 800; font-size: 15px; letter-spacing: -.3px; line-height: 1.1; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jb-apply-progress { display: flex; gap: 5px; flex-basis: 100%; margin-top: 11px; }
+.jb-apply-progress > span { flex: 1; height: 5px; border-radius: 999px; }
+
+/* Contenido del formulario y barra de acción */
+.jb-apply-formpad { max-width: 560px; margin: 0 auto; padding: 14px 16px 0; }
+.jb-apply-actioninner { max-width: 560px; margin: 0 auto; }
+.jb-apply-hint { display: none; }
+
+/* Utilidades responsive de una sola pieza */
+.jb-apply-desktoponly { display: none !important; }
+.jb-apply-mobileonly { display: inline; }
+
 @media (min-width: 1024px) {
-  .jb-apply-shell { display: flex; gap: 28px; max-width: 1160px; margin: 0 auto; align-items: flex-start; padding: 0 24px; }
-  .jb-apply-main { flex: 0 0 720px; max-width: 720px; min-height: 0 !important; }
-  .jb-apply-preview { display: block; flex: 1 1 auto; min-width: 0; padding: 24px 4px; }
-  .jb-apply-action { position: sticky; left: auto; right: auto; }
+  .jb-apply-shell { display: flex; flex-direction: column; min-height: 100vh; }
+  .jb-apply-body { display: flex; flex: 1; min-height: 0; }
+  .jb-apply-main { flex: 0 0 720px; max-width: 720px; min-height: 0 !important; border-right: 1px solid var(--line); }
+  .jb-apply-preview { display: block; flex: 1 1 auto; min-width: 0; background: var(--surface); }
+  .jb-apply-action { position: sticky; left: auto; right: auto; background: var(--surface) !important; padding: 16px 44px !important; }
+
+  .jb-apply-header { height: 64px; padding: 0 26px; display: flex; align-items: center; background: var(--surface); }
+  .jb-apply-headrow { flex-wrap: nowrap; gap: 16px; width: 100%; }
+  .jb-apply-back { width: 36px; height: 36px; background: var(--bg); border-color: var(--line); box-shadow: 2px 2px 0 var(--ink); }
+  .jb-apply-headtitle { flex: 0 0 auto; }
+  .jb-apply-headtitle .jb-apply-steptitle { font-size: 16px; }
+  .jb-apply-progress { flex: 1 1 auto; flex-basis: auto; margin-top: 0; gap: 6px; }
+  .jb-apply-progress > span { height: 6px; }
+
+  .jb-apply-formpad { max-width: none; margin: 0; padding: 36px 44px 24px; }
+  .jb-apply-actioninner { display: flex; align-items: center; gap: 16px; max-width: none; }
+  .jb-apply-actioninner .jb-hard { width: auto !important; padding: 13px 34px !important; }
+  .jb-apply-hint { display: block; flex: 1; font-size: 13px; color: var(--soft); margin: 0; }
+
+  .jb-apply-desktoponly { display: inline !important; }
+  .jb-apply-mobileonly { display: none !important; }
+  .jb-apply-desktopblock { display: block !important; }
+  .jb-apply-mobileblock { display: none !important; }
 }
+/* Bloques que solo existen en desktop (encabezado paso 2) — ocultos por defecto */
+.jb-apply-desktopblock { display: none; }
+.jb-apply-mobileblock { display: block; }
+
+/* Botones sociales: columna en mobile, grid 2 columnas en desktop */
+.jb-apply-social { display: flex; flex-direction: column; gap: 9px; }
+@media (min-width: 1024px) { .jb-apply-social { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; } }
+
+/* Spinner del botón de acción durante "Enviando…" */
+.jb-apply-spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.5); border-top-color: #fff; border-radius: 50%; display: inline-block; animation: jbSpin .8s linear infinite; }
+
+/* Badge de check final (paso Enviada): 74px mobile / 82px desktop */
+.jb-apply-donebadge { width: 74px; height: 74px; }
+@media (min-width: 1024px) { .jb-apply-donebadge { width: 82px; height: 82px; } }
+
+/* Fila de botones del paso final: apilada en mobile, en fila centrada en desktop */
+.jb-apply-donebtns { display: flex; flex-direction: column; gap: 9px; }
+@media (min-width: 1024px) { .jb-apply-donebtns { flex-direction: row; justify-content: center; align-items: center; } }
+
+/* Badge de icono del paso Screening: 34px mobile / 36px desktop */
+.jb-apply-screenbadge { width: 34px; height: 34px; }
+@media (min-width: 1024px) { .jb-apply-screenbadge { width: 36px; height: 36px; } }
+
+/* Escalado responsive de títulos de paso */
+.jb-apply-title-1 { font-size: 22px; }
+.jb-apply-title-3 { font-size: 21px; }
+.jb-apply-title-done { font-size: 25px; }
+@media (min-width: 1024px) {
+  .jb-apply-title-1 { font-size: 30px; letter-spacing: -1.1px; }
+  .jb-apply-title-3 { font-size: 26px; letter-spacing: -.9px; }
+  .jb-apply-title-done { font-size: 30px; letter-spacing: -1.1px; }
+}
+
 /* Scanner del parseo de CV (línea lima recorriendo el documento) */
 .jb-scan { animation: jbScan 1.4s ease-in-out infinite; }
 @keyframes jbScan { 0% { top: 8%; } 50% { top: 84%; } 100% { top: 8%; } }
+/* Barra de progreso del parseo (0 → 100%) y trazo del check animado */
+.jb-fillbar { animation: jbFillbar 1.9s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes jbFillbar { from { width: 0; } to { width: 100%; } }
+.jb-checkline { stroke-dasharray: 26; animation: jbCheck .4s ease forwards; }
+@keyframes jbCheck { from { stroke-dashoffset: 26; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .jb-scan, .jb-fillbar, .jb-checkline { animation: none; } .jb-fillbar { width: 100%; } }

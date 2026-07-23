@@ -4,8 +4,7 @@ import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ARCHIVO, MONO, BoardRoot, HardButton, AiTag, MonoLabel, CompanyLogo, StepProgress, inputStyle } from "@/components/board/ui";
-import { CityAutocomplete } from "@/components/board/city-autocomplete";
+import { ARCHIVO, MONO, BoardRoot, HardButton, AiTag, MonoLabel, CompanyLogo, inputStyle } from "@/components/board/ui";
 
 type Job = { id: string; title: string; modality: string | null; city: string | null; company: string; logoUrl: string | null; salary: string };
 type PreviewSkill = { name: string; requirement: "excluyente" | "deseable" };
@@ -38,6 +37,7 @@ export function ApplyWizard({ job, preview, screening, slug, locale, authed = fa
   const [fromCV, setFromCV] = useState(false);
   const [cvName, setCvName] = useState("");
   const [cvUrl, setCvUrl] = useState<string | null>(null);
+  const [cvSize, setCvSize] = useState<number | null>(null);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", role: "", note: "" });
   const [skills, setSkills] = useState<string[]>([]);
   const [skillDraft, setSkillDraft] = useState("");
@@ -106,7 +106,7 @@ export function ApplyWizard({ job, preview, screening, slug, locale, authed = fa
 
   async function onFile(file: File | null) {
     if (!file) return;
-    setCvName(file.name); setParsing(true); setError("");
+    setCvName(file.name); setCvSize(file.size); setParsing(true); setError("");
     const fd = new FormData(); fd.append("cv", file);
     const r = await fetch("/api/careers/parse-cv", { method: "POST", body: fd }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
     setParsing(false);
@@ -178,221 +178,249 @@ export function ApplyWizard({ job, preview, screening, slug, locale, authed = fa
   else if (step === 2) { actionLabel = hasScreening ? t("continue") : t("submitApply"); actionDisabled = !canContinue2; actionVariant = canContinue2 ? "accent" : "disabled"; }
   else if (step === 3) { actionLabel = screeningComplete ? t("submitApply") : t("answerRequired"); actionDisabled = !screeningComplete; actionVariant = screeningComplete ? "accent" : "disabled"; }
   const showAction = (step === 2 || step === 3) && !isDone;
-  // Hint contextual bajo el botón (según el paso).
-  const actionHint = btn !== "idle" ? "" : step === 2 ? t("freeToApply") : (step === 3 && !screeningComplete) ? t("answerRequiredHint") : "";
+  // Hint contextual junto al botón (según el paso; solo visible en desktop).
+  const actionHint = btn !== "idle"
+    ? ""
+    : step === 2
+      ? (hasScreening ? t("hintContinue") : t("hintReview"))
+      : t("hintRequired");
 
   return (
     <BoardRoot>
       <div className="jb-apply-shell">
-      <div className="jb-apply-main" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      {/* header + progress */}
-      <header style={{ padding: "10px 16px 12px", borderBottom: "1px solid var(--line)", background: "rgba(244,240,232,.9)", position: "sticky", top: 0, zIndex: 20 }}>
-        <div style={{ maxWidth: 560, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button onClick={() => (step > 1 && !isDone ? setStep(step - 1) : router.push({ pathname: "/empleos/oferta/[slug]", params: { slug } }))} className="jb-tap" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "pointer" }}>
+        {/* HEADER + PROGRESS — full width arriba en desktop, sticky arriba en mobile */}
+        <header className="jb-apply-header">
+          <div className="jb-apply-headrow">
+            <button onClick={() => (step > 1 && !isDone ? setStep(step - 1) : router.push({ pathname: "/empleos/oferta/[slug]", params: { slug } }))} className="jb-hard jb-apply-back">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="var(--ink)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="jb-apply-headtitle">
               <MonoLabel style={{ fontSize: 9.5 }}>{t("hdr", { n: step, total: totalSteps })}</MonoLabel>
-              <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, letterSpacing: "-.3px", lineHeight: 1.1, marginTop: 2 }}>{stepTitles[step]}</div>
+              <div className="jb-apply-steptitle">{stepTitles[step]}</div>
+            </div>
+            <div className="jb-apply-progress">
+              {Array.from({ length: totalSteps }, (_, i) => (
+                <span key={i} style={{ background: i < step ? "var(--brand)" : "#E0DACC" }} />
+              ))}
             </div>
           </div>
-          <div style={{ marginTop: 11 }}><StepProgress total={totalSteps} current={step} /></div>
-        </div>
-      </header>
+        </header>
 
-      <div style={{ flex: 1, overflowY: "auto", paddingBottom: showAction ? 90 : 20 }}>
-        <div style={{ maxWidth: 560, margin: "0 auto", padding: "14px 16px 0" }}>
-          {/* banner de la oferta (persistente) */}
-          <div style={{ display: "flex", alignItems: "center", gap: 11, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: "11px 13px" }}>
-            <CompanyLogo name={job.company} logoUrl={job.logoUrl} size={38} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, lineHeight: 1.1 }}>{job.title}</div>
-              <div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)", marginTop: 2 }}>{[job.company, job.modality, job.salary].filter(Boolean).join(" · ")}</div>
-            </div>
-          </div>
-
-          {/* STEP 1 */}
-          {step === 1 && (
-            <div style={{ paddingTop: 16 }}>
-              <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 22, letterSpacing: "-.7px", margin: "0 0 5px" }}>{t("cvHead")}</h2>
-              <p style={{ fontSize: 14, lineHeight: 1.5, color: "var(--soft)", margin: "0 0 16px" }}>{t("cvSub")}</p>
-              <input ref={fileRef} type="file" accept="application/pdf,text/plain" onChange={(e) => onFile(e.target.files?.[0] ?? null)} style={{ display: "none" }} />
-              {!parsing ? (
-                <button onClick={() => fileRef.current?.click()} className="jb-hard" style={{ width: "100%", cursor: "pointer", background: "var(--surface)", border: "2px dashed #C4BCA9", borderRadius: 16, padding: "30px 20px", textAlign: "center" }}>
-                  <span style={{ width: 52, height: 52, borderRadius: 15, background: "var(--brandSoft)", color: "var(--brand)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M5 16v3a1 1 0 001 1h12a1 1 0 001-1v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                  </span>
-                  <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15 }}>{t("cvUploadBig")}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)", marginTop: 5 }}>{t("cvUploadHint")}</div>
-                </button>
-              ) : (
-                <div style={{ background: "var(--ink)", borderRadius: 16, padding: "22px 20px", color: "#F4F0E8", display: "flex", alignItems: "center", gap: 16 }}>
-                  <div style={{ position: "relative", width: 60, height: 76, flexShrink: 0, background: "#0F0E0C", borderRadius: 9, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="#6E7A46" strokeWidth="1.6" strokeLinejoin="round" /><path d="M14 3v4h4" stroke="#6E7A46" strokeWidth="1.6" strokeLinejoin="round" /><path d="M9 12h6M9 15h6M9 18h3" stroke="#6E7A46" strokeWidth="1.4" strokeLinecap="round" /></svg>
-                    <div className="jb-scan" style={{ position: "absolute", left: 0, right: 0, height: 3, background: "var(--lime)", boxShadow: "0 0 10px 2px rgba(198,242,78,.6)" }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "#fff" }}>{t("parsing")}</div>
-                    <div style={{ fontFamily: MONO, fontSize: 10, color: "#B7B2A8", margin: "3px 0 10px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cvName}</div>
-                    <div style={{ height: 6, borderRadius: 999, background: "#38352E", overflow: "hidden" }}><div className="jb-fillbar" style={{ height: "100%", width: "60%", background: "var(--lime)" }} /></div>
-                    <div style={{ fontFamily: MONO, fontSize: 9.5, color: "#8C877E", marginTop: 9 }}>{t("parsingHint")}</div>
+        {/* CUERPO: columna de formulario + preview de la oferta (solo desktop) */}
+        <div className="jb-apply-body">
+          <div className="jb-apply-main" style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ flex: 1, paddingBottom: showAction ? 96 : 24 }}>
+              <div className="jb-apply-formpad">
+                {/* banner de la oferta (persistente) — solo mobile; en desktop vive en el preview */}
+                <div className="jb-apply-mobileblock" style={{ display: "flex", alignItems: "center", gap: 11, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: "11px 13px" }}>
+                  <CompanyLogo name={job.company} logoUrl={job.logoUrl} size={38} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, lineHeight: 1.1 }}>{job.title}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)", marginTop: 2 }}>{[job.company, job.modality, job.salary].filter(Boolean).join(" · ")}</div>
                   </div>
                 </div>
-              )}
-              <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0" }}>
-                <span style={{ flex: 1, height: 1, background: "var(--line)" }} /><span style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)" }}>{t("orAuto")}</span><span style={{ flex: 1, height: 1, background: "var(--line)" }} />
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                <HardButton variant="surface" onClick={() => setSocialSoon(true)} full style={{ fontSize: 14 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21.6 12.2c0-.6-.1-1.2-.2-1.8H12v3.4h5.4c-.2 1.2-.9 2.3-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.1Z" fill="#4285F4" /><path d="M12 22c2.7 0 5-1 6.6-2.7l-3.2-2.5c-.9.6-2 .9-3.4.9-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6C4.7 19.8 8.1 22 12 22Z" fill="#34A853" /><path d="M6.4 13.6c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7H3.1C2.4 8.5 2 10.2 2 12s.4 3.5 1.1 5l3.3-2.6Z" fill="#FBBC05" /><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 2.9 14.7 2 12 2 8.1 2 4.7 4.2 3.1 7.5l3.3 2.6C7.2 7.6 9.4 5.9 12 5.9Z" fill="#EA4335" /></svg>{t("withGoogle")}
-                </HardButton>
-                <HardButton variant="surface" onClick={() => setSocialSoon(true)} full style={{ fontSize: 14 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.4 3H3.6A.6.6 0 003 3.6v16.8a.6.6 0 00.6.6h16.8a.6.6 0 00.6-.6V3.6a.6.6 0 00-.6-.6ZM8.3 18.3H5.5V9.4h2.8v8.9ZM6.9 8.2a1.6 1.6 0 110-3.3 1.6 1.6 0 010 3.3Zm11.4 10.1h-2.8v-4.3c0-1 0-2.4-1.4-2.4s-1.7 1.1-1.7 2.3v4.4H9.6V9.4h2.7v1.2h.04c.4-.7 1.3-1.5 2.6-1.5 2.8 0 3.3 1.9 3.3 4.3v4.9Z" /></svg>{t("withLinkedin")}
-                </HardButton>
-                {socialSoon && <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--soft)", textAlign: "center" }}>{t("soon")}</div>}
-                <button onClick={() => { setFromCV(false); setStep(2); }} className="jb-tap" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: 13, color: "var(--soft)", background: "transparent", border: "none", padding: 8, cursor: "pointer" }}>{t("manual")}</button>
-              </div>
-            </div>
-          )}
 
-          {/* STEP 2 */}
-          {step === 2 && (
-            <div style={{ paddingTop: 16 }}>
-              {fromCV && (
-                <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 12, padding: "11px 13px", marginBottom: 16 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="11" fill="#C6F24E" /><path d="M7 12.5l3 3 6-7" stroke="#1A1A17" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  <div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: "#2C3907" }}>{t("autofillBanner")}</div><div style={{ fontSize: 12, color: "#46540F", marginTop: 1 }}>{t("autofillHint")}</div></div>
-                </div>
-              )}
-              {fromCV && cvName && <CvMiniCard name={cvName} onReplace={onFile} t={t} />}
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <div><label style={label}>{t("firstName")}{fromCV && form.firstName && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.firstName} onChange={(e) => set("firstName", e.target.value)} placeholder={t("firstNamePlaceholder")} style={inputStyle} /></div>
-                  <div><label style={label}>{t("lastName")}{fromCV && form.lastName && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.lastName} onChange={(e) => set("lastName", e.target.value)} placeholder={t("lastNamePlaceholder")} style={inputStyle} /></div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <div><label style={label}>{t("email")}{fromCV && form.email && <AiTag>{t("fromCV")}</AiTag>}</label><input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="tu@correo.com" style={inputStyle} /></div>
-                  <div><label style={label}>{t("phone")}</label><input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+58…" style={inputStyle} /></div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <div><label style={label}>{t("role")}{fromCV && form.role && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.role} onChange={(e) => set("role", e.target.value)} placeholder={t("rolePlaceholder")} style={inputStyle} /></div>
-                  <div>
-                    <label style={label}>{t("city")}{fromCV && parsed.city && <AiTag>{t("fromCV")}</AiTag>}</label>
-                    <CityAutocomplete value={parsed.city || ""} onChange={(city) => setParsed((p) => ({ ...p, city }))} placeholder={t("city")} />
-                  </div>
-                </div>
-                <div>
-                  <label style={label}>{fromCV ? t("skillsDetected") : t("skillsYours")}{fromCV && <AiTag>{t("fromCV")}</AiTag>}</label>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {skills.map((s) => (
-                      <span key={s} onClick={() => setSkills((cur) => cur.filter((x) => x !== s))} className="jb-tap" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "5px 8px 5px 10px", cursor: "pointer" }}>{s}<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="var(--soft)" strokeWidth="2.6" strokeLinecap="round" /></svg></span>
-                    ))}
-                  </div>
-                  {skills.length === 0 && <div style={{ fontSize: 12.5, color: "var(--soft)", margin: "6px 0 4px" }}>{t("noSkills")}</div>}
-                  <div style={{ display: "flex", gap: 7, marginTop: 8 }}>
-                    <input value={skillDraft} onChange={(e) => setSkillDraft(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(skillDraft); } }} placeholder={t("addSkillPlaceholder")} style={{ ...inputStyle, flex: 1 }} />
-                    <HardButton variant="brand" onClick={() => addSkill(skillDraft)} style={{ fontSize: 13, padding: "0 15px" }}>{t("addSkill")}</HardButton>
-                  </div>
-                  {suggested.length > 0 && (
-                    <div style={{ marginTop: 10 }}>
-                      <MonoLabel style={{ fontSize: 9, marginBottom: 6 }}>{t("suggested")}</MonoLabel>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                        {suggested.map((sg) => <span key={sg} onClick={() => addSkill(sg)} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px dashed #BEE0CE", borderRadius: 8, padding: "5px 9px", cursor: "pointer" }}>+ {sg}</span>)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div><label style={label}>{t("messageLabel")} <span style={{ textTransform: "none", color: "#B0AAA0" }}>{t("optional")}</span></label><textarea value={form.note} onChange={(e) => set("note", e.target.value)} placeholder={t("messagePlaceholder")} style={{ ...inputStyle, minHeight: 74, resize: "none" }} /></div>
-
-                {fromCV && parsed.exp.length > 0 && <ParsedBlock title={t("experience")} tag={t("fromCV")} items={parsed.exp.map((e) => ({ main: e.title, sub: [e.company, [e.start_date, e.is_current ? "actual" : e.end_date].filter(Boolean).join(" — ")].filter(Boolean).join(" · ") }))} />}
-                {fromCV && parsed.edu.length > 0 && <ParsedBlock title={t("education")} tag={t("fromCV")} items={parsed.edu.map((e) => ({ main: e.degree, sub: [e.institution, [e.start_year, e.end_year].filter(Boolean).join(" — ")].filter(Boolean).join(" · ") }))} />}
-                {fromCV && parsed.langs.length > 0 && <LanguagesBlock langs={parsed.langs} tag={t("fromCV")} title={t("languages")} basic={t("basic")} />}
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: screening */}
-          {step === 3 && hasScreening && (
-            <div style={{ paddingTop: 16 }}>
-              <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 21, letterSpacing: "-.6px", margin: "0 0 6px" }}>{t("s3Title")}</h2>
-              <p style={{ fontSize: 14, lineHeight: 1.5, color: "var(--soft)", margin: "0 0 18px" }}>{t("screeningIntro", { company: job.company, job: job.title })}</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                {screening.map((q, i) => (
-                  <div key={q.id}>
-                    <label style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", display: "block", marginBottom: 10 }}>{i + 1} · {q.prompt}{q.required && <span style={{ color: "var(--accent)" }}> *</span>}</label>
-                    {q.type === "yes_no" || q.type === "single_choice" ? (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                        {(q.type === "yes_no" ? [t("yes"), t("no")] : q.options).map((opt) => {
-                          const on = answers[q.id] === opt;
-                          return <button key={opt} onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt }))} style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: on ? 700 : 600, fontSize: 13, borderRadius: 999, padding: "8px 14px", border: `1.5px solid ${on ? "#1A1A17" : "#E7E1D4"}`, background: on ? "#DCEFE4" : "#FCFAF6", color: on ? "#0E5C4A" : "#54504A", cursor: "pointer" }}>{opt}</button>;
-                        })}
+                {/* STEP 1 */}
+                {step === 1 && (
+                  <div style={{ paddingTop: 16 }}>
+                    <h1 className="jb-apply-title-1" style={{ fontFamily: ARCHIVO, fontWeight: 900, letterSpacing: "-.7px", margin: "0 0 5px" }}>{t("cvHead")}</h1>
+                    <p style={{ fontSize: 14, lineHeight: 1.5, color: "var(--soft)", margin: "0 0 16px" }}>{t("cvSub")}</p>
+                    <input ref={fileRef} type="file" accept="application/pdf,text/plain" onChange={(e) => onFile(e.target.files?.[0] ?? null)} style={{ display: "none" }} />
+                    {!parsing ? (
+                      <div
+                        role="button" tabIndex={0}
+                        onClick={() => fileRef.current?.click()}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileRef.current?.click(); } }}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => { e.preventDefault(); onFile(e.dataTransfer.files?.[0] ?? null); }}
+                        className="jb-hard" style={{ width: "100%", cursor: "pointer", background: "var(--surface)", border: "2px dashed #C4BCA9", borderRadius: 16, padding: "30px 20px", textAlign: "center" }}>
+                        <span style={{ width: 52, height: 52, borderRadius: 15, background: "var(--brandSoft)", color: "var(--brand)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M5 16v3a1 1 0 001 1h12a1 1 0 001-1v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                        </span>
+                        <div className="jb-apply-mobileblock" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15 }}>{t("cvUploadBig")}</div>
+                        <div className="jb-apply-desktopblock" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 17 }}>{t("cvUploadBigDesktop")}</div>
+                        <div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--soft)", marginTop: 5 }}>{t("cvUploadHint")}</div>
                       </div>
                     ) : (
-                      <input type={q.type === "url" ? "url" : "text"} value={(answers[q.id] as string) ?? ""} onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))} placeholder={q.type === "url" ? "https://…" : ""} style={inputStyle} />
+                      <div style={{ background: "var(--ink)", borderRadius: 16, padding: "22px 20px", color: "#F4F0E8", display: "flex", alignItems: "center", gap: 16 }}>
+                        <div style={{ position: "relative", width: 60, height: 76, flexShrink: 0, background: "#0F0E0C", borderRadius: 9, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="#6E7A46" strokeWidth="1.6" strokeLinejoin="round" /><path d="M14 3v4h4" stroke="#6E7A46" strokeWidth="1.6" strokeLinejoin="round" /><path d="M9 12h6M9 15h6M9 18h3" stroke="#6E7A46" strokeWidth="1.4" strokeLinecap="round" /></svg>
+                          <div className="jb-scan" style={{ position: "absolute", left: 0, right: 0, height: 3, background: "var(--lime)", boxShadow: "0 0 10px 2px rgba(198,242,78,.6)" }} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15, color: "#fff" }}>{t("parsing")}</div>
+                          <div style={{ fontFamily: MONO, fontSize: 10, color: "#B7B2A8", margin: "3px 0 10px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cvName}</div>
+                          <div style={{ height: 6, borderRadius: 999, background: "#38352E", overflow: "hidden" }}><div className="jb-fillbar" style={{ height: "100%", background: "var(--lime)" }} /></div>
+                          <div style={{ fontFamily: MONO, fontSize: 9.5, color: "#8C877E", marginTop: 9 }}>{t("parsingHint")}</div>
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0" }}>
+                      <span style={{ flex: 1, height: 1, background: "var(--line)" }} /><span style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)" }}>{t("orAuto")}</span><span style={{ flex: 1, height: 1, background: "var(--line)" }} />
+                    </div>
+                    <div className="jb-apply-social">
+                      <HardButton variant="surface" onClick={() => setSocialSoon(true)} full style={{ fontSize: 14 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21.6 12.2c0-.6-.1-1.2-.2-1.8H12v3.4h5.4c-.2 1.2-.9 2.3-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.1Z" fill="#4285F4" /><path d="M12 22c2.7 0 5-1 6.6-2.7l-3.2-2.5c-.9.6-2 .9-3.4.9-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6C4.7 19.8 8.1 22 12 22Z" fill="#34A853" /><path d="M6.4 13.6c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7H3.1C2.4 8.5 2 10.2 2 12s.4 3.5 1.1 5l3.3-2.6Z" fill="#FBBC05" /><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 2.9 14.7 2 12 2 8.1 2 4.7 4.2 3.1 7.5l3.3 2.6C7.2 7.6 9.4 5.9 12 5.9Z" fill="#EA4335" /></svg>
+                        <span className="jb-apply-mobileonly">{t("withGoogle")}</span><span className="jb-apply-desktoponly">{t("googleShort")}</span>
+                      </HardButton>
+                      <HardButton variant="surface" onClick={() => setSocialSoon(true)} full style={{ fontSize: 14 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.4 3H3.6A.6.6 0 003 3.6v16.8a.6.6 0 00.6.6h16.8a.6.6 0 00.6-.6V3.6a.6.6 0 00-.6-.6ZM8.3 18.3H5.5V9.4h2.8v8.9ZM6.9 8.2a1.6 1.6 0 110-3.3 1.6 1.6 0 010 3.3Zm11.4 10.1h-2.8v-4.3c0-1 0-2.4-1.4-2.4s-1.7 1.1-1.7 2.3v4.4H9.6V9.4h2.7v1.2h.04c.4-.7 1.3-1.5 2.6-1.5 2.8 0 3.3 1.9 3.3 4.3v4.9Z" /></svg>
+                        <span className="jb-apply-mobileonly">{t("withLinkedin")}</span><span className="jb-apply-desktoponly">{t("linkedinShort")}</span>
+                      </HardButton>
+                    </div>
+                    {socialSoon && <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--soft)", textAlign: "center", marginTop: 10 }}>{t("soon")}</div>}
+                    <button onClick={() => { setFromCV(false); setStep(2); }} className="jb-tap" style={{ display: "block", margin: "16px auto 0", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 600, fontSize: 13, color: "var(--soft)", background: "transparent", border: "none", padding: 8, cursor: "pointer" }}>{t("manual")}</button>
+                  </div>
+                )}
+
+                {/* STEP 2 */}
+                {step === 2 && (
+                  <div style={{ paddingTop: 16 }}>
+                    {/* encabezado del paso — solo desktop (en mobile el título va en el header) */}
+                    <div className="jb-apply-desktopblock" style={{ marginBottom: 20 }}>
+                      <h1 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 28, letterSpacing: "-1px", margin: "0 0 6px" }}>{t("s2Title")}</h1>
+                      <p style={{ fontSize: 14.5, lineHeight: 1.5, color: "var(--soft)", margin: 0 }}>{t("s2Sub")}</p>
+                    </div>
+                    {fromCV && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 12, padding: "11px 13px", marginBottom: 16 }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="11" fill="#C6F24E" /><path className="jb-checkline" d="M7 12.5l3 3 6-7" stroke="#1A1A17" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        <div><div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, color: "#2C3907" }}>{t("autofillBanner")}</div><div style={{ fontSize: 12, color: "#46540F", marginTop: 1 }}>{t("autofillHint")}</div></div>
+                      </div>
+                    )}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div><label style={label}>{t("firstName")}{fromCV && form.firstName && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.firstName} onChange={(e) => set("firstName", e.target.value)} placeholder={t("firstNamePlaceholder")} style={inputStyle} /></div>
+                        <div><label style={label}>{t("lastName")}{fromCV && form.lastName && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.lastName} onChange={(e) => set("lastName", e.target.value)} placeholder={t("lastNamePlaceholder")} style={inputStyle} /></div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div><label style={label}>{t("email")}{fromCV && form.email && <AiTag>{t("fromCV")}</AiTag>}</label><input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="tu@correo.com" style={inputStyle} /></div>
+                        <div><label style={label}>{t("phone")} <span className="jb-apply-desktoponly" style={{ textTransform: "none", color: "#B0AAA0" }}>{t("optional")}</span></label><input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+58…" style={inputStyle} /></div>
+                      </div>
+                      <div><label style={label}>{t("role")}{fromCV && form.role && <AiTag>{t("fromCV")}</AiTag>}</label><input value={form.role} onChange={(e) => set("role", e.target.value)} placeholder={t("rolePlaceholder")} style={inputStyle} /></div>
+                      <div>
+                        <label style={label}>{fromCV ? t("skillsDetected") : t("skillsYours")}{fromCV && <AiTag>{t("fromCV")}</AiTag>}</label>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                          {skills.map((s) => (
+                            <span key={s} onClick={() => setSkills((cur) => cur.filter((x) => x !== s))} className="jb-tap" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "5px 8px 5px 10px", cursor: "pointer" }}>{s}<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="var(--soft)" strokeWidth="2.6" strokeLinecap="round" /></svg></span>
+                          ))}
+                        </div>
+                        {skills.length === 0 && <div style={{ fontSize: 12.5, color: "var(--soft)", margin: "6px 0 4px" }}>{t("noSkills")}</div>}
+                        <div style={{ display: "flex", gap: 7, marginTop: 8 }}>
+                          <input value={skillDraft} onChange={(e) => setSkillDraft(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(skillDraft); } }} placeholder={t("addSkillPlaceholder")} style={{ ...inputStyle, flex: 1 }} />
+                          <HardButton variant="brand" onClick={() => addSkill(skillDraft)} style={{ fontSize: 13, padding: "0 15px" }}>{t("addSkill")}</HardButton>
+                        </div>
+                        {suggested.length > 0 && (
+                          <div style={{ marginTop: 10 }}>
+                            <MonoLabel style={{ fontSize: 9, marginBottom: 6 }}>{t("suggested")}</MonoLabel>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              {suggested.map((sg) => <span key={sg} onClick={() => addSkill(sg)} className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px dashed #BEE0CE", borderRadius: 8, padding: "5px 9px", cursor: "pointer" }}>+ {sg}</span>)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div><label style={label}>{t("messageLabel")} <span style={{ textTransform: "none", color: "#B0AAA0" }}>{t("optional")}</span></label><textarea value={form.note} onChange={(e) => set("note", e.target.value)} placeholder={t("messagePlaceholder")} style={{ ...inputStyle, minHeight: 74, resize: "none" }} /></div>
+
+                      {/* card de CV — después del mensaje, antes de las secciones extraídas */}
+                      {fromCV && cvName && <CvMiniCard name={cvName} size={cvSize} cvUrl={cvUrl} onReplace={onFile} t={t} />}
+
+                      {fromCV && parsed.exp.length > 0 && <ParsedBlock title={t("experience")} tag={t("fromCV")} items={parsed.exp.map((e) => ({ main: e.title, sub: [e.company, [e.start_date, e.is_current ? "actual" : e.end_date].filter(Boolean).join(" — ")].filter(Boolean).join(" · ") }))} />}
+                      {fromCV && parsed.edu.length > 0 && <ParsedBlock title={t("education")} tag={t("fromCV")} items={parsed.edu.map((e) => ({ main: e.degree, sub: [e.institution, [e.start_year, e.end_year].filter(Boolean).join(" — ")].filter(Boolean).join(" · ") }))} />}
+                      {fromCV && parsed.langs.length > 0 && <LanguagesBlock langs={parsed.langs} tag={t("fromCV")} title={t("languages")} basic={t("basic")} />}
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 3: screening */}
+                {step === 3 && hasScreening && (
+                  <div style={{ paddingTop: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 6 }}>
+                      <span className="jb-apply-screenbadge" style={{ width: 34, height: 34, borderRadius: 11, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="2" /><path d="M9.5 14l1.8 1.8 3.7-3.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </span>
+                      <h1 className="jb-apply-title-3" style={{ fontFamily: ARCHIVO, fontWeight: 900, letterSpacing: "-.6px", margin: 0 }}>{t("s3Title")}</h1>
+                    </div>
+                    <p style={{ fontSize: 14, lineHeight: 1.5, color: "var(--soft)", margin: "0 0 18px" }}>{t("screeningIntro", { company: job.company, job: job.title })}</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                      {screening.map((q, i) => (
+                        <div key={q.id}>
+                          <label style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", display: "block", marginBottom: 10 }}>{i + 1} · {q.prompt}{q.required && <span style={{ color: "var(--accent)" }}> *</span>}</label>
+                          {q.type === "yes_no" || q.type === "single_choice" ? (
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                              {(q.type === "yes_no" ? [t("yes"), t("no")] : q.options).map((opt) => {
+                                const on = answers[q.id] === opt;
+                                return <button key={opt} onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt }))} style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: on ? 700 : 600, fontSize: 13, borderRadius: 999, padding: "8px 14px", border: `1.5px solid ${on ? "#1A1A17" : "#E7E1D4"}`, background: on ? "#DCEFE4" : "#FCFAF6", color: on ? "#0E5C4A" : "#54504A", cursor: "pointer" }}>{opt}</button>;
+                              })}
+                            </div>
+                          ) : (
+                            <input type={q.type === "url" ? "url" : "text"} value={(answers[q.id] as string) ?? ""} onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))} placeholder={q.type === "url" ? "https://…" : ""} style={inputStyle} />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP DONE */}
+                {isDone && (
+                  <div style={{ padding: "30px 4px", textAlign: "center" }}>
+                    <span className="jb-apply-donebadge" style={{ borderRadius: 22, background: "var(--brandSoft)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}><svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path className="jb-checkline" d="M6 12.5l3.5 3.5 8-9" stroke="#0E5C4A" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+                    <h1 className="jb-apply-title-done" style={{ fontFamily: ARCHIVO, fontWeight: 900, letterSpacing: "-.9px", margin: "0 0 8px" }}>{t("success")}</h1>
+                    <p style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--soft)", margin: "0 auto 22px", maxWidth: 420 }}>{t("doneDesc", { company: job.company, job: job.title, email: form.email })}</p>
+                    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 15, padding: 16, textAlign: "left", marginBottom: 16, maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>
+                      <MonoLabel style={{ marginBottom: 11 }}>{t("whatsNext")}</MonoLabel>
+                      {[t("next1"), t("next2")].map((txt, i) => (
+                        <div key={i} style={{ display: "flex", gap: 11, alignItems: "flex-start", marginBottom: i === 0 ? 11 : 0 }}>
+                          <span style={{ width: 24, height: 24, borderRadius: 8, background: i === 0 ? "var(--limeSoft)" : "var(--brandSoft)", color: i === 0 ? "#46540F" : "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontWeight: 700, fontSize: 11, flexShrink: 0 }}>{i + 1}</span>
+                          <span style={{ fontSize: 13.5, lineHeight: 1.45, color: "#3A3833" }}>{txt}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {authed ? (
+                      <div className="jb-apply-donebtns">
+                        <HardButton variant="brand" full onClick={() => router.push("/cuenta")}>{t("viewApps")}</HardButton>
+                        <Link href="/empleos" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 14, color: "var(--soft)", padding: 8, textAlign: "center" }}>
+                          <span className="jb-apply-mobileonly">{t("keepBrowsing")}</span><span className="jb-apply-desktoponly">{t("keepBrowsingShort")}</span>
+                        </Link>
+                      </div>
+                    ) : (
+                      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 15, padding: 16, textAlign: "left", maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>
+                        <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15.5, letterSpacing: "-.3px", marginBottom: 3 }}>{acctMode === "signin" ? t("acctSigninTitle") : t("acctTitle")}</div>
+                        <p style={{ fontSize: 13, lineHeight: 1.45, color: "var(--soft)", margin: "0 0 12px" }}>{acctMode === "signin" ? t("acctSigninSub") : t("acctSub")}</p>
+                        <input
+                          type="password" value={acctPw} onChange={(e) => setAcctPw(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") finishAccount(); }}
+                          placeholder="••••••••" autoComplete={acctMode === "signin" ? "current-password" : "new-password"}
+                          style={{ ...inputStyle, marginBottom: 10 }}
+                        />
+                        <HardButton variant={acctBusy ? "disabled" : "brand"} full disabled={acctBusy} onClick={finishAccount}>
+                          {acctBusy ? t("sending") : acctMode === "signin" ? t("acctSigninCta") : t("acctCta")}
+                        </HardButton>
+                        {acctErr && <p style={{ fontSize: 12.5, color: acctMode === "signin" ? "#BD4332" : "var(--soft)", margin: "9px 0 0" }}>{acctErr}</p>}
+                        <Link href="/empleos" style={{ display: "block", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", padding: "10px 8px 2px", textAlign: "center" }}>{t("acctSkip")}</Link>
+                      </div>
                     )}
                   </div>
-                ))}
+                )}
+
+                {error && <p style={{ fontSize: 13, color: "#BD4332", marginTop: 12 }}>{error}</p>}
               </div>
             </div>
-          )}
 
-          {/* STEP DONE */}
-          {isDone && (
-            <div style={{ padding: "30px 4px", textAlign: "center" }}>
-              <span style={{ width: 74, height: 74, borderRadius: 22, background: "var(--brandSoft)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}><svg width="38" height="38" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5 8-9" stroke="#0E5C4A" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
-              <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 25, letterSpacing: "-.9px", margin: "0 0 8px" }}>{t("success")}</h2>
-              <p style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--soft)", margin: "0 auto 22px", maxWidth: 290 }}>{t("doneDesc", { company: job.company, job: job.title, email: form.email })}</p>
-              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 15, padding: 16, textAlign: "left", marginBottom: 16 }}>
-                <MonoLabel style={{ marginBottom: 11 }}>{t("whatsNext")}</MonoLabel>
-                {[t("next1"), t("next2")].map((txt, i) => (
-                  <div key={i} style={{ display: "flex", gap: 11, alignItems: "flex-start", marginBottom: i === 0 ? 11 : 0 }}>
-                    <span style={{ width: 24, height: 24, borderRadius: 8, background: i === 0 ? "var(--limeSoft)" : "var(--brandSoft)", color: i === 0 ? "#46540F" : "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontWeight: 700, fontSize: 11, flexShrink: 0 }}>{i + 1}</span>
-                    <span style={{ fontSize: 13.5, lineHeight: 1.45, color: "#3A3833" }}>{txt}</span>
-                  </div>
-                ))}
-              </div>
-              {authed ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                  <HardButton variant="brand" full onClick={() => router.push("/cuenta")}>{t("viewApps")}</HardButton>
-                  <Link href="/empleos" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 14, color: "var(--soft)", padding: 8, textAlign: "center" }}>{t("keepBrowsing")}</Link>
-                </div>
-              ) : (
-                <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 15, padding: 16, textAlign: "left" }}>
-                  <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15.5, letterSpacing: "-.3px", marginBottom: 3 }}>{acctMode === "signin" ? t("acctSigninTitle") : t("acctTitle")}</div>
-                  <p style={{ fontSize: 13, lineHeight: 1.45, color: "var(--soft)", margin: "0 0 12px" }}>{acctMode === "signin" ? t("acctSigninSub") : t("acctSub")}</p>
-                  <input
-                    type="password" value={acctPw} onChange={(e) => setAcctPw(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") finishAccount(); }}
-                    placeholder="••••••••" autoComplete={acctMode === "signin" ? "current-password" : "new-password"}
-                    style={{ ...inputStyle, marginBottom: 10 }}
-                  />
-                  <HardButton variant={acctBusy ? "disabled" : "brand"} full disabled={acctBusy} onClick={finishAccount}>
-                    {acctBusy ? t("sending") : acctMode === "signin" ? t("acctSigninCta") : t("acctCta")}
+            {/* sticky action — fija abajo en mobile; anclada bajo el formulario en desktop */}
+            {showAction && (
+              <div className="jb-apply-action" style={{ background: "rgba(252,250,246,.96)", backdropFilter: "blur(8px)", borderTop: "1px solid var(--line)", padding: "12px 16px 16px", zIndex: 20 }}>
+                <div className="jb-apply-actioninner">
+                  {actionHint && <p className="jb-apply-hint">{actionHint}</p>}
+                  <HardButton variant={actionVariant} full disabled={actionDisabled} onClick={primary}>
+                    {btn === "sending" && <span className="jb-apply-spinner" />}{actionLabel}
                   </HardButton>
-                  {acctErr && <p style={{ fontSize: 12.5, color: acctMode === "signin" ? "#BD4332" : "var(--soft)", margin: "9px 0 0" }}>{acctErr}</p>}
-                  <Link href="/empleos" style={{ display: "block", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", padding: "10px 8px 2px", textAlign: "center" }}>{t("acctSkip")}</Link>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>{/* /jb-apply-main */}
 
-          {error && <p style={{ fontSize: 13, color: "#BD4332", marginTop: 12 }}>{error}</p>}
-        </div>
-      </div>
-
-      {/* sticky action — fija abajo en mobile; anclada bajo el formulario en desktop */}
-      {showAction && (
-        <div className="jb-apply-action" style={{ background: "rgba(252,250,246,.96)", backdropFilter: "blur(8px)", borderTop: "1px solid var(--line)", padding: "12px 16px 16px", zIndex: 20 }}>
-          <div style={{ maxWidth: 560, margin: "0 auto" }}>
-            {actionHint && <p style={{ fontFamily: MONO, fontSize: 10, color: actionDisabled && step === 3 ? "var(--accent)" : "var(--soft)", textAlign: "center", margin: "0 0 8px" }}>{actionHint}</p>}
-            <HardButton variant={actionVariant} full disabled={actionDisabled} onClick={primary}>{actionLabel}</HardButton>
-          </div>
-        </div>
-      )}
-      </div>{/* /jb-apply-main */}
-
-      {preview && <OfferPreview job={job} preview={preview} t={t} tDetail={tDetail} tModality={tModality} />}
+          {preview && <OfferPreview job={job} preview={preview} t={t} tDetail={tDetail} tModality={tModality} />}
+        </div>{/* /jb-apply-body */}
       </div>{/* /jb-apply-shell */}
     </BoardRoot>
   );
@@ -400,41 +428,52 @@ export function ApplyWizard({ job, preview, screening, slug, locale, authed = fa
 
 // Preview de la oferta (solo desktop): lo que el candidato está aplicando, a la vista.
 function OfferPreview({ job, preview, t, tDetail, tModality }: { job: Job; preview: Preview; t: ReturnType<typeof useTranslations>; tDetail: ReturnType<typeof useTranslations>; tModality: ReturnType<typeof useTranslations> }) {
+  const chipNeutral: CSSProperties = { fontSize: 12.5, fontWeight: 600, color: "#54504A", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 11px" };
   return (
     <aside className="jb-apply-preview">
-      <div style={{ position: "sticky", top: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-          <CompanyLogo name={job.company} logoUrl={job.logoUrl} size={48} />
+      <div style={{ padding: "32px 40px 40px", maxWidth: 640, position: "sticky", top: 88 }}>
+        <MonoLabel style={{ marginBottom: 14 }}>{t("applyingTo")}</MonoLabel>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+          <CompanyLogo name={job.company} logoUrl={job.logoUrl} size={56} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--brand)", fontWeight: 700 }}>{job.company}</div>
-            <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 21, lineHeight: 1.08, letterSpacing: "-.6px", margin: "3px 0 0" }}>{job.title}</h2>
+            <div style={{ fontFamily: MONO, fontSize: 12, color: "var(--soft)" }}>{job.company}</div>
+            <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 24, lineHeight: 1.05, letterSpacing: "-.8px", margin: "3px 0 0" }}>{job.title}</h2>
           </div>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-          {job.city && <span style={{ fontSize: 11.5, fontWeight: 600, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "4px 9px" }}>{job.city}</span>}
-          {job.modality && <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "4px 9px" }}>{tModality(job.modality)}</span>}
-          {preview.employmentType && <span style={{ fontSize: 11.5, fontWeight: 600, color: "#54504A", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "4px 9px" }}>{preview.employmentType}</span>}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 15 }}>
+          {job.city && <span style={chipNeutral}>{job.city}</span>}
+          {job.modality && <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 11px" }}>{tModality(job.modality)}</span>}
+          {preview.employmentType && <span style={chipNeutral}>{preview.employmentType}</span>}
         </div>
         {(job.salary || preview.match) && (
-          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <MonoLabel style={{ fontSize: 9.5 }}>{tDetail("salary")}</MonoLabel>
-              <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 17, letterSpacing: "-.4px", color: "var(--brand)", marginTop: 2 }}>{job.salary || t("salaryOpen")}</div>
+          <div style={{ display: "flex", gap: 12, marginTop: 18 }}>
+            <div style={{ flex: 1, background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 14, padding: 14 }}>
+              <MonoLabel style={{ fontSize: 10 }}>{tDetail("salary")}</MonoLabel>
+              <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 20, color: "var(--brand)", marginTop: 4 }}>{job.salary || t("salaryOpen")}</div>
+              <div style={{ fontSize: 12, color: "var(--soft)" }}>{t("salaryUnit")}</div>
             </div>
-            {preview.match && <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#46540F", background: "var(--limeSoft)", borderRadius: 8, padding: "5px 9px" }}>{t("matchForYou", { met: preview.match.met, total: preview.match.total })}</span>}
+            {preview.match && (
+              <div style={{ flex: 1, background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 14, padding: 14 }}>
+                <div style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "var(--brand)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z" stroke="var(--brand)" strokeWidth="1.7" strokeLinejoin="round" /></svg>{t("matchLabel")}
+                </div>
+                <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 20, color: "var(--ink)", marginTop: 4 }}>{t("matchValue", { met: preview.match.met, total: preview.match.total })}</div>
+                <div style={{ fontSize: 12, color: "#3A6558" }}>{t("matchUnit")}</div>
+              </div>
+            )}
           </div>
         )}
-        {preview.description && <div>
-          <MonoLabel style={{ marginBottom: 7 }}>{tDetail("about")}</MonoLabel>
-          <p style={{ fontSize: 13, lineHeight: 1.55, color: "#3A3833", margin: 0, whiteSpace: "pre-wrap", maxHeight: 220, overflow: "hidden" }}>{preview.description}</p>
+        {preview.description && <div style={{ marginTop: 22 }}>
+          <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 16, marginBottom: 8 }}>{tDetail("about")}</div>
+          <p style={{ fontSize: 14, lineHeight: 1.6, color: "#3A3833", margin: 0, whiteSpace: "pre-wrap" }}>{preview.description}</p>
         </div>}
-        {(preview.reqs.length > 0 || preview.skills.length > 0) && <div>
-          <MonoLabel style={{ marginBottom: 8 }}>{tDetail("looking")}</MonoLabel>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: preview.skills.length ? 11 : 0 }}>
+        {(preview.reqs.length > 0 || preview.skills.length > 0) && <div style={{ marginTop: 20 }}>
+          <div style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 16, marginBottom: 10 }}>{tDetail("looking")}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: preview.skills.length ? 11 : 0 }}>
             {preview.reqs.map((r, i) => (
-              <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10" fill="var(--brandSoft)" /><path d="M8 12.5l2.5 2.5 5-5.5" stroke="var(--brand)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                <span style={{ fontSize: 12.5, lineHeight: 1.4, color: "#3A3833" }}>{r}</span>
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10" fill="var(--brandSoft)" /><path d="M8 12.5l2.5 2.5 5.5-6" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span style={{ fontSize: 13.5, lineHeight: 1.5, color: "#3A3833" }}>{r}</span>
               </div>
             ))}
           </div>
@@ -444,27 +483,31 @@ function OfferPreview({ job, preview, t, tDetail, tModality }: { job: Job; previ
             ))}
           </div>
         </div>}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10.5, color: "var(--soft)", paddingTop: 4 }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-11" stroke="var(--brand)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>{t("freeToApply")}
+        <div style={{ marginTop: 22, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 12, padding: "13px 14px", fontSize: 12.5, lineHeight: 1.5, color: "#46540F" }}>
+          <b>{t("freeToApplyBold")}</b> {t("freeToApplyRest")}
         </div>
       </div>
     </aside>
   );
 }
 
-function CvMiniCard({ name, onReplace, t }: { name: string; onReplace: (f: File | null) => void; t: ReturnType<typeof useTranslations> }) {
+function CvMiniCard({ name, size, cvUrl, onReplace, t }: { name: string; size: number | null; cvUrl: string | null; onReplace: (f: File | null) => void; t: ReturnType<typeof useTranslations> }) {
+  const meta = size ? `${t("cvAttached")} · ${Math.max(1, Math.round(size / 1024))} KB` : t("cvAttached");
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 11, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "10px 12px", marginBottom: 14 }}>
-      <span style={{ width: 34, height: 42, borderRadius: 7, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><path d="M14 3v4h4" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg>
+    <div style={{ display: "flex", alignItems: "center", gap: 11, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "11px 13px" }}>
+      <span style={{ width: 40, height: 48, borderRadius: 8, background: "var(--brandSoft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><path d="M14 3v4h4" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg>
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
-        <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 1 }}>{t("cvAttached")}</div>
+        <div style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)", marginTop: 1 }}>{meta}</div>
       </div>
-      <label className="jb-tap" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 8, padding: "6px 10px", cursor: "pointer", flexShrink: 0 }}>
+      {cvUrl && (
+        <a href={cvUrl} target="_blank" rel="noopener noreferrer" className="jb-tap" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--brand)", background: "var(--brandSoft)", border: "1px solid #BEE0CE", borderRadius: 9, padding: "7px 12px", cursor: "pointer", flexShrink: 0, textDecoration: "none" }}>{t("viewCv")}</a>
+      )}
+      <label className="jb-tap" style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "var(--soft)", cursor: "pointer", flexShrink: 0 }}>
         <input type="file" accept="application/pdf,text/plain" onChange={(e) => onReplace(e.target.files?.[0] ?? null)} style={{ display: "none" }} />
-        {t("cvReplace")}
+        <span className="jb-apply-desktoponly">{t("cvReplace")}</span><span className="jb-apply-mobileonly">{t("change")}</span>
       </label>
     </div>
   );

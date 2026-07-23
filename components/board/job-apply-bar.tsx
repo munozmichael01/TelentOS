@@ -58,8 +58,13 @@ export function JobApplyBar({ jobId, slug, locale, authed = false, hasRequiredSc
           {state === "applied" ? (
             <Link href="/cuenta" className="jb-hard" style={{ ...barStyle, background: "#0E5C4A" }}>{t("detail.applied")} →</Link>
           ) : canOneTap ? (
-            <button onClick={oneTap} disabled={state === "applying"} className="jb-hard" style={{ ...barStyle, cursor: "pointer", opacity: state === "applying" ? .7 : 1 }}>
-              {state === "applying" ? t("apply.sending") : `${t("detail.oneTap")} ⚡`}
+            <button onClick={oneTap} disabled={state === "applying"} className="jb-hard" style={{ ...barStyle, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", opacity: state === "applying" ? .7 : 1 }}>
+              {state === "applying" ? t("apply.sending") : (
+                <>
+                  {t("detail.oneTap")}
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </>
+              )}
             </button>
           ) : (
             <Link href={{ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug } }} className="jb-hard" style={barStyle}>
