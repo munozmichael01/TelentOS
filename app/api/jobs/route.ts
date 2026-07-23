@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       salary_min: body.salary_min ?? null,
       salary_max: body.salary_max ?? null,
       salary_currency: body.salary_currency ?? "EUR",
+      salary_period: ["hour","day","week","month","year"].includes(body.salary_period) ? body.salary_period : "month",
       location: body.location ?? null,
       // city/country_code solo si llegan (tolerante a migración 0029 pendiente)
       ...(body.city !== undefined ? { city: body.city } : {}),

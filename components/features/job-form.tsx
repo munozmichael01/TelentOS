@@ -24,6 +24,7 @@ type FormState = {
   skills: string[];
   salary_min: string;
   salary_max: string;
+  salary_period: string;
   location: string;
   employment_type: string;
   sector: string;
@@ -35,7 +36,7 @@ type FormState = {
 };
 
 const EMPTY: FormState = {
-  title: "", description: "", skills: [], salary_min: "", salary_max: "",
+  title: "", description: "", skills: [], salary_min: "", salary_max: "", salary_period: "month",
   location: "", employment_type: "full_time", sector: "", department: "",
   category: "", category_key: "", closes_at: "", experience_min_years: "0",
 };
@@ -52,6 +53,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
           skills: job.skills,
           salary_min: job.salary_min?.toString() ?? "",
           salary_max: job.salary_max?.toString() ?? "",
+          salary_period: (job as { salary_period?: string }).salary_period ?? "month",
           location: job.location ?? "",
           employment_type: job.employment_type,
           sector: job.sector ?? "",
@@ -161,6 +163,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
         skills: form.skills,
         salary_min: form.salary_min ? Number(form.salary_min) : null,
         salary_max: form.salary_max ? Number(form.salary_max) : null,
+        salary_period: form.salary_period,
         location: form.location || null,
         employment_type: form.employment_type,
         sector: form.sector || null,
@@ -290,6 +293,16 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
             <div>
               <div style={fieldLabel}>Salario máx. (€)</div>
               <Input type="number" value={form.salary_max} onChange={(e) => set("salary_max", e.target.value)} />
+            </div>
+            <div>
+              <div style={fieldLabel}>Frecuencia del salario</div>
+              <select value={form.salary_period} onChange={(e) => set("salary_period", e.target.value)} style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 14, color: "#1A1A17", background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: 9, padding: "9px 12px", outline: "none" }}>
+                <option value="hour">Por hora</option>
+                <option value="day">Por día</option>
+                <option value="week">Por semana</option>
+                <option value="month">Mensual</option>
+                <option value="year">Anual</option>
+              </select>
             </div>
             <div>
               <div style={fieldLabel}>Exp. mínima (años)</div>

@@ -23,7 +23,7 @@ function titleTokens(s: string): Set<string> {
 type JobDetail = {
   id: string; title: string; description: string | null; city: string | null; country_code: string | null;
   location: string | null; modality: string | null; salary_min: number | null; salary_max: number | null;
-  salary_currency: string | null; employment_type: string | null; category: string | null; created_at: string;
+  salary_currency: string | null; salary_period: string | null; employment_type: string | null; category: string | null; created_at: string;
   education_level: string | null; seniority_level: string | null; experience_min_years: number | null;
   closes_at: string | null; category_key: string | null;
   company: { id: string; name: string; slug: string | null; logo_url: string | null } | null;
@@ -35,7 +35,7 @@ async function getJob(slug: string) {
   const supabase = createClient();
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, employment_type, category, created_at, education_level, seniority_level, experience_min_years, closes_at, category_key, company:companies(id, name, slug, logo_url)")
+    .select("id, title, description, city, country_code, location, modality, salary_min, salary_max, salary_currency, salary_period, employment_type, category, created_at, education_level, seniority_level, experience_min_years, closes_at, category_key, company:companies(id, name, slug, logo_url)")
     .eq("id", id).eq("status", "active").maybeSingle();
   if (!job) return null;
   const { data: skillRows } = await supabase

@@ -28,14 +28,21 @@ export function logoFor(name: string | null | undefined) {
 }
 
 // Salario "$1.800–2.400" (o "Desde $X" / "Hasta $X"); null → cadena vacía.
-export function formatSalary(job: Pick<BoardJob, "salary_min" | "salary_max" | "salary_currency">, locale: string) {
+// Sufijo de periodo por idioma (se muestra tal cual; el orden usa el equivalente mensual).
+const PERIOD_SUFFIX: Record<string, Record<string, string>> = {
+  es: { hour: "/h", day: "/día", week: "/sem", month: "/mes", year: "/año" },
+  en: { hour: "/hr", day: "/day", week: "/wk", month: "/mo", year: "/yr" },
+  pt: { hour: "/h", day: "/dia", week: "/sem", month: "/mês", year: "/ano" },
+};
+export function formatSalary(job: Pick<BoardJob, "salary_min" | "salary_max" | "salary_currency"> & { salary_period?: string | null }, locale: string) {
   const { salary_min: min, salary_max: max, salary_currency: cur } = job;
   if (min == null && max == null) return "";
   const sym = cur === "USD" || cur == null ? "$" : `${cur} `;
   const fmt = (n: number) => new Intl.NumberFormat(locale).format(n);
-  if (min != null && max != null) return `${sym}${fmt(min)}–${fmt(max)}`;
-  const one = (min ?? max)!;
-  return `${sym}${fmt(one)}`;
+  const lang = (locale.split("-")[0] as keyof typeof PERIOD_SUFFIX) in PERIOD_SUFFIX ? (locale.split("-")[0] as string) : "es";
+  const suf = PERIOD_SUFFIX[lang][job.salary_period ?? "month"] ?? "";
+  const body = min != null && max != null ? `${fmt(min)}–${fmt(max)}` : fmt((min ?? max)!);
+  return `${sym}${body}${suf}`;
 }
 
 // Fecha relativa corta ("hoy", "hace 3 d") con Intl.RelativeTimeFormat.

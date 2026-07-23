@@ -13,7 +13,7 @@ import { formatSalary, relativeDate, jobSlug } from "@/lib/board/format";
 type PanelJob = {
   id: string; title: string; description: string | null; city: string | null; country_code: string | null;
   location: string | null; modality: string | null; salary_min: number | null; salary_max: number | null;
-  salary_currency: string | null; employment_type: string | null; created_at: string;
+  salary_currency: string | null; salary_period: string | null; employment_type: string | null; created_at: string;
   education_level: string | null; seniority_level: string | null; experience_min_years: number | null;
   company: { id: string; name: string; slug: string | null; logo_url: string | null } | null;
 };
