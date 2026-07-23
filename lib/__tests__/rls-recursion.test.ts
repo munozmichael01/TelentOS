@@ -47,13 +47,17 @@ const SENSITIVE = [
 ];
 
 describe.skipIf(!hasDb)("RLS: sin recursión bajo sesión autenticada (regresión migr. 0050)", () => {
-  const admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } });
+  // Clientes creados PEREZOSAMENTE en beforeAll: el cuerpo del describe corre al recolectar
+  // incluso con skipIf, y sin claves (CI) createClient lanzaría "supabaseKey is required".
+  // beforeAll/afterAll NO corren en suites saltadas, así que aquí es seguro.
   const email = "rls-selftest@talentos.test";
   const password = "rls-selftest-" + "x".repeat(12);
+  let admin: ReturnType<typeof createClient>;
   let userId: string | null = null;
   let userClient: ReturnType<typeof createClient>;
 
   beforeAll(async () => {
+    admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } });
     // Usuario efímero (idempotente: si quedó de una corrida anterior, lo borramos).
     const { data: list } = await admin.auth.admin.listUsers();
     const prev = list?.users.find((u) => u.email === email);
