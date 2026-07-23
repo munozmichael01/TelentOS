@@ -222,12 +222,23 @@ function initials(nameOrEmail: string) {
 export function AppShell({
   children,
   userRole,
+  companies = [],
+  activeCompanyId = null,
 }: {
   children: React.ReactNode;
   userRole?: Role | null;
+  companies?: { id: string; name: string; isParent: boolean }[];
+  activeCompanyId?: string | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
+
+  // Switcher multi-empresa: fija/limpia la cookie de empresa activa y refresca.
+  function switchCompany(id: string) {
+    const val = id || "";
+    document.cookie = `tos_company=${val}; path=/; max-age=${val ? 60 * 60 * 24 * 365 : 0}; samesite=lax`;
+    router.refresh();
+  }
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -321,6 +332,23 @@ export function AppShell({
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
               </button>
             </div>
+
+            {/* Switcher multi-empresa — solo si la cuenta tiene matriz + hijas */}
+            {companies.length > 1 && (
+              <div className="nav-label" style={{ padding: "10px 14px", borderBottom: "1px solid #E7E1D4" }}>
+                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "9px", letterSpacing: "1px", textTransform: "uppercase", color: "#79746B", marginBottom: "5px" }}>Empresa</div>
+                <select
+                  value={activeCompanyId ?? ""}
+                  onChange={(e) => switchCompany(e.target.value)}
+                  style={{ width: "100%", fontFamily: "'Hanken Grotesk', sans-serif", fontSize: "13px", fontWeight: 700, color: "#1A1A17", background: "#FCFAF6", border: "1.5px solid #E7E1D4", borderRadius: "9px", padding: "8px 10px", outline: "none", cursor: "pointer" }}
+                >
+                  <option value="">Todas las empresas</option>
+                  {companies.map((c) => (
+                    <option key={c.id} value={c.id}>{c.isParent ? `${c.name} (matriz)` : c.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* nav */}
             <nav style={{ flex: 1, overflowY: "auto", padding: "12px 12px 8px" }}>

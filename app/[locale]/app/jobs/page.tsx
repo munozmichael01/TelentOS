@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveCompanyId } from "@/lib/workspace";
 import { formatSalaryRange } from "@/lib/utils";
 import type { Job } from "@/lib/types";
 
@@ -29,8 +30,12 @@ export default async function JobsPage({
   searchParams: { status?: string; sector?: string; location?: string; department?: string };
 }) {
   const supabase = createClient();
+  // Empresa activa del switcher (RLS ya limita al alcance de la cuenta; esto acota a UNA
+  // empresa cuando el switcher no está en "Todas").
+  const activeCompanyId = await getActiveCompanyId();
 
   let query = supabase.from("jobs").select("*").order("created_at", { ascending: false });
+  if (activeCompanyId) query = query.eq("company_id", activeCompanyId);
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.sector) query = query.eq("sector", searchParams.sector);
   if (searchParams.department) query = query.eq("department", searchParams.department);
