@@ -79,6 +79,17 @@ const CASES = [
       confirma: /alerta/i.test(j.answer ?? ""),
     }),
   },
+  {
+    id: "narración en el idioma del usuario (en-us)",
+    query: "cocina en Madrid",
+    locale: "en-us",
+    expect: (j) => ({
+      intakeFalse: j.intake_needed === false,
+      // narración localizada: inglés, no español
+      enIngles: /found|no jobs|closest|match/i.test(j.answer ?? ""),
+      noEspañol: !/encontr[ée]|ofertas que encajan|no encontr[ée] ofertas/i.test(j.answer ?? ""),
+    }),
+  },
 ];
 
 const cookie = await sessionCookie(OWNER);
@@ -86,7 +97,7 @@ const cookie = await sessionCookie(OWNER);
 const rows = [];
 for (const c of CASES) {
   try {
-    const { status, json } = await post("/api/board/assistant", { query: c.query, history: [] }, cookie);
+    const { status, json } = await post("/api/board/assistant", { query: c.query, history: [], locale: c.locale }, cookie);
     const checks = { http: status === 200, ...c.expect(json) };
     const ok = Object.values(checks).every(Boolean);
     rows.push({

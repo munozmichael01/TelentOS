@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { routing } from "@/i18n/routing";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { jsonError } from "@/lib/api";
 import { rateLimit } from "@/lib/rate-limit";
@@ -54,6 +56,13 @@ export async function POST(req: Request) {
     .map((m: { role: string; content: string }) => ({ role: m.role as "user" | "assistant", content: String(m.content) }))
     .slice(-10);
 
+  // Narración en el idioma del usuario: el cliente envía su locale; la pregunta de intake
+  // ya viene del LLM en el idioma del usuario, pero el resumen de resultados lo componemos
+  // aquí (conteo fiable) y hay que localizarlo (antes iba hardcodeado en español).
+  const rawLocale = typeof body?.locale === "string" ? body.locale : routing.defaultLocale;
+  const locale = (routing.locales as readonly string[]).includes(rawLocale) ? rawLocale : routing.defaultLocale;
+  const t = await getTranslations({ locale, namespace: "Board.assistant" });
+
   const result = await runBoardAssistant({ query, history });
 
   // Crear alerta desde el chat: si el usuario lo pide explícitamente (alerta / avísame /
@@ -81,10 +90,10 @@ export async function POST(req: Request) {
       .from("job_alerts")
       .insert({ user_id: user.id, criteria, active: true, frequency: "daily" });
     if (alertErr) {
-      return NextResponse.json({ answer: "No pude crear la alerta ahora mismo. Inténtalo de nuevo.", filters: f, jobs: [], total: 0 });
+      return NextResponse.json({ answer: t("alertFailed"), filters: f, jobs: [], total: 0 });
     }
     return NextResponse.json({
-      answer: "Listo, guardé tu búsqueda como alerta. Te aviso apenas entren ofertas que coincidan.",
+      answer: t("alertCreatedText"),
       filters: f,
       alert: { criteria, frequency: "daily" },
       jobs: [], total: 0,
@@ -165,14 +174,12 @@ export async function POST(req: Request) {
   let answer = result.output.answer;
   if (!result.output.intake_needed) {
     // Si el agente interpretó facetas (ubicación/modalidad/área/…), reconoce el paso de
-    // interpretación antes del conteo (mockup: "Esto es lo que entendí de tu búsqueda.").
+    // interpretación antes del conteo. Todo localizado al idioma del usuario.
     const interpreted = Object.values(result.output.filters ?? {}).some((v) => v != null && v !== "");
-    const lead = widened
-      ? "No encontré coincidencias exactas, pero esto es lo más cercano. "
-      : interpreted && total > 0 ? "Esto es lo que entendí de tu búsqueda. " : "";
+    const lead = widened ? t("widenedLead") : interpreted && total > 0 ? t("interpretedLead") : "";
     answer = total > 0
-      ? `${lead}${total === 1 ? "Encontré 1 oferta que encaja." : `Encontré ${total} ofertas que encajan.`}`
-      : "No encontré ofertas con esos criterios. Prueba ampliar: quita la ubicación o cambia la modalidad.";
+      ? [lead, t("foundN", { count: total })].filter(Boolean).join(" ")
+      : t("none");
   }
 
   return NextResponse.json({
