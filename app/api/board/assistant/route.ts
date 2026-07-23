@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { jsonError } from "@/lib/api";
+import { rateLimit } from "@/lib/rate-limit";
 import { runBoardAssistant } from "@/agents/agent-board-assistant";
 import { searchJobs, type BoardSearchParams } from "@/lib/job-board/search";
 import { getCategories } from "@/lib/board/categories";
@@ -33,6 +34,13 @@ export async function POST(req: Request) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return jsonError("Inicia sesión para usar el asistente", 401);
+
+  // Anti-abuso: el asistente hace llamadas LLM (coste). Límite por usuario — 20/min es
+  // holgado para un chat humano y corta el spam. Es el patrón de rate-limit del resto de
+  // endpoints de IA (search-parse, apply, parse-cv), que a este le faltaba.
+  if (!(await rateLimit(`board-assistant:${user.id}`, 20, 60_000))) {
+    return jsonError("Vas muy rápido. Espera unos segundos y vuelve a intentarlo.", 429);
+  }
 
   const body = await req.json().catch(() => null);
   const query = typeof body?.query === "string" ? body.query.trim() : "";
