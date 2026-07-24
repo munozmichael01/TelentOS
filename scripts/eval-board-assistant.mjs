@@ -91,6 +91,17 @@ const CASES = [
     }),
   },
   {
+    id: "anclaje de job titles: 'chef' recupera ofertas de cocinero (sinónimo)",
+    query: "chef",
+    expect: (j) => ({
+      intakeFalse: j.intake_needed === false,
+      conteo: typeof j.total === "number" && j.total > 0,
+      // la expansión matchea por sinónimo: las ofertas traen cocinero/cocina/jefe de cocina
+      // en el título aunque el usuario escribió "chef" (que casi no aparece literal en el board)
+      recuperaSinónimo: Array.isArray(j.jobs) && j.jobs.some((o) => /cocin|chef|jefe de cocina/i.test(o.title ?? "")),
+    }),
+  },
+  {
     id: "narración en el idioma del usuario (en-us)",
     query: "cocina en Madrid",
     locale: "en-us",
