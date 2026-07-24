@@ -112,8 +112,11 @@ export function BoardClient({
   }
   async function fetchTitles(q: string) {
     if (!q.trim()) { setTitleSug([]); return; }
-    const r = await fetch(`/api/board/titles?q=${encodeURIComponent(q)}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
-    setTitleSug(r?.titles ?? []);
+    // CARGOS canónicos de la taxonomía (no los títulos libres de las ofertas). Se limpia la
+    // etiqueta gendered ("camarero / camarera" → "camarero") para usarla como término de búsqueda.
+    const r = await fetch(`/api/job-titles?q=${encodeURIComponent(q)}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    const labels = ((r?.titles ?? []) as { label: string }[]).map((t) => t.label.split(" / ")[0].trim());
+    setTitleSug(Array.from(new Set(labels)));
   }
   // Cierre por clic fuera (respeta zonas data-keep-open).
   useEffect(() => {
