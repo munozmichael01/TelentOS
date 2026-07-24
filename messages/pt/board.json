@@ -500,7 +500,8 @@
     "widenedLead": "Não encontrei correspondências exatas, mas isto é o mais próximo.",
     "none": "Não encontrei vagas com esses critérios. Tente ampliar: remova a localização ou mude a modalidade.",
     "alertCreatedText": "Pronto — guardei sua busca como alerta. Aviso assim que entrarem vagas que combinem.",
-    "alertFailed": "Não consegui criar o alerta agora. Tente novamente."
+    "alertFailed": "Não consegui criar o alerta agora. Tente novamente.",
+    "loadMore": "Carregar mais vagas"
   },
   "builder": {
     "eyebrow": "Assistente de perfil",

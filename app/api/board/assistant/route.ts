@@ -9,7 +9,7 @@ import { searchJobs, type BoardSearchParams } from "@/lib/job-board/search";
 import { getCategories } from "@/lib/board/categories";
 import { resolveSkillIds } from "@/lib/skills";
 import { computeRecruiterFit, type JobSkillReq } from "@/lib/job-board/fit";
-import { expandJobTitle } from "@/lib/job-board/job-titles";
+import { expandJobTitle, resolveTitleContext } from "@/lib/job-board/job-titles";
 import type { EducationLevel, SeniorityLevel } from "@/lib/types";
 
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -118,6 +118,9 @@ export async function POST(req: Request) {
 
   // JobCards autoritativos: búsqueda determinista con los filtros finales del agente
   // (salvo que pida más intake, en cuyo caso aún no hay filtros que ejecutar).
+  // Paginación en el chat ("cargar más"): al usuario que solo conversa hay que darle TODO.
+  const PAGE_SIZE = 8;
+  const page = Math.max(1, Number(body?.page) || 1);
   let jobs: unknown[] = [];
   let total = 0;
   let widened = false;
@@ -125,20 +128,31 @@ export async function POST(req: Request) {
     // La categoría del LLM es free-text; a la búsqueda solo le sirve la canónica.
     const f = result.output.filters;
     const catKeys = f.category ? categoryKeysFrom(f.category) : [];
-    // Anclaje de job titles: expande el rol a sinónimos + variantes localizadas (es/en/pt)
-    // desde la taxonomía en BBDD → OR-busca todas las formas ("chef"→"cocinero", "product
-    // owner"→"responsable de producto"). Si el término no matchea la taxonomía, se usa tal cual.
+    // Anclaje: sinónimos para RECALL (qTokens) + contexto de título para RANKING (mismos
+    // títulos canónicos que resuelve la query → el RPC pone esas ofertas primero, igual que
+    // el board). Las aplicadas del usuario (global) van al final vía el RPC.
     const titleForms = f.q ? await expandJobTitle(f.q) : [];
+    const tctx = f.q ? await resolveTitleContext(f.q) : { titleIds: [], relatedIds: [], relatedW: [] };
+    const admin0 = createAdminClient();
+    const { data: appRows } = await admin0.from("applications")
+      .select("job_id, candidates!inner(user_id)").eq("candidates.user_id", user.id);
+    const appliedIds = (appRows ?? []).map((a) => a.job_id as string);
+
     const base: BoardSearchParams = {
       q: titleForms.length ? undefined : f.q,
       qTokens: titleForms.length ? titleForms : undefined,
       location: f.location, modality: f.modality, contract: f.contract,
-      salaryMin: f.salaryMin, categoryKeys: catKeys.length ? catKeys : undefined, pageSize: 12,
+      salaryMin: f.salaryMin, categoryKeys: catKeys.length ? catKeys : undefined,
+      titleIds: tctx.titleIds.length ? tctx.titleIds : undefined,
+      relatedIds: tctx.relatedIds.length ? tctx.relatedIds : undefined,
+      relatedW: tctx.relatedW.length ? tctx.relatedW : undefined,
+      appliedIds: appliedIds.length ? appliedIds : undefined,
+      pageSize: PAGE_SIZE, page,
     };
     let res = await searchJobs(supabase, base);
-    // 0 resultados con frase exacta → amplía: tokens del q (OR) + categorías detectadas
-    // desde el propio q. "product owner" → token "product" pega con "Producto…".
-    if (res.total === 0 && f.q) {
+    // 0 resultados con frase exacta → amplía (solo en la 1ª página): tokens del q (OR) +
+    // categorías detectadas desde el propio q. "product owner" → token "product" pega con "Producto…".
+    if (res.total === 0 && f.q && page === 1) {
       const toks = tokensOf(f.q);
       const catFromQ = resolveCategoryKeys(f.q);
       if (toks.length || catFromQ.length) {
@@ -155,17 +169,10 @@ export async function POST(req: Request) {
 
     const jobRows = jobs as { id: string }[];
     if (jobRows.length) {
-      // Admin: candidates/job_skills/applications tienen RLS por empresa; un candidato no
-      // las lee con RLS. Scopeado por user.id (que controlamos tras el guard de sesión).
+      // Admin: candidates/job_skills tienen RLS por empresa; un candidato no las lee con RLS.
       const admin = createAdminClient();
       const ids = jobRows.map((j) => j.id);
-
-      // Ofertas a las que el usuario YA aplicó (histórico, no solo esta sesión): se marcan
-      // "ya aplicada" y se empujan al fondo (no se ocultan — el usuario ve su estado).
-      const { data: myApps } = await admin.from("applications")
-        .select("job_id, candidates!inner(user_id)")
-        .eq("candidates.user_id", user.id).in("job_id", ids);
-      const appliedSet = new Set((myApps ?? []).map((a) => a.job_id as string));
+      const appliedSet = new Set(appliedIds);
 
       // Fit por oferta: el perfil del candidato (su ficha ATS) vs cada oferta. Lo que hace
       // que sea un "asistente" y no un listado. Solo si tiene ficha con datos.
@@ -198,11 +205,9 @@ export async function POST(req: Request) {
         }
       }
 
-      // Adjunta fit + applied y ORDENA: no-aplicadas primero, luego mejor fit primero.
-      // (Reordena el lote traído; el fit se calcula tras el fetch, no en el índice.)
-      jobs = jobRows
-        .map((j) => ({ ...j, fit: fitByJob.get(j.id), applied: appliedSet.has(j.id) }))
-        .sort((a, b) => (a.applied ? 1 : 0) - (b.applied ? 1 : 0) || (b.fit ?? -1) - (a.fit ?? -1));
+      // Adjunta fit + applied para DISPLAY. NO se reordena: el RPC ya ordenó por relevancia de
+      // título (igual que el board) y mandó las aplicadas al final.
+      jobs = jobRows.map((j) => ({ ...j, fit: fitByJob.get(j.id), applied: appliedSet.has(j.id) }));
     }
   }
 
@@ -226,6 +231,7 @@ export async function POST(req: Request) {
     intake_needed: result.output.intake_needed,
     suggested_refinements: result.output.suggested_refinements,
     jobs, total,
+    page, hasMore: page * PAGE_SIZE < total,   // "cargar más" en el chat
     _status: result.status,
   });
 }
