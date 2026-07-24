@@ -5,6 +5,7 @@ import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Loader2, X } from "lucide-react";
 import { LocationAutocomplete } from "@/components/features/location-autocomplete";
+import { JobTitlePicker } from "@/components/features/job-title-picker";
 import { getCategories } from "@/lib/board/categories";
 import type { Job } from "@/lib/types";
 import type { JobDraft } from "@/agents/agent-job-writer";
@@ -20,6 +21,8 @@ import { FieldProposalMulti } from "@/components/ui/field-proposal-multi";
 
 type FormState = {
   title: string;
+  job_title_id: string;     // cargo canónico estructurado (taxonomía)
+  job_title_label: string;  // etiqueta mostrada del cargo elegido
   description: string;
   skills: string[];
   salary_min: string;
@@ -36,7 +39,7 @@ type FormState = {
 };
 
 const EMPTY: FormState = {
-  title: "", description: "", skills: [], salary_min: "", salary_max: "", salary_period: "month",
+  title: "", job_title_id: "", job_title_label: "", description: "", skills: [], salary_min: "", salary_max: "", salary_period: "month",
   location: "", employment_type: "full_time", sector: "", department: "",
   category: "", category_key: "", closes_at: "", experience_min_years: "0",
 };
@@ -49,6 +52,8 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
     job
       ? {
           title: job.title,
+          job_title_id: (job as { job_title_id?: string | null }).job_title_id ?? "",
+          job_title_label: "",
           description: job.description ?? "",
           skills: job.skills,
           salary_min: job.salary_min?.toString() ?? "",
@@ -159,6 +164,7 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
     try {
       const payload = {
         title: form.title,
+        job_title_id: form.job_title_id || null,
         description: form.description || null,
         skills: form.skills,
         salary_min: form.salary_min ? Number(form.salary_min) : null,
@@ -247,11 +253,24 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <div style={{ gridColumn: "1 / -1" }}>
-              <div style={fieldLabel}>Título *</div>
+              <div style={fieldLabel}>Título * <span style={{ fontWeight: 400, color: "#79746B" }}>— el que ve el candidato (libre, SEO)</span></div>
               <Input
                 value={form.title}
                 onChange={(e) => set("title", e.target.value)}
                 placeholder="Senior Frontend Engineer"
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <div style={fieldLabel}>Cargo estándar <span style={{ fontWeight: 400, color: "#79746B" }}>— para matching y posicionamiento (no se muestra)</span></div>
+              <JobTitlePicker
+                valueLabel={form.job_title_label}
+                onPick={(t) => setForm((f) => ({
+                  ...f,
+                  job_title_id: t.id,
+                  job_title_label: t.label,
+                  category_key: f.category_key || t.category_key || "",
+                  skills: Array.from(new Set([...f.skills, ...t.skills])),
+                }))}
               />
             </div>
             <div>
