@@ -12,6 +12,7 @@
     "eval:cv": "node scripts/eval-cv-parser.mjs",
     "eval:assistant": "node scripts/eval-assistant.mjs",
     "eval:board": "node scripts/eval-board-assistant.mjs",
+    "seed:jobtitles": "node scripts/seed-job-titles.mjs",
     "eval:payroll": "node scripts/eval-payroll-copilot.mjs",
     "eval:candidate": "node scripts/eval-candidate-analyzer.mjs",
     "eval:jobwriter": "node scripts/eval-job-writer.mjs",

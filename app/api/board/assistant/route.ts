@@ -9,6 +9,7 @@ import { searchJobs, type BoardSearchParams } from "@/lib/job-board/search";
 import { getCategories } from "@/lib/board/categories";
 import { resolveSkillIds } from "@/lib/skills";
 import { computeRecruiterFit, type JobSkillReq } from "@/lib/job-board/fit";
+import { expandJobTitle } from "@/lib/job-board/job-titles";
 import type { EducationLevel, SeniorityLevel } from "@/lib/types";
 
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -124,8 +125,14 @@ export async function POST(req: Request) {
     // La categoría del LLM es free-text; a la búsqueda solo le sirve la canónica.
     const f = result.output.filters;
     const catKeys = f.category ? categoryKeysFrom(f.category) : [];
+    // Anclaje de job titles: expande el rol a sinónimos + variantes localizadas (es/en/pt)
+    // desde la taxonomía en BBDD → OR-busca todas las formas ("chef"→"cocinero", "product
+    // owner"→"responsable de producto"). Si el término no matchea la taxonomía, se usa tal cual.
+    const titleForms = f.q ? await expandJobTitle(f.q) : [];
     const base: BoardSearchParams = {
-      q: f.q, location: f.location, modality: f.modality, contract: f.contract,
+      q: titleForms.length ? undefined : f.q,
+      qTokens: titleForms.length ? titleForms : undefined,
+      location: f.location, modality: f.modality, contract: f.contract,
       salaryMin: f.salaryMin, categoryKeys: catKeys.length ? catKeys : undefined, pageSize: 12,
     };
     let res = await searchJobs(supabase, base);
