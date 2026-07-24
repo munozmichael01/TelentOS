@@ -73,14 +73,18 @@ async function seedSkills() {
         name: hit.name,
         category: hit.category ?? skill.category,
         aliases: mergeAliases(hit.aliases, aliases),
+        esco_uri: skill.escoUri ?? null,
       });
     } else {
-      newRows.push({ name: skill.name, category: skill.category, aliases });
+      newRows.push({ name: skill.name, category: skill.category, aliases, esco_uri: skill.escoUri ?? null });
     }
   }
 
   for (const rows of chunk(newRows)) {
-    if (rows.length) await must("insert skills", db.from("skills").insert(rows));
+    if (!rows.length) continue;
+    const { error } = await db.from("skills").insert(rows);
+    // Idempotente: en re-runs las skills ya existen (unique lower(name)); ignorar el dup.
+    if (error && !/duplicate key/i.test(error.message)) throw new Error(`insert skills: ${error.message}`);
   }
   for (const rows of chunk(updates)) {
     if (rows.length) await must("update skills", db.from("skills").upsert(rows));
@@ -133,21 +137,23 @@ async function seedTranslationsAndSynonyms(titleIds, skillIds) {
 
   for (const title of taxonomy.jobTitles) {
     const id = titleIds.get(normalize(title.canonicalName));
+    if (!id) continue;
     for (const [locale, name] of Object.entries(title.translations)) {
-      jobTitleTranslations.push({ job_title_id: id, locale, name });
+      if (name) jobTitleTranslations.push({ job_title_id: id, locale, name });
     }
     for (const row of title.synonyms) {
-      jobTitleSynonyms.push({ job_title_id: id, locale: row.locale, synonym: row.synonym });
+      if (row.synonym) jobTitleSynonyms.push({ job_title_id: id, locale: row.locale, synonym: row.synonym });
     }
   }
 
   for (const skill of taxonomy.skills) {
     const id = skillIds.get(normalize(skill.name));
+    if (!id) continue;
     for (const [locale, name] of Object.entries(skill.translations)) {
-      skillTranslations.push({ skill_id: id, locale, name });
+      if (name) skillTranslations.push({ skill_id: id, locale, name });
     }
     for (const row of skill.synonyms) {
-      skillSynonyms.push({ skill_id: id, locale: row.locale, synonym: row.synonym });
+      if (row.synonym) skillSynonyms.push({ skill_id: id, locale: row.locale, synonym: row.synonym });
     }
   }
 
@@ -179,10 +185,13 @@ async function seedRelations(titleIds, skillIds) {
 
   for (const title of taxonomy.jobTitles) {
     const titleId = titleIds.get(normalize(title.canonicalName));
+    if (!titleId) continue;
     for (const skill of title.skills) {
+      const skillId = skillIds.get(normalize(skill.skillName));
+      if (!skillId) continue;
       titleSkills.push({
         job_title_id: titleId,
-        skill_id: skillIds.get(normalize(skill.skillName)),
+        skill_id: skillId,
         weight: skill.weight,
         is_core: Boolean(skill.isCore),
       });

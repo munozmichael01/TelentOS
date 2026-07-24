@@ -12,24 +12,44 @@ type Index = { byNorm: Map<string, Set<string>>; labelsByTitle: Map<string, stri
 let cache: { idx: Index; at: number } | null = null;
 const TTL_MS = 15 * 60 * 1000;
 
+async function pageAll(
+  db: ReturnType<typeof createAdminClient>,
+  table: string,
+  cols: string,
+): Promise<Record<string, unknown>[]> {
+  const out: Record<string, unknown>[] = [];
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await db.from(table).select(cols).range(from, from + PAGE - 1);
+    if (error || !data?.length) break;
+    out.push(...(data as unknown as Record<string, unknown>[]));
+    if (data.length < PAGE) break;
+  }
+  return out;
+}
+
+// Índice desde el esquema OFICIAL de taxonomía: canónico (job_titles) + traducciones
+// (job_title_translations) + sinónimos (job_title_synonyms). norm = minúsculas sin acentos
+// (en JS) para casar con el término normalizado del usuario.
 async function loadIndex(): Promise<Index> {
   const db = createAdminClient();
   const byNorm = new Map<string, Set<string>>();
   const labelsByTitle = new Map<string, string[]>();
-  // Paginado defensivo por si la taxonomía crece más allá del page size por defecto.
-  const PAGE = 1000;
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await db
-      .from("job_title_aliases")
-      .select("title_id, label, norm")
-      .range(from, from + PAGE - 1);
-    if (error || !data?.length) break;
-    for (const a of data as { title_id: string; label: string; norm: string }[]) {
-      (byNorm.get(a.norm) ?? byNorm.set(a.norm, new Set()).get(a.norm)!).add(a.title_id);
-      (labelsByTitle.get(a.title_id) ?? labelsByTitle.set(a.title_id, []).get(a.title_id)!).push(a.label);
-    }
-    if (data.length < PAGE) break;
-  }
+  const add = (titleId: string, label: string) => {
+    if (!label) return;
+    const n = norm(label);
+    if (n.length < 2) return;
+    (byNorm.get(n) ?? byNorm.set(n, new Set()).get(n)!).add(titleId);
+    (labelsByTitle.get(titleId) ?? labelsByTitle.set(titleId, []).get(titleId)!).push(label);
+  };
+  const [titles, translations, synonyms] = await Promise.all([
+    pageAll(db, "job_titles", "id, canonical_name"),
+    pageAll(db, "job_title_translations", "job_title_id, name"),
+    pageAll(db, "job_title_synonyms", "job_title_id, synonym"),
+  ]);
+  for (const t of titles) add(t.id as string, t.canonical_name as string);
+  for (const t of translations) add(t.job_title_id as string, t.name as string);
+  for (const s of synonyms) add(s.job_title_id as string, s.synonym as string);
   return { byNorm, labelsByTitle };
 }
 
