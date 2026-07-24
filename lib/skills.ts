@@ -29,17 +29,28 @@ export function dedupeStrings(arr: string[]): string[] {
 export async function resolveSkillIds(db: AdminDb, names: string[]): Promise<string[]> {
   if (names.length === 0) return [];
 
-  const { data: catalog } = await db.from("skills").select("id, name, aliases");
-  const byKey = new Map<string, string>(); // lower(name|alias) → id
+  // Normalización (minúsculas, sin acentos) para casar variantes.
+  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+
+  // Resolver contra el catálogo canónico + aliases + skill_synonyms (ESCO). Así "Excel" y
+  // "Microsoft Excel" caen en la MISMA skill en vez de crear duplicados (dedup de matching).
+  const [{ data: catalog }, { data: syns }] = await Promise.all([
+    db.from("skills").select("id, name, aliases"),
+    db.from("skill_synonyms").select("skill_id, synonym"),
+  ]);
+  const byKey = new Map<string, string>(); // norm(name|alias|synonym) → id
   for (const s of (catalog ?? []) as { id: string; name: string; aliases: string[] }[]) {
-    byKey.set(s.name.toLowerCase(), s.id);
-    for (const a of s.aliases ?? []) byKey.set(a.toLowerCase(), s.id);
+    byKey.set(norm(s.name), s.id);
+    for (const a of s.aliases ?? []) byKey.set(norm(a), s.id);
+  }
+  for (const r of (syns ?? []) as { skill_id: string; synonym: string }[]) {
+    if (!byKey.has(norm(r.synonym))) byKey.set(norm(r.synonym), r.skill_id);
   }
 
   const ids: string[] = [];
   const toCreate: string[] = [];
   for (const name of names) {
-    const hit = byKey.get(name.toLowerCase());
+    const hit = byKey.get(norm(name));
     if (hit) ids.push(hit);
     else toCreate.push(name);
   }
