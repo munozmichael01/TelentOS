@@ -71,10 +71,9 @@ async function loadTitleSkillIndex() {
   TITLE_FORMS.sort((a, b) => b.form.length - a.form.length);
   for (const r of jts) (SKILLS_BY_TITLE.get(r.job_title_id) ?? SKILLS_BY_TITLE.set(r.job_title_id, []).get(r.job_title_id)).push(r);
 }
-function titleSkillRows(jobId, title) {
-  const nt = ` ${normT(title)} `;
-  const hit = TITLE_FORMS.find((f) => nt.includes(f.form));
-  const sks = hit ? SKILLS_BY_TITLE.get(hit.tid) : null;
+const matchTitleId = (title) => { const nt = ` ${normT(title)} `; return TITLE_FORMS.find((f) => nt.includes(f.form))?.tid ?? null; };
+function titleSkillRows(jobId, titleId) {
+  const sks = titleId ? SKILLS_BY_TITLE.get(titleId) : null;
   return (sks ?? []).map((s) => ({ job_id: jobId, skill_id: s.skill_id, requirement: s.is_core ? "excluyente" : "deseable" }));
 }
 
@@ -172,6 +171,7 @@ async function main() {
       employment_type: empType(val(j.jobtype)),
       category: String(val(j.category) ?? "").trim() || null, category_key: catKey(val(j.category)),
       status: "active", source: "import_xml", external_id: extId,
+      job_title_id: matchTitleId(title),   // ancla estructurada para ranking/skills
       dedupe_hash: dedupeHash(title, city ?? region),
     });
     if (error) { console.error("job insert", title.slice(0, 30), error.message); skipped++; continue; }
@@ -181,7 +181,7 @@ async function main() {
       await db.from("job_stages").insert(DEFAULT_STAGES.map((s) => ({ ...s, job_id: inserted.id })));
       // Skills desde el job title (acotación del dueño): el feed no las declara, así que las
       // tomamos de las relaciones ESCO del título identificado.
-      const skillRows = titleSkillRows(inserted.id, title);
+      const skillRows = titleSkillRows(inserted.id, matchTitleId(title));
       if (skillRows.length) await db.from("job_skills").upsert(skillRows, { onConflict: "job_id,skill_id" });
     }
     created++;

@@ -47,26 +47,29 @@ async function main() {
     (skillsByTitle.get(r.job_title_id) ?? skillsByTitle.set(r.job_title_id, []).get(r.job_title_id)).push(r);
   }
 
-  // 3) ofertas sin job_skills
-  const jobsAll = await pageAll("jobs", "id, title");
+  // 3) todas las ofertas (con su job_title_id actual) + set de las que ya tienen skills
+  const jobsAll = await pageAll("jobs", "id, title, job_title_id");
   const withSkills = new Set((await pageAll("job_skills", "job_id")).map((r) => r.job_id));
-  const jobs = jobsAll.filter((j) => !withSkills.has(j.id));
-  console.log(`Ofertas sin skills: ${jobs.length}`);
 
-  // 4) match + filas job_skills
+  // 4) match → job_title_id (para todas las que aún no lo tienen) + job_skills (sin skills)
   const rows = [];
+  const titleUpd = [];       // {id, job_title_id}
   let matched = 0, noMatch = 0;
-  for (const j of jobs) {
+  for (const j of jobsAll) {
     const nt = ` ${norm(j.title)} `;
     const hit = forms.find((f) => nt.includes(f.form));
-    const sks = hit ? skillsByTitle.get(hit.tid) : null;
-    if (!sks?.length) { noMatch++; continue; }
+    if (!hit) { noMatch++; continue; }
     matched++;
-    for (const s of sks) rows.push({ job_id: j.id, skill_id: s.skill_id, requirement: s.is_core ? "excluyente" : "deseable" });
+    if (!j.job_title_id) titleUpd.push({ id: j.id, job_title_id: hit.tid });
+    if (!withSkills.has(j.id)) for (const s of (skillsByTitle.get(hit.tid) ?? [])) rows.push({ job_id: j.id, skill_id: s.skill_id, requirement: s.is_core ? "excluyente" : "deseable" });
   }
-  console.log(`Match: ${matched} · sin match: ${noMatch} · filas job_skills: ${rows.length}`);
-  if (DRY) { console.log(rows.slice(0, 5)); return; }
+  console.log(`Match: ${matched} · sin match: ${noMatch} · job_title_id a setear: ${titleUpd.length} · filas job_skills: ${rows.length}`);
+  if (DRY) { console.log({ titleUpd: titleUpd.slice(0, 3), rows: rows.slice(0, 3) }); return; }
+  // Agrupado por título: 1 update por título (in de ids) en vez de uno por oferta.
+  const byTitle = new Map();
+  for (const u of titleUpd) (byTitle.get(u.job_title_id) ?? byTitle.set(u.job_title_id, []).get(u.job_title_id)).push(u.id);
+  for (const [tid, ids] of byTitle) for (const part of chunk(ids, 200)) { const { error } = await db.from("jobs").update({ job_title_id: tid }).in("id", part); if (error) throw error; }
   for (const part of chunk(rows, 1000)) { const { error } = await db.from("job_skills").upsert(part, { onConflict: "job_id,skill_id" }); if (error) throw error; }
-  console.log("Backfill de job_skills completo.");
+  console.log("Backfill de job_title_id + job_skills completo.");
 }
 main().catch((e) => { console.error(e); process.exit(1); });
