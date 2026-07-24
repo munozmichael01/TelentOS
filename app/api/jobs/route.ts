@@ -21,6 +21,7 @@ export async function POST(req: Request) {
     .insert({
       company_id: companyId!,
       title: body.title.trim(),
+      job_title_id: body.job_title_id ?? null,   // cargo canónico estructurado (picker)
       description: body.description ?? null,
       skills, // display/legado; la fuente matcheable es job_skills
       salary_min: body.salary_min ?? null,
