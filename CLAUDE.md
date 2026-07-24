@@ -5,6 +5,32 @@ Stack: **Next.js 14 App Router · Supabase/Postgres · OpenAI GPT-4o**.
 
 ---
 
+## Método de trabajo — reglas duras (leer SIEMPRE antes de construir)
+
+Estas reglas existen porque se rompieron y costaron re-trabajo, tokens y tiempo del dueño.
+No son opcionales.
+
+1. **Recon ANTES de construir.** Antes de crear una tabla, script, dato, componente o
+   endpoint nuevo, buscar si ya existe: `grep`/`ls` en `scripts/`, `supabase/migrations/`,
+   `data/`, `handoff/` y el código. **Nunca crear un esquema o pipeline paralelo** al que ya
+   hay. Reportar qué se encontró ANTES de escribir código. (Caso real: se creó
+   `job_title_aliases` ignorando `scripts/seed-taxonomy.mjs`, que ya existía.)
+2. **Nunca inventar datos de referencia.** Taxonomías (ESCO), catálogos y cualquier dato con
+   fuente canónica se pueblan con su pipeline/fuente (`scripts/*taxonomy*`, la API de ESCO),
+   NO con el LLM. (Caso real: hostelería inventada con el LLM teniendo la API de ESCO ya
+   integrada.)
+3. **Preservar IDs y relaciones canónicas** al modelar (p. ej. `esco_uri`). No aplanar ni
+   descartar el vínculo con la fuente.
+4. **Dedup en catálogos.** Un concepto = una fila + sinónimos/alias (Excel + "Microsoft
+   Excel" = una skill con alias, no dos). Si el matching crea filas nuevas por texto libre,
+   es un bug: resolver contra el canónico + sinónimos, no crear duplicados.
+5. **Verificar antes de decir "hecho".** Diff contra spec/mockup/fuente; no declarar completo
+   sin evidencia (eval verde, query, screenshot).
+6. **Frenar y confirmar cuando se vaya a inventar o asumir** — antes de construir, no después
+   de shipear.
+
+---
+
 ## Reglas de proyecto
 
 - **`handoff/` NO se commitea** (está en `.gitignore`): specs, mockups, auditorías y documentos de traspaso viven solo en local, en el checkout principal (`~/Documents/Dev/TalentOS/handoff/`). En worktrees no existen — leerlos desde esa ruta absoluta.

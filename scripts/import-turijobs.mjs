@@ -53,6 +53,31 @@ const DEFAULT_STAGES = [
   { name: "Contratado", order_index: 4, is_terminal: true }, { name: "Descartado", order_index: 5, is_terminal: true },
 ];
 
+// Índice título→skills desde la taxonomía ESCO: identifica el job title de la oferta por su
+// texto y adjunta las skills relacionadas del título (job_title_skills). Poblado una vez.
+const normT = (s) => String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+let TITLE_FORMS = [];      // {form, tid} ordenado por longitud desc
+let SKILLS_BY_TITLE = new Map();
+async function loadTitleSkillIndex() {
+  const page = async (table, cols) => { const out = []; for (let f = 0; ; f += 1000) { const { data } = await db.from(table).select(cols).range(f, f + 999); if (!data?.length) break; out.push(...data); if (data.length < 1000) break; } return out; };
+  const [titles, tr, syn, jts] = await Promise.all([
+    page("job_titles", "id, canonical_name"), page("job_title_translations", "job_title_id, name"),
+    page("job_title_synonyms", "job_title_id, synonym"), page("job_title_skills", "job_title_id, skill_id, is_core"),
+  ]);
+  const add = (tid, label) => { const n = normT(label); if (n.length >= 4) TITLE_FORMS.push({ form: ` ${n} `, tid }); };
+  for (const t of titles) add(t.id, t.canonical_name);
+  for (const t of tr) add(t.job_title_id, t.name);
+  for (const s of syn) add(s.job_title_id, s.synonym);
+  TITLE_FORMS.sort((a, b) => b.form.length - a.form.length);
+  for (const r of jts) (SKILLS_BY_TITLE.get(r.job_title_id) ?? SKILLS_BY_TITLE.set(r.job_title_id, []).get(r.job_title_id)).push(r);
+}
+function titleSkillRows(jobId, title) {
+  const nt = ` ${normT(title)} `;
+  const hit = TITLE_FORMS.find((f) => nt.includes(f.form));
+  const sks = hit ? SKILLS_BY_TITLE.get(hit.tid) : null;
+  return (sks ?? []).map((s) => ({ job_id: jobId, skill_id: s.skill_id, requirement: s.is_core ? "excluyente" : "deseable" }));
+}
+
 const COUNTRY = { "40": "ES", "118": "PT", "3": "AD", "71": "IT", "5": "FR", "122": "GB", "120": "US", "68": "MX", "60": "DE", "48": "CH" };
 
 const PERIOD = { hora: "hour", diario: "day", dia: "day", semanal: "week", mensual: "month", mes: "month", anual: "year", año: "year", ano: "year" };
@@ -103,6 +128,8 @@ async function main() {
   const companyCache = new Map(); // companyid → uuid
   let created = 0, skipped = 0, companiesNew = 0, noSalary = 0;
 
+  if (!DRY) { await loadTitleSkillIndex(); console.log(`Índice título→skills: ${TITLE_FORMS.length} formas`); }
+
   for (const j of jobs) {
     const cid = String(val(j.companyid) ?? "").trim();
     const cname = String(val(j.company) ?? "").trim() || "Empresa";
@@ -152,6 +179,10 @@ async function main() {
     const { data: inserted } = await db.from("jobs").select("id").eq("company_id", companyId).eq("external_id", extId).maybeSingle();
     if (inserted?.id) {
       await db.from("job_stages").insert(DEFAULT_STAGES.map((s) => ({ ...s, job_id: inserted.id })));
+      // Skills desde el job title (acotación del dueño): el feed no las declara, así que las
+      // tomamos de las relaciones ESCO del título identificado.
+      const skillRows = titleSkillRows(inserted.id, title);
+      if (skillRows.length) await db.from("job_skills").upsert(skillRows, { onConflict: "job_id,skill_id" });
     }
     created++;
     if (created % 200 === 0) console.log(`  … ${created} ofertas`);
