@@ -124,6 +124,7 @@ export async function POST(req: Request) {
   let jobs: unknown[] = [];
   let total = 0;
   let widened = false;
+  let relatedTitles: string[] = [];   // roles relacionados (grafo) para pivotar la búsqueda
   if (!result.output.intake_needed) {
     // La categoría del LLM es free-text; a la búsqueda solo le sirve la canónica.
     const f = result.output.filters;
@@ -137,6 +138,12 @@ export async function POST(req: Request) {
     const { data: appRows } = await admin0.from("applications")
       .select("job_id, candidates!inner(user_id)").eq("candidates.user_id", user.id);
     const appliedIds = (appRows ?? []).map((a) => a.job_id as string);
+
+    // Roles relacionados (grafo job_title_relations) para pivotar la búsqueda con un toque.
+    if (page === 1 && tctx.relatedIds.length) {
+      const { data: rel } = await admin0.from("job_titles").select("canonical_name").in("id", tctx.relatedIds.slice(0, 6));
+      relatedTitles = (rel ?? []).map((r) => (r as { canonical_name: string }).canonical_name);
+    }
 
     const base: BoardSearchParams = {
       q: titleForms.length ? undefined : f.q,
@@ -230,6 +237,7 @@ export async function POST(req: Request) {
     filters: result.output.filters,
     intake_needed: result.output.intake_needed,
     suggested_refinements: result.output.suggested_refinements,
+    related: relatedTitles,                    // roles relacionados (grafo) para pivotar
     jobs, total,
     page, hasMore: page * PAGE_SIZE < total,   // "cargar más" en el chat
     _status: result.status,

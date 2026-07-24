@@ -18,7 +18,7 @@ const ROOT: CSSProperties = {
 } as CSSProperties;
 
 type Filters = { q?: string; location?: string; modality?: string; category?: string; contract?: string; salaryMin?: number };
-type BotMsg = { role: "bot"; text: string; chips?: { k: string; v: string }[]; jobs?: BoardJob[]; alert?: { text: string }; query?: string; page?: number; hasMore?: boolean };
+type BotMsg = { role: "bot"; text: string; chips?: { k: string; v: string }[]; jobs?: BoardJob[]; alert?: { text: string }; query?: string; page?: number; hasMore?: boolean; refinements?: string[] };
 type UserMsg = { role: "user"; text: string };
 type Msg = BotMsg | UserMsg;
 
@@ -125,6 +125,7 @@ export function BoardAssistant({ locale }: { locale: string }) {
         query,
         page: data.page ?? 1,
         hasMore: !!data.hasMore,
+        refinements: Array.from(new Set([...(data.related ?? []), ...(data.suggested_refinements ?? [])] as string[])).slice(0, 5),
       }]);
     } catch {
       setMessages((m) => [...m, { role: "bot", text: t("error") }]);
@@ -247,6 +248,16 @@ export function BoardAssistant({ locale }: { locale: string }) {
                       <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "#2C3907" }}>{t("alertCreated")}</div>
                       <div style={{ fontSize: 12, color: "#46540F" }}>{m.alert.text}</div>
                     </div>
+                  </div>
+                )}
+                {m.refinements && m.refinements.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 11 }}>
+                    {m.refinements.map((r, ri) => (
+                      <button key={ri} type="button" onClick={() => send(r)} disabled={typing}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--ink)", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 999, padding: "6px 12px", cursor: "pointer" }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="var(--brand)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>{r}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
