@@ -500,7 +500,8 @@
     "widenedLead": "No encontré coincidencias exactas, pero esto es lo más cercano.",
     "none": "No encontré ofertas con esos criterios. Prueba ampliar: quita la ubicación o cambia la modalidad.",
     "alertCreatedText": "Listo, guardé tu búsqueda como alerta. Te aviso apenas entren ofertas que coincidan.",
-    "alertFailed": "No pude crear la alerta ahora mismo. Inténtalo de nuevo."
+    "alertFailed": "No pude crear la alerta ahora mismo. Inténtalo de nuevo.",
+    "loadMore": "Cargar más ofertas"
   },
   "builder": {
     "eyebrow": "Asistente de perfil",

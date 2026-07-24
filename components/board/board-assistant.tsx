@@ -18,7 +18,7 @@ const ROOT: CSSProperties = {
 } as CSSProperties;
 
 type Filters = { q?: string; location?: string; modality?: string; category?: string; contract?: string; salaryMin?: number };
-type BotMsg = { role: "bot"; text: string; chips?: { k: string; v: string }[]; jobs?: BoardJob[]; alert?: { text: string } };
+type BotMsg = { role: "bot"; text: string; chips?: { k: string; v: string }[]; jobs?: BoardJob[]; alert?: { text: string }; query?: string; page?: number; hasMore?: boolean };
 type UserMsg = { role: "user"; text: string };
 type Msg = BotMsg | UserMsg;
 
@@ -45,6 +45,7 @@ export function BoardAssistant({ locale }: { locale: string }) {
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const [applied, setApplied] = useState<Record<string, boolean>>({});
+  const [loadingMore, setLoadingMore] = useState<number | null>(null);
   const [applying, setApplying] = useState<string | null>(null);
   const [hasProfile, setHasProfile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -121,12 +122,35 @@ export function BoardAssistant({ locale }: { locale: string }) {
         chips: chipsFromFilters(data.filters ?? {}, locale),
         jobs,
         alert,
+        query,
+        page: data.page ?? 1,
+        hasMore: !!data.hasMore,
       }]);
     } catch {
       setMessages((m) => [...m, { role: "bot", text: t("error") }]);
     } finally {
       setTyping(false);
     }
+  }
+
+  // "Cargar más" en el chat: pide la siguiente página con la misma query (mismo ranking) y
+  // APPENDA las ofertas al mismo mensaje. Al usuario que solo conversa se le da TODO.
+  async function loadMore(idx: number) {
+    const msg = messages[idx];
+    if (msg.role !== "bot" || !msg.query || loadingMore !== null) return;
+    const nextPage = (msg.page ?? 1) + 1;
+    setLoadingMore(idx);
+    try {
+      const res = await fetch("/api/board/assistant", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: msg.query, history: [], locale, page: nextPage }),
+      });
+      const data = await res.json();
+      setMessages((m) => m.map((x, i) => i === idx && x.role === "bot"
+        ? { ...x, jobs: [...(x.jobs ?? []), ...((data.jobs ?? []) as BoardJob[])], page: nextPage, hasMore: !!data.hasMore }
+        : x));
+    } catch { /* silencioso: el botón sigue disponible para reintentar */ }
+    finally { setLoadingMore(null); }
   }
 
   return (
@@ -168,8 +192,9 @@ export function BoardAssistant({ locale }: { locale: string }) {
                   </div>
                 )}
                 {m.jobs && m.jobs.length > 0 && (
+                  <>
                   <div className="jb-asst-jobs" style={{ display: "grid", marginTop: 11 }}>
-                    {m.jobs.slice(0, isDesktop ? 4 : 3).map((j) => {
+                    {m.jobs.map((j) => {
                       const logo = logoFor(j.company?.name);
                       const md = modalityStyle(j.modality);
                       const canQuick = hasProfile && !j.hasRequiredScreening;
@@ -207,6 +232,13 @@ export function BoardAssistant({ locale }: { locale: string }) {
                       );
                     })}
                   </div>
+                  {m.hasMore && (
+                    <button onClick={() => loadMore(i)} disabled={loadingMore === i}
+                      style={{ marginTop: 10, width: "100%", fontFamily: ARCHIVO, fontWeight: 700, fontSize: 12.5, color: "var(--ink)", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 10, cursor: "pointer" }}>
+                      {loadingMore === i ? "…" : t("loadMore")}
+                    </button>
+                  )}
+                  </>
                 )}
                 {m.alert && (
                   <div style={{ display: "flex", alignItems: "center", gap: 11, marginTop: 11, background: "var(--limeSoft)", border: "1px solid #D6E89A", borderRadius: 12, padding: "12px 14px" }}>

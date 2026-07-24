@@ -65,6 +65,39 @@ async function getIndex(): Promise<Index> {
  * (canónico + traducciones + sinónimos). Devuelve frases (para OR-buscar por título),
  * incluida la original. Vacío si el término es muy corto o no matchea la taxonomía.
  */
+// Títulos canónicos que resuelve un término (mismo matching que expandJobTitle) + sus
+// relacionados por peso (job_title_relations). Alimenta el ranking de relevancia del board
+// y el asistente: un término ("cocinero") puede resolver a varios títulos (grill cook, cook…).
+export async function resolveTitleContext(
+  q: string,
+): Promise<{ titleIds: string[]; relatedIds: string[]; relatedW: number[] }> {
+  const empty = { titleIds: [], relatedIds: [], relatedW: [] };
+  const nq = norm(q);
+  if (nq.length < 4) return empty;
+  const idx = await getIndex();
+  const set = new Set<string>();
+  idx.byNorm.get(nq)?.forEach((id) => set.add(id));
+  if (set.size === 0) {
+    idx.byNorm.forEach((ids, n) => {
+      const [short, long] = n.length <= nq.length ? [n, nq] : [nq, n];
+      if (short.length >= 5 && long.includes(short)) ids.forEach((id) => set.add(id));
+    });
+  }
+  const titleIds = Array.from(set);
+  if (!titleIds.length) return empty;
+  const db = createAdminClient();
+  const { data } = await db
+    .from("job_title_relations")
+    .select("a_id, b_id, weight")
+    .or(`a_id.in.(${titleIds.join(",")}),b_id.in.(${titleIds.join(",")})`);
+  const rel = new Map<string, number>();
+  for (const r of (data ?? []) as { a_id: string; b_id: string; weight: number }[]) {
+    const other = set.has(r.a_id) ? r.b_id : r.a_id;
+    if (!set.has(other)) rel.set(other, Math.max(rel.get(other) ?? 0, r.weight));
+  }
+  return { titleIds, relatedIds: Array.from(rel.keys()), relatedW: Array.from(rel.values()) };
+}
+
 export async function expandJobTitle(q: string, max = 10): Promise<string[]> {
   const nq = norm(q);
   if (nq.length < 4) return [];

@@ -500,7 +500,8 @@
     "widenedLead": "No exact matches, but here is the closest.",
     "none": "No jobs matched those criteria. Try broadening: remove the location or change the work mode.",
     "alertCreatedText": "Done — I saved your search as an alert. I will notify you as soon as matching jobs come in.",
-    "alertFailed": "I could not create the alert right now. Please try again."
+    "alertFailed": "I could not create the alert right now. Please try again.",
+    "loadMore": "Load more jobs"
   },
   "builder": {
     "eyebrow": "Profile assistant",

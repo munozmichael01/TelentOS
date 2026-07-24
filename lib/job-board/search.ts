@@ -3,6 +3,7 @@
 // SSR del board (SEO) y el endpoint de filtrado interactivo. La interpretación por LLM
 // del texto libre ocurre ANTES (nl-search, aparte) y llega aquí ya como filtros.
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveTitleContext } from "@/lib/job-board/job-titles";
 
 export type BoardSort = "relevance" | "recent" | "salary";
 
@@ -27,6 +28,12 @@ export type BoardSearchParams = {
   sort?: BoardSort;
   page?: number;
   pageSize?: number;
+  // Ranking de relevancia por título (board + asistente IGUAL): títulos canónicos que resuelve
+  // la query (exacto) + relacionados por peso, y las ya aplicadas (van al final).
+  titleIds?: string[];
+  relatedIds?: string[];
+  relatedW?: number[];
+  appliedIds?: string[];
 };
 
 export type BoardJob = {
@@ -93,15 +100,39 @@ export async function searchJobs(
   const pageSize = Math.min(50, params.pageSize ?? 20);
   const from = (page - 1) * pageSize;
 
-  // Resultados paginados
-  let q = applyFilters(supabase.from("jobs").select(SELECT, { count: "exact" }), params);
-  if (params.sort === "salary") q = q.order("salary_month_max", { ascending: false, nullsFirst: false });
-  else q = q.order("created_at", { ascending: false }); // relevance≈recent por ahora
-  q = q.range(from, from + pageSize - 1);
-  const { data, count, error } = await q;
+  // Resultados paginados y RANKEADOS por relevancia de título (RPC en DB, mismo orden para
+  // board y asistente): exacto → relacionado por peso → substring → resto, aplicadas al final.
+  const dateFrom = params.datePosted
+    ? new Date(Date.now() - (params.datePosted === "24h" ? 1 : params.datePosted === "week" ? 7 : 30) * 86400000).toISOString()
+    : null;
+  const catKeys = params.categoryKeys ?? (params.categoryKey ? [params.categoryKey] : null);
+  const companyIds = params.companyIds ?? (params.companyId ? [params.companyId] : null);
+  const contracts = params.contracts ?? (params.contract ? [params.contract] : null);
+  // Contexto de título para el ranking. El asistente lo pasa explícito (q interpretado por el
+  // LLM); el board no → se auto-resuelve desde q, así ambos ordenan IGUAL sin cablear cada caller.
+  let titleIds = params.titleIds, relatedIds = params.relatedIds, relatedW = params.relatedW;
+  if (!titleIds && params.q) {
+    const ctx = await resolveTitleContext(params.q);
+    if (ctx.titleIds.length) { titleIds = ctx.titleIds; relatedIds = ctx.relatedIds; relatedW = ctx.relatedW; }
+  }
+  const { data: ranked, error } = await supabase.rpc("board_rank_jobs", {
+    p_q: params.q ?? null, p_tokens: params.qTokens ?? null, p_location: params.location ?? null,
+    p_category_keys: catKeys, p_modalities: params.modalities ?? null, p_contracts: contracts,
+    p_company_ids: companyIds, p_salary_min: params.salaryMin ?? null, p_date_from: dateFrom,
+    p_title_ids: titleIds ?? null, p_related_ids: relatedIds ?? null, p_related_w: relatedW ?? null,
+    p_applied: params.appliedIds ?? null, p_sort: params.sort ?? "relevance", p_limit: pageSize, p_offset: from,
+  });
   if (error) throw new Error(error.message);
+  const rankedRows = (ranked ?? []) as { id: string; total: number }[];
+  const count = Number(rankedRows[0]?.total ?? 0);
 
-  const jobRows = (data ?? []) as unknown as Omit<BoardJob, "hasRequiredScreening">[];
+  // Filas completas en el orden del ranking.
+  let jobRows: Omit<BoardJob, "hasRequiredScreening">[] = [];
+  if (rankedRows.length) {
+    const { data } = await supabase.from("jobs").select(SELECT).in("id", rankedRows.map((r) => r.id));
+    const byId = new Map((((data ?? []) as unknown) as Omit<BoardJob, "hasRequiredScreening">[]).map((j) => [j.id, j]));
+    jobRows = rankedRows.map((r) => byId.get(r.id)).filter((j): j is Omit<BoardJob, "hasRequiredScreening"> => !!j);
+  }
   // Screening obligatorio por oferta (para el gating del botón de la card). Una sola query
   // acotada a los IDs de la página. Si la RLS lo oculta al visitante, queda false (el flujo
   // de aplicar lo re-verifica en servidor de todos modos).
