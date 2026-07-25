@@ -633,7 +633,11 @@
     "titleLoc": "Jobs in {location}",
     "introCompanies": "Companies hiring: {companies}.",
     "crumbHome": "Home",
-    "crumbJobs": "Jobs"
+    "crumbJobs": "Jobs",
+    "faqCount": "{subject}: how many openings are there?",
+    "faqCompanies": "{subject}: which companies are hiring?",
+    "faqSalary": "{subject}: what is the salary range?",
+    "faqSalaryA": "Most postings pay between {range}."
   },
   "saved": {
     "title": "Saved",

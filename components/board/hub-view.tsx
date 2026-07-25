@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import type { HubData } from "@/lib/board/hub";
 import { getCategories } from "@/lib/board/categories";
 import { citySlug } from "@/lib/board/geo";
-import { logoFor, formatSalary, modalityStyle, relativeDate, jobSlug } from "@/lib/board/format";
+import { logoFor, formatSalary, modalityStyle, relativeDate, jobSlug, PERIOD_SUFFIX } from "@/lib/board/format";
 import { HubAlert } from "@/components/board/hub-alert";
 
 const ARCHIVO = "'Archivo',sans-serif";
@@ -30,8 +30,32 @@ export async function HubView({ data, locale, path }: { data: HubData; locale: s
   const related = getCategories(locale).filter((c) => !(data.kind === "category" && c.label === data.label)).slice(0, 8);
   const locSlug = data.location && !isLocationOnly ? data.location.slug : null;
 
+  // FAQPage (AEO) — solo preguntas respondibles con DATO real. El sujeto es el título ya
+  // localizado (self-contained en es/en/pt). Salario solo si hay muestra suficiente.
+  const withSalary = data.jobs.filter((j) => j.salary_min != null || j.salary_max != null);
+  const faqs: { q: string; a: string }[] = [];
+  if (data.total > 0) {
+    faqs.push({ q: t("faqCount", { subject: title }), a: t("count", { count: data.total }) });
+    if (data.companies.length) faqs.push({ q: t("faqCompanies", { subject: title }), a: data.companies.join(", ") });
+    // Solo un periodo (el modal) para no mezclar €/hora con €/año. Rango TÍPICO p25–p75
+    // (no min–max crudo) para que un outlier de dato sucio no falsee la respuesta AEO.
+    const byPeriod: Record<string, typeof withSalary> = {};
+    for (const j of withSalary) (byPeriod[j.salary_period ?? "month"] ??= []).push(j);
+    const period = Object.keys(byPeriod).sort((a, b) => byPeriod[b].length - byPeriod[a].length)[0];
+    const sample = period ? byPeriod[period] : [];
+    if (sample.length >= 5) {
+      const mids = sample.map((j) => ((j.salary_min ?? j.salary_max!) + (j.salary_max ?? j.salary_min!)) / 2).sort((a, b) => a - b);
+      const at = (p: number) => mids[Math.floor(p * (mids.length - 1))];
+      const suf = PERIOD_SUFFIX[locale.split("-")[0]]?.[period] ?? "";
+      const cur = sample[0].salary_currency ?? "EUR";
+      const sym = cur === "USD" ? "$" : `${cur} `;
+      const range = `${sym}${Math.round(at(0.25)).toLocaleString(locale)}–${Math.round(at(0.75)).toLocaleString(locale)}${suf}`;
+      faqs.push({ q: t("faqSalary", { subject: title }), a: t("faqSalaryA", { range }) });
+    }
+  }
+
   const jobUrl = (j: (typeof data.jobs)[number]) => `${SITE}/${locale}/empleos/oferta/${jobSlug(j)}`;
-  const ld = [
+  const ld: object[] = [
     {
       "@context": "https://schema.org", "@type": "BreadcrumbList",
       itemListElement: [
@@ -43,6 +67,10 @@ export async function HubView({ data, locale, path }: { data: HubData; locale: s
     ...(data.jobs.length ? [{
       "@context": "https://schema.org", "@type": "ItemList", numberOfItems: data.total,
       itemListElement: data.jobs.map((j, i) => ({ "@type": "ListItem", position: i + 1, url: jobUrl(j) })),
+    }] : []),
+    ...(faqs.length ? [{
+      "@context": "https://schema.org", "@type": "FAQPage",
+      mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
     }] : []),
   ];
 
