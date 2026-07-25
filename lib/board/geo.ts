@@ -27,6 +27,36 @@ export function cityFromSlug(slug: string, country: string): BoardCity | null {
   return found ? { name: found.name, admin1: found.admin1, country: found.country, population: found.population } : null;
 }
 
+// Países cubiertos (code → nombre localizado) para hubs de país. Ampliar según mercados.
+const COUNTRIES: Record<string, { es: string; en: string; pt: string }> = {
+  ES: { es: "España", en: "Spain", pt: "Espanha" },
+  PT: { es: "Portugal", en: "Portugal", pt: "Portugal" },
+  VE: { es: "Venezuela", en: "Venezuela", pt: "Venezuela" },
+  AD: { es: "Andorra", en: "Andorra", pt: "Andorra" },
+  IT: { es: "Italia", en: "Italy", pt: "Itália" },
+  FR: { es: "Francia", en: "France", pt: "França" },
+  GB: { es: "Reino Unido", en: "United Kingdom", pt: "Reino Unido" },
+  CH: { es: "Suiza", en: "Switzerland", pt: "Suíça" },
+  US: { es: "Estados Unidos", en: "United States", pt: "Estados Unidos" },
+  DE: { es: "Alemania", en: "Germany", pt: "Alemanha" },
+  MX: { es: "México", en: "Mexico", pt: "México" },
+  BR: { es: "Brasil", en: "Brazil", pt: "Brasil" },
+};
+const langOf = (locale: string) => { const l = locale.split("-")[0]; return l === "en" || l === "pt" ? l : "es"; };
+
+export function countrySlug(code: string, locale: string): string {
+  const c = COUNTRIES[code.toUpperCase()];
+  return c ? citySlug(c[langOf(locale) as "es" | "en" | "pt"]) : "";
+}
+// País canónico a partir de su slug (en el idioma del locale). null si no está cubierto.
+export function countryFromSlug(slug: string, locale: string): { code: string; name: string } | null {
+  const lang = langOf(locale) as "es" | "en" | "pt";
+  for (const [code, names] of Object.entries(COUNTRIES)) {
+    if (citySlug(names[lang]) === slug) return { code, name: names[lang] };
+  }
+  return null;
+}
+
 // Autocompletado de ciudades del país (ordenadas por población). q vacío → las mayores.
 export function searchCities(q: string, country: string, limit = 8): BoardCity[] {
   const cc = country.toUpperCase();

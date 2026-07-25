@@ -629,7 +629,11 @@
     "alertDone": "Avisaremos você",
     "browseAll": "Ver todas as vagas",
     "relatedCats": "Outras áreas",
-    "inCity": "em {city}"
+    "inCity": "em {city}",
+    "titleLoc": "Vagas em {location}",
+    "introCompanies": "Empresas contratando: {companies}.",
+    "crumbHome": "Início",
+    "crumbJobs": "Vagas"
   },
   "saved": {
     "title": "Salvas",

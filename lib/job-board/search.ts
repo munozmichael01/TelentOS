@@ -13,6 +13,7 @@ export type BoardSearchParams = {
   // no matchea nada — p. ej. "product owner" → ["product", "owner"] pega con "Producto".
   qTokens?: string[];
   location?: string; // ciudad/texto
+  country?: string; // country_code (hubs de país)
   category?: string; // free-text legacy
   categoryKey?: string; // categoría canónica (data/taxonomy/categories.json)
   modality?: "presencial" | "hibrido" | "remoto";
@@ -121,6 +122,7 @@ export async function searchJobs(
     p_company_ids: companyIds, p_salary_min: params.salaryMin ?? null, p_date_from: dateFrom,
     p_title_ids: titleIds ?? null, p_related_ids: relatedIds ?? null, p_related_w: relatedW ?? null,
     p_applied: params.appliedIds ?? null, p_sort: params.sort ?? "relevance", p_limit: pageSize, p_offset: from,
+    p_country: params.country ?? null,
   });
   if (error) throw new Error(error.message);
   const rankedRows = (ranked ?? []) as { id: string; total: number }[];
