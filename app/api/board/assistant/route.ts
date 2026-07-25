@@ -7,6 +7,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { runBoardAssistant } from "@/agents/agent-board-assistant";
 import { searchJobs, type BoardSearchParams } from "@/lib/job-board/search";
 import { getCategories } from "@/lib/board/categories";
+import { countryForLocale } from "@/lib/board/geo";
 import { resolveSkillIds } from "@/lib/skills";
 import { computeRecruiterFit, type JobSkillReq } from "@/lib/job-board/fit";
 import { expandJobTitle, resolveTitleContext } from "@/lib/job-board/job-titles";
@@ -154,6 +155,7 @@ export async function POST(req: Request) {
       relatedIds: tctx.relatedIds.length ? tctx.relatedIds : undefined,
       relatedW: tctx.relatedW.length ? tctx.relatedW : undefined,
       appliedIds: appliedIds.length ? appliedIds : undefined,
+      homeCountry: countryForLocale(locale), // mismo boost local-first que el board (orden idéntico)
       pageSize: PAGE_SIZE, page,
     };
     let res = await searchJobs(supabase, base);

@@ -41,6 +41,7 @@ export default async function BoardPage({
     modality: modality === "presencial" || modality === "hibrido" || modality === "remoto" ? modality : undefined,
     contract: searchParams.contract,
     sort: (searchParams.sort as "relevance" | "recent" | "salary") ?? "relevance",
+    homeCountry: countryForLocale(params.locale), // boost local-first del mercado (no filtra)
     pageSize: 20,
   });
 

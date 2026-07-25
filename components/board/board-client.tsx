@@ -90,6 +90,10 @@ export function BoardClient({
   // Multi-select por grupo (barra de filtros desktop): OR dentro del grupo, AND entre grupos.
   const [sel, setSel] = useState<Sel>(emptySel());
   const [location, setLocation] = useState("");
+  // ¿`location` vino del autocomplete del gazetteer (→ el hub de ciudad resuelve) o del texto
+  // libre del NL (puede no existir)? Solo enlazamos la ciudad a su hub si está validada, para
+  // no generar un 404 (p. ej. "Madrid" bajo mercado VE, que no está en el gazetteer).
+  const [cityValid, setCityValid] = useState(false);
   const [sort, setSort] = useState<BoardSort>("relevance");
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -146,6 +150,7 @@ export function BoardClient({
     if (s.date.length) p.set("datePosted", s.date[0]);
     if (s.salary.length) { const min = Math.min(...s.salary.map((v) => SALARY_MIN[v] ?? 0)); if (min > 0) p.set("salaryMin", String(min)); }
     p.set("sort", sortV);
+    if (country) p.set("homeCountry", country); // boost local-first del mercado (no filtra)
     if (pg > 1) p.set("page", String(pg));
     return p;
   }
@@ -176,7 +181,7 @@ export function BoardClient({
           if (f.q) { effQuery = f.q; setQuery(f.q); }
         }
       }
-      setNlChips(chips); setSel(next); setLocation(nextLoc); setPage(1);
+      setNlChips(chips); setSel(next); setLocation(nextLoc); setCityValid(false); setPage(1);
       await fetchJobs(next, sort, effQuery, nextLoc, 1);
     });
   }
@@ -196,7 +201,7 @@ export function BoardClient({
 
   function clearFilters() {
     const next = emptySel();
-    setSel(next); setLocation(""); setNlChips([]); setPage(1);
+    setSel(next); setLocation(""); setCityValid(false); setNlChips([]); setPage(1);
     startTransition(() => fetchJobs(next, sort, query, "", 1));
   }
 
@@ -354,7 +359,7 @@ export function BoardClient({
 
   // Sugerencia estructurada → filtro exacto, sin call-out interpretado (spec).
   function applyStructured(next: Sel, loc: string, q = "") {
-    setSel(next); setLocation(loc); setQuery(q); setNlChips([]); setSearchOpen(false); setPage(1);
+    setSel(next); setLocation(loc); setCityValid(!!loc); setQuery(q); setNlChips([]); setSearchOpen(false); setPage(1);
     startTransition(() => fetchJobs(next, sort, q, loc, 1));
   }
   const selectTitle = (title: string) => applyStructured(emptySel(), "", title);
@@ -556,7 +561,7 @@ export function BoardClient({
               : <span style={{ color: "var(--brand)" }}>{activeArea}</span>}
           </>}
           {activeCity && <>{" "}{t("results.inCity")}{" "}
-            {sel.area[0]
+            {sel.area[0] && cityValid
               ? <Link href={{ pathname: "/empleos/[categoria]/[ubicacion]", params: { categoria: sel.area[0], ubicacion: citySlug(activeCity) } }} style={{ color: "var(--brand)" }}>{activeCity}</Link>
               : <span style={{ color: "var(--brand)" }}>{activeCity}</span>}
           </>}

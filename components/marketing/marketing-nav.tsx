@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { routing, type Locale, type StaticPathname } from "@/i18n/routing";
+import { type Locale, type StaticPathname } from "@/i18n/routing";
 import { LogoMark, MIcon, type IconName } from "./icons";
 
 const ARCHIVO = "'Archivo',sans-serif";
@@ -40,7 +40,11 @@ const MENU_COLS: MenuCol[] = [
   },
 ];
 
-const LOCALE_LABELS: Record<Locale, string> = {
+// Selector de IDIOMA de marketing: un locale primario por idioma. es-es es un mercado del
+// board (idioma español), no una opción de idioma de marketing → no se lista aquí (sus rutas
+// no-board redirigen a es-ve).
+const MARKETING_LOCALES = ["es-ve", "en-us", "pt-br"] as const;
+const LOCALE_LABELS: Partial<Record<Locale, string>> = {
   "es-ve": "Español (Venezuela)",
   "en-us": "English (US)",
   "pt-br": "Português (Brasil)",
@@ -119,7 +123,7 @@ export function MarketingNav() {
               </button>
               {langOpen && (
                 <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, minWidth: 150, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 13, boxShadow: "0 20px 40px -24px rgba(26,26,23,.55)", padding: 6, zIndex: 60 }}>
-                  {routing.locales.map((l) => (
+                  {MARKETING_LOCALES.map((l) => (
                     <button
                       key={l}
                       className="ld-menuitem"

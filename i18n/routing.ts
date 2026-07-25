@@ -26,25 +26,27 @@ export const pathnames = {
   "/careers/[slug]/jobs/[id]": "/careers/[slug]/jobs/[id]",
 
   // Job board público (slugs localizados por mercado)
-  "/empleos": { "es-ve": "/empleos", "en-us": "/jobs", "pt-br": "/vagas" },
+  "/empleos": { "es-ve": "/empleos", "es-es": "/empleos", "en-us": "/jobs", "pt-br": "/vagas" },
   "/empleos/oferta/[slug]": {
     "es-ve": "/empleos/oferta/[slug]",
+    "es-es": "/empleos/oferta/[slug]",
     "en-us": "/jobs/opening/[slug]",
     "pt-br": "/vagas/vaga/[slug]",
   },
   "/empleos/oferta/[slug]/aplicar": {
     "es-ve": "/empleos/oferta/[slug]/aplicar",
+    "es-es": "/empleos/oferta/[slug]/aplicar",
     "en-us": "/jobs/opening/[slug]/apply",
     "pt-br": "/vagas/vaga/[slug]/candidatar",
   },
-  "/cuenta": { "es-ve": "/cuenta", "en-us": "/account", "pt-br": "/conta" },
-  "/cuenta/entrar": { "es-ve": "/cuenta/entrar", "en-us": "/account/sign-in", "pt-br": "/conta/entrar" },
-  "/cuenta/perfil": { "es-ve": "/cuenta/perfil", "en-us": "/account/profile", "pt-br": "/conta/perfil" },
-  "/empleos/asistente": { "es-ve": "/empleos/asistente", "en-us": "/jobs/assistant", "pt-br": "/vagas/assistente" },
-  "/empleos/empresas": { "es-ve": "/empleos/empresas", "en-us": "/jobs/companies", "pt-br": "/vagas/empresas" },
-  "/empleos/empresa/[slug]": { "es-ve": "/empleos/empresa/[slug]", "en-us": "/jobs/company/[slug]", "pt-br": "/vagas/empresa/[slug]" },
-  "/empleos/[categoria]": { "es-ve": "/empleos/[categoria]", "en-us": "/jobs/[categoria]", "pt-br": "/vagas/[categoria]" },
-  "/empleos/[categoria]/[ubicacion]": { "es-ve": "/empleos/[categoria]/[ubicacion]", "en-us": "/jobs/[categoria]/[ubicacion]", "pt-br": "/vagas/[categoria]/[ubicacion]" },
+  "/cuenta": { "es-ve": "/cuenta", "es-es": "/cuenta", "en-us": "/account", "pt-br": "/conta" },
+  "/cuenta/entrar": { "es-ve": "/cuenta/entrar", "es-es": "/cuenta/entrar", "en-us": "/account/sign-in", "pt-br": "/conta/entrar" },
+  "/cuenta/perfil": { "es-ve": "/cuenta/perfil", "es-es": "/cuenta/perfil", "en-us": "/account/profile", "pt-br": "/conta/perfil" },
+  "/empleos/asistente": { "es-ve": "/empleos/asistente", "es-es": "/empleos/asistente", "en-us": "/jobs/assistant", "pt-br": "/vagas/assistente" },
+  "/empleos/empresas": { "es-ve": "/empleos/empresas", "es-es": "/empleos/empresas", "en-us": "/jobs/companies", "pt-br": "/vagas/empresas" },
+  "/empleos/empresa/[slug]": { "es-ve": "/empleos/empresa/[slug]", "es-es": "/empleos/empresa/[slug]", "en-us": "/jobs/company/[slug]", "pt-br": "/vagas/empresa/[slug]" },
+  "/empleos/[categoria]": { "es-ve": "/empleos/[categoria]", "es-es": "/empleos/[categoria]", "en-us": "/jobs/[categoria]", "pt-br": "/vagas/[categoria]" },
+  "/empleos/[categoria]/[ubicacion]": { "es-ve": "/empleos/[categoria]/[ubicacion]", "es-es": "/empleos/[categoria]/[ubicacion]", "en-us": "/jobs/[categoria]/[ubicacion]", "pt-br": "/vagas/[categoria]/[ubicacion]" },
 
   // Dashboard B2B autenticado (no localizado — mismo slug en todos los locales)
   "/app/dashboard": "/app/dashboard",
@@ -82,7 +84,10 @@ export const pathnames = {
 } as const;
 
 export const routing = defineRouting({
-  locales: ["es-ve", "en-us", "pt-br"],
+  // Mercados (idioma-país). es-ve default (arranca en VE). es-es/pt-br/en-us comparten
+  // messages por idioma (es/pt/en). El país solo pesa en el board (boost local + hubs de
+  // ciudad); marketing/dashboard de los mercados no-primarios redirigen a su idioma primario.
+  locales: ["es-ve", "es-es", "en-us", "pt-br"],
   defaultLocale: "es-ve",
   pathnames,
 });
