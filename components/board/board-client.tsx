@@ -331,18 +331,25 @@ export function BoardClient({
   const activeFacets = GROUPS.flatMap((g) => sel[g].map((v) => ({ group: g, value: v, label: facetLabel(g, v) })));
 
   // ── Autocomplete estructurado ────────────────────────────────────────────
-  function onQueryChange(v: string) { setQuery(v); setSearchOpen(true); fetchCities(v); fetchTitles(v); }
+  // Parte "X en Y" (es/en/pt) -> {cargo, ciudad}, para formar el combo estructurado en vez de
+  // caer en "contextual". Sin separador, todo es el termino de cargo.
+  function splitQuery(q: string): { role: string; city: string | null } {
+    const m = q.match(/^(.*\S)\s+(?:en|in|em|na|no)\s+(\S.*)$/i);
+    return m ? { role: m[1].trim(), city: m[2].trim() } : { role: q.trim(), city: null };
+  }
+  function onQueryChange(v: string) {
+    setQuery(v); setSearchOpen(true);
+    const parts = splitQuery(v);
+    fetchTitles(parts.role || v);
+    fetchCities(parts.city ?? v);
+  }
   const qlc = query.trim().toLowerCase();
-  const titleSugF = qlc ? titleSug.slice(0, 3) : [];
-  const citySugF = qlc ? citySug.slice(0, 3) : [];
+  const qCity = splitQuery(query.trim()).city;
+  // Combo "Cargo en Ciudad": la query trae "X en Y" y AMBOS matchean dato estructurado.
+  const combo = qCity && titleSug.length && citySug.length ? { title: titleSug[0], city: citySug[0].name } : null;
+  const titleSugF = qlc && !combo ? titleSug.slice(0, 3) : [];
+  const citySugF = qlc && !combo ? citySug.slice(0, 3) : [];
   const compSug = qlc ? facets.company.filter((c) => c.value.toLowerCase().includes(qlc)).slice(0, 3) : [];
-  // Combo "Cargo en Ciudad" cuando el texto contiene ambas señales (mockup).
-  const combo = (() => {
-    if (!qlc) return null;
-    const title = titleSug.find((tt) => qlc.includes(tt.toLowerCase()) || tt.toLowerCase().includes(qlc.split(" en ")[0]?.trim() ?? " "));
-    const city = citySug.find((c) => qlc.includes(c.name.toLowerCase()));
-    return title && city ? { title, city: city.name } : null;
-  })();
   const hasStructured = !!combo || titleSugF.length > 0 || citySugF.length > 0 || compSug.length > 0;
 
   // Sugerencia estructurada → filtro exacto, sin call-out interpretado (spec).
@@ -386,11 +393,11 @@ export function BoardClient({
         {titleSugF.length > 0 && <><div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "var(--soft)", padding: "6px 12px 2px" }}>{t("search.groupTitles")}</div>{titleSugF.map((tt) => suggRow("title", tt, t("search.metaTitle"), () => selectTitle(tt)))}</>}
         {citySugF.length > 0 && <><div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "var(--soft)", padding: "6px 12px 2px" }}>{t("search.groupCities")}</div>{citySugF.map((c) => suggRow("city", c.name, t("search.metaCity"), () => selectCity(c.name)))}</>}
         {compSug.length > 0 && <><div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "var(--soft)", padding: "6px 12px 2px" }}>{t("search.groupCompanies")}</div>{compSug.map((c) => suggRow("company", c.value, t("search.metaCompany"), () => c.id && selectCompany(c.id)))}</>}
-        <div data-val={query} onMouseDown={(e) => { e.preventDefault(); selectContextual(); }} className="jb-tap" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 12px", borderRadius: 8, cursor: "pointer", borderTop: hasStructured ? "1px solid var(--line)" : "none", marginTop: hasStructured ? 2 : 0 }}>
+        {!hasStructured && (<div data-val={query} onMouseDown={(e) => { e.preventDefault(); selectContextual(); }} className="jb-tap" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 12px", borderRadius: 8, cursor: "pointer", borderTop: hasStructured ? "1px solid var(--line)" : "none", marginTop: hasStructured ? 2 : 0 }}>
           <span style={{ width: 26, height: 26, borderRadius: 7, background: "var(--limeSoft)", color: "#46540F", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z" stroke="#46540F" strokeWidth="1.7" strokeLinejoin="round" /></svg></span>
           <span style={{ flex: 1, fontSize: 14 }}>{t("search.searchAll")} <b>“{query}”</b></span>
           <span style={{ fontFamily: MONO, fontSize: 9.5, color: "var(--soft)" }}>{t("search.metaContextual")}</span>
-        </div>
+        </div>)}
       </div>
     );
   }
