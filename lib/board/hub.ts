@@ -62,7 +62,7 @@ export async function resolveHub(seg1: string, seg2: string | undefined, locale:
   }
 
   const supabase = createClient();
-  const { jobs, total, facets } = await searchJobs(supabase, { ...params, pageSize: 30 });
+  const { jobs, total, facets } = await searchJobs(supabase, { ...params, homeCountry: countryForLocale(locale), pageSize: 30 });
 
   // Tops REALES scopeados al hub (mismo WHERE que board_rank_jobs) por nº de ofertas activas:
   // top-10 empresas, puestos y áreas. No confundir con `facets` (base global, no scopeada).

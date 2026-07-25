@@ -48,6 +48,18 @@ export async function middleware(request: NextRequest) {
   const locale = pathname.match(localeRe)?.[1] ?? routing.defaultLocale;
   const bare = pathname.replace(localeRe, "") || "/";
 
+  // Mercados NO primarios (p. ej. es-es) existen solo para el board (SEO geo). Sus rutas
+  // NO-board (marketing, dashboard, auth) colapsan al locale primario del idioma → evita
+  // contenido duplicado. El board y la cuenta del candidato sí se mantienen por mercado.
+  const LANG_PRIMARY: Record<string, string> = { es: "es-ve", en: "en-us", pt: "pt-br" };
+  const primary = LANG_PRIMARY[locale.split("-")[0]] ?? routing.defaultLocale;
+  const isBoardNs = /^\/(empleos|jobs|vagas|cuenta|account|conta)(\/|$)/.test(bare);
+  if (locale !== primary && !isBoardNs) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = `/${primary}${bare === "/" ? "" : bare}`;
+    return NextResponse.redirect(redirectUrl);
+  }
+
   const isPrivate = bare === "/app" || bare.startsWith("/app/");
   const isCandidate = user?.app_metadata?.audience === "candidate";
 
