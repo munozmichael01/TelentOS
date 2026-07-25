@@ -7,7 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 const ARCHIVO = "'Archivo',sans-serif";
 
 // Crea una alerta desde el hub (criteria { categoryKey, location }). Reusa /api/board/alerts.
-export function HubAlert({ criteria }: { criteria: { categoryKey: string; location?: string } }) {
+export function HubAlert({ criteria }: { criteria: { categoryKey?: string; q?: string; location?: string } }) {
   const t = useTranslations("Board.hub");
   const router = useRouter();
   const [done, setDone] = useState(false);

@@ -629,7 +629,11 @@
     "alertDone": "We'll notify you",
     "browseAll": "Browse all jobs",
     "relatedCats": "Other areas",
-    "inCity": "in {city}"
+    "inCity": "in {city}",
+    "titleLoc": "Jobs in {location}",
+    "introCompanies": "Companies hiring: {companies}.",
+    "crumbHome": "Home",
+    "crumbJobs": "Jobs"
   },
   "saved": {
     "title": "Saved",

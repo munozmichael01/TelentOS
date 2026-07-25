@@ -629,7 +629,11 @@
     "alertDone": "Te avisaremos",
     "browseAll": "Ver todas las ofertas",
     "relatedCats": "Otras áreas",
-    "inCity": "en {city}"
+    "inCity": "en {city}",
+    "titleLoc": "Empleos en {location}",
+    "introCompanies": "Empresas que contratan: {companies}.",
+    "crumbHome": "Inicio",
+    "crumbJobs": "Empleos"
   },
   "saved": {
     "title": "Guardadas",

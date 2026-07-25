@@ -12,8 +12,11 @@ const norm = (s: string) =>
 const STOP = new Set(["para", "with", "como", "sobre", "trabajo", "empleo", "oferta", "ofertas",
   "junior", "senior", "estudiante", "busco", "buscar", "quiero", "puesto", "vacante"]);
 const tokensOf = (s: string) => norm(s).split(/[^a-z0-9]+/).filter((w) => w.length >= 5 && !STOP.has(w));
+// Slug de una etiqueta: primera forma de género ("camarero / camarera" → "camarero"), sin acentos.
+export const titleSlug = (label: string) =>
+  norm(label.split(" / ")[0]).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
-type Index = { byNorm: Map<string, Set<string>>; byToken: Map<string, Set<string>>; labelsByTitle: Map<string, string[]> };
+type Index = { byNorm: Map<string, Set<string>>; byToken: Map<string, Set<string>>; bySlug: Map<string, Set<string>>; labelsByTitle: Map<string, string[]> };
 let cache: { idx: Index; at: number } | null = null;
 const TTL_MS = 15 * 60 * 1000;
 
@@ -40,6 +43,7 @@ async function loadIndex(): Promise<Index> {
   const db = createAdminClient();
   const byNorm = new Map<string, Set<string>>();
   const byToken = new Map<string, Set<string>>();
+  const bySlug = new Map<string, Set<string>>();
   const labelsByTitle = new Map<string, string[]>();
   const add = (titleId: string, label: string) => {
     if (!label) return;
@@ -48,6 +52,8 @@ async function loadIndex(): Promise<Index> {
     (byNorm.get(n) ?? byNorm.set(n, new Set()).get(n)!).add(titleId);
     (labelsByTitle.get(titleId) ?? labelsByTitle.set(titleId, []).get(titleId)!).push(label);
     for (const tok of tokensOf(label)) (byToken.get(tok) ?? byToken.set(tok, new Set()).get(tok)!).add(titleId);
+    const sl = titleSlug(label);
+    if (sl.length >= 2) (bySlug.get(sl) ?? bySlug.set(sl, new Set()).get(sl)!).add(titleId);
   };
   const [titles, translations, synonyms] = await Promise.all([
     pageAll(db, "job_titles", "id, canonical_name"),
@@ -57,7 +63,25 @@ async function loadIndex(): Promise<Index> {
   for (const t of titles) add(t.id as string, t.canonical_name as string);
   for (const t of translations) add(t.job_title_id as string, t.name as string);
   for (const s of synonyms) add(s.job_title_id as string, s.synonym as string);
-  return { byNorm, byToken, labelsByTitle };
+  return { byNorm, byToken, bySlug, labelsByTitle };
+}
+
+// Resuelve un SLUG de cargo (hub /empleos/{slug}) → títulos canónicos + etiqueta a mostrar.
+// Localizado: el slug "camarero" (es) o "waiter" (en) matchea la forma correspondiente.
+export async function resolveTitleSlug(
+  slug: string,
+): Promise<{ titleIds: string[]; label: string } | null> {
+  const idx = await getIndex();
+  const ids = idx.bySlug.get(slug);
+  if (!ids?.size) return null;
+  const titleIds = Array.from(ids);
+  // Etiqueta: la forma cuyo slug coincide (primera), capitalizada por el consumidor.
+  let label = slug.replace(/-/g, " ");
+  for (const id of titleIds) {
+    const hit = (idx.labelsByTitle.get(id) ?? []).find((l) => titleSlug(l) === slug);
+    if (hit) { label = hit.split(" / ")[0]; break; }
+  }
+  return { titleIds, label };
 }
 
 // Títulos que resuelve un término, en 3 niveles: (1) forma exacta, (2) forma contenida en la
