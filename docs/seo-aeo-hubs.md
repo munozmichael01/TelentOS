@@ -3,7 +3,10 @@
 Documentación técnica de la estrategia de URLs de hub, SSR, structured data (JSON-LD),
 sitemap e indexación (Google Indexing API). Pensado para **SEO** (Google Search / Google
 Jobs) **y AEO** (Answer Engine Optimization: ChatGPT, Perplexity, Google AI Overviews,
-Gemini). Estado: PLAN (Pieza 2 del épico de búsqueda). Fecha: 2026-07-24.
+Gemini). Fecha: 2026-07-25.
+
+**Estado por slice:** 2a ✅ · 2a.2 ✅ · 2a.3 ✅ (todo en prod) · 2b ⏳ (buscador→URL) ·
+2c ⏳ (sitemap + Indexing API) · región/admin1 ⏳. Ver §8 e **§9 (inventario de lo construido)**.
 
 ## 1. Por qué (y el error que corregimos)
 
@@ -52,12 +55,33 @@ GPTBot, PerplexityBot, etc.) reciben contenido real, no un shell JS. Incluye:
 ## 4. Structured data / JSON-LD (SEO + AEO)
 
 Requisito de la Indexing API y clave para Google Jobs y para que los answer engines citen.
-- **Página de oferta**: `JobPosting` completo (title, description, datePosted, validThrough,
-  hiringOrganization, jobLocation, baseSalary, employmentType). Elegible para el widget de
-  Google Jobs.
-- **Hub**: `ItemList` de las ofertas + `BreadcrumbList`. Opcional `FAQPage` ("¿Cuánto gana un
-  camarero en Barcelona?", "¿Cuántas vacantes hay?") — muy fuerte para **AEO**.
-- **Board/Org**: `WebSite` + `Organization` en el layout.
+- **Página de oferta** (`app/[locale]/empleos/oferta/[slug]/page.tsx`): `JobPosting` completo
+  (title, description, datePosted, **validThrough** = `closes_at` o `created_at`+60d,
+  hiringOrganization, jobLocation, jobLocationType TELECOMMUTE si remoto, baseSalary si hay,
+  employmentType). Gated en `!careerActive`. Elegible para el widget de Google Jobs. ✅
+- **Hub**: `ItemList` de las ofertas + `BreadcrumbList` + **`FAQPage`**. ✅
+
+### FAQ del hub — regla dura (implementada en 2a.3)
+La FAQ es **VISIBLE en la página** (acordeón `<details>`) **y** replicada como `FAQPage`
+JSON-LD, en sincronía. Google **ignora/penaliza** structured data que no refleje contenido
+visible; y para salir como P&R hace falta una URL con ese contenido — esa URL **es el hub**.
+Solo preguntas respondibles con **dato real** (nada de LLM, nada de medias):
+
+| Pregunta | Fuente | Gate |
+|---|---|---|
+| ¿Cuántas vacantes de {sujeto}? | conteo del hub (`total`) | siempre (total>0) |
+| ¿Qué empresas están contratando? | **top-10 empresas** por ofertas activas (`board_hub_facets`) | si hay |
+| ¿Qué requisitos/conocimientos se piden? | **skills core del cargo** (`job_title_skills`, ESCO) | hub de cargo con ≥3 skills core |
+| ¿Qué puestos tienen más ofertas? | **top puestos** por ofertas activas | hub de ubicación, ≥3 |
+| ¿Qué áreas contratan más? | **top áreas** por ofertas activas | ubicación/cargo, ≥2 |
+
+- **Sujeto** = el `<h1>` ya localizado → preguntas self-contained en es/en/pt.
+- **Salario: NO se muestra** — el dato viene sucio y mezclado por periodo (€25/año), un rango
+  calculado sería engañoso. Se reevaluará cuando se normalice el salario.
+- **Requisitos**: la fuente es el **cargo canónico** (taxonomía), NO las ofertas (que no traen
+  requisitos estructurados — ver hueco en el backlog). Los tops salen de `board_hub_facets`,
+  que replica el `WHERE` de `board_rank_jobs` para **reconciliar** con el conteo del hub.
+- **Board/Org**: `WebSite` + `Organization` en el layout. ⏳
 
 ## 5. AEO (Answer Engine Optimization)
 
@@ -103,10 +127,34 @@ tener los pasos 1-4.
 
 ## 8. Slices de implementación
 
-- **2a** · `resolveHub` (categoría|cargo|ubicación, slugs localizados) + `p_country` en el RPC
+- **2a** ✅ · `resolveHub` (categoría|cargo|ubicación, slugs localizados) + `p_country` en el RPC
   + rutas SSR `/empleos/[a]` y `/empleos/[a]/[b]` con ofertas rankeadas, H1/breadcrumb,
-  canonical/hreflang, noindex condicional, y JSON-LD (`JobPosting`/`ItemList`/`BreadcrumbList`).
-- **2b** · El buscador **navega** las selecciones estructuradas a la URL del hub (SSR) en vez
+  canonical, noindex condicional, y JSON-LD (`JobPosting`/`ItemList`/`BreadcrumbList`).
+- **2a.2** ✅ · `validThrough` en `JobPosting` + primer `FAQPage` (data-gated).
+- **2a.3** ✅ · FAQ **visible + JSON-LD en sync**, tops reales vía `board_hub_facets`
+  (reconcilia con el conteo), requisitos del cargo desde taxonomía, **sin salario**; fix RLS
+  `skills` a lectura anon.
+- **2b** ⏳ · El buscador **navega** las selecciones estructuradas a la URL del hub (SSR) en vez
   de `fetch` client-side.
-- **2c** · Sitemap diario (cron) + cliente Indexing API (UPDATE/DELETE) + `FAQPage`/AEO. Enchufe
-  con las credenciales de Google (sección 7).
+- **2c** ⏳ · Sitemap diario (cron, solo hubs con ≥1 oferta) + ping Google + `robots.txt` para
+  bots de IA (GPTBot/PerplexityBot/Google-Extended) + cliente Indexing API (UPDATE/DELETE).
+  Enchufe con las credenciales de Google (§7).
+- **región/admin1** ⏳ · Hubs de región (p. ej. `/empleos/cataluna`): falta el gazetteer de
+  regiones + resolución en `resolveHub`. Hoy funcionan país y ciudad; región no.
+
+## 9. Inventario de lo construido (código y DB)
+
+| Pieza | Dónde |
+|---|---|
+| Resolución de hub | `lib/board/hub.ts` (`resolveHub`, `HubData`, tops + coreSkills) |
+| Vista SSR del hub | `components/board/hub-view.tsx` (H1, intro, listado, FAQ visible, JSON-LD, interlinking) |
+| Rutas | `app/[locale]/empleos/[categoria]/page.tsx` y `[categoria]/[ubicacion]/page.tsx` |
+| Oferta (JobPosting) | `app/[locale]/empleos/oferta/[slug]/page.tsx` |
+| Geo/gazetteer | `lib/board/geo.ts` (ciudades, `COUNTRIES`, slugs) · `lib/board/categories.ts` |
+| Índice de cargos | `lib/job-board/job-titles.ts` (`resolveTitleSlug`, `resolveTitleContext`) |
+| Ranking | RPC `board_rank_jobs` (0056–0059) · `lib/job-board/search.ts` |
+| Tops del hub | RPC `board_hub_facets` (0060) — top empresas/puestos/áreas, reconcilia con el hub |
+| RLS | `skills` lectura anon (0061) |
+| i18n | `messages/{es,en,pt}/board.json` namespace `hub` |
+
+**Pendiente de credenciales (dueño):** ver §7 (Search Console + Service Account + env vars).
