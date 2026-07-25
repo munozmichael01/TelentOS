@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import type { HubData } from "@/lib/board/hub";
 import { getCategories } from "@/lib/board/categories";
 import { citySlug } from "@/lib/board/geo";
-import { logoFor, formatSalary, modalityStyle, relativeDate, jobSlug, PERIOD_SUFFIX } from "@/lib/board/format";
+import { logoFor, formatSalary, modalityStyle, relativeDate, jobSlug } from "@/lib/board/format";
 import { HubAlert } from "@/components/board/hub-alert";
 
 const ARCHIVO = "'Archivo',sans-serif";
@@ -30,28 +30,21 @@ export async function HubView({ data, locale, path }: { data: HubData; locale: s
   const related = getCategories(locale).filter((c) => !(data.kind === "category" && c.label === data.label)).slice(0, 8);
   const locSlug = data.location && !isLocationOnly ? data.location.slug : null;
 
-  // FAQPage (AEO) — solo preguntas respondibles con DATO real. El sujeto es el título ya
-  // localizado (self-contained en es/en/pt). Salario solo si hay muestra suficiente.
-  const withSalary = data.jobs.filter((j) => j.salary_min != null || j.salary_max != null);
+  // FAQ (SEO + AEO) — VISIBLE en la página + JSON-LD en sincronía (Google exige que el
+  // structured data refleje contenido visible). Solo preguntas respondibles con DATO real:
+  // conteo absoluto, top-10 empresas por ofertas activas, requisitos canónicos del cargo
+  // (taxonomía ESCO, no las ofertas) y top puestos/áreas por ofertas activas. Sin salario
+  // (dato sucio: no afirmamos rangos). El sujeto es el título ya localizado (self-contained).
   const faqs: { q: string; a: string }[] = [];
   if (data.total > 0) {
     faqs.push({ q: t("faqCount", { subject: title }), a: t("count", { count: data.total }) });
-    if (data.companies.length) faqs.push({ q: t("faqCompanies", { subject: title }), a: data.companies.join(", ") });
-    // Solo un periodo (el modal) para no mezclar €/hora con €/año. Rango TÍPICO p25–p75
-    // (no min–max crudo) para que un outlier de dato sucio no falsee la respuesta AEO.
-    const byPeriod: Record<string, typeof withSalary> = {};
-    for (const j of withSalary) (byPeriod[j.salary_period ?? "month"] ??= []).push(j);
-    const period = Object.keys(byPeriod).sort((a, b) => byPeriod[b].length - byPeriod[a].length)[0];
-    const sample = period ? byPeriod[period] : [];
-    if (sample.length >= 5) {
-      const mids = sample.map((j) => ((j.salary_min ?? j.salary_max!) + (j.salary_max ?? j.salary_min!)) / 2).sort((a, b) => a - b);
-      const at = (p: number) => mids[Math.floor(p * (mids.length - 1))];
-      const suf = PERIOD_SUFFIX[locale.split("-")[0]]?.[period] ?? "";
-      const cur = sample[0].salary_currency ?? "EUR";
-      const sym = cur === "USD" ? "$" : `${cur} `;
-      const range = `${sym}${Math.round(at(0.25)).toLocaleString(locale)}–${Math.round(at(0.75)).toLocaleString(locale)}${suf}`;
-      faqs.push({ q: t("faqSalary", { subject: title }), a: t("faqSalaryA", { range }) });
-    }
+    if (data.companies.length) faqs.push({ q: t("faqCompanies", { subject: title }), a: data.companies.join(", ") + "." });
+    if (data.kind === "jobtitle" && data.coreSkills.length >= 3)
+      faqs.push({ q: t("faqSkills", { subject: title }), a: data.coreSkills.join(", ") + "." });
+    if (isLocationOnly && data.topTitles.length >= 3)
+      faqs.push({ q: t("faqTopTitles", { subject: title }), a: data.topTitles.map((x) => x.label).join(", ") + "." });
+    if ((isLocationOnly || data.kind === "jobtitle") && data.topCategories.length >= 2)
+      faqs.push({ q: t("faqTopAreas", { subject: title }), a: data.topCategories.map((x) => x.label).join(", ") + "." });
   }
 
   const jobUrl = (j: (typeof data.jobs)[number]) => `${SITE}/${locale}/empleos/oferta/${jobSlug(j)}`;
@@ -111,6 +104,21 @@ export async function HubView({ data, locale, path }: { data: HubData; locale: s
                 </Link>
               );
             })}
+          </div>
+        )}
+
+        {/* FAQ visible (SEO/AEO) — mismo contenido que el JSON-LD FAQPage de arriba. */}
+        {faqs.length > 0 && (
+          <div style={{ margin: "32px 0 4px" }}>
+            <div style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "var(--soft)", marginBottom: 12 }}>{t("faqHeading")}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {faqs.map((f, i) => (
+                <details key={i} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "12px 14px" }}>
+                  <summary style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, letterSpacing: "-.2px", cursor: "pointer", listStyle: "none" }}>{f.q}</summary>
+                  <p style={{ fontSize: 13.5, lineHeight: 1.5, color: "#3A3833", margin: "8px 0 0" }}>{f.a}</p>
+                </details>
+              ))}
+            </div>
           </div>
         )}
 

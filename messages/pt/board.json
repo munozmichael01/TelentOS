@@ -636,8 +636,10 @@
     "crumbJobs": "Vagas",
     "faqCount": "{subject}: quantas vagas há?",
     "faqCompanies": "{subject}: quais empresas estão contratando?",
-    "faqSalary": "{subject}: qual é a faixa salarial?",
-    "faqSalaryA": "A maioria das vagas paga entre {range}."
+    "faqHeading": "Perguntas frequentes",
+    "faqSkills": "{subject}: quais requisitos ou conhecimentos são pedidos?",
+    "faqTopTitles": "{subject}: quais cargos têm mais vagas?",
+    "faqTopAreas": "{subject}: quais áreas mais contratam?"
   },
   "saved": {
     "title": "Salvas",
