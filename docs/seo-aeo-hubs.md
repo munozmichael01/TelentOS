@@ -5,8 +5,22 @@ sitemap e indexación (Google Indexing API). Pensado para **SEO** (Google Search
 Jobs) **y AEO** (Answer Engine Optimization: ChatGPT, Perplexity, Google AI Overviews,
 Gemini). Fecha: 2026-07-25.
 
-**Estado por slice:** 2a ✅ · 2a.2 ✅ · 2a.3 ✅ (todo en prod) · 2b ⏳ (buscador→URL) ·
-2c ⏳ (sitemap + Indexing API) · región/admin1 ⏳. Ver §8 e **§9 (inventario de lo construido)**.
+**Estado por slice:** 2a ✅ · 2a.2 ✅ · 2a.3 ✅ · 2c-sitemap/robots ✅ · **multi-mercado ✅**
+(todo en prod) · 2b ⏳ (buscador→URL) · 2c-IndexingAPI ⏳ (credenciales) · hreflang ⏳. Ver §8–§10.
+
+## 0. Mercados (idioma-país) — data-driven por país real de la oferta
+
+4 mercados: **es-ve (default), es-es, pt-br, en-us** (VE/US/BR ya tenían locale; solo `es-es`
+era nuevo). El país de la oferta (`jobs.country_code`) decide dónde vive; **no es filtro, es
+prioridad**: cada mercado hace un **boost local-first** (`board_rank_jobs.p_home_country`) que
+prioriza sus ofertas pero SIGUE mostrando el resto → job board internacional. Orden:
+`no-aplicadas → relevancia → país del mercado (desempate) → recencia`. Board y asistente pasan
+el mismo `homeCountry` (del locale) → **ordenan idéntico**. Los hubs de ciudad resuelven contra
+el gazetteer **del país del mercado** (Madrid resuelve en es-es, no en es-ve). Marketing/
+dashboard NO usan país: las rutas no-board de mercados no-primarios **redirigen al idioma
+primario** (es-es → es-ve) para no duplicar contenido. Abrir un país = 1 línea + sus ciudades
+en `cities.json`. Los europeos del dataset Turijobs (PT/IT/FR…) no se abren (visibles/buscables,
+sin hub de ciudad; el sitemap valida y no expone 404).
 
 ## 1. Por qué (y el error que corregimos)
 
