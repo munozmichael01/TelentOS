@@ -8,7 +8,12 @@ import { createAdminClient } from "@/lib/supabase/server";
 const norm = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim();
 
-type Index = { byNorm: Map<string, Set<string>>; labelsByTitle: Map<string, string[]> };
+// Stopwords para el matching por token (evita ruido en frases de intención).
+const STOP = new Set(["para", "with", "como", "sobre", "trabajo", "empleo", "oferta", "ofertas",
+  "junior", "senior", "estudiante", "busco", "buscar", "quiero", "puesto", "vacante"]);
+const tokensOf = (s: string) => norm(s).split(/[^a-z0-9]+/).filter((w) => w.length >= 5 && !STOP.has(w));
+
+type Index = { byNorm: Map<string, Set<string>>; byToken: Map<string, Set<string>>; labelsByTitle: Map<string, string[]> };
 let cache: { idx: Index; at: number } | null = null;
 const TTL_MS = 15 * 60 * 1000;
 
@@ -34,6 +39,7 @@ async function pageAll(
 async function loadIndex(): Promise<Index> {
   const db = createAdminClient();
   const byNorm = new Map<string, Set<string>>();
+  const byToken = new Map<string, Set<string>>();
   const labelsByTitle = new Map<string, string[]>();
   const add = (titleId: string, label: string) => {
     if (!label) return;
@@ -41,6 +47,7 @@ async function loadIndex(): Promise<Index> {
     if (n.length < 2) return;
     (byNorm.get(n) ?? byNorm.set(n, new Set()).get(n)!).add(titleId);
     (labelsByTitle.get(titleId) ?? labelsByTitle.set(titleId, []).get(titleId)!).push(label);
+    for (const tok of tokensOf(label)) (byToken.get(tok) ?? byToken.set(tok, new Set()).get(tok)!).add(titleId);
   };
   const [titles, translations, synonyms] = await Promise.all([
     pageAll(db, "job_titles", "id, canonical_name"),
@@ -50,7 +57,26 @@ async function loadIndex(): Promise<Index> {
   for (const t of titles) add(t.id as string, t.canonical_name as string);
   for (const t of translations) add(t.job_title_id as string, t.name as string);
   for (const s of synonyms) add(s.job_title_id as string, s.synonym as string);
-  return { byNorm, labelsByTitle };
+  return { byNorm, byToken, labelsByTitle };
+}
+
+// Títulos que resuelve un término, en 3 niveles: (1) forma exacta, (2) forma contenida en la
+// query (parte corta ≥5), (3) SOLAPE POR TOKEN — un token de la query (≥5, no stopword) es un
+// token de una forma. El nivel 3 resuelve frases de intención: "estudiante de cocina" → "cocina"
+// → cargos de cocina. Solo se usa si los niveles precisos no encontraron nada.
+function matchTitleIds(idx: Index, nq: string): Set<string> {
+  const set = new Set<string>();
+  idx.byNorm.get(nq)?.forEach((id) => set.add(id));
+  if (set.size === 0) {
+    idx.byNorm.forEach((ids, n) => {
+      const [short, long] = n.length <= nq.length ? [n, nq] : [nq, n];
+      if (short.length >= 5 && long.includes(short)) ids.forEach((id) => set.add(id));
+    });
+  }
+  if (set.size === 0) {
+    for (const tok of tokensOf(nq)) idx.byToken.get(tok)?.forEach((id) => set.add(id));
+  }
+  return set;
 }
 
 async function getIndex(): Promise<Index> {
@@ -75,14 +101,7 @@ export async function resolveTitleContext(
   const nq = norm(q);
   if (nq.length < 4) return empty;
   const idx = await getIndex();
-  const set = new Set<string>();
-  idx.byNorm.get(nq)?.forEach((id) => set.add(id));
-  if (set.size === 0) {
-    idx.byNorm.forEach((ids, n) => {
-      const [short, long] = n.length <= nq.length ? [n, nq] : [nq, n];
-      if (short.length >= 5 && long.includes(short)) ids.forEach((id) => set.add(id));
-    });
-  }
+  const set = matchTitleIds(idx, nq);
   const titleIds = Array.from(set);
   if (!titleIds.length) return empty;
   const db = createAdminClient();
@@ -102,17 +121,7 @@ export async function expandJobTitle(q: string, max = 10): Promise<string[]> {
   const nq = norm(q);
   if (nq.length < 4) return [];
   const idx = await getIndex();
-
-  const titleIds = new Set<string>();
-  // 1) match exacto de alias (lo más preciso).
-  idx.byNorm.get(nq)?.forEach((id) => titleIds.add(id));
-  // 2) si no hubo exacto, containment con la parte corta ≥5 (evita ruido de prefijos cortos).
-  if (titleIds.size === 0) {
-    idx.byNorm.forEach((ids, n) => {
-      const [short, long] = n.length <= nq.length ? [n, nq] : [nq, n];
-      if (short.length >= 5 && long.includes(short)) ids.forEach((id) => titleIds.add(id));
-    });
-  }
+  const titleIds = matchTitleIds(idx, nq);
   if (titleIds.size === 0) return [];
 
   const out = new Set<string>([q]);
