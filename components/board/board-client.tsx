@@ -362,10 +362,14 @@ export function BoardClient({
     setSel(next); setLocation(loc); setCityValid(!!loc); setQuery(q); setNlChips([]); setSearchOpen(false); setPage(1);
     startTransition(() => fetchJobs(next, sort, q, loc, 1));
   }
-  const selectTitle = (title: string) => applyStructured(emptySel(), "", title);
-  const selectCity = (name: string) => applyStructured(emptySel(), name);
+  // Pieza 2b: una selección ESTRUCTURADA (cargo, ciudad, combo) navega a su HUB — URL real,
+  // SSR, indexable y compartible — en vez de filtrar en cliente. El texto libre / contextual
+  // se queda en el board interactivo (selectContextual → runSearch). titleSlug == citySlug de
+  // la primera forma; ambos slugs resuelven en resolveHub (taxonomía / gazetteer del mercado).
+  const selectTitle = (title: string) => router.push({ pathname: "/empleos/[categoria]", params: { categoria: citySlug(title) } });
+  const selectCity = (name: string) => router.push({ pathname: "/empleos/[categoria]", params: { categoria: citySlug(name) } });
+  const selectCombo = (title: string, city: string) => router.push({ pathname: "/empleos/[categoria]/[ubicacion]", params: { categoria: citySlug(title), ubicacion: citySlug(city) } });
   const selectCompany = (id: string) => applyStructured({ ...emptySel(), company: [id] }, "");
-  const selectCombo = (title: string, city: string) => applyStructured(emptySel(), city, title);
   function selectContextual() { setSearchOpen(false); runSearch(); }
 
   const SUGG_ICON: Record<string, { bg: string; c: string; path: JSX.Element }> = {
