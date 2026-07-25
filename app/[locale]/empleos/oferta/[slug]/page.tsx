@@ -117,7 +117,8 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
     title: job.title,
     description: job.description ?? job.title,
     datePosted: job.created_at,
-    validThrough: job.closes_at ?? undefined,
+    // Google prefiere validThrough; casi ninguna oferta trae closes_at → fallback +60 días.
+    validThrough: job.closes_at ?? new Date(new Date(job.created_at).getTime() + 60 * 86400000).toISOString(),
     employmentType: job.employment_type ?? undefined,
     hiringOrganization: job.company
       ? { "@type": "Organization", name: job.company.name, logo: job.company.logo_url ?? undefined }

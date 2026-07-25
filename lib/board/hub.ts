@@ -58,12 +58,9 @@ export async function resolveHub(seg1: string, seg2: string | undefined, locale:
   }
 
   const { jobs, total, facets } = await searchJobs(createClient(), { ...params, pageSize: 30 });
-  return {
-    kind, label, location, jobs, total,
-    index: total > 0,
-    companies: facets.company.slice(0, 5).map((c) => c.value),
-    facets,
-  };
+  // Empresas del HUB (de las ofertas reales, no de facets globales que no se scopean por cargo).
+  const companies = Array.from(new Set(jobs.map((j) => j.company?.name).filter((n): n is string => !!n))).slice(0, 5);
+  return { kind, label, location, jobs, total, index: total > 0, companies, facets };
 }
 
 export { categoryLabel };

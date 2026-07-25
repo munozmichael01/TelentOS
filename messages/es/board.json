@@ -633,7 +633,11 @@
     "titleLoc": "Empleos en {location}",
     "introCompanies": "Empresas que contratan: {companies}.",
     "crumbHome": "Inicio",
-    "crumbJobs": "Empleos"
+    "crumbJobs": "Empleos",
+    "faqCount": "{subject}: ¿cuántas vacantes hay?",
+    "faqCompanies": "{subject}: ¿qué empresas están contratando?",
+    "faqSalary": "{subject}: ¿cuál es el rango salarial?",
+    "faqSalaryA": "La mayoría de las ofertas paga entre {range}."
   },
   "saved": {
     "title": "Guardadas",

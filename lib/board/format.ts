@@ -29,7 +29,7 @@ export function logoFor(name: string | null | undefined) {
 
 // Salario "$1.800–2.400" (o "Desde $X" / "Hasta $X"); null → cadena vacía.
 // Sufijo de periodo por idioma (se muestra tal cual; el orden usa el equivalente mensual).
-const PERIOD_SUFFIX: Record<string, Record<string, string>> = {
+export const PERIOD_SUFFIX: Record<string, Record<string, string>> = {
   es: { hour: "/h", day: "/día", week: "/sem", month: "/mes", year: "/año" },
   en: { hour: "/hr", day: "/day", week: "/wk", month: "/mo", year: "/yr" },
   pt: { hour: "/h", day: "/dia", week: "/sem", month: "/mês", year: "/ano" },
