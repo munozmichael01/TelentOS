@@ -636,8 +636,10 @@
     "crumbJobs": "Empleos",
     "faqCount": "{subject}: ¿cuántas vacantes hay?",
     "faqCompanies": "{subject}: ¿qué empresas están contratando?",
-    "faqSalary": "{subject}: ¿cuál es el rango salarial?",
-    "faqSalaryA": "La mayoría de las ofertas paga entre {range}."
+    "faqHeading": "Preguntas frecuentes",
+    "faqSkills": "{subject}: ¿qué requisitos o conocimientos se piden?",
+    "faqTopTitles": "{subject}: ¿qué puestos tienen más ofertas?",
+    "faqTopAreas": "{subject}: ¿qué áreas contratan más?"
   },
   "saved": {
     "title": "Guardadas",

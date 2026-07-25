@@ -636,8 +636,10 @@
     "crumbJobs": "Jobs",
     "faqCount": "{subject}: how many openings are there?",
     "faqCompanies": "{subject}: which companies are hiring?",
-    "faqSalary": "{subject}: what is the salary range?",
-    "faqSalaryA": "Most postings pay between {range}."
+    "faqHeading": "Frequently asked questions",
+    "faqSkills": "{subject}: what skills or requirements are expected?",
+    "faqTopTitles": "{subject}: which roles have the most openings?",
+    "faqTopAreas": "{subject}: which fields are hiring the most?"
   },
   "saved": {
     "title": "Saved",

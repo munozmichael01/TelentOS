@@ -5,6 +5,7 @@ import { resolveTitleSlug } from "@/lib/job-board/job-titles";
 import { createClient } from "@/lib/supabase/server";
 
 export type HubKind = "category" | "jobtitle" | "city" | "country";
+export type HubTop = { key: string; label: string; cnt: number };
 export type HubData = {
   kind: HubKind;
   label: string;                 // etiqueta del rol/categoría/ubicación de seg1 (localizada)
@@ -12,7 +13,10 @@ export type HubData = {
   jobs: BoardJob[];
   total: number;
   index: boolean;                // ≥1 oferta → indexable; 0 → noindex (se mantiene la URL)
-  companies: string[];           // top empresas (intro data-driven / AEO)
+  companies: string[];           // top 10 empresas por nº de ofertas activas (agregado real)
+  topTitles: HubTop[];           // top puestos por ofertas activas (útil en hubs de ubicación/área)
+  topCategories: HubTop[];       // top áreas por ofertas activas (útil en hubs de ubicación/cargo)
+  coreSkills: string[];          // requisitos canónicos del cargo (taxonomía ESCO) — solo hub de cargo
   facets: BoardFacets;
 };
 
@@ -57,10 +61,39 @@ export async function resolveHub(seg1: string, seg2: string | undefined, locale:
     location = { kind, label, slug: seg1 };
   }
 
-  const { jobs, total, facets } = await searchJobs(createClient(), { ...params, pageSize: 30 });
-  // Empresas del HUB (de las ofertas reales, no de facets globales que no se scopean por cargo).
-  const companies = Array.from(new Set(jobs.map((j) => j.company?.name).filter((n): n is string => !!n))).slice(0, 5);
-  return { kind, label, location, jobs, total, index: total > 0, companies, facets };
+  const supabase = createClient();
+  const { jobs, total, facets } = await searchJobs(supabase, { ...params, pageSize: 30 });
+
+  // Tops REALES scopeados al hub (mismo WHERE que board_rank_jobs) por nº de ofertas activas:
+  // top-10 empresas, puestos y áreas. No confundir con `facets` (base global, no scopeada).
+  const lang = locale.split("-")[0];
+  const { data: facetRows } = await supabase.rpc("board_hub_facets", {
+    p_title_ids: params.titleIds ?? null, p_category_keys: params.categoryKey ? [params.categoryKey] : null,
+    p_location: params.location ?? null, p_country: params.country ?? null, p_limit: 10, p_locale: lang,
+  });
+  const rows = (facetRows ?? []) as { kind: string; key: string; label: string; cnt: number }[];
+  const clean = (s: string) => s.split(" / ")[0]; // "camarero / camarera" → "camarero"
+  const companies = rows.filter((r) => r.kind === "company").map((r) => r.label);
+  const topTitles = rows.filter((r) => r.kind === "jobtitle").map((r) => ({ key: r.key, label: clean(r.label), cnt: Number(r.cnt) }));
+  const topCategories = rows.filter((r) => r.kind === "category").map((r) => ({ key: r.key, label: categoryLabel(r.key, locale) ?? r.key, cnt: Number(r.cnt) }));
+
+  // Requisitos canónicos del cargo (AEO no numérico): skills core de la taxonomía ESCO para los
+  // titleIds del hub. Fuente = cargo canónico, NO las ofertas (que no traen requisitos estructurados).
+  let coreSkills: string[] = [];
+  if (kind === "jobtitle" && params.titleIds?.length) {
+    const { data: sk } = await supabase
+      .from("job_title_skills")
+      .select("weight, skills(name, skill_translations(name, locale))")
+      .in("job_title_id", params.titleIds).eq("is_core", true).order("weight", { ascending: false }).limit(12);
+    const seen = new Set<string>();
+    for (const r of (sk ?? []) as unknown as { skills: { name: string; skill_translations: { name: string; locale: string }[] } | null }[]) {
+      const tr = r.skills?.skill_translations?.find((x) => x.locale === lang)?.name ?? r.skills?.name;
+      if (tr && !seen.has(tr.toLowerCase())) { seen.add(tr.toLowerCase()); coreSkills.push(tr); }
+    }
+    coreSkills = coreSkills.slice(0, 6);
+  }
+
+  return { kind, label, location, jobs, total, index: total > 0, companies, topTitles, topCategories, coreSkills, facets };
 }
 
 export { categoryLabel };
