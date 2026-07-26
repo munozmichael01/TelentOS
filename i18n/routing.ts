@@ -11,6 +11,16 @@ import { defineRouting } from "next-intl/routing";
 // locale + hreflang ya hacen el geo-targeting; localizar sus slugs no aporta y añade
 // coste. El board sí: /empleos · /jobs · /vagas (el EN `jobs` ya no colisiona con el
 // dashboard porque este vive bajo /app/jobs).
+// Idioma y país son EJES INDEPENDIENTES (una cosa es la oferta, otra el producto): cualquier
+// mercado se navega en cualquier idioma. Locale = {idioma}-{país}. Los slugs del board se
+// localizan por IDIOMA (empleos/jobs/vagas); byLang genera el mapa para los 12 locales.
+const LANGS = ["es", "en", "pt"] as const;
+const COUNTRIES = ["ve", "es", "br", "us"] as const;
+const LOCALES = LANGS.flatMap((la) => COUNTRIES.map((c) => `${la}-${c}`)) as
+  `${(typeof LANGS)[number]}-${(typeof COUNTRIES)[number]}`[];
+const byLang = (es: string, en: string, pt: string): Record<string, string> =>
+  Object.fromEntries(LOCALES.map((l) => [l, l.startsWith("es") ? es : l.startsWith("en") ? en : pt]));
+
 export const pathnames = {
   "/": "/",
   "/login": "/login",
@@ -25,28 +35,18 @@ export const pathnames = {
   "/careers/[slug]": "/careers/[slug]",
   "/careers/[slug]/jobs/[id]": "/careers/[slug]/jobs/[id]",
 
-  // Job board público (slugs localizados por mercado)
-  "/empleos": { "es-ve": "/empleos", "es-es": "/empleos", "en-us": "/jobs", "pt-br": "/vagas" },
-  "/empleos/oferta/[slug]": {
-    "es-ve": "/empleos/oferta/[slug]",
-    "es-es": "/empleos/oferta/[slug]",
-    "en-us": "/jobs/opening/[slug]",
-    "pt-br": "/vagas/vaga/[slug]",
-  },
-  "/empleos/oferta/[slug]/aplicar": {
-    "es-ve": "/empleos/oferta/[slug]/aplicar",
-    "es-es": "/empleos/oferta/[slug]/aplicar",
-    "en-us": "/jobs/opening/[slug]/apply",
-    "pt-br": "/vagas/vaga/[slug]/candidatar",
-  },
-  "/cuenta": { "es-ve": "/cuenta", "es-es": "/cuenta", "en-us": "/account", "pt-br": "/conta" },
-  "/cuenta/entrar": { "es-ve": "/cuenta/entrar", "es-es": "/cuenta/entrar", "en-us": "/account/sign-in", "pt-br": "/conta/entrar" },
-  "/cuenta/perfil": { "es-ve": "/cuenta/perfil", "es-es": "/cuenta/perfil", "en-us": "/account/profile", "pt-br": "/conta/perfil" },
-  "/empleos/asistente": { "es-ve": "/empleos/asistente", "es-es": "/empleos/asistente", "en-us": "/jobs/assistant", "pt-br": "/vagas/assistente" },
-  "/empleos/empresas": { "es-ve": "/empleos/empresas", "es-es": "/empleos/empresas", "en-us": "/jobs/companies", "pt-br": "/vagas/empresas" },
-  "/empleos/empresa/[slug]": { "es-ve": "/empleos/empresa/[slug]", "es-es": "/empleos/empresa/[slug]", "en-us": "/jobs/company/[slug]", "pt-br": "/vagas/empresa/[slug]" },
-  "/empleos/[categoria]": { "es-ve": "/empleos/[categoria]", "es-es": "/empleos/[categoria]", "en-us": "/jobs/[categoria]", "pt-br": "/vagas/[categoria]" },
-  "/empleos/[categoria]/[ubicacion]": { "es-ve": "/empleos/[categoria]/[ubicacion]", "es-es": "/empleos/[categoria]/[ubicacion]", "en-us": "/jobs/[categoria]/[ubicacion]", "pt-br": "/vagas/[categoria]/[ubicacion]" },
+  // Job board público (slugs localizados por IDIOMA)
+  "/empleos": byLang("/empleos", "/jobs", "/vagas"),
+  "/empleos/oferta/[slug]": byLang("/empleos/oferta/[slug]", "/jobs/opening/[slug]", "/vagas/vaga/[slug]"),
+  "/empleos/oferta/[slug]/aplicar": byLang("/empleos/oferta/[slug]/aplicar", "/jobs/opening/[slug]/apply", "/vagas/vaga/[slug]/candidatar"),
+  "/cuenta": byLang("/cuenta", "/account", "/conta"),
+  "/cuenta/entrar": byLang("/cuenta/entrar", "/account/sign-in", "/conta/entrar"),
+  "/cuenta/perfil": byLang("/cuenta/perfil", "/account/profile", "/conta/perfil"),
+  "/empleos/asistente": byLang("/empleos/asistente", "/jobs/assistant", "/vagas/assistente"),
+  "/empleos/empresas": byLang("/empleos/empresas", "/jobs/companies", "/vagas/empresas"),
+  "/empleos/empresa/[slug]": byLang("/empleos/empresa/[slug]", "/jobs/company/[slug]", "/vagas/empresa/[slug]"),
+  "/empleos/[categoria]": byLang("/empleos/[categoria]", "/jobs/[categoria]", "/vagas/[categoria]"),
+  "/empleos/[categoria]/[ubicacion]": byLang("/empleos/[categoria]/[ubicacion]", "/jobs/[categoria]/[ubicacion]", "/vagas/[categoria]/[ubicacion]"),
 
   // Dashboard B2B autenticado (no localizado — mismo slug en todos los locales)
   "/app/dashboard": "/app/dashboard",
@@ -84,10 +84,10 @@ export const pathnames = {
 } as const;
 
 export const routing = defineRouting({
-  // Mercados (idioma-país). es-ve default (arranca en VE). es-es/pt-br/en-us comparten
-  // messages por idioma (es/pt/en). El país solo pesa en el board (boost local + hubs de
-  // ciudad); marketing/dashboard de los mercados no-primarios redirigen a su idioma primario.
-  locales: ["es-ve", "es-es", "en-us", "pt-br"],
+  // 12 locales = 3 idiomas × 4 mercados. es-ve default (arranca en VE). Messages compartidos por
+  // idioma. El país solo pesa en el board (boost local + hubs de ciudad); marketing/dashboard de
+  // locales no-primarios redirigen a su idioma primario (es→es-ve, en→en-us, pt→pt-br).
+  locales: LOCALES,
   defaultLocale: "es-ve",
   pathnames,
 });
