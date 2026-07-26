@@ -74,9 +74,15 @@ function pageDefs(cur: number, total: number): (number | "…")[] {
 
 export function BoardClient({
   initialJobs, initialTotal, initialFacets, initialQuery, categories, country, authed = false,
+  initialArea, initialLocation = "", initialCountry, hub,
 }: {
   initialJobs: BoardJob[]; initialTotal: number; initialFacets: BoardFacets; initialQuery: string;
   categories: BoardCategory[]; country: string; authed?: boolean;
+  // Siembra desde una URL de hub (la búsqueda estructurada ES el buscador con el facet aplicado):
+  // área (categoría), ubicación, o país (filtro fijo del hub de país). `hub` trae la cabecera SEO
+  // (H1 + breadcrumb server-side) y las FAQ visibles que van bajo el paginado.
+  initialArea?: string; initialLocation?: string; initialCountry?: string;
+  hub?: { h1: string; crumb: string; faqs: { q: string; a: string }[] };
 }) {
   const t = useTranslations("Board");
   const locale = useLocale();
@@ -88,12 +94,12 @@ export function BoardClient({
   const [query, setQuery] = useState(initialQuery);
   const [nlChips, setNlChips] = useState<NlChip[]>([]);
   // Multi-select por grupo (barra de filtros desktop): OR dentro del grupo, AND entre grupos.
-  const [sel, setSel] = useState<Sel>(emptySel());
-  const [location, setLocation] = useState("");
+  const [sel, setSel] = useState<Sel>(initialArea ? { ...emptySel(), area: [initialArea] } : emptySel());
+  const [location, setLocation] = useState(initialLocation);
   // ¿`location` vino del autocomplete del gazetteer (→ el hub de ciudad resuelve) o del texto
   // libre del NL (puede no existir)? Solo enlazamos la ciudad a su hub si está validada, para
   // no generar un 404 (p. ej. "Madrid" bajo mercado VE, que no está en el gazetteer).
-  const [cityValid, setCityValid] = useState(false);
+  const [cityValid, setCityValid] = useState(!!initialLocation); // sembrada desde hub = validada
   const [sort, setSort] = useState<BoardSort>("relevance");
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -151,6 +157,7 @@ export function BoardClient({
     if (s.salary.length) { const min = Math.min(...s.salary.map((v) => SALARY_MIN[v] ?? 0)); if (min > 0) p.set("salaryMin", String(min)); }
     p.set("sort", sortV);
     if (country) p.set("homeCountry", country); // boost local-first del mercado (no filtra)
+    if (initialCountry) p.set("country", initialCountry); // filtro fijo del hub de país (España)
     if (pg > 1) p.set("page", String(pg));
     return p;
   }
@@ -549,14 +556,21 @@ export function BoardClient({
 
         <div className="jb-board-split">
          <div className="jb-board-list">
-        {/* Breadcrumb + H1 SEO enlazable */}
+        {/* Breadcrumb + H1 SEO. En modo HUB el título viene del servidor (localizado, SSR); en el
+            índice del board se deriva de cargo/ciudad activos (enlaces internos, link juice). */}
         <nav style={{ fontFamily: MONO, fontSize: 10, color: "var(--soft)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingTop: 4 }}>
           <Link href="/" style={{ color: "var(--soft)" }}>{t("crumb.home")}</Link> / <Link href="/empleos" style={{ color: "var(--soft)" }}>{t("crumb.jobs")}</Link>
-          {activeArea && <> / {sel.area[0] ? <Link href={{ pathname: "/empleos/[categoria]", params: { categoria: sel.area[0] } }} style={{ color: "var(--soft)" }}>{activeArea}</Link> : activeArea}</>}
-          {activeCity && <> / <span style={{ color: "var(--ink)" }}>{activeCity}</span></>}
+          {hub ? <> / <span style={{ color: "var(--ink)" }}>{hub.crumb}</span></> : <>
+            {activeArea && <> / {sel.area[0] ? <Link href={{ pathname: "/empleos/[categoria]", params: { categoria: sel.area[0] } }} style={{ color: "var(--soft)" }}>{activeArea}</Link> : activeArea}</>}
+            {activeCity && <> / <span style={{ color: "var(--ink)" }}>{activeCity}</span></>}
+          </>}
         </nav>
-        {/* Encabezado de resultados: <h2> — el <h1> único de la página es el hero (móvil).
-            Cargo y ciudad son enlaces internos (link juice SEO, spec §32). */}
+        {hub ? (
+          <>
+            <h1 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 22, letterSpacing: "-.7px", lineHeight: 1.15, margin: "9px 0 2px" }}>{hub.h1}</h1>
+            <div style={{ fontFamily: MONO, fontSize: 12, color: "var(--soft)", marginBottom: 2 }}>{t("results.count", { count: total })}</div>
+          </>
+        ) : (
         <h2 style={{ fontFamily: ARCHIVO, fontWeight: 900, fontSize: 21, letterSpacing: "-.6px", lineHeight: 1.2, margin: "9px 0 3px" }}>
           {t("results.count", { count: total })}{(activeArea || activeCity) && " "}
           {activeArea && <>{t("results.ofRole")}{" "}
@@ -570,6 +584,7 @@ export function BoardClient({
               : <span style={{ color: "var(--brand)" }}>{activeCity}</span>}
           </>}
         </h2>
+        )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "0 0 12px" }}>
           <span style={{ fontFamily: MONO, fontSize: 11, color: "var(--soft)" }}>{t("results.results", { count: total })}</span>
           {/* Desktop: botón de texto junto al conteo. Mobile: campana compacta (40x40). */}
@@ -664,6 +679,22 @@ export function BoardClient({
              </div>
              <span style={{ fontFamily: MONO, fontSize: 9.5, color: "#B0AAA0" }}>{t("results.pageOf", { page, total: totalPages })}</span>
            </nav>
+         )}
+
+         {/* FAQ del hub (SEO/AEO) — debajo del paginado. Mismo contenido que el FAQPage JSON-LD
+             que renderiza el server de la página. Solo en modo hub. */}
+         {hub && hub.faqs.length > 0 && (
+           <div style={{ margin: "32px 0 4px" }}>
+             <div style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: .5, color: "var(--soft)", marginBottom: 12 }}>{t("hub.faqHeading")}</div>
+             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+               {hub.faqs.map((f, i) => (
+                 <details key={i} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "12px 14px" }}>
+                   <summary style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 14, letterSpacing: "-.2px", cursor: "pointer", listStyle: "none" }}>{f.q}</summary>
+                   <p style={{ fontSize: 13.5, lineHeight: 1.5, color: "#3A3833", margin: "8px 0 0" }}>{f.a}</p>
+                 </details>
+               ))}
+             </div>
+           </div>
          )}
          </div>{/* /jb-board-list */}
 

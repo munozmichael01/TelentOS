@@ -32,6 +32,7 @@ export async function GET(req: Request) {
     datePosted: dp === "24h" || dp === "week" || dp === "month" ? dp : undefined,
     sort: (g("sort") as BoardSort) ?? "relevance",
     homeCountry: g("homeCountry"), // boost local-first del mercado (no filtra)
+    country: g("country"), // filtro duro (hub de país)
     page: num("page"),
     pageSize: num("pageSize"),
   };

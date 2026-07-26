@@ -18,6 +18,8 @@ export type HubData = {
   topCategories: HubTop[];       // top áreas por ofertas activas (útil en hubs de ubicación/cargo)
   coreSkills: string[];          // requisitos canónicos del cargo (taxonomía ESCO) — solo hub de cargo
   facets: BoardFacets;
+  // Siembra del board (la URL estructurada ES el buscador con el facet aplicado).
+  seed: { area?: string; query?: string; location?: string; country?: string };
 };
 
 // Ubicación (seg1 solo, o seg2): ciudad del mercado o país cubierto. null si no resuelve.
@@ -61,8 +63,19 @@ export async function resolveHub(seg1: string, seg2: string | undefined, locale:
     location = { kind, label, slug: seg1 };
   }
 
+  // Seed para el board. Para CARGO se siembra `query=label` (y se busca por q) para que el board
+  // interactivo y el hub ordenen/filtren igual; los tops/skills siguen usando titleIds (exactos).
+  const seed: HubData["seed"] = {};
+  if (params.categoryKey) seed.area = params.categoryKey;
+  if (kind === "jobtitle") seed.query = label;
+  if (params.location) seed.location = params.location;
+  if (params.country) seed.country = params.country;
+
   const supabase = createClient();
-  const { jobs, total, facets } = await searchJobs(supabase, { ...params, homeCountry: countryForLocale(locale), pageSize: 30 });
+  const searchParams = kind === "jobtitle"
+    ? { q: label, location: params.location, country: params.country }
+    : params;
+  const { jobs, total, facets } = await searchJobs(supabase, { ...searchParams, homeCountry: countryForLocale(locale), pageSize: 20 });
 
   // Tops REALES scopeados al hub (mismo WHERE que board_rank_jobs) por nº de ofertas activas:
   // top-10 empresas, puestos y áreas. No confundir con `facets` (base global, no scopeada).
@@ -93,7 +106,7 @@ export async function resolveHub(seg1: string, seg2: string | undefined, locale:
     coreSkills = coreSkills.slice(0, 6);
   }
 
-  return { kind, label, location, jobs, total, index: total > 0, companies, topTitles, topCategories, coreSkills, facets };
+  return { kind, label, location, jobs, total, index: total > 0, companies, topTitles, topCategories, coreSkills, facets, seed };
 }
 
 export { categoryLabel };
