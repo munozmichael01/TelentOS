@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition, type CSSProperties } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import type { BoardJob, BoardFacets, BoardSort } from "@/lib/job-board/search";
 import type { BoardCategory } from "@/lib/board/geo";
 import { jobSlug } from "@/lib/board/format";
@@ -87,6 +87,11 @@ export function BoardClient({
   const t = useTranslations("Board");
   const locale = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
+  // Idioma ≠ mercado: cambia la UI a otro idioma MANTENIENDO el país/mercado (es-ve → en-ve).
+  const uiLang = locale.split("-")[0];
+  const marketCc = locale.split("-")[1] ?? "ve";
+  const switchLang = (lang: string) => { if (lang !== uiLang) router.replace(pathname as never, { locale: `${lang}-${marketCc}` }); };
 
   const [jobs, setJobs] = useState(initialJobs);
   const [total, setTotal] = useState(initialTotal);
@@ -440,6 +445,12 @@ export function BoardClient({
           </div>
           {/* Nav + cuenta, agrupados a la derecha (nav visible solo en desktop) */}
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 20 }}>
+            {/* Idioma de la UI (mantiene el mercado): una cosa es la oferta, otra el producto. */}
+            <div style={{ display: "flex", alignItems: "center", gap: 2, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 999, padding: 2, flexShrink: 0 }}>
+              {(["es", "en", "pt"] as const).map((lg) => (
+                <button key={lg} onClick={() => switchLang(lg)} aria-label={lg} style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: .3, textTransform: "uppercase", color: lg === uiLang ? "#fff" : "var(--soft)", background: lg === uiLang ? "var(--brand)" : "transparent", border: "none", borderRadius: 999, padding: "3px 7px", cursor: "pointer" }}>{lg}</button>
+              ))}
+            </div>
             <nav className="jb-topnav" style={{ alignItems: "center", gap: 22 }}>
               <Link href="/empleos/empresas" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)" }}>{t("nav.companies")}</Link>
               <Link href="/cuenta" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)" }}>{t("nav.alerts")}</Link>
