@@ -1,6 +1,6 @@
 import { searchJobs, type BoardJob, type BoardFacets } from "@/lib/job-board/search";
 import { getCategories, categoryLabel } from "@/lib/board/categories";
-import { cityFromSlug, citySlug, countryFromSlug, countryForLocale } from "@/lib/board/geo";
+import { cityFromSlugGlobal, citySlug, countryFromSlug, countryForLocale } from "@/lib/board/geo";
 import { resolveTitleSlug } from "@/lib/job-board/job-titles";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,7 +24,7 @@ export type HubData = {
 function resolveLocation(slug: string, locale: string):
   | { kind: "city" | "country"; label: string; params: { location?: string; country?: string } }
   | null {
-  const city = cityFromSlug(slug, countryForLocale(locale));
+  const city = cityFromSlugGlobal(slug, countryForLocale(locale));
   if (city) return { kind: "city", label: city.name, params: { location: city.name } };
   const country = countryFromSlug(slug, locale);
   if (country) return { kind: "country", label: country.name, params: { country: country.code } };

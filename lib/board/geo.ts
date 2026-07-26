@@ -26,6 +26,44 @@ export function cityFromSlug(slug: string, country: string): BoardCity | null {
   const found = CITIES.find((c) => c.country === cc && citySlug(c.name) === slug);
   return found ? { name: found.name, admin1: found.admin1, country: found.country, population: found.population } : null;
 }
+// Ciudad canónica GLOBAL (cualquier país), prefiriendo el mercado ante colisiones (Barcelona
+// existe en ES y VE). El mercado prioriza, NO restringe: Madrid resuelve también en es-ve.
+export function cityFromSlugGlobal(slug: string, preferCountry: string): BoardCity | null {
+  const cc = preferCountry.toUpperCase();
+  const matches = CITIES.filter((c) => citySlug(c.name) === slug);
+  if (!matches.length) return null;
+  const pick = matches.find((c) => c.country === cc) ?? matches.slice().sort((a, b) => b.population - a.population)[0];
+  return { name: pick.name, admin1: pick.admin1, country: pick.country, population: pick.population };
+}
+// Autocomplete GLOBAL de ciudades (todos los países), con el mercado priorizado. No filtra por
+// país: el mercado solo sube sus ciudades. El filtro "solo con ofertas" lo hace el endpoint.
+export function searchCitiesGlobal(q: string, preferCountry: string, limit = 12): BoardCity[] {
+  const cc = preferCountry.toUpperCase();
+  const nq = q.trim().toLowerCase();
+  const clean = ({ name, admin1, country, population }: RawCity): BoardCity => ({ name, admin1, country, population });
+  let list = nq ? CITIES.filter((c) => c.name.toLowerCase().includes(nq)) : CITIES.slice();
+  list.sort((a, b) => {
+    const pa = a.country === cc ? 0 : 1, pb = b.country === cc ? 0 : 1;
+    if (pa !== pb) return pa - pb;
+    if (nq) {
+      const sa = a.name.toLowerCase().startsWith(nq) ? 0 : 1, sb = b.name.toLowerCase().startsWith(nq) ? 0 : 1;
+      if (sa !== sb) return sa - sb;
+    }
+    return b.population - a.population;
+  });
+  // Dedupe por slug: varias "Valencia" (VE/ES/US) resuelven el mismo hub → una sola sugerencia
+  // (se queda la primera del orden = la del mercado si existe).
+  const seen = new Set<string>();
+  const out: BoardCity[] = [];
+  for (const c of list) {
+    const s = citySlug(c.name);
+    if (seen.has(s)) continue;
+    seen.add(s);
+    out.push(clean(c));
+    if (out.length >= limit) break;
+  }
+  return out;
+}
 
 // Países cubiertos (code → nombre localizado) para hubs de país. Ampliar según mercados.
 const COUNTRIES: Record<string, { es: string; en: string; pt: string }> = {
