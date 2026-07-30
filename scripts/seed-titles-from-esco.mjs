@@ -261,9 +261,20 @@ async function persistLabelsAndSkills(titles, idFor) {
   // Skills: resolver por esco_uri o nombre, insertar las nuevas, enlazar JT↔skill.
   const allSkills = new Map();
   for (const t of titles) for (const s of t.skills) if (!allSkills.has(s.uri)) allSkills.set(s.uri, s);
-  const { data: existing } = await db.from("skills").select("id, name, esco_uri");
+  // PAGINADO obligatorio: Supabase corta a 1.000 filas y el catálogo pasa de 1.800. Sin esto el
+  // mapa de skills existentes llegaba a medias, las ya presentes se intentaban reinsertar (error
+  // de duplicado, silenciado) y **el enlace cargo↔skill se descartaba sin avisar**: `cook` acabó
+  // con 2 competencias cuando ESCO le da 15 esenciales + 35 opcionales.
   const byUriS = new Map(), byNameS = new Map();
-  for (const r of existing ?? []) { if (r.esco_uri) byUriS.set(r.esco_uri, r.id); byNameS.set(nkey(r.name), r.id); }
+  {
+    const P = 1000;
+    for (let from = 0; ; from += P) {
+      const { data, error } = await db.from("skills").select("id, name, esco_uri").range(from, from + P - 1);
+      if (error) throw error;
+      for (const r of data ?? []) { if (r.esco_uri) byUriS.set(r.esco_uri, r.id); byNameS.set(nkey(r.name), r.id); }
+      if (!data || data.length < P) break;
+    }
+  }
   const toInsert = [];
   for (const s of allSkills.values()) if (!byUriS.has(s.uri) && !byNameS.has(nkey(s.name))) toInsert.push({ name: s.name, esco_uri: s.uri, category: "domain" });
   for (const part of chunk(toInsert, 500)) {
@@ -272,11 +283,25 @@ async function persistLabelsAndSkills(titles, idFor) {
     for (const r of data ?? []) { if (r.esco_uri) byUriS.set(r.esco_uri, r.id); byNameS.set(nkey(r.name), r.id); }
   }
   const skillId = (s) => byUriS.get(s.uri) ?? byNameS.get(nkey(s.name));
+  // Red de seguridad: si alguna skill sigue sin resolverse (choque de duplicado al insertar),
+  // se busca por esco_uri antes de rendirse. Un enlace perdido aquí es una competencia que
+  // desaparece del módulo de Desempeño, así que no puede fallar en silencio.
+  const unresolved = [...allSkills.values()].filter((s) => !skillId(s));
+  for (const part of chunk(unresolved.map((s) => s.uri), 100)) {
+    const { data } = await db.from("skills").select("id, name, esco_uri").in("esco_uri", part);
+    for (const r of data ?? []) { if (r.esco_uri) byUriS.set(r.esco_uri, r.id); byNameS.set(nkey(r.name), r.id); }
+  }
   const links = [];
+  let dropped = 0;
   for (const t of titles) {
     const jid = idFor(t); if (!jid) continue;
-    for (const s of t.skills) { const sid = skillId(s); if (sid) links.push({ job_title_id: jid, skill_id: sid, weight: s.weight, is_core: s.isCore }); }
+    for (const s of t.skills) {
+      const sid = skillId(s);
+      if (sid) links.push({ job_title_id: jid, skill_id: sid, weight: s.weight, is_core: s.isCore });
+      else dropped++;
+    }
   }
+  if (dropped) console.warn(`  ⚠ ${dropped} enlaces cargo↔skill descartados por no resolver la skill`);
   for (const part of chunk(links, 500)) { const { error } = await db.from("job_title_skills").upsert(part, { onConflict: "job_title_id,skill_id" }); if (error) throw error; }
   console.log(`traducciones: ${tr.length} · sinónimos nuevos: ${syn.length} · skills nuevas: ${toInsert.length} · enlaces JT↔skill: ${links.length}`);
 }

@@ -263,5 +263,15 @@
         "emptyWeeks": "No weeks configured."
       }
     }
+  },
+  "competencies": {
+    "title": "Role competencies",
+    "intro": "Derived from the standard role on this record. They come from the taxonomy, not hand-written.",
+    "introInherited": "Inherited from {anchor}, the standard role this position maps to.",
+    "core": "Expected",
+    "optional": "Nice to have",
+    "noTitle": "This record has no standard role linked, so there are no competencies to assess yet. Link one by editing the record.",
+    "noTitleWithRole": "The role “{role}” isn’t linked to the taxonomy yet, so there are no competencies to assess. Link it by editing the record.",
+    "noSkills": "The standard role on this record has no competencies defined in the taxonomy yet."
   }
 }

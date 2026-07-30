@@ -263,5 +263,15 @@
         "emptyWeeks": "Sin semanas configuradas."
       }
     }
+  },
+  "competencies": {
+    "title": "Competencias del puesto",
+    "intro": "Se evalúan a partir del cargo estándar de la ficha. Vienen de la taxonomía, no se definen a mano.",
+    "introInherited": "Heredadas de {anchor}, el cargo estándar al que corresponde este puesto.",
+    "core": "Esperadas",
+    "optional": "Deseables",
+    "noTitle": "Esta ficha no tiene cargo estándar vinculado, así que aún no hay competencias que evaluar. Vincúlalo editando la ficha.",
+    "noTitleWithRole": "El cargo «{role}» todavía no está vinculado a la taxonomía, así que aún no hay competencias que evaluar. Vincúlalo editando la ficha.",
+    "noSkills": "El cargo estándar de esta ficha aún no tiene competencias definidas en la taxonomía."
   }
 }

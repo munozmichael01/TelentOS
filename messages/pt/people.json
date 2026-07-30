@@ -263,5 +263,15 @@
         "emptyWeeks": "Sem semanas configuradas."
       }
     }
+  },
+  "competencies": {
+    "title": "Competências do cargo",
+    "intro": "Derivadas do cargo padrão da ficha. Vêm da taxonomia, não são definidas à mão.",
+    "introInherited": "Herdadas de {anchor}, o cargo padrão ao qual esta posição corresponde.",
+    "core": "Esperadas",
+    "optional": "Desejáveis",
+    "noTitle": "Esta ficha não tem cargo padrão vinculado, então ainda não há competências a avaliar. Vincule um editando a ficha.",
+    "noTitleWithRole": "O cargo “{role}” ainda não está vinculado à taxonomia, então não há competências a avaliar. Vincule-o editando a ficha.",
+    "noSkills": "O cargo padrão desta ficha ainda não tem competências definidas na taxonomia."
   }
 }
