@@ -26,9 +26,81 @@ escritura solo `service_role` (seeds). Migraciones `0052`, `0053`.
 ### Seeds
 - `npm run seed:taxonomy` (`scripts/seed-taxonomy.mjs`): seedea todo el `taxonomy.json`
   (350 títulos + 1.766 skills con URIs, sinónimos, traducciones, relaciones, enlaces JT↔skill).
-- `npm run seed:hospitality` (`scripts/seed-hospitality-from-esco.mjs`): trae hostelería
-  REAL de la API de ESCO (el export reducido la excluyó). ~75 ocupaciones con URIs + skills.
-- Para poblar otro sector: mismo patrón (buscar en ESCO por términos del sector → insertar).
+- `npm run seed:titles -- --sector=<nombre|all> [--dry]` (`scripts/seed-titles-from-esco.mjs`):
+  trae ocupaciones REALES de la API de ESCO para los sectores del preset `SECTORS` (hostelería,
+  software, it_ops, product_design, exec, people_hr, finance, marketing, customer, logistics,
+  maintenance, retail). Abrir un sector nuevo = una entrada en ese mapa, no un script nuevo.
+  Incluye un **filtro de relevancia**: la búsqueda de ESCO es difusa y para "human resources
+  manager" devuelve también "human rights officer" o "library manager"; se exige compartir el
+  token específico del término (los genéricos tipo *manager/officer* no bastan). `--dry` lista
+  lo que entraría y lo descartado, para auditarlo antes de aplicar.
+- `npm run seed:titles -- --enrich [--dry]`: completa lo que `build-taxonomy-from-esco.mjs`
+  truncó en los títulos ya existentes — recorta sinónimos y skills a 8, y ahí se perdieron los
+  acrónimos de ESCO (CEO, CTO, CIO) y skills core. Solo añade, nunca borra.
+- `job_title_synonyms` tiene índice único (migr. 0064) sobre (título, locale, `lower(synonym)`):
+  antes no lo tenía y re-ejecutar un seeder duplicaba filas.
+
+### Modelo de DOS NIVELES (migr. 0066)
+
+`job_titles` tiene dos niveles, porque el estándar internacional y el vocabulario real del
+mercado no son lo mismo:
+
+| `level` | Qué es | Trae |
+|---|---|---|
+| `esco` | **Ancla** estándar | `esco_uri`, etiqueta oficial, traducciones, sinónimos y skills |
+| `market` | **Cargo real** que publican las empresas y buscan los candidatos | `parent_title_id` al ancla; **hereda sus skills** y puede añadir propias |
+
+Ejemplo: `Frontend Engineer` y `Backend Engineer` son cargos de mercado con padre
+`software developer` (19 skills heredadas cada uno); `Head of People` y `People Ops` cuelgan de
+`human resources manager`.
+
+**Regla anti-redundancia** (evita duplicar cargos, que es el riesgo principal):
+- Misma ocupación dicha de otra forma (mesero/camarero/waiter · CEO/chief executive officer) →
+  **sinónimo**, no crea fila.
+- El mercado lo trata como puesto distinto —otras expectativas, otras skills, demanda de
+  búsqueda propia— aunque ESCO lo agrupe en un genérico → **cargo `market`** con padre.
+- Test: ¿lo buscaría un candidato con ese término **y** pondría el recruiter requisitos
+  distintos? Los dos sí → cargo propio. Solo el primero → sinónimo.
+- Las variantes de **seniority** no son cargos ("Senior Backend Engineer" no es otro puesto):
+  eso vive en su columna.
+- El nombre tiene índice único **normalizado**: "Sushiman" y "sushiman" no pueden coexistir.
+
+### Curación del nivel `market` — `npm run taxonomy:market`
+
+El vocabulario **se observa** de datos reales (`employees.role_title` + `jobs.title` limpiados,
+con frecuencia mínima), nunca se inventa. El padre **no se asigna automáticamente**: la
+heurística de similitud de tokens falla de forma peligrosa (probado: *Night Manager* → `night
+auditor`, *Finance Analyst* → `financial manager`, *Técnico de Mantenimiento* →
+`microelectronics maintenance technician`). Por eso el flujo es:
+
+1. `--emit` vuelca `data/taxonomy/market-titles.json` con la propuesta y su score.
+2. Se **revisa a mano**: `decision` = `market` | `synonym` | `skip`, y `parent` explícito. Lo que
+   no tiene ancla adecuada se queda en `review` — **no se fuerza un padre incorrecto**.
+3. `--apply` inserta solo lo curado. El fichero queda versionado en el repo y auditable en un PR.
+   Los cargos `market` se insertan **antes** que los sinónimos, porque un sinónimo puede
+   pertenecer a un cargo de mercado ("Oficial de Mantenimiento" es otra forma de decir "Técnico
+   de Mantenimiento"). Un cargo `market` solo puede colgar de un ancla ESCO; un sinónimo, de
+   cualquier cargo.
+
+**Cuando falta el ancla, no se fuerza el padre.** La familia de mantenimiento de edificios (85
+ofertas) se quedó en `review` porque las búsquedas de "maintenance technician" en ESCO solo
+devolvían especializadas (aeronáutica, microelectrónica). Se resolvió importando el preset
+`facility_maintenance`, que sí trae los genéricos correctos —**`building caretaker`** y
+**`facilities manager`**— y recurando esas entradas. Es el patrón a seguir: si no hay ancla
+adecuada, se busca en ESCO; si tampoco existe, se deja en `review` y se documenta.
+
+Quedan **5 en `review`** (Entertainer, Coordinadora de Logística, Gerente de Engenharia,
+Engenheira de Projetos, Técnico de Campo): 1–4 apariciones cada uno y sin ancla clara en el
+subconjunto actual. No bloquean nada; se resuelven a mano en el picker de la ficha o importando
+su ocupación.
+
+### Relaciones con peso — `npm run build:relations`
+
+`job_title_relations (a_id, b_id, weight)` es un grafo **no dirigido** (par normalizado `a<b`,
+con PK) que alimenta el "relacionados por peso" del ranking del board y del asistente.
+Se recalcula entero con **top-N por cargo** (antes había un `.slice(0, 600)` global que dejaba
+sin vecinos a 371 de 590 cargos). Señales, todas deterministas: Jaccard de skills · solapamiento
+léxico del nombre · misma área · **jerarquía** (padre↔hijo 0.90, hermanos 0.75).
 
 ## 2. Ofertas ↔ taxonomía
 

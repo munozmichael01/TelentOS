@@ -99,11 +99,11 @@ Guards:
 | **Horarios** | ✅ Completo | `/settings/schedules` |
 | **Payroll** | 🚧 En implementación — spec y protocolo en `handoff/Handoff Claude Code - Payroll spec producto.md` (§8 con puertas de AC) | `/payroll`, `/payroll/runs`, `/payroll/profiles` |
 | **Onboarding** | ✅ Completo | vía `application_events` + tareas |
-| **Performance Management** | ❌ No iniciado | — roadmap pendiente |
+| **Desempeño** (Performance Management) | 📋 Spec cerrada, sin código — [`docs/Performance Management/talentos-desempeno-spec.md`](docs/Performance%20Management/talentos-desempeno-spec.md) + [backlog](docs/Performance%20Management/talentos-desempeno-backlog.md) | `/desempeno` (sección propia, pendiente) |
 
 **Payroll**: el esquema (migraciones 0016–0019) existe; el ciclo funcional se está implementando según la spec de `handoff/`. Reglas clave: el pack `generic` es el único activo (VE/BR/ES son mocks en preview); **el dinero nunca fluye automáticamente del ATS a nómina** — los campos `offer_*` de la candidatura solo pre-rellenan el formulario de compensación que RR.HH. confirma al contratar (el auto-create de `pay_profiles` en `hire/route.ts` fue revertido a propósito: no reintroducirlo).
 
-**Performance Management** (no confundir con rendimiento de la app) = módulo de evaluaciones de desempeño, review cycles, goals — no existe en el código aún. Tablas `review_cycles`, `performance_reviews`, `goals` no están en ninguna migración.
+**Desempeño / Performance Management** (no confundir con rendimiento de la app) = evaluaciones de desempeño, objetivos, feedback continuo, planes de desarrollo y mejora, promociones e historial. **No existe código aún**: ninguna tabla del módulo está en una migración. La spec y el backlog de la v1 están cerrados en `docs/Performance Management/` (los ficheros `performance-management-spec.md` y `performance-backlog-epicas-historias.md` de esa carpeta son una **propuesta externa** que se conserva solo como catálogo de casos borde y criterios de aceptación — el documento de referencia es `talentos-desempeno-spec.md`). Dos bloqueantes estructurales antes de cualquier pantalla de evaluación: **no hay superficie de empleado** (0 de 49 empleados tienen `user_id`; ninguna página admite el rol `employee`) y **falta `employees.job_title_id`** (el cargo es texto libre, sin puente a la taxonomía). Reglas propias del módulo: las competencias **se derivan de `job_title_skills`** (nunca un catálogo paralelo), la escala es de **4 puntos sin punto medio**, y una promoción **pre-rellena** compensación pero nunca escribe en `pay_profiles`.
 
 ---
 
@@ -167,6 +167,7 @@ agent_runs         (auditoría de ejecuciones de agentes)
 | Ausencias (timeoff, calendar) | `"Ausencias"` |
 | Horas (horas, compensacion) | `"Horas"` |
 | Payroll (payroll, runs, profiles) | `"Payroll"` |
+| Desempeño (ciclos, objetivos, resultados) | `"Desempeño"` |
 | Ajustes (todas las sub-páginas) | `"Ajustes"` |
 
 ### Cards
@@ -220,7 +221,7 @@ Tipografía: Archivo 900 (headings/eyebrow) · Space Mono (labels/números/monos
 
 Estos temas requieren decisión explícita del producto antes de implementar:
 
-- **Rating scale de desempeño**: ¿1-5 numérico, 1-10, o etiquetas cualitativas (Exceeds/Meets/Below)? Afecta schema de `performance_reviews`.
+- ~~**Rating scale de desempeño**~~ — ✅ **DECIDIDO (2026-07-29)**: escala de **4 puntos con etiquetas cualitativas, sin punto medio**, más opción "sin elementos" que se excluye del promedio (evita el sesgo de tendencia central). Una sola escala fija en la v1. Pendiente menor: las etiquetas exactas y los cortes de score.
 - **Taxonomía de motivos de descarte**: ¿Lista fija configurable por empresa o free-text? Afecta `application_events.reason`.
 - **Proveedor de calendario para entrevistas**: ¿Google Calendar, Outlook, o solo gestión interna? Afecta `interviews` + integraciones.
 - **Alcance del beta de payroll VE**: ¿Solo cálculo de nómina o también envío a bancos y generación de archivos IVSS/SSO/LPH? Afecta `pay_run_lines` + `payroll_exports`.

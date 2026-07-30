@@ -9,17 +9,24 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const id = url.searchParams.get("id");
   const q = (url.searchParams.get("q") ?? "").trim();
+  // Idioma para la etiqueta del cargo. El canónico de ESCO está en inglés ("housekeeping
+  // supervisor"), así que sin esto una ficha en español mostraría el término en inglés.
+  const lang = (url.searchParams.get("locale") ?? "").split("-")[0];
   const db = createClient();
 
-  // Detalle de un cargo: categoría + skills sugeridas.
+  // Detalle de un cargo: categoría + skills sugeridas. La etiqueta se localiza si se pide.
   if (id) {
-    const [{ data: title }, { data: links }] = await Promise.all([
+    const [{ data: title }, { data: links }, { data: tr }] = await Promise.all([
       db.from("job_titles").select("id, canonical_name, category_key").eq("id", id).maybeSingle(),
       db.from("job_title_skills").select("is_core, skills(name)").eq("job_title_id", id).order("is_core", { ascending: false }).limit(12),
+      lang
+        ? db.from("job_title_translations").select("name").eq("job_title_id", id).eq("locale", lang).maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
     if (!title) return NextResponse.json({ title: null, skills: [] });
     const skills = (links ?? []).map((l) => (l as { skills?: { name?: string } }).skills?.name).filter((s): s is string => !!s);
-    return NextResponse.json({ title: { id: title.id, label: title.canonical_name, category_key: title.category_key ?? null }, skills });
+    const label = (tr as { name?: string } | null)?.name ?? title.canonical_name;
+    return NextResponse.json({ title: { id: title.id, label, category_key: title.category_key ?? null }, skills });
   }
 
   // Búsqueda de cargos (canónico + traducción + sinónimo). Muestra la forma que matcheó.

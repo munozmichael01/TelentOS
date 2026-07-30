@@ -84,7 +84,11 @@
       "legalEntityPlaceholder": "Razão social que o contrata",
       "benefits": "Benefícios",
       "benefitsPlaceholder": "Digite um benefício e pressione Enter (seguro saúde, academia…)",
-      "benefitsRemove": "Remover {name}"
+      "benefitsRemove": "Remover {name}",
+      "jobTitle": "Cargo padrão",
+      "jobTitleHint": "— daqui saem as competências avaliadas",
+      "jobTitlePlaceholder": "Busque o cargo na taxonomia… (cozinheiro, recepcionista)",
+      "jobTitleClear": "Remover o cargo padrão"
     },
     "contracts": {
       "indefinido": "Indeterminado",
