@@ -201,30 +201,45 @@ async function main() {
   //    el índice de matching usa canonical_name y la etiqueta cae al canónico si falta.
   if (!existsSync(CURATION_PATH)) { console.error(`Falta ${CURATION_PATH}. Genera con --emit, revísalo y vuelve.`); process.exit(1); }
   const curated = JSON.parse(readFileSync(CURATION_PATH, "utf8")).titles ?? [];
+  // Un cargo 'market' solo puede colgar de un ANCLA ESCO (es su roll-up al estándar). Un
+  // SINÓNIMO, en cambio, puede pertenecer a cualquier cargo, incluido uno de mercado:
+  // "Oficial de Mantenimiento" es otra forma de decir "Técnico de Mantenimiento".
   const anchorByName = new Map(escoAnchors.map((a) => [norm(a.canonical_name), a]));
+  const anyByName = new Map(anchors.map((a) => [norm(a.canonical_name), a]));
 
-  const market = [], synonyms = [], pending = [];
+  const market = [], pending = [];
   for (const c of curated) {
-    if (c.decision === "skip") continue;
-    if (c.decision !== "market" && c.decision !== "synonym") { pending.push(c.title); continue; }
+    if (c.decision !== "market") continue;
     if (!c.parent) { pending.push(c.title); continue; }
     const anchor = anchorByName.get(norm(c.parent));
-    if (!anchor) { console.error(`  ✗ ancla inexistente para "${c.title}": ${c.parent}`); pending.push(c.title); continue; }
-    if (c.decision === "market") {
-      market.push({ canonical_name: c.title, level: "market", parent_title_id: anchor.id, category_key: anchor.category_key, source: "observed", esco_uri: null });
-    } else {
-      // Misma ocupación dicha de otra forma → sinónimo del ancla, sin crear cargo.
-      synonyms.push({ job_title_id: anchor.id, locale: "es", synonym: c.title });
-    }
+    if (!anchor) { console.error(`  ✗ ancla ESCO inexistente para "${c.title}": ${c.parent}`); pending.push(c.title); continue; }
+    market.push({ canonical_name: c.title, level: "market", parent_title_id: anchor.id, category_key: anchor.category_key, source: "observed", esco_uri: null });
   }
-  console.log(`\nA insertar: ${market.length} cargos de mercado · ${synonyms.length} sinónimos · sin decidir: ${pending.length}`);
 
+  // 5a) Primero los cargos de mercado: un sinónimo puede pertenecer a uno de ellos, así que
+  //     tienen que existir antes de resolver los sinónimos de esta misma pasada.
   let inserted = 0;
   for (const row of market) {
-    const { error } = await db.from("job_titles").insert(row);
-    if (!error) inserted++;
-    else if (!/duplicate key/i.test(error.message)) throw error;
+    const { data, error } = await db.from("job_titles").insert(row).select("id, canonical_name").maybeSingle();
+    if (!error) { inserted++; if (data) anyByName.set(norm(data.canonical_name), data); }
+    else if (/duplicate key/i.test(error.message)) {
+      const { data: ex } = await db.from("job_titles").select("id, canonical_name").ilike("canonical_name", row.canonical_name).maybeSingle();
+      if (ex) anyByName.set(norm(ex.canonical_name), ex);
+    } else throw error;
   }
+
+  // 5b) Sinónimos: ya se pueden resolver contra cualquier cargo, incluidos los recién creados.
+  const synonyms = [];
+  for (const c of curated) {
+    if (c.decision !== "synonym") continue;
+    if (!c.parent) { pending.push(c.title); continue; }
+    const owner = anyByName.get(norm(c.parent));
+    if (!owner) { console.error(`  ✗ cargo inexistente para el sinónimo "${c.title}": ${c.parent}`); pending.push(c.title); continue; }
+    synonyms.push({ job_title_id: owner.id, locale: "es", synonym: c.title });
+  }
+  for (const c of curated) if (c.decision !== "market" && c.decision !== "synonym" && c.decision !== "skip") pending.push(c.title);
+  console.log(`\nInsertar: ${market.length} cargos de mercado · ${synonyms.length} sinónimos · sin decidir: ${pending.length}`);
+
   let synIns = 0;
   for (const row of synonyms) {
     const { error } = await db.from("job_title_synonyms").insert(row);

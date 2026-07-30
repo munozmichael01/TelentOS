@@ -3,8 +3,8 @@
     {
       "title": "Técnico de Mantenimiento",
       "freq": 47,
-      "decision": "review",
-      "parent": null,
+      "decision": "market",
+      "parent": "building caretaker",
       "parent_suggested": "microelectronics maintenance technician",
       "parent_score": 0.5
     },
@@ -35,8 +35,8 @@
     {
       "title": "Técnico de Mantenimiento Hotel",
       "freq": 12,
-      "decision": "review",
-      "parent": null,
+      "decision": "synonym",
+      "parent": "Técnico de Mantenimiento",
       "parent_suggested": "accommodation manager",
       "parent_score": 0.5
     },
@@ -51,8 +51,8 @@
     {
       "title": "Oficial de Mantenimiento",
       "freq": 9,
-      "decision": "review",
-      "parent": null,
+      "decision": "synonym",
+      "parent": "Técnico de Mantenimiento",
       "parent_suggested": null,
       "parent_score": null
     },
@@ -99,8 +99,8 @@
     {
       "title": "Jefe de mantenimiento",
       "freq": 5,
-      "decision": "review",
-      "parent": null,
+      "decision": "market",
+      "parent": "facilities manager",
       "parent_suggested": "microelectronics maintenance technician",
       "parent_score": 0.5
     },
@@ -219,8 +219,8 @@
     {
       "title": "Oficial de Servicios Técnicos",
       "freq": 4,
-      "decision": "review",
-      "parent": null,
+      "decision": "synonym",
+      "parent": "Técnico de Mantenimiento",
       "parent_suggested": null,
       "parent_score": null
     },

@@ -124,6 +124,13 @@ const SECTORS = {
     category: "Admin & Office", sector: "admin_office", categoryKey: "learning_education",
     terms: ["teacher", "trainer", "lecturer", "school principal", "instructional designer"],
   },
+  // Mantenimiento GENÉRICO de edificios/instalaciones. Las búsquedas por "maintenance
+  // technician" solo devolvían las especializadas (aeronáutica, microelectrónica), y el
+  // mantenimiento de hotel/instalaciones es la familia más frecuente de nuestras ofertas.
+  facility_maintenance: {
+    category: "Industrial & Energy", sector: "industrial_energy", categoryKey: "engineering_maintenance",
+    terms: ["maintenance", "building caretaker", "facilities", "handyman", "building technician"],
+  },
   mechanical: {
     category: "Industrial & Energy", sector: "industrial_energy", categoryKey: "mechanical_automotive",
     terms: ["mechanical engineer", "car mechanic", "automotive engineer", "vehicle technician"],

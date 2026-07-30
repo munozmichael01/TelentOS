@@ -77,6 +77,22 @@ auditor`, *Finance Analyst* → `financial manager`, *Técnico de Mantenimiento*
 2. Se **revisa a mano**: `decision` = `market` | `synonym` | `skip`, y `parent` explícito. Lo que
    no tiene ancla adecuada se queda en `review` — **no se fuerza un padre incorrecto**.
 3. `--apply` inserta solo lo curado. El fichero queda versionado en el repo y auditable en un PR.
+   Los cargos `market` se insertan **antes** que los sinónimos, porque un sinónimo puede
+   pertenecer a un cargo de mercado ("Oficial de Mantenimiento" es otra forma de decir "Técnico
+   de Mantenimiento"). Un cargo `market` solo puede colgar de un ancla ESCO; un sinónimo, de
+   cualquier cargo.
+
+**Cuando falta el ancla, no se fuerza el padre.** La familia de mantenimiento de edificios (85
+ofertas) se quedó en `review` porque las búsquedas de "maintenance technician" en ESCO solo
+devolvían especializadas (aeronáutica, microelectrónica). Se resolvió importando el preset
+`facility_maintenance`, que sí trae los genéricos correctos —**`building caretaker`** y
+**`facilities manager`**— y recurando esas entradas. Es el patrón a seguir: si no hay ancla
+adecuada, se busca en ESCO; si tampoco existe, se deja en `review` y se documenta.
+
+Quedan **5 en `review`** (Entertainer, Coordinadora de Logística, Gerente de Engenharia,
+Engenheira de Projetos, Técnico de Campo): 1–4 apariciones cada uno y sin ancla clara en el
+subconjunto actual. No bloquean nada; se resuelven a mano en el picker de la ficha o importando
+su ocupación.
 
 ### Relaciones con peso — `npm run build:relations`
 
