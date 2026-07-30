@@ -14,6 +14,7 @@
     "eval:board": "node scripts/eval-board-assistant.mjs",
     "seed:taxonomy": "node scripts/seed-taxonomy.mjs",
     "seed:titles": "node scripts/seed-titles-from-esco.mjs",
+    "build:relations": "node scripts/build-title-relations.mjs",
     "eval:payroll": "node scripts/eval-payroll-copilot.mjs",
     "eval:candidate": "node scripts/eval-candidate-analyzer.mjs",
     "eval:jobwriter": "node scripts/eval-job-writer.mjs",
