@@ -26,9 +26,19 @@ escritura solo `service_role` (seeds). Migraciones `0052`, `0053`.
 ### Seeds
 - `npm run seed:taxonomy` (`scripts/seed-taxonomy.mjs`): seedea todo el `taxonomy.json`
   (350 títulos + 1.766 skills con URIs, sinónimos, traducciones, relaciones, enlaces JT↔skill).
-- `npm run seed:hospitality` (`scripts/seed-hospitality-from-esco.mjs`): trae hostelería
-  REAL de la API de ESCO (el export reducido la excluyó). ~75 ocupaciones con URIs + skills.
-- Para poblar otro sector: mismo patrón (buscar en ESCO por términos del sector → insertar).
+- `npm run seed:titles -- --sector=<nombre|all> [--dry]` (`scripts/seed-titles-from-esco.mjs`):
+  trae ocupaciones REALES de la API de ESCO para los sectores del preset `SECTORS` (hostelería,
+  software, it_ops, product_design, exec, people_hr, finance, marketing, customer, logistics,
+  maintenance, retail). Abrir un sector nuevo = una entrada en ese mapa, no un script nuevo.
+  Incluye un **filtro de relevancia**: la búsqueda de ESCO es difusa y para "human resources
+  manager" devuelve también "human rights officer" o "library manager"; se exige compartir el
+  token específico del término (los genéricos tipo *manager/officer* no bastan). `--dry` lista
+  lo que entraría y lo descartado, para auditarlo antes de aplicar.
+- `npm run seed:titles -- --enrich [--dry]`: completa lo que `build-taxonomy-from-esco.mjs`
+  truncó en los títulos ya existentes — recorta sinónimos y skills a 8, y ahí se perdieron los
+  acrónimos de ESCO (CEO, CTO, CIO) y skills core. Solo añade, nunca borra.
+- `job_title_synonyms` tiene índice único (migr. 0064) sobre (título, locale, `lower(synonym)`):
+  antes no lo tenía y re-ejecutar un seeder duplicaba filas.
 
 ## 2. Ofertas ↔ taxonomía
 

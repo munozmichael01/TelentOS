@@ -13,7 +13,7 @@
     "eval:assistant": "node scripts/eval-assistant.mjs",
     "eval:board": "node scripts/eval-board-assistant.mjs",
     "seed:taxonomy": "node scripts/seed-taxonomy.mjs",
-    "seed:hospitality": "node scripts/seed-hospitality-from-esco.mjs",
+    "seed:titles": "node scripts/seed-titles-from-esco.mjs",
     "eval:payroll": "node scripts/eval-payroll-copilot.mjs",
     "eval:candidate": "node scripts/eval-candidate-analyzer.mjs",
     "eval:jobwriter": "node scripts/eval-job-writer.mjs",

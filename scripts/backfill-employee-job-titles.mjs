@@ -39,7 +39,10 @@ async function main() {
     pageAll("job_title_synonyms", "job_title_id, synonym"),
   ]);
   const forms = [];
-  const push = (tid, label) => { const n = norm(label); if (n.length >= 4) forms.push({ form: ` ${n} `, tid }); };
+  // ≥3 caracteres (no 4): los acrónimos que ESCO da como alternativeLabel —CEO, CTO, CIO— son de
+  // 3 y son justo los cargos de dirección más habituales en una plantilla real. El padding con
+  // espacios ya obliga a que casen como palabra completa, así que no generan falsos positivos.
+  const push = (tid, label) => { const n = norm(label); if (n.length >= 3) forms.push({ form: ` ${n} `, tid }); };
   for (const t of titles) push(t.id, t.canonical_name);
   for (const t of tr) push(t.job_title_id, t.name);
   for (const s of syn) push(s.job_title_id, s.synonym);
