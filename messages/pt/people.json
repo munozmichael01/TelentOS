@@ -118,7 +118,8 @@
       "ausencias": "Ausências ({count})",
       "horas": "Horas",
       "compensacion": "Compensação",
-      "horario": "Horário"
+      "horario": "Horário",
+      "expediente": "Histórico"
     },
     "info": {
       "title": "Dados do colaborador",
@@ -273,5 +274,23 @@
     "noTitle": "Esta ficha não tem cargo padrão vinculado, então ainda não há competências a avaliar. Vincule um editando a ficha.",
     "noTitleWithRole": "O cargo “{role}” ainda não está vinculado à taxonomia, então não há competências a avaliar. Vincule-o editando a ficha.",
     "noSkills": "O cargo padrão desta ficha ainda não tem competências definidas na taxonomia."
+  },
+  "timeline": {
+    "title": "Histórico",
+    "intro": "Histórico da pessoa na empresa. Só se acrescenta: nada é editado nem apagado.",
+    "empty": "Ainda não há eventos registados.",
+    "type": {
+      "hired": "Entrada como colaborador",
+      "role_changed": "Mudança de cargo ou nível",
+      "promotion": "Promoção",
+      "cycle_started": "Entrou em ciclo de avaliação",
+      "self_review": "Autoavaliação enviada",
+      "manager_review": "Avaliação do gestor enviada",
+      "rating_published": "Resultado publicado",
+      "calibration_adjust": "Ajuste na calibração",
+      "development_plan": "Plano de desenvolvimento",
+      "improvement_plan": "Plano de melhoria",
+      "acknowledged": "Confirmação do colaborador"
+    }
   }
 }

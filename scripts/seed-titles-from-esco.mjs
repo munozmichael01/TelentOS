@@ -302,8 +302,19 @@ async function persistLabelsAndSkills(titles, idFor) {
     }
   }
   if (dropped) console.warn(`  ⚠ ${dropped} enlaces cargo↔skill descartados por no resolver la skill`);
-  for (const part of chunk(links, 500)) { const { error } = await db.from("job_title_skills").upsert(part, { onConflict: "job_title_id,skill_id" }); if (error) throw error; }
-  console.log(`traducciones: ${tr.length} · sinónimos nuevos: ${syn.length} · skills nuevas: ${toInsert.length} · enlaces JT↔skill: ${links.length}`);
+  // Dedupe por (cargo, skill) ANTES del upsert: dos URIs distintas de ESCO pueden resolver a la
+  // misma skill nuestra (se resuelve por nombre cuando no hay esco_uri), y Postgres rechaza el
+  // lote entero si el mismo par aparece dos veces ("ON CONFLICT ... cannot affect row a second
+  // time"). Gana la primera aparición, que es la esencial: van antes que las opcionales.
+  const seenLink = new Set();
+  const uniqueLinks = links.filter((l) => {
+    const k = `${l.job_title_id}|${l.skill_id}`;
+    if (seenLink.has(k)) return false;
+    seenLink.add(k);
+    return true;
+  });
+  for (const part of chunk(uniqueLinks, 500)) { const { error } = await db.from("job_title_skills").upsert(part, { onConflict: "job_title_id,skill_id" }); if (error) throw error; }
+  console.log(`traducciones: ${tr.length} · sinónimos nuevos: ${syn.length} · skills nuevas: ${toInsert.length} · enlaces JT↔skill: ${uniqueLinks.length}`);
 }
 
 /** Completa lo que el builder truncó (sinónimos y skills) en los títulos que YA existen. */

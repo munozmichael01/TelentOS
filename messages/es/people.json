@@ -118,7 +118,8 @@
       "ausencias": "Ausencias ({count})",
       "horas": "Horas",
       "compensacion": "Compensación",
-      "horario": "Horario"
+      "horario": "Horario",
+      "expediente": "Expediente"
     },
     "info": {
       "title": "Datos del empleado",
@@ -273,5 +274,23 @@
     "noTitle": "Esta ficha no tiene cargo estándar vinculado, así que aún no hay competencias que evaluar. Vincúlalo editando la ficha.",
     "noTitleWithRole": "El cargo «{role}» todavía no está vinculado a la taxonomía, así que aún no hay competencias que evaluar. Vincúlalo editando la ficha.",
     "noSkills": "El cargo estándar de esta ficha aún no tiene competencias definidas en la taxonomía."
+  },
+  "timeline": {
+    "title": "Expediente",
+    "intro": "Historial de la persona en la empresa. Solo se añade: nada se edita ni se borra.",
+    "empty": "Aún no hay eventos registrados en el expediente.",
+    "type": {
+      "hired": "Alta como empleado",
+      "role_changed": "Cambio de cargo o nivel",
+      "promotion": "Promoción",
+      "cycle_started": "Entra en ciclo de evaluación",
+      "self_review": "Autoevaluación enviada",
+      "manager_review": "Evaluación del manager enviada",
+      "rating_published": "Resultado publicado",
+      "calibration_adjust": "Ajuste en calibración",
+      "development_plan": "Plan de desarrollo",
+      "improvement_plan": "Plan de mejora",
+      "acknowledged": "Acuse del empleado"
+    }
   }
 }

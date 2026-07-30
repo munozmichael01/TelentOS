@@ -118,7 +118,8 @@
       "ausencias": "Time Off ({count})",
       "horas": "Hours",
       "compensacion": "Compensation",
-      "horario": "Schedule"
+      "horario": "Schedule",
+      "expediente": "Record"
     },
     "info": {
       "title": "Employee Data",
@@ -273,5 +274,23 @@
     "noTitle": "This record has no standard role linked, so there are no competencies to assess yet. Link one by editing the record.",
     "noTitleWithRole": "The role “{role}” isn’t linked to the taxonomy yet, so there are no competencies to assess. Link it by editing the record.",
     "noSkills": "The standard role on this record has no competencies defined in the taxonomy yet."
+  },
+  "timeline": {
+    "title": "Record",
+    "intro": "History of this person at the company. Append-only: nothing is edited or deleted.",
+    "empty": "No events recorded yet.",
+    "type": {
+      "hired": "Joined as employee",
+      "role_changed": "Role or level change",
+      "promotion": "Promotion",
+      "cycle_started": "Entered review cycle",
+      "self_review": "Self-assessment submitted",
+      "manager_review": "Manager review submitted",
+      "rating_published": "Result published",
+      "calibration_adjust": "Calibration adjustment",
+      "development_plan": "Development plan",
+      "improvement_plan": "Improvement plan",
+      "acknowledged": "Employee acknowledgement"
+    }
   }
 }
