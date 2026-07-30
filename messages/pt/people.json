@@ -296,11 +296,12 @@
   "portal": {
     "invite": "Dar acesso ao portal",
     "hasAccess": "Com acesso ao portal",
-    "sent": "Convite enviado para {email}",
-    "notSent": "Conta criada. O email não saiu: copia o link e partilha-o.",
+    "sent": "Link enviado para {email}",
+    "notSent": "Pronto. O email não saiu: copia o link e partilha-o.",
     "copyLink": "Copiar link de acesso",
     "copied": "Link copiado",
     "noEmail": "Adiciona um email à ficha para poder convidar",
-    "error": "Não foi possível convidar"
+    "error": "Não foi possível convidar",
+    "resend": "Reenviar acesso"
   }
 }

@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, KeyRound, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 
 export function ResetPasswordForm() {
   const router = useRouter();
+  // Destino tras definir la contraseña. Lo arrastra el callback desde el enlace: un empleado
+  // recién invitado acaba en su portal, no en el dashboard de empresa.
+  const nextPath = useSearchParams().get("next");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,7 +45,7 @@ export function ResetPasswordForm() {
       return;
     }
     setDone(true);
-    setTimeout(() => router.push("/app/dashboard"), 2500);
+    setTimeout(() => router.push(nextPath || "/app/dashboard"), 2500);
   }
 
   return (
