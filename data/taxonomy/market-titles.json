@@ -1,0 +1,420 @@
+{
+  "titles": [
+    {
+      "title": "Técnico de Mantenimiento",
+      "freq": 47,
+      "decision": "review",
+      "parent": null,
+      "parent_suggested": "microelectronics maintenance technician",
+      "parent_score": 0.5
+    },
+    {
+      "title": "Fregador",
+      "freq": 27,
+      "decision": "synonym",
+      "parent": "kitchen porter",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Jefe de Sector",
+      "freq": 14,
+      "decision": "market",
+      "parent": "head waiter / head waitress",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Front Office Agent",
+      "freq": 13,
+      "decision": "synonym",
+      "parent": "hospitality establishment receptionist",
+      "parent_suggested": "rooms division manager",
+      "parent_score": 0.67
+    },
+    {
+      "title": "Técnico de Mantenimiento Hotel",
+      "freq": 12,
+      "decision": "review",
+      "parent": null,
+      "parent_suggested": "accommodation manager",
+      "parent_score": 0.5
+    },
+    {
+      "title": "Bagageiro",
+      "freq": 10,
+      "decision": "synonym",
+      "parent": "hotel porter",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Oficial de Mantenimiento",
+      "freq": 9,
+      "decision": "review",
+      "parent": null,
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Rental Car Agent",
+      "freq": 9,
+      "decision": "market",
+      "parent": "customer service representative",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Friegaplatos",
+      "freq": 7,
+      "decision": "synonym",
+      "parent": "kitchen porter",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Restaurant Supervisor",
+      "freq": 6,
+      "decision": "market",
+      "parent": "restaurant manager",
+      "parent_suggested": "accommodation manager",
+      "parent_score": 1
+    },
+    {
+      "title": "F&B Supervisor",
+      "freq": 6,
+      "decision": "market",
+      "parent": "restaurant manager",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "GUEST EXPERIENCE",
+      "freq": 5,
+      "decision": "market",
+      "parent": "client relations manager",
+      "parent_suggested": "customer experience manager",
+      "parent_score": 1
+    },
+    {
+      "title": "Jefe de mantenimiento",
+      "freq": 5,
+      "decision": "review",
+      "parent": null,
+      "parent_suggested": "microelectronics maintenance technician",
+      "parent_score": 0.5
+    },
+    {
+      "title": "COMERCIAL NACIONAL",
+      "freq": 5,
+      "decision": "market",
+      "parent": "sales manager",
+      "parent_suggested": "commercial director",
+      "parent_score": 0.5
+    },
+    {
+      "title": "Empregado de Andares/Áreas",
+      "freq": 5,
+      "decision": "synonym",
+      "parent": "room attendant",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "2º Jefe de Recepción",
+      "freq": 4,
+      "decision": "skip",
+      "parent": null,
+      "parent_suggested": "hospitality establishment receptionist",
+      "parent_score": 1
+    },
+    {
+      "title": "Guest Relations",
+      "freq": 4,
+      "decision": "synonym",
+      "parent": "client relations manager",
+      "parent_suggested": "customer experience manager",
+      "parent_score": 1
+    },
+    {
+      "title": "Técnico Mantenimiento",
+      "freq": 4,
+      "decision": "skip",
+      "parent": null,
+      "parent_suggested": "microelectronics maintenance technician",
+      "parent_score": 0.5
+    },
+    {
+      "title": "Night Manager",
+      "freq": 4,
+      "decision": "market",
+      "parent": "rooms division manager",
+      "parent_suggested": "night auditor",
+      "parent_score": 0.5
+    },
+    {
+      "title": "Jefe Partida",
+      "freq": 4,
+      "decision": "market",
+      "parent": "chef",
+      "parent_suggested": "chef",
+      "parent_score": 1
+    },
+    {
+      "title": "Jefe de recepción",
+      "freq": 4,
+      "decision": "market",
+      "parent": "rooms division manager",
+      "parent_suggested": "hospitality establishment receptionist",
+      "parent_score": 1
+    },
+    {
+      "title": "Jefe Mantenimiento",
+      "freq": 4,
+      "decision": "skip",
+      "parent": null,
+      "parent_suggested": "microelectronics maintenance technician",
+      "parent_score": 0.5
+    },
+    {
+      "title": "Guest Service Agent",
+      "freq": 4,
+      "decision": "synonym",
+      "parent": "hospitality establishment receptionist",
+      "parent_suggested": "call centre agent",
+      "parent_score": 0.4
+    },
+    {
+      "title": "Steward",
+      "freq": 4,
+      "decision": "synonym",
+      "parent": "kitchen porter",
+      "parent_suggested": "hotel butler",
+      "parent_score": 0.5
+    },
+    {
+      "title": "Engineering Supervisor",
+      "freq": 4,
+      "decision": "market",
+      "parent": "industrial maintenance supervisor",
+      "parent_suggested": "electromechanical engineer",
+      "parent_score": 1
+    },
+    {
+      "title": "Empregado de andares",
+      "freq": 4,
+      "decision": "skip",
+      "parent": null,
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Empregada de Andares",
+      "freq": 4,
+      "decision": "skip",
+      "parent": null,
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Oficial de Servicios Técnicos",
+      "freq": 4,
+      "decision": "review",
+      "parent": null,
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Guest Service Line Agent",
+      "freq": 4,
+      "decision": "skip",
+      "parent": null,
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "COCINEROS",
+      "freq": 4,
+      "decision": "synonym",
+      "parent": "cook",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Entertainer",
+      "freq": 4,
+      "decision": "review",
+      "parent": null,
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Customer Success Manager",
+      "freq": 3,
+      "decision": "market",
+      "parent": "client relations manager",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Head of People",
+      "freq": 2,
+      "decision": "market",
+      "parent": "human resources manager",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Frontend Engineer",
+      "freq": 2,
+      "decision": "market",
+      "parent": "software developer",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Backend Engineer",
+      "freq": 2,
+      "decision": "market",
+      "parent": "software developer",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Finance Analyst",
+      "freq": 1,
+      "decision": "synonym",
+      "parent": "financial analyst",
+      "parent_suggested": "financial manager",
+      "parent_score": 1
+    },
+    {
+      "title": "Head of Marketing",
+      "freq": 1,
+      "decision": "market",
+      "parent": "marketing manager",
+      "parent_suggested": "marketing manager",
+      "parent_score": 1
+    },
+    {
+      "title": "Responsable de Operaciones",
+      "freq": 1,
+      "decision": "synonym",
+      "parent": "operations manager",
+      "parent_suggested": "chief operating officer",
+      "parent_score": 1
+    },
+    {
+      "title": "Técnica de Operaciones",
+      "freq": 1,
+      "decision": "skip",
+      "parent": null,
+      "parent_suggested": "chief operating officer",
+      "parent_score": 1
+    },
+    {
+      "title": "Operador",
+      "freq": 1,
+      "decision": "skip",
+      "parent": null,
+      "parent_suggested": "pyrotechnics drying room attendant",
+      "parent_score": 0.5
+    },
+    {
+      "title": "Coordinadora de Logística",
+      "freq": 1,
+      "decision": "review",
+      "parent": null,
+      "parent_suggested": "logistics analyst",
+      "parent_score": 1
+    },
+    {
+      "title": "Encargado de Compras",
+      "freq": 1,
+      "decision": "synonym",
+      "parent": "purchasing manager",
+      "parent_suggested": "purchasing manager",
+      "parent_score": 1
+    },
+    {
+      "title": "Gerente de Engenharia",
+      "freq": 1,
+      "decision": "review",
+      "parent": null,
+      "parent_suggested": "industrial engineering technician",
+      "parent_score": 0.5
+    },
+    {
+      "title": "COO",
+      "freq": 1,
+      "decision": "synonym",
+      "parent": "chief operating officer",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "People Ops",
+      "freq": 1,
+      "decision": "market",
+      "parent": "human resources manager",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Gerente General",
+      "freq": 1,
+      "decision": "synonym",
+      "parent": "chief executive officer",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Responsable de RRHH",
+      "freq": 1,
+      "decision": "synonym",
+      "parent": "human resources manager",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Técnico de Selección",
+      "freq": 1,
+      "decision": "synonym",
+      "parent": "recruitment consultant",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Coordinadora de RRHH",
+      "freq": 1,
+      "decision": "synonym",
+      "parent": "human resources officer",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Analista de RH",
+      "freq": 1,
+      "decision": "synonym",
+      "parent": "human resources officer",
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Engenheira de Projetos",
+      "freq": 1,
+      "decision": "review",
+      "parent": null,
+      "parent_suggested": null,
+      "parent_score": null
+    },
+    {
+      "title": "Técnico de Campo",
+      "freq": 1,
+      "decision": "review",
+      "parent": null,
+      "parent_suggested": null,
+      "parent_score": null
+    }
+  ]
+}

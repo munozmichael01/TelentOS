@@ -40,6 +40,52 @@ escritura solo `service_role` (seeds). Migraciones `0052`, `0053`.
 - `job_title_synonyms` tiene índice único (migr. 0064) sobre (título, locale, `lower(synonym)`):
   antes no lo tenía y re-ejecutar un seeder duplicaba filas.
 
+### Modelo de DOS NIVELES (migr. 0066)
+
+`job_titles` tiene dos niveles, porque el estándar internacional y el vocabulario real del
+mercado no son lo mismo:
+
+| `level` | Qué es | Trae |
+|---|---|---|
+| `esco` | **Ancla** estándar | `esco_uri`, etiqueta oficial, traducciones, sinónimos y skills |
+| `market` | **Cargo real** que publican las empresas y buscan los candidatos | `parent_title_id` al ancla; **hereda sus skills** y puede añadir propias |
+
+Ejemplo: `Frontend Engineer` y `Backend Engineer` son cargos de mercado con padre
+`software developer` (19 skills heredadas cada uno); `Head of People` y `People Ops` cuelgan de
+`human resources manager`.
+
+**Regla anti-redundancia** (evita duplicar cargos, que es el riesgo principal):
+- Misma ocupación dicha de otra forma (mesero/camarero/waiter · CEO/chief executive officer) →
+  **sinónimo**, no crea fila.
+- El mercado lo trata como puesto distinto —otras expectativas, otras skills, demanda de
+  búsqueda propia— aunque ESCO lo agrupe en un genérico → **cargo `market`** con padre.
+- Test: ¿lo buscaría un candidato con ese término **y** pondría el recruiter requisitos
+  distintos? Los dos sí → cargo propio. Solo el primero → sinónimo.
+- Las variantes de **seniority** no son cargos ("Senior Backend Engineer" no es otro puesto):
+  eso vive en su columna.
+- El nombre tiene índice único **normalizado**: "Sushiman" y "sushiman" no pueden coexistir.
+
+### Curación del nivel `market` — `npm run taxonomy:market`
+
+El vocabulario **se observa** de datos reales (`employees.role_title` + `jobs.title` limpiados,
+con frecuencia mínima), nunca se inventa. El padre **no se asigna automáticamente**: la
+heurística de similitud de tokens falla de forma peligrosa (probado: *Night Manager* → `night
+auditor`, *Finance Analyst* → `financial manager`, *Técnico de Mantenimiento* →
+`microelectronics maintenance technician`). Por eso el flujo es:
+
+1. `--emit` vuelca `data/taxonomy/market-titles.json` con la propuesta y su score.
+2. Se **revisa a mano**: `decision` = `market` | `synonym` | `skip`, y `parent` explícito. Lo que
+   no tiene ancla adecuada se queda en `review` — **no se fuerza un padre incorrecto**.
+3. `--apply` inserta solo lo curado. El fichero queda versionado en el repo y auditable en un PR.
+
+### Relaciones con peso — `npm run build:relations`
+
+`job_title_relations (a_id, b_id, weight)` es un grafo **no dirigido** (par normalizado `a<b`,
+con PK) que alimenta el "relacionados por peso" del ranking del board y del asistente.
+Se recalcula entero con **top-N por cargo** (antes había un `.slice(0, 600)` global que dejaba
+sin vecinos a 371 de 590 cargos). Señales, todas deterministas: Jaccard de skills · solapamiento
+léxico del nombre · misma área · **jerarquía** (padre↔hijo 0.90, hermanos 0.75).
+
 ## 2. Ofertas ↔ taxonomía
 
 - `jobs.title`: texto **libre** (SEO/atractivo). Lo que ve y busca el candidato. No se toca.
