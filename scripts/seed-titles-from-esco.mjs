@@ -105,7 +105,8 @@ const SECTORS = {
   },
   comms_pr: {
     category: "Marketing & Growth", sector: "marketing_growth", categoryKey: "communications_pr",
-    terms: ["public relations officer", "press officer", "journalist", "editor", "publications coordinator"],
+    // "press officer" se descartó como término: en ESCO arrastra operarios de prensa industrial.
+    terms: ["public relations officer", "spokesperson", "communications officer", "journalist", "publications coordinator"],
   },
   construction: {
     category: "Industrial & Energy", sector: "industrial_energy", categoryKey: "construction_facilities",
@@ -141,12 +142,21 @@ const GENERIC_TOKENS = new Set(["manager", "officer", "chief", "assistant", "con
   "administrator", "analyst", "designer", "executive", "general", "senior", "junior", "head",
   "supervisor", "representative", "and", "the", "for", "with"]);
 
+// Cola larga de ESCO que la búsqueda difusa arrastra a cualquier área: ocupaciones de
+// distribución/maquinaria del tipo "wholesale merchant in mining, construction and civil
+// engineering machinery" (aparece al buscar "civil engineer") o "punch press operator" (al
+// buscar "press officer"). Son ocupaciones reales pero de otro dominio, y ninguna empresa de
+// nuestro ICP publica esos puestos. Descarte deliberado y documentado.
+const NOISE_PATTERNS = [/wholesale merchant/i, /import export/i, /rental service/i,
+  /distribution manager/i, /machinery/i, /press operator/i];
+
 const clean = (s) => String(s ?? "").replace(/\s*\/\s*/g, " / ").replace(/\s+/g, " ").trim();
 const nkey = (s) => clean(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const tokens = (s) => nkey(s).split(/[^a-z0-9]+/).filter(Boolean);
 /** ¿La ocupación devuelta por ESCO corresponde de verdad al término buscado? */
 function isRelevant(term, label) {
   const nt = nkey(term), nl = nkey(label);
+  if (NOISE_PATTERNS.some((re) => re.test(label))) return false;
   if (nl === nt) return true;
   const spec = tokens(term).filter((w) => w.length > 2 && !GENERIC_TOKENS.has(w));
   // Términos hechos solo de genéricos ("chief executive officer"): se exige el término completo.
