@@ -17,6 +17,12 @@ const env = Object.fromEntries(readFileSync(join(ROOT, ".env.local"), "utf8").sp
   .filter((l) => l.includes("=") && !l.startsWith("#")).map((l) => [l.slice(0, l.indexOf("=")).trim(), l.slice(l.indexOf("=") + 1).trim()]));
 const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 const DRY = process.argv.includes("--dry");
+// Re-clasifica ofertas que YA tienen cargo, no solo las que están a null. Necesario cuando la
+// taxonomía cambia: tras limpiar los sinónimos que usurpaban nombres (migr. 0068), 494 ofertas
+// habían quedado en `bartender` —149 de ellas "camarero/a DE PISOS", que es limpieza de
+// habitaciones, no barra—. Solo toca las importadas (source='import_xml'): las nativas llevan
+// el cargo que eligió una persona con el picker y no se sobreescriben.
+const RECLASSIFY = process.argv.includes("--reclassify");
 
 const norm = (s) => String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
 const chunk = (a, n) => Array.from({ length: Math.ceil(a.length / n) }, (_, i) => a.slice(i * n, i * n + n));
@@ -34,7 +40,14 @@ async function main() {
     pageAll("job_title_synonyms", "job_title_id, synonym"),
   ]);
   const forms = []; // {form, tid}
-  const push = (tid, label) => { const n = norm(label); if (n.length >= 4) forms.push({ form: ` ${n} `, tid }); };
+  // Las formas de género se parten: ESCO escribe "camarero de pisos / camarera de pisos" y en la
+  // oferta viene "Camarero/a de pisos". Sin partirlas, la forma completa nunca está contenida.
+  const push = (tid, label) => {
+    if (!label) return;
+    if (String(label).includes(" / ")) for (const part of String(label).split(" / ")) push(tid, part.trim());
+    const n = norm(label);
+    if (n.length >= 4) forms.push({ form: ` ${n} `, tid });
+  };
   for (const t of titles) push(t.id, t.canonical_name);
   for (const t of tr) push(t.job_title_id, t.name);
   for (const s of syn) push(s.job_title_id, s.synonym);
@@ -48,22 +61,28 @@ async function main() {
   }
 
   // 3) todas las ofertas (con su job_title_id actual) + set de las que ya tienen skills
-  const jobsAll = await pageAll("jobs", "id, title, job_title_id");
+  const jobsAll = await pageAll("jobs", "id, title, job_title_id, source");
   const withSkills = new Set((await pageAll("job_skills", "job_id")).map((r) => r.job_id));
 
   // 4) match → job_title_id (para todas las que aún no lo tienen) + job_skills (sin skills)
   const rows = [];
   const titleUpd = [];       // {id, job_title_id}
-  let matched = 0, noMatch = 0;
+  let matched = 0, noMatch = 0, changed = 0;
   for (const j of jobsAll) {
-    const nt = ` ${norm(j.title)} `;
+    // "Camarero/a de pisos" → "camarero de pisos": la marca de género rompía la contención
+    // contra la forma de la taxonomía y mandaba la oferta a un cargo más genérico.
+    const nt = ` ${norm(String(j.title ?? "").replace(/\/(a|o|as|os|e)\b/gi, ""))} `;
     const hit = forms.find((f) => nt.includes(f.form));
     if (!hit) { noMatch++; continue; }
     matched++;
     if (!j.job_title_id) titleUpd.push({ id: j.id, job_title_id: hit.tid });
+    else if (RECLASSIFY && j.source === "import_xml" && j.job_title_id !== hit.tid) {
+      titleUpd.push({ id: j.id, job_title_id: hit.tid });
+      changed++;
+    }
     if (!withSkills.has(j.id)) for (const s of (skillsByTitle.get(hit.tid) ?? [])) rows.push({ job_id: j.id, skill_id: s.skill_id, requirement: s.is_core ? "excluyente" : "deseable" });
   }
-  console.log(`Match: ${matched} · sin match: ${noMatch} · job_title_id a setear: ${titleUpd.length} · filas job_skills: ${rows.length}`);
+  console.log(`Match: ${matched} · sin match: ${noMatch} · job_title_id a setear: ${titleUpd.length}${RECLASSIFY ? ` (de los cuales ${changed} RE-clasificados)` : ""} · filas job_skills: ${rows.length}`);
   if (DRY) { console.log({ titleUpd: titleUpd.slice(0, 3), rows: rows.slice(0, 3) }); return; }
   // Agrupado por título: 1 update por título (in de ids) en vez de uno por oferta.
   const byTitle = new Map();

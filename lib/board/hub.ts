@@ -72,8 +72,12 @@ export async function resolveHub(seg1: string, seg2: string | undefined, locale:
   if (params.country) seed.country = params.country;
 
   const supabase = createClient();
+  // El hub de cargo busca por texto Y por sus titleIds. Pasar titleIds explícito es lo que evita
+  // que searchJobs auto-resuelva el contexto de título y arrastre cargos RELACIONADOS: un hub es
+  // la página de UN cargo, y su conteo se muestra como tal ("570 ofertas de camarero"). Los
+  // relacionados son cosa del buscador, no del hub.
   const searchParams = kind === "jobtitle"
-    ? { q: label, location: params.location, country: params.country }
+    ? { q: label, titleIds: params.titleIds, location: params.location, country: params.country }
     : params;
   const { jobs, total, facets } = await searchJobs(supabase, { ...searchParams, homeCountry: countryForLocale(locale), pageSize: 20 });
 

@@ -47,6 +47,11 @@ async function loadIndex(): Promise<Index> {
   const labelsByTitle = new Map<string, string[]>();
   const add = (titleId: string, label: string) => {
     if (!label) return;
+    // Formas de género por separado: ESCO escribe "cocinero / cocinera" y el usuario busca
+    // "cocinero". Sin esto la forma normaliza a "cocinero cocinera" y la query exacta NO casa,
+    // así que el cargo genérico quedaba fuera de su propia búsqueda (medido con q="cocinero":
+    // resolvía a chef/grill cook/fish cook por sinónimos y `cook` no aparecía).
+    if (label.includes(" / ")) for (const part of label.split(" / ")) add(titleId, part.trim());
     const n = norm(label);
     if (n.length < 2) return;
     (byNorm.get(n) ?? byNorm.set(n, new Set()).get(n)!).add(titleId);
@@ -83,6 +88,11 @@ export async function resolveTitleSlug(
   }
   return { titleIds, label };
 }
+
+/** Peso mínimo para que un cargo relacionado arrastre sus ofertas a la búsqueda ("de medio
+ *  hacia arriba"). El grafo va de 0.25 a 0.95 con un suelo de 0.35 para vecinos de la misma
+ *  área sin solape real; 0.5 deja fuera ese ruido y mantiene el parentesco de verdad. */
+const RELATED_MIN_WEIGHT = 0.5;
 
 // Títulos que resuelve un término, en 3 niveles: (1) forma exacta, (2) forma contenida en la
 // query (parte corta ≥5), (3) SOLAPE POR TOKEN — un token de la query (≥5, no stopword) es un
@@ -138,7 +148,15 @@ export async function resolveTitleContext(
     const other = set.has(r.a_id) ? r.b_id : r.a_id;
     if (!set.has(other)) rel.set(other, Math.max(rel.get(other) ?? 0, r.weight));
   }
-  return { titleIds, relatedIds: Array.from(rel.keys()), relatedW: Array.from(rel.values()) };
+  // Solo relacionados de peso MEDIO hacia arriba, y ordenados de mayor a menor. Por debajo del
+  // umbral el parentesco es demasiado flojo para arrastrar ofertas a la búsqueda: el grafo tiene
+  // un suelo de 0.35 donde caen vecinos de la misma área con poco solape real (buscar "cocinero"
+  // no debe traer "doorman" porque comparten área). El orden lo respeta el RPC, que puntúa
+  // 500 + peso*100, pero se ordena aquí también para que las dos arrays queden alineadas.
+  const ordered = Array.from(rel.entries())
+    .filter(([, w]) => w >= RELATED_MIN_WEIGHT)
+    .sort((a, b) => b[1] - a[1]);
+  return { titleIds, relatedIds: ordered.map(([id]) => id), relatedW: ordered.map(([, w]) => w) };
 }
 
 export async function expandJobTitle(q: string, max = 10): Promise<string[]> {
