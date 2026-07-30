@@ -5,6 +5,10 @@ import { OnboardingPanel } from "@/components/features/onboarding-panel";
 import { DocumentUploader } from "@/components/features/document-uploader";
 import { FileLink } from "@/components/features/file-link";
 import { EmployeeForm } from "@/components/features/employee-form";
+import { RoleCompetencies } from "@/components/features/role-competencies";
+import { getRoleCompetencies } from "@/lib/performance/competencies";
+import { EmployeeTimeline } from "@/components/features/employee-timeline";
+import { getEmployeeEvents } from "@/lib/performance/events";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, initials } from "@/lib/utils";
@@ -145,6 +149,11 @@ export default async function EmployeePage({ params }: { params: { id: string; l
   const { data: employee } = await supabase.from("employees").select("*").eq("id", params.id).maybeSingle();
   if (!employee) notFound();
   const emp = employee as Employee;
+  // Competencias evaluables del puesto (Desempeño, bloque 1): salen de la taxonomía vía el
+  // cargo canónico de la ficha, con herencia del ancla ESCO si el cargo es de mercado.
+  const competencies = await getRoleCompetencies(supabase, emp.job_title_id, params.locale);
+  // Expediente: historial append-only de la persona (ciclos, resultados, planes, promociones).
+  const timeline = await getEmployeeEvents(supabase, params.id);
 
   const [
     { data: manager }, { data: all }, { data: tasks }, { data: docs },
@@ -365,6 +374,7 @@ export default async function EmployeePage({ params }: { params: { id: string; l
           <TabsTrigger value="horas">{t("detail.tabs.horas")}</TabsTrigger>
           <TabsTrigger value="compensacion">{t("detail.tabs.compensacion")}</TabsTrigger>
           <TabsTrigger value="horario">{t("detail.tabs.horario")}</TabsTrigger>
+          <TabsTrigger value="expediente">{t("detail.tabs.expediente")}</TabsTrigger>
         </TabsList>
 
         {/* ── Información ── */}
@@ -391,6 +401,9 @@ export default async function EmployeePage({ params }: { params: { id: string; l
                 ))}
               </div>
             </div>
+
+            {/* Competencias del puesto (taxonomía) */}
+            <RoleCompetencies data={competencies} locale={params.locale} roleTitle={emp.role_title} />
 
             {/* Mini org chart */}
             {(mgr || reports.length > 0) && (
@@ -804,6 +817,13 @@ export default async function EmployeePage({ params }: { params: { id: string; l
                 })}
               </div>
             )}
+          </div>
+        </TabsContent>
+
+        {/* Expediente — historial append-only de la persona (Desempeño, bloque 1) */}
+        <TabsContent value="expediente">
+          <div style={{ maxWidth: "760px" }}>
+            <EmployeeTimeline events={timeline} locale={params.locale} />
           </div>
         </TabsContent>
       </Tabs>
