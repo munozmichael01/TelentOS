@@ -19,6 +19,7 @@ export async function POST(req: Request) {
       name: body.name.trim(),
       email: body.email ?? null,
       role_title: body.role_title ?? null,
+      job_title_id: body.job_title_id || null,
       department: body.department ?? null,
       start_date: body.start_date ?? null,
       contract_type: body.contract_type ?? "indefinido",

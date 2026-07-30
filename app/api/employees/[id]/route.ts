@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireApiRole, jsonError } from "@/lib/api";
 
 const EDITABLE = [
-  "name", "email", "role_title", "department", "start_date",
+  "name", "email", "role_title", "job_title_id", "department", "start_date",
   "contract_type", "manager_id", "vacation_days_total", "status",
   "national_id", "birth_date", "address",
   "phone", "emergency_contact_name", "emergency_contact_phone",

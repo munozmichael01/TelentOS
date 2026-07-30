@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ModalitySelector, type WorkModality } from "@/components/ui/modality-selector";
+import { JobTitlePicker } from "@/components/features/job-title-picker";
 import type { Employee } from "@/lib/types";
 
 /** Cabecera de grupo de la ficha (DS §3.1): legend Space Mono uppercase + divisor. */
@@ -80,9 +81,14 @@ export function EmployeeForm({
 }) {
   const router = useRouter();
   const t = useTranslations("People");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // Etiqueta del cargo canónico vinculado. No se persiste (vive en la taxonomía), así que se
+  // resuelve al abrir la ficha en edición y se mantiene fuera de `form` para que el payload
+  // siga siendo exactamente lo que se guarda.
+  const [jobTitleLabel, setJobTitleLabel] = useState("");
   const [form, setForm] = useState({
     name: employee?.name ?? "",
     email: employee?.email ?? "",
@@ -92,6 +98,7 @@ export function EmployeeForm({
     emergency_contact_name: employee?.emergency_contact_name ?? "",
     emergency_contact_phone: employee?.emergency_contact_phone ?? "",
     role_title: employee?.role_title ?? "",
+    job_title_id: employee?.job_title_id ?? "",
     department: employee?.department ?? "",
     seniority_level: employee?.seniority_level ?? "",
     start_date: employee?.start_date ?? new Date().toISOString().slice(0, 10),
@@ -108,6 +115,18 @@ export function EmployeeForm({
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
+
+  // Al abrir en edición, resuelve la etiqueta localizada del cargo vinculado (el canónico de
+  // ESCO está en inglés). Solo cuando hace falta: si no hay cargo, no se pide nada.
+  useEffect(() => {
+    if (!open || !form.job_title_id || jobTitleLabel) return;
+    let alive = true;
+    fetch(`/api/job-titles?id=${form.job_title_id}&locale=${locale}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (alive && d?.title?.label) setJobTitleLabel(d.title.label); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [open, form.job_title_id, jobTitleLabel, locale]);
 
   async function save() {
     setSaving(true);
@@ -191,6 +210,39 @@ export function EmployeeForm({
                 <div className="space-y-1.5">
                   <Label>{t("form.fields.seniority")}</Label>
                   <Input value={form.seniority_level} onChange={(e) => set("seniority_level", e.target.value)} placeholder={t("form.fields.seniorityPlaceholder")} />
+                </div>
+                {/* Cargo canónico de la taxonomía: de aquí salen las competencias evaluables.
+                    Reutiliza el picker compartido con el formulario de ofertas. */}
+                <div className="col-span-2 space-y-1.5">
+                  <Label>
+                    {t("form.fields.jobTitle")}{" "}
+                    <span className="font-normal text-[#79746B]">{t("form.fields.jobTitleHint")}</span>
+                  </Label>
+                  {form.job_title_id ? (
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#0E5C4A] bg-[#E4F0EA] px-3 py-1 text-[13px] text-[#0E5C4A]">
+                        {jobTitleLabel || form.role_title}
+                        <button
+                          type="button"
+                          onClick={() => { set("job_title_id", ""); setJobTitleLabel(""); }}
+                          aria-label={t("form.fields.jobTitleClear")}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    </div>
+                  ) : (
+                    <JobTitlePicker
+                      valueLabel=""
+                      placeholder={t("form.fields.jobTitlePlaceholder")}
+                      onPick={(jt) => {
+                        set("job_title_id", jt.id);
+                        setJobTitleLabel(jt.label);
+                        // Si la ficha aún no tiene cargo escrito, se propone el de la taxonomía.
+                        if (!form.role_title.trim()) set("role_title", jt.label);
+                      }}
+                    />
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label>{t("form.fields.dept")}</Label>

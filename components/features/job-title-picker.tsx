@@ -3,17 +3,22 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 
-// Picker de CARGO CANÓNICO (taxonomía ESCO) para publicar oferta. Busca por nombre/traducción/
-// sinónimo contra /api/job-titles y, al elegir, devuelve el cargo + sus skills sugeridas
-// (job_title_skills) para pre-rellenar. El título libre de la oferta es aparte.
+// Picker de CARGO CANÓNICO (taxonomía ESCO). Busca por nombre/traducción/sinónimo contra
+// /api/job-titles y, al elegir, devuelve el cargo + sus skills sugeridas (job_title_skills)
+// para pre-rellenar. Compartido por dos consumidores, cada uno con su texto:
+//   · publicar oferta → el título libre de la oferta es aparte (jobs.job_title_id)
+//   · ficha de empleado → el cargo del que se derivan sus competencias (employees.job_title_id)
 type Suggestion = { id: string; label: string; category_key: string | null };
 
 export function JobTitlePicker({
   valueLabel,
   onPick,
+  placeholder,
 }: {
   valueLabel: string;
   onPick: (t: { id: string; label: string; category_key: string | null; skills: string[] }) => void;
+  /** Texto del input. Se externaliza en el consumidor (i18n); por defecto, el de publicar oferta. */
+  placeholder?: string;
 }) {
   const [q, setQ] = useState(valueLabel);
   const [results, setResults] = useState<Suggestion[]>([]);
@@ -48,7 +53,7 @@ export function JobTitlePicker({
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => q.trim().length >= 2 && results.length > 0 && setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        placeholder="Busca el cargo estándar… (cocinero, product manager)"
+        placeholder={placeholder ?? "Busca el cargo estándar… (cocinero, product manager)"}
       />
       {open && results.length > 0 && (
         <div style={{ position: "absolute", zIndex: 20, top: "100%", left: 0, right: 0, marginTop: 4, background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: 10, boxShadow: "0 6px 20px rgba(0,0,0,.08)", overflow: "hidden" }}>

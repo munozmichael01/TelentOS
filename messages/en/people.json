@@ -84,7 +84,11 @@
       "legalEntityPlaceholder": "Legal company name",
       "benefits": "Benefits",
       "benefitsPlaceholder": "Type a benefit and press Enter (health insurance, gym…)",
-      "benefitsRemove": "Remove {name}"
+      "benefitsRemove": "Remove {name}",
+      "jobTitle": "Standard role",
+      "jobTitleHint": "— the competencies being assessed come from here",
+      "jobTitlePlaceholder": "Search the taxonomy… (cook, receptionist)",
+      "jobTitleClear": "Remove standard role"
     },
     "contracts": {
       "indefinido": "Permanent",

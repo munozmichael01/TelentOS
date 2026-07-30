@@ -249,6 +249,9 @@ export type Employee = {
   name: string;
   email: string | null;
   role_title: string | null;
+  /** Cargo canónico de la taxonomía (migr. 0063). Fuente de las competencias esperadas del
+   *  puesto en Desempeño. `role_title` queda como texto libre de display. */
+  job_title_id: string | null;
   department: string | null;
   start_date: string | null;
   contract_type: string;
