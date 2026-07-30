@@ -22,6 +22,7 @@ async function loadMessages(locale: string) {
     Settings: await load("settings"),
     People: await load("people"),
     Timeoff: await load("timeoff"),
+    Portal: await load("portal"),
   };
 }
 

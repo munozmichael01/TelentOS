@@ -48,6 +48,14 @@ export const pathnames = {
   "/empleos/[categoria]": byLang("/empleos/[categoria]", "/jobs/[categoria]", "/vagas/[categoria]"),
   "/empleos/[categoria]/[ubicacion]": byLang("/empleos/[categoria]/[ubicacion]", "/jobs/[categoria]/[ubicacion]", "/vagas/[categoria]/[ubicacion]"),
 
+  // Portal del EMPLEADO (superficie propia del rol `employee`; el dashboard B2B es de RR.HH.).
+  // No se localiza el slug: es zona privada, el prefijo de locale ya da el idioma.
+  "/app/mi/perfil": "/app/mi/perfil",
+  "/app/mi/desempeno": "/app/mi/desempeno",
+  "/app/mi/ausencias": "/app/mi/ausencias",
+  "/app/mi/nomina": "/app/mi/nomina",
+  "/app/mi/horas": "/app/mi/horas",
+
   // Dashboard B2B autenticado (no localizado — mismo slug en todos los locales)
   "/app/dashboard": "/app/dashboard",
   "/app/jobs": "/app/jobs",

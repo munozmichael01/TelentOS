@@ -292,5 +292,15 @@
       "improvement_plan": "Plano de melhoria",
       "acknowledged": "Confirmação do colaborador"
     }
+  },
+  "portal": {
+    "invite": "Dar acesso ao portal",
+    "hasAccess": "Com acesso ao portal",
+    "sent": "Convite enviado para {email}",
+    "notSent": "Conta criada. O email não saiu: copia o link e partilha-o.",
+    "copyLink": "Copiar link de acesso",
+    "copied": "Link copiado",
+    "noEmail": "Adiciona um email à ficha para poder convidar",
+    "error": "Não foi possível convidar"
   }
 }

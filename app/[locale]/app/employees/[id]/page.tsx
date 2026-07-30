@@ -8,6 +8,7 @@ import { EmployeeForm } from "@/components/features/employee-form";
 import { RoleCompetencies } from "@/components/features/role-competencies";
 import { getRoleCompetencies } from "@/lib/performance/competencies";
 import { EmployeeTimeline } from "@/components/features/employee-timeline";
+import { InviteToPortal } from "@/components/features/invite-to-portal";
 import { getEmployeeEvents } from "@/lib/performance/events";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
@@ -342,11 +343,15 @@ export default async function EmployeePage({ params }: { params: { id: string; l
             </div>
           </div>
         </div>
-        <EmployeeForm employee={emp} managers={(all ?? []).map((e) => ({ id: e.id, name: e.name }))} trigger={
-          <button style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "9px 15px", boxShadow: "3px 3px 0 #1A1A17", cursor: "pointer" }}>
-            {t("detail.actionsBtn")}
-          </button>
-        } />
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", flexWrap: "wrap" }}>
+          {/* Acceso al portal del empleado (crea/vincula su cuenta) */}
+          <InviteToPortal employeeId={emp.id} hasAccess={!!emp.user_id} hasEmail={!!emp.email} />
+          <EmployeeForm employee={emp} managers={(all ?? []).map((e) => ({ id: e.id, name: e.name }))} trigger={
+            <button style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "9px 15px", boxShadow: "3px 3px 0 #1A1A17", cursor: "pointer" }}>
+              {t("detail.actionsBtn")}
+            </button>
+          } />
+        </div>
       </div>
 
       {/* Stat tiles */}
