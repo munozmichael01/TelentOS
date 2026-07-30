@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -31,13 +32,21 @@ export function AuthCallback() {
     const refresh_token = hp.get("refresh_token");
 
     const isRecovery = type === "recovery" || hashType === "recovery";
-    const next = isRecovery ? "/auth/reset-password" : "/dashboard";
+    // A dónde ir tras validar el enlace. `next` lo fija quien genera el enlace (p. ej. la
+    // invitación al portal manda a /app/mi/perfil); sin él, al dashboard, que el middleware
+    // reencamina según el rol. Antes estaba fijo en "/dashboard", una ruta que no existe:
+    // todas las páginas cuelgan de /app/*, así que un login correcto acababa en 404.
+    const target = searchParams.get("next") || "/app/dashboard";
+    // En recuperación hay que pasar antes por definir la contraseña, arrastrando el destino.
+    const next = isRecovery
+      ? `/auth/reset-password${target !== "/app/dashboard" ? `?next=${encodeURIComponent(target)}` : ""}`
+      : target;
 
     async function handle() {
       // 1. PKCE: code in query string
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!error) { router.replace(next); return; }
+        if (!error) { router.replace(next as never); return; }
         setErrorMsg("El enlace es inválido o ha expirado.");
         return;
       }
@@ -45,7 +54,7 @@ export function AuthCallback() {
       // 2. Token-hash OTP (email confirm / recovery)
       if (token_hash && type) {
         const { error } = await supabase.auth.verifyOtp({ token_hash, type });
-        if (!error) { router.replace(next); return; }
+        if (!error) { router.replace(next as never); return; }
         setErrorMsg("El enlace es inválido o ha expirado.");
         return;
       }
@@ -63,14 +72,14 @@ export function AuthCallback() {
       // 4. Implicit flow – tokens in hash (successful reset / signup)
       if (access_token && refresh_token) {
         const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-        if (!error) { router.replace(next); return; }
+        if (!error) { router.replace(next as never); return; }
         setErrorMsg("No se pudo establecer la sesión. Intenta de nuevo.");
         return;
       }
 
       // 5. Supabase v2 – session auto-detected by the SDK from the hash
       const { data } = await supabase.auth.getSession();
-      if (data.session) { router.replace(next); return; }
+      if (data.session) { router.replace(next as never); return; }
 
       setErrorMsg("Enlace inválido o ya utilizado.");
     }

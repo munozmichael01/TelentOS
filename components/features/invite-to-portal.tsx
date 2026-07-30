@@ -20,15 +20,6 @@ export function InviteToPortal({ employeeId, hasAccess, hasEmail }: { employeeId
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  if (hasAccess) {
-    return (
-      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: 600, color: "#0E5C4A", background: "#DCEFE4", border: "1px solid #BEE0CE", borderRadius: "999px", padding: "5px 11px" }}>
-        <Check className="h-3.5 w-3.5" />
-        {t("hasAccess")}
-      </span>
-    );
-  }
-
   async function invite() {
     setLoading(true); setError(null);
     const res = await fetch(`/api/employees/${employeeId}/invite`, { method: "POST" });
@@ -42,10 +33,18 @@ export function InviteToPortal({ employeeId, hasAccess, hasEmail }: { employeeId
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-start" }}>
+      {/* Con acceso ya concedido el botón pasa a REENVIAR: el correo puede no haber llegado o
+          el enlace puede haber caducado, y RR.HH. necesita poder resolverlo sin soporte. */}
+      {hasAccess && !link && (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: 600, color: "#0E5C4A", background: "#DCEFE4", border: "1px solid #BEE0CE", borderRadius: "999px", padding: "5px 11px" }}>
+          <Check className="h-3.5 w-3.5" />
+          {t("hasAccess")}
+        </span>
+      )}
       {!link && (
         <Button variant="outline" onClick={invite} disabled={loading || !hasEmail} title={hasEmail ? undefined : t("noEmail")}>
           {loading && <Loader2 className="animate-spin" />}
-          {t("invite")}
+          {hasAccess ? t("resend") : t("invite")}
         </Button>
       )}
       {!hasEmail && <span style={{ fontSize: "12px", color: "#79746B" }}>{t("noEmail")}</span>}

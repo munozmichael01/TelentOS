@@ -36,12 +36,15 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   if (!employee) return jsonError("Empleado no encontrado", 404);
   if (employee.company_id !== companyId) return jsonError("Ese empleado no es de tu empresa", 403);
   if (!employee.email) return jsonError("La ficha no tiene email. Añádelo antes de invitar.", 422);
-  if (employee.user_id) return jsonError("Este empleado ya tiene acceso al portal", 409);
 
   const email = String(employee.email).trim().toLowerCase();
+  // Si ya tiene cuenta vinculada, esto es un REENVÍO: se salta la creación y se le manda un
+  // enlace nuevo. Es lo que hace falta de verdad cuando el correo no llegó o el enlace caducó.
+  const isResend = !!employee.user_id;
 
   // 1) Cuenta: reutiliza la existente si ese email ya está registrado (p. ej. fue candidato).
-  let userId: string | null = null;
+  let userId: string | null = employee.user_id;
+  if (!isResend) {
   const { data: created, error: createErr } = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
@@ -75,13 +78,21 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       employee_id: employee.id, invited_by: user!.id, invited_at: new Date().toISOString(),
     });
   }
+  }
 
-  // 3) Enlace de acceso al portal.
+  // 3) Enlace de acceso. Dos decisiones importantes:
+  //    · Tipo `recovery` (definir contraseña), no `magiclink`: al empleado se le acaba de crear
+  //      la cuenta y NO TIENE CONTRASEÑA. Con un magic link entraría una vez y nunca más podría
+  //      iniciar sesión por su cuenta. Aquí define su contraseña y ya es dueño de su acceso.
+  //    · El redirect apunta a /auth/callback, NUNCA a la página destino: Supabase devuelve los
+  //      tokens en el FRAGMENTO de la URL y solo el callback los procesa. Apuntar directo a la
+  //      página deja al usuario sin sesión y el middleware lo manda al login.
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://telent-os-mu.vercel.app";
+  const callback = `${site}/es-ve/auth/callback?next=${encodeURIComponent("/app/mi/perfil")}`;
   const { data: link, error: linkGenErr } = await admin.auth.admin.generateLink({
-    type: "magiclink",
+    type: "recovery",
     email,
-    options: { redirectTo: `${site}/es-ve/app/mi/perfil` },
+    options: { redirectTo: callback },
   });
   if (linkGenErr) return jsonError(linkGenErr.message, 500);
   const actionLink = link?.properties?.action_link ?? null;
@@ -94,24 +105,29 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       <div style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;color:#1A1A17">
         <p style="font-size:15px">Hola ${employee.name},</p>
         <p style="font-size:15px;line-height:1.55">Ya tienes acceso al portal de empleado: ahí verás tu ficha, tus ausencias, tus horas, tus recibos de nómina y tu desempeño.</p>
+        <p style="font-size:15px;line-height:1.55">Para entrar, <strong>define tu contraseña</strong> con este enlace:</p>
         <p style="margin:26px 0">
-          <a href="${actionLink}" style="background:#0E5C4A;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px;display:inline-block">Entrar al portal</a>
+          <a href="${actionLink}" style="background:#0E5C4A;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px;display:inline-block">Definir mi contraseña</a>
         </p>
-        <p style="font-size:12.5px;color:#79746B;line-height:1.5">El enlace es de un solo uso y caduca en una hora. Si expira, pide a tu equipo de personas que te lo reenvíe.</p>
+        <p style="font-size:12.5px;color:#79746B;line-height:1.5">El enlace es de un solo uso y caduca en una hora. Si expira, pide a tu equipo de personas que te lo reenvíe. Después podrás entrar con tu email y la contraseña que elijas.</p>
       </div>`,
   });
 
-  await recordEmployeeEvent(admin, {
-    employeeId: employee.id,
-    type: "portal_invited",
-    summary: email,
-    actorId: user!.id,
-    actorEmail: user!.email ?? null,
-  });
+  // Solo se anota la primera vez: un reenvío no es un hito del expediente, es soporte.
+  if (!isResend) {
+    await recordEmployeeEvent(admin, {
+      employeeId: employee.id,
+      type: "portal_invited",
+      summary: email,
+      actorId: user!.id,
+      actorEmail: user!.email ?? null,
+    });
+  }
 
   return NextResponse.json({
     ok: true,
     email,
+    resent: isResend,
     emailSent: mail.ok,
     emailSkipped: mail.skipped ?? false,
     // Para que RR.HH. pueda copiarlo si el correo no llega.
