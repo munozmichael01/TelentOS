@@ -95,7 +95,43 @@ const SECTORS = {
     category: "Retail & Hospitality", sector: "retail_hospitality", categoryKey: "retail_store",
     terms: ["cashier", "shop assistant", "store manager", "shop supervisor"],
   },
+  data_ai: {
+    category: "Engineering", sector: "tech_saas", categoryKey: "data_ai_analytics",
+    terms: ["data scientist", "data analyst", "data engineer", "business intelligence manager", "statistician"],
+  },
+  banking: {
+    category: "Finance & Accounting", sector: "finance_accounting", categoryKey: "banking_insurance",
+    terms: ["bank teller", "insurance broker", "investment analyst", "credit analyst", "insurance underwriter"],
+  },
+  comms_pr: {
+    category: "Marketing & Growth", sector: "marketing_growth", categoryKey: "communications_pr",
+    terms: ["public relations officer", "press officer", "journalist", "editor", "publications coordinator"],
+  },
+  construction: {
+    category: "Industrial & Energy", sector: "industrial_energy", categoryKey: "construction_facilities",
+    terms: ["civil engineer", "construction manager", "architect", "facilities manager", "quantity surveyor"],
+  },
+  electrical: {
+    category: "Industrial & Energy", sector: "industrial_energy", categoryKey: "electrical_electronics",
+    terms: ["electrician", "electrical engineer", "electronics engineer", "electrical mechanic"],
+  },
+  energy: {
+    category: "Industrial & Energy", sector: "industrial_energy", categoryKey: "energy_utilities",
+    terms: ["energy engineer", "power plant operator", "wind turbine technician", "solar energy technician"],
+  },
+  education: {
+    category: "Admin & Office", sector: "admin_office", categoryKey: "learning_education",
+    terms: ["teacher", "trainer", "lecturer", "school principal", "instructional designer"],
+  },
+  mechanical: {
+    category: "Industrial & Energy", sector: "industrial_energy", categoryKey: "mechanical_automotive",
+    terms: ["mechanical engineer", "car mechanic", "automotive engineer", "vehicle technician"],
+  },
 };
+
+/** Presets que cubren un área (category_key) concreta — para curar POR ÁREA, que es el orden
+ *  correcto: se mira la cobertura por área y se siembra la que esté flaca. */
+const sectorsForArea = (areaKey) => Object.entries(SECTORS).filter(([, s]) => s.categoryKey === areaKey).map(([k]) => k);
 // La búsqueda de ESCO es difusa: para "human resources manager" devuelve también "human rights
 // officer", "library manager" o "court clerk". Importarlas metería ocupaciones en categorías que
 // no les corresponden (taxonomía sucia). Se exige que la ocupación comparta con el término
@@ -286,12 +322,21 @@ async function importSectors(names) {
 
 async function main() {
   if (ENRICH) return enrich();
+  const areaArg = argOf("area");
   const arg = argOf("sector");
-  if (!arg) {
-    console.error(`Uso: --sector=<${Object.keys(SECTORS).join("|")}|all>  [--dry]   ·   o --enrich [--dry]`);
+  if (!arg && !areaArg) {
+    console.error(`Uso: --area=<category_key,…>   ·   --sector=<${Object.keys(SECTORS).join("|")}|all>   ·   --enrich    [--dry]`);
     process.exit(1);
   }
-  const names = arg === "all" ? Object.keys(SECTORS) : arg.split(",").map((s) => s.trim()).filter(Boolean);
+  // --area recibe claves de job_categories (la forma correcta de pedirlo) y las traduce a los
+  // presets que cubren esa área.
+  const names = areaArg
+    ? areaArg.split(",").map((a) => a.trim()).filter(Boolean).flatMap((a) => {
+        const found = sectorsForArea(a);
+        if (!found.length) { console.error(`Área sin preset de términos: ${a}. Añádela al mapa SECTORS.`); process.exit(1); }
+        return found;
+      })
+    : arg === "all" ? Object.keys(SECTORS) : arg.split(",").map((s) => s.trim()).filter(Boolean);
   console.log(`Sectores: ${names.join(", ")}`);
   return importSectors(names);
 }
