@@ -214,10 +214,19 @@ async function persistLabelsAndSkills(titles, idFor) {
 
   // Sinónimos: el índice único es sobre lower(synonym) (expresión), así que PostgREST no puede
   // hacer onConflict por columnas → se deduplica en cliente contra lo ya guardado.
+  // OJO: hay que PAGINAR la lectura. Supabase corta la respuesta a 1.000 filas, y con ~15
+  // sinónimos por título un lote de 300 títulos devolvía la mitad → el set quedaba incompleto y
+  // el insert violaba el índice único (fue exactamente el fallo del primer --enrich).
   const seen = new Set();
-  for (const part of chunk(ids, 300)) {
-    const { data } = await db.from("job_title_synonyms").select("job_title_id, locale, synonym").in("job_title_id", part);
-    for (const r of data ?? []) seen.add(`${r.job_title_id}|${r.locale}|${nkey(r.synonym)}`);
+  for (const part of chunk(ids, 200)) {
+    const P = 1000;
+    for (let from = 0; ; from += P) {
+      const { data, error } = await db.from("job_title_synonyms")
+        .select("job_title_id, locale, synonym").in("job_title_id", part).range(from, from + P - 1);
+      if (error) throw error;
+      for (const r of data ?? []) seen.add(`${r.job_title_id}|${r.locale}|${nkey(r.synonym)}`);
+      if (!data || data.length < P) break;
+    }
   }
   const syn = [];
   for (const t of titles) {
@@ -229,7 +238,18 @@ async function persistLabelsAndSkills(titles, idFor) {
       syn.push({ job_title_id: id, locale: s.locale, synonym: s.synonym });
     }
   }
-  for (const part of chunk(syn, 500)) { const { error } = await db.from("job_title_synonyms").insert(part); if (error) throw error; }
+  // Si otro seeder escribió entremedias (no conviene correr dos a la vez, pero pasa), el lote
+  // choca con el índice único: se reintenta fila a fila y se ignoran solo los duplicados, en vez
+  // de tirar todo el proceso.
+  for (const part of chunk(syn, 500)) {
+    const { error } = await db.from("job_title_synonyms").insert(part);
+    if (!error) continue;
+    if (!/duplicate key/i.test(error.message)) throw error;
+    for (const row of part) {
+      const { error: e1 } = await db.from("job_title_synonyms").insert(row);
+      if (e1 && !/duplicate key/i.test(e1.message)) throw e1;
+    }
+  }
 
   // Skills: resolver por esco_uri o nombre, insertar las nuevas, enlazar JT↔skill.
   const allSkills = new Map();
