@@ -1,0 +1,56 @@
+{
+  "eyebrow": "My space",
+  "profile": {
+    "title": "My profile",
+    "description": "Your details as recorded by the company.",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "dept": "Department",
+    "joined": "Start date",
+    "manager": "Manager",
+    "contract": "Contract",
+    "location": "Location",
+    "modality": "Work mode",
+    "phone": "Phone",
+    "readOnly": "If something is wrong, tell your people team: the company maintains these details."
+  },
+  "performance": {
+    "title": "My performance",
+    "description": "The competencies expected of your role, and your history."
+  },
+  "absences": {
+    "title": "My time off",
+    "description": "Your requests and their status.",
+    "empty": "No time off recorded yet.",
+    "type": "Type",
+    "from": "From",
+    "to": "To",
+    "days": "Days",
+    "status": "Status",
+    "statusLabel": {
+      "approved": "Approved",
+      "pending": "Pending",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    }
+  },
+  "hours": {
+    "title": "My hours",
+    "description": "Your time records.",
+    "empty": "No hours recorded yet.",
+    "date": "Date",
+    "start": "In",
+    "end": "Out",
+    "duration": "Duration",
+    "total": "{count} records · {total} total"
+  },
+  "payroll": {
+    "title": "My payslips",
+    "description": "Payslips from closed payroll runs.",
+    "empty": "No payslips available yet.",
+    "period": "Period",
+    "gross": "Gross",
+    "net": "Net"
+  }
+}

@@ -16,6 +16,7 @@ export const EMPLOYEE_EVENT_TYPES = [
   "development_plan",   // plan de desarrollo creado o actualizado (bloque 4)
   "improvement_plan",   // plan de mejora (bloque 4)
   "acknowledged",       // acuse del empleado
+  "portal_invited",     // RR.HH. le da acceso al portal
 ] as const;
 
 export type EmployeeEventType = (typeof EMPLOYEE_EVENT_TYPES)[number];

@@ -1,0 +1,56 @@
+{
+  "eyebrow": "O meu espaço",
+  "profile": {
+    "title": "O meu perfil",
+    "description": "Os teus dados tal como constam na empresa.",
+    "name": "Nome",
+    "email": "Email",
+    "role": "Cargo",
+    "dept": "Departamento",
+    "joined": "Data de entrada",
+    "manager": "Responsável",
+    "contract": "Contrato",
+    "location": "Localização",
+    "modality": "Modalidade",
+    "phone": "Telefone",
+    "readOnly": "Se algo não estiver correto, fala com a equipa de pessoas: estes dados são mantidos pela empresa."
+  },
+  "performance": {
+    "title": "O meu desempenho",
+    "description": "As competências esperadas do teu cargo e o teu histórico."
+  },
+  "absences": {
+    "title": "As minhas ausências",
+    "description": "Os teus pedidos e o respetivo estado.",
+    "empty": "Ainda não há ausências registadas.",
+    "type": "Tipo",
+    "from": "De",
+    "to": "Até",
+    "days": "Dias",
+    "status": "Estado",
+    "statusLabel": {
+      "approved": "Aprovada",
+      "pending": "Pendente",
+      "rejected": "Recusada",
+      "cancelled": "Cancelada"
+    }
+  },
+  "hours": {
+    "title": "As minhas horas",
+    "description": "O teu registo de jornada.",
+    "empty": "Ainda não há horas registadas.",
+    "date": "Data",
+    "start": "Entrada",
+    "end": "Saída",
+    "duration": "Duração",
+    "total": "{count} registos · {total} no total"
+  },
+  "payroll": {
+    "title": "Os meus recibos",
+    "description": "Recibos das folhas de pagamento já fechadas.",
+    "empty": "Ainda não há recibos disponíveis.",
+    "period": "Período",
+    "gross": "Bruto",
+    "net": "Líquido"
+  }
+}

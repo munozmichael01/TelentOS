@@ -292,5 +292,15 @@
       "improvement_plan": "Improvement plan",
       "acknowledged": "Employee acknowledgement"
     }
+  },
+  "portal": {
+    "invite": "Grant portal access",
+    "hasAccess": "Has portal access",
+    "sent": "Invitation sent to {email}",
+    "notSent": "Account created. The email didn’t go out: copy the link and share it.",
+    "copyLink": "Copy access link",
+    "copied": "Link copied",
+    "noEmail": "Add an email to this record before inviting",
+    "error": "Could not invite"
   }
 }

@@ -122,6 +122,13 @@ const IconPanel = () => (
     <path d="M9 4v16" stroke="currentColor" strokeWidth="2"/>
   </svg>
 );
+// Desempeño: línea ascendente con hito. Icono de línea del DS, sin emojis.
+const IconPerformance = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 18l5-5 3 3 7-7" /><path d="M15 9h4v4" />
+  </svg>
+);
+
 const LogoMark = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
     <path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round"/>
@@ -133,6 +140,14 @@ type NavSection = { section: string; brand?: boolean };
 
 // roles that can see each nav item; omit key = visible to all roles
 const NAV_ROLES: Record<string, Role[]> = {
+  // El rol `employee` solo ve su portal (/app/mi/*). Todo lo demás del dashboard es de
+  // empresa, así que se restringe explícitamente: antes estos ítems no tenían regla y por
+  // tanto eran visibles para todos los roles, incluido el empleado.
+  "/app/dashboard":          ["owner", "hr_admin", "recruiter", "manager"],
+  "/app/employees":          ["owner", "hr_admin", "manager"],
+  "/app/org":                ["owner", "hr_admin", "recruiter", "manager"],
+  "/app/settings/absences":  ["owner", "hr_admin"],
+  "/app/settings/schedules": ["owner", "hr_admin"],
   // reclutamiento — manager no tiene acceso al pipeline de selección
   "/app/jobs":               ["owner", "hr_admin", "recruiter"],
   "/app/candidates":         ["owner", "hr_admin", "recruiter"],
@@ -157,6 +172,14 @@ const NAV_ROLES: Record<string, Role[]> = {
 };
 
 const ALL_NAV = [
+  // Portal del empleado: visible para TODOS los roles (cualquiera tiene su propio espacio).
+  // Para el rol `employee` es lo único que ve, porque el resto está restringido arriba.
+  { section: "Mi espacio" },
+  { href: "/app/mi/perfil",     label: "Mi perfil",     Icon: IconEmployee },
+  { href: "/app/mi/desempeno",  label: "Mi desempeño",  Icon: IconPerformance },
+  { href: "/app/mi/ausencias",  label: "Mis ausencias", Icon: IconVacaciones },
+  { href: "/app/mi/horas",      label: "Mis horas",     Icon: IconHoras },
+  { href: "/app/mi/nomina",     label: "Mi nómina",     Icon: IconPayroll },
   { href: "/app/dashboard",          label: "Dashboard",    Icon: IconDashboard },
   { section: "Reclutamiento" },
   { href: "/app/jobs",               label: "Ofertas",      Icon: IconBriefcase },

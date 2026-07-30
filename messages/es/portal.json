@@ -1,0 +1,56 @@
+{
+  "eyebrow": "Mi espacio",
+  "profile": {
+    "title": "Mi perfil",
+    "description": "Tus datos tal y como constan en la empresa.",
+    "name": "Nombre",
+    "email": "Email",
+    "role": "Cargo",
+    "dept": "Departamento",
+    "joined": "Fecha de ingreso",
+    "manager": "Responsable",
+    "contract": "Contrato",
+    "location": "Ubicación",
+    "modality": "Modalidad",
+    "phone": "Teléfono",
+    "readOnly": "Si algo no es correcto, díselo a tu equipo de personas: estos datos los mantiene la empresa."
+  },
+  "performance": {
+    "title": "Mi desempeño",
+    "description": "Las competencias que se esperan de tu puesto y tu historial."
+  },
+  "absences": {
+    "title": "Mis ausencias",
+    "description": "Tus solicitudes y su estado.",
+    "empty": "Todavía no tienes ausencias registradas.",
+    "type": "Tipo",
+    "from": "Desde",
+    "to": "Hasta",
+    "days": "Días",
+    "status": "Estado",
+    "statusLabel": {
+      "approved": "Aprobada",
+      "pending": "Pendiente",
+      "rejected": "Rechazada",
+      "cancelled": "Cancelada"
+    }
+  },
+  "hours": {
+    "title": "Mis horas",
+    "description": "Tu registro de jornada.",
+    "empty": "Todavía no hay horas registradas.",
+    "date": "Fecha",
+    "start": "Entrada",
+    "end": "Salida",
+    "duration": "Duración",
+    "total": "{count} registros · {total} en total"
+  },
+  "payroll": {
+    "title": "Mi nómina",
+    "description": "Tus recibos de las nóminas ya cerradas.",
+    "empty": "Aún no hay recibos disponibles.",
+    "period": "Periodo",
+    "gross": "Bruto",
+    "net": "Neto"
+  }
+}

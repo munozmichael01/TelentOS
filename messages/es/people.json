@@ -292,5 +292,15 @@
       "improvement_plan": "Plan de mejora",
       "acknowledged": "Acuse del empleado"
     }
+  },
+  "portal": {
+    "invite": "Dar acceso al portal",
+    "hasAccess": "Con acceso al portal",
+    "sent": "Invitación enviada a {email}",
+    "notSent": "Cuenta creada. El correo no salió: copia el enlace y pásaselo.",
+    "copyLink": "Copiar enlace de acceso",
+    "copied": "Enlace copiado",
+    "noEmail": "Añade un email a la ficha para poder invitar",
+    "error": "No se pudo invitar"
   }
 }
