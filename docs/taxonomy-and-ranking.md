@@ -94,6 +94,36 @@ Engenheira de Projetos, Técnico de Campo): 1–4 apariciones cada uno y sin anc
 subconjunto actual. No bloquean nada; se resuelven a mano en el picker de la ficha o importando
 su ocupación.
 
+### Contrato de ORDEN del buscador (board y asistente, idéntico)
+
+```
+no aplicadas → CARGO EXACTO → RELACIONADOS de mayor a menor peso → texto → resto
+                  (1000)         (500 + peso*100)                   (100)    (0)
+```
+- Solo entran relacionados de **peso ≥ 0.5** (`RELATED_MIN_WEIGHT` en `lib/job-board/job-titles.ts`).
+  El grafo tiene un suelo de 0.35 para vecinos de la misma área sin solape real: buscar
+  "cocinero" no debe arrastrar "doorman" por compartir hostelería.
+- Los relacionados entran también en el **conjunto de resultados**, no solo en la puntuación
+  (migr. 0067). Antes `p_related_ids` no estaba en el WHERE del RPC, así que una oferta de cargo
+  relacionado solo salía si su texto contenía el término: el tramo de relacionados no existía.
+- Los **hubs no arrastran relacionados**: un hub es la página de UN cargo y su conteo se muestra
+  como tal. `resolveHub` pasa `titleIds` explícito para desactivar la resolución automática.
+
+Verificado con q="cocinero": exacto `cook` 79 ofertas (pos. 1–79) → `grill cook` w=0.95, 210
+ofertas (80–289) → `sommelier` w=0.6, 5 ofertas (290–294) → texto, 58 (295–352).
+
+### Propiedad del sinónimo (migr. 0068)
+
+**Un sinónimo no puede usurpar el nombre de otro cargo.** Si un término es el nombre canónico o
+traducido de un cargo, ese cargo es su dueño. Al subir el cap de sinónimos a 30 en el `--enrich`
+entraron etiquetas de ESCO demasiado generales: "cocinero" quedó como sinónimo de `grill cook`,
+`chef` y `fish cook`. Efecto medido: la query "cocinero" resolvía a 292 ofertas de esos tres
+cargos y **el cocinero genérico se quedaba fuera**. Se borraron 135 colisiones.
+
+Además, las **formas de género se indexan por separado**: ESCO escribe "cocinero / cocinera" y el
+usuario busca "cocinero"; sin partirlas la forma normaliza a "cocinero cocinera" y el cargo no
+casaba con su propia búsqueda.
+
 ### Relaciones con peso — `npm run build:relations`
 
 `job_title_relations (a_id, b_id, weight)` es un grafo **no dirigido** (par normalizado `a<b`,
