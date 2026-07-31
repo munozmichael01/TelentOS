@@ -17,11 +17,16 @@ export function ResetPasswordForm() {
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [noSession, setNoSession] = useState(false);
+  // Cuenta para la que se define la contraseña. Se muestra deshabilitada: quien llega desde una
+  // invitación necesita ver PARA QUÉ correo está creando el acceso —puede tener varios— y a la
+  // vez no debe poder cambiarlo, porque el enlace ya está emitido para esa cuenta concreta.
+  const [email, setEmail] = useState("");
 
   // Verify there is an active recovery session — if not, show a helpful message
   useEffect(() => {
     createClient().auth.getSession().then(({ data }) => {
       if (!data.session) setNoSession(true);
+      else setEmail(data.session.user.email ?? "");
     });
   }, []);
 
@@ -111,6 +116,24 @@ export function ResetPasswordForm() {
             </div>
           ) : (
             <form onSubmit={submit}>
+              {email && (
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "6px" }}>
+                    Cuenta
+                  </label>
+                  {/* El estilo `disabled` del DS baja al 50% de opacidad, pensado para acciones
+                      no disponibles. Aquí el campo hay que LEERLO, así que se mantiene inerte
+                      (fondo apagado, texto secundario) pero legible. */}
+                  <Input
+                    type="email"
+                    value={email}
+                    disabled
+                    readOnly
+                    aria-label="Cuenta"
+                    className="disabled:opacity-100 bg-[#F8F4EB] text-[#54504A]"
+                  />
+                </div>
+              )}
               <div style={{ marginBottom: "15px" }}>
                 <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "6px" }}>
                   Nueva contraseña
