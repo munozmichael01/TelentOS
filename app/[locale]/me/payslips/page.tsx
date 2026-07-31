@@ -8,7 +8,9 @@ import { getMyEmployee } from "@/lib/performance/me";
  * Solo se listan las nóminas ya CERRADAS: un borrador o una nómina en cálculo no es un recibo
  * y enseñarla al empleado sería mostrarle una cifra que aún puede cambiar.
  */
-const VISIBLE_STATUSES = ["closed", "paid", "approved"];
+// Estados reales de pay_run_status: draft · in_review · approved · exported · paid.
+// El empleado ve solo las cerradas: `draft` e `in_review` son cifras que aún pueden cambiar.
+const VISIBLE_STATUSES = ["approved", "exported", "paid"];
 
 export default async function MiNominaPage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);

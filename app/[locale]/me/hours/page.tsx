@@ -10,6 +10,11 @@ const hhmm = (min: number | null) => {
   return m ? `${h}h ${String(m).padStart(2, "0")}m` : `${h}h`;
 };
 
+// start_time/end_time son timestamptz (fecha completa), no `time`: hay que formatear la HORA
+// en la zona del registro. Recortar los primeros caracteres mostraría el año.
+const clock = (ts: string | null, tz: string | null, locale: string) =>
+  ts ? new Date(ts).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", timeZone: tz ?? undefined }) : "—";
+
 /**
  * Portal del empleado — su registro de horas, en solo lectura.
  * El fichaje desde el portal y los conceptos/proyectos por entrada están en el backlog: hoy el
@@ -22,13 +27,13 @@ export default async function MisHorasPage({ params }: { params: { locale: strin
 
   const { data } = await supabase
     .from("time_entries")
-    .select("id, date, start_time, end_time, duration_minutes, entry_type, comment")
+    .select("id, date, start_time, end_time, duration_minutes, entry_type, comment, timezone")
     .eq("employee_id", emp.id)
     .order("date", { ascending: false })
     .limit(60);
   const rows = (data ?? []) as {
     id: string; date: string; start_time: string | null; end_time: string | null;
-    duration_minutes: number | null; entry_type: string; comment: string | null;
+    duration_minutes: number | null; entry_type: string; comment: string | null; timezone: string | null;
   }[];
   const totalMin = rows.reduce((acc, r) => acc + (r.duration_minutes ?? 0), 0);
 
@@ -53,8 +58,8 @@ export default async function MisHorasPage({ params }: { params: { locale: strin
               {rows.map((r) => (
                 <HairlineRow key={r.id} align={["left", "left", "left", "right"]}>
                   <span style={{ fontSize: "13.5px", fontWeight: 600 }}>{formatDate(r.date)}</span>
-                  <span style={{ fontSize: "13px", color: "#54504A" }}>{r.start_time?.slice(0, 5) ?? "—"}</span>
-                  <span style={{ fontSize: "13px", color: "#54504A" }}>{r.end_time?.slice(0, 5) ?? "—"}</span>
+                  <span style={{ fontSize: "13px", color: "#54504A" }}>{clock(r.start_time, r.timezone, params.locale)}</span>
+                  <span style={{ fontSize: "13px", color: "#54504A" }}>{clock(r.end_time, r.timezone, params.locale)}</span>
                   <span style={{ fontFamily: "'Space Mono',monospace", fontSize: "12.5px" }}>{hhmm(r.duration_minutes)}</span>
                 </HairlineRow>
               ))}
