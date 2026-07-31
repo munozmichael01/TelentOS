@@ -39,5 +39,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const companies = await getAccountCompanies();
   const activeCompanyId = companies.length > 1 ? await getActiveCompanyId() : null;
 
-  return <AppShell userRole={userRole as never} companies={companies.map((c) => ({ id: c.id, name: c.name, isParent: c.parent_company_id == null }))} activeCompanyId={activeCompanyId}>{children}</AppShell>;
+  // ¿Esta persona es además plantilla? Solo entonces se le ofrece el salto a su portal. Antes
+  // el menú mostraba "Mi espacio" a cualquiera, incluido un owner sin ficha: enlaces muertos.
+  const { data: ownEmployee } = await createAdminClient()
+    .from("employees").select("id").eq("user_id", user.id).maybeSingle();
+
+  return (
+    <AppShell
+      userRole={userRole as never}
+      companies={companies.map((c) => ({ id: c.id, name: c.name, isParent: c.parent_company_id == null }))}
+      activeCompanyId={activeCompanyId}
+      crossLink={ownEmployee ? { href: "/me/profile", label: "Ir a mi espacio" } : null}
+    >
+      {children}
+    </AppShell>
+  );
 }
