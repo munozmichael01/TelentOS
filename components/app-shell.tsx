@@ -172,14 +172,6 @@ const NAV_ROLES: Record<string, Role[]> = {
 };
 
 const ALL_NAV = [
-  // Portal del empleado: visible para TODOS los roles (cualquiera tiene su propio espacio).
-  // Para el rol `employee` es lo único que ve, porque el resto está restringido arriba.
-  { section: "Mi espacio" },
-  { href: "/app/me/profile",     label: "Mi perfil",     Icon: IconEmployee },
-  { href: "/app/me/performance",  label: "Mi desempeño",  Icon: IconPerformance },
-  { href: "/app/me/time-off",  label: "Mis ausencias", Icon: IconVacaciones },
-  { href: "/app/me/hours",      label: "Mis horas",     Icon: IconHoras },
-  { href: "/app/me/payslips",     label: "Mi nómina",     Icon: IconPayroll },
   { href: "/app/dashboard",          label: "Dashboard",    Icon: IconDashboard },
   { section: "Reclutamiento" },
   { href: "/app/jobs",               label: "Ofertas",      Icon: IconBriefcase },
@@ -197,6 +189,16 @@ const ALL_NAV = [
   { href: "/app/payroll",          label: "Payroll",             Icon: IconPayroll },
   { href: "/app/payroll/runs",     label: "Pay Runs",            Icon: IconPayRuns },
   { href: "/app/payroll/profiles", label: "Perfiles salariales", Icon: IconPayProfiles },
+  // Portal del empleado: visible para TODOS los roles (cualquiera tiene su propio espacio),
+  // pero abajo: para RR.HH. su espacio personal es secundario frente al trabajo de empresa.
+  // Para el rol `employee` es lo ÚNICO que ve, porque el resto está restringido arriba, y al
+  // caer el resto de secciones esta queda arriba del todo por sí sola.
+  { section: "Mi espacio" },
+  { href: "/app/me/profile",     label: "Mi perfil",     Icon: IconEmployee },
+  { href: "/app/me/performance", label: "Mi desempeño",  Icon: IconPerformance },
+  { href: "/app/me/time-off",    label: "Mis ausencias", Icon: IconVacaciones },
+  { href: "/app/me/hours",       label: "Mis horas",     Icon: IconHoras },
+  { href: "/app/me/payslips",    label: "Mi nómina",     Icon: IconPayroll },
   { section: "Ajustes" },
   {
     href: "/app/settings",
