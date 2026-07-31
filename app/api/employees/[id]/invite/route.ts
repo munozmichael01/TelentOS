@@ -5,7 +5,7 @@ import { sendEmail } from "@/lib/email/resend";
 import { recordEmployeeEvent } from "@/lib/performance/events";
 
 /**
- * Invita a un EMPLEADO al portal (/app/mi/*): crea o reutiliza su cuenta, la vincula a su ficha
+ * Invita a un EMPLEADO al portal (/app/me/*): crea o reutiliza su cuenta, la vincula a su ficha
  * y le manda un enlace de acceso.
  *
  * Es el puente user↔employee del lado de RR.HH. (el otro es /api/employees/self, que hace lo
@@ -88,7 +88,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   //      tokens en el FRAGMENTO de la URL y solo el callback los procesa. Apuntar directo a la
   //      página deja al usuario sin sesión y el middleware lo manda al login.
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://telent-os-mu.vercel.app";
-  const callback = `${site}/es-ve/auth/callback?next=${encodeURIComponent("/app/mi/perfil")}`;
+  const callback = `${site}/es-ve/auth/callback?next=${encodeURIComponent("/app/me/profile")}`;
   const { data: link, error: linkGenErr } = await admin.auth.admin.generateLink({
     type: "recovery",
     email,

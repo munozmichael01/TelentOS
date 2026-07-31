@@ -140,7 +140,7 @@ type NavSection = { section: string; brand?: boolean };
 
 // roles that can see each nav item; omit key = visible to all roles
 const NAV_ROLES: Record<string, Role[]> = {
-  // El rol `employee` solo ve su portal (/app/mi/*). Todo lo demás del dashboard es de
+  // El rol `employee` solo ve su portal (/app/me/*). Todo lo demás del dashboard es de
   // empresa, así que se restringe explícitamente: antes estos ítems no tenían regla y por
   // tanto eran visibles para todos los roles, incluido el empleado.
   "/app/dashboard":          ["owner", "hr_admin", "recruiter", "manager"],
@@ -152,13 +152,13 @@ const NAV_ROLES: Record<string, Role[]> = {
   "/app/jobs":               ["owner", "hr_admin", "recruiter"],
   "/app/candidates":         ["owner", "hr_admin", "recruiter"],
   "/app/career-site":        ["owner", "hr_admin", "recruiter"],
-  "/app/canales":            ["owner", "hr_admin", "recruiter"],
+  "/app/channels":            ["owner", "hr_admin", "recruiter"],
   // personas — manager solo ve su equipo (scoping via RLS en backend)
   "/app/timeoff":            ["owner", "hr_admin", "manager"],
   "/app/timeoff/calendar":   ["owner", "hr_admin", "manager"],
-  "/app/horas":              ["owner", "hr_admin", "manager"],
+  "/app/hours":              ["owner", "hr_admin", "manager"],
   // sensibles — solo admin
-  "/app/horas/compensacion": ["owner", "hr_admin"],
+  "/app/hours/compensation": ["owner", "hr_admin"],
   // payroll — solo owner/hr_admin (datos financieros sensibles)
   "/app/payroll":            ["owner", "hr_admin"],
   "/app/payroll/runs":       ["owner", "hr_admin"],
@@ -175,24 +175,24 @@ const ALL_NAV = [
   // Portal del empleado: visible para TODOS los roles (cualquiera tiene su propio espacio).
   // Para el rol `employee` es lo único que ve, porque el resto está restringido arriba.
   { section: "Mi espacio" },
-  { href: "/app/mi/perfil",     label: "Mi perfil",     Icon: IconEmployee },
-  { href: "/app/mi/desempeno",  label: "Mi desempeño",  Icon: IconPerformance },
-  { href: "/app/mi/ausencias",  label: "Mis ausencias", Icon: IconVacaciones },
-  { href: "/app/mi/horas",      label: "Mis horas",     Icon: IconHoras },
-  { href: "/app/mi/nomina",     label: "Mi nómina",     Icon: IconPayroll },
+  { href: "/app/me/profile",     label: "Mi perfil",     Icon: IconEmployee },
+  { href: "/app/me/performance",  label: "Mi desempeño",  Icon: IconPerformance },
+  { href: "/app/me/time-off",  label: "Mis ausencias", Icon: IconVacaciones },
+  { href: "/app/me/hours",      label: "Mis horas",     Icon: IconHoras },
+  { href: "/app/me/payslips",     label: "Mi nómina",     Icon: IconPayroll },
   { href: "/app/dashboard",          label: "Dashboard",    Icon: IconDashboard },
   { section: "Reclutamiento" },
   { href: "/app/jobs",               label: "Ofertas",      Icon: IconBriefcase },
   { href: "/app/candidates",         label: "Candidatos",   Icon: IconCandidates },
   { href: "/app/career-site",        label: "Career Site",  Icon: IconGlobe },
-  { href: "/app/canales",            label: "Canales",      Icon: IconChannels },
+  { href: "/app/channels",            label: "Canales",      Icon: IconChannels },
   { section: "Personas" },
   { href: "/app/employees",          label: "Empleados",    Icon: IconEmployee },
   { href: "/app/org",                label: "Organigrama",  Icon: IconOrg },
   { href: "/app/timeoff",            label: "Ausencias",    Icon: IconVacaciones },
   { href: "/app/timeoff/calendar",   label: "Calendario",   Icon: IconCalendar },
-  { href: "/app/horas",              label: "Horas",        Icon: IconHoras },
-  { href: "/app/horas/compensacion", label: "Banco de horas", Icon: IconCompensacion },
+  { href: "/app/hours",              label: "Horas",        Icon: IconHoras },
+  { href: "/app/hours/compensation", label: "Banco de horas", Icon: IconCompensacion },
   { section: "Payroll", brand: true },
   { href: "/app/payroll",          label: "Payroll",             Icon: IconPayroll },
   { href: "/app/payroll/runs",     label: "Pay Runs",            Icon: IconPayRuns },
