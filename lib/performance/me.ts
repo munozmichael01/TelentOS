@@ -4,7 +4,7 @@ import type { Employee } from "@/lib/types";
 
 /**
  * La ficha de empleado del usuario autenticado. Es la base de las cinco pantallas del portal
- * (/app/mi/*), así que vive en un solo sitio: cada pantalla resuelve "quién soy" igual.
+ * (/app/me/*), así que vive en un solo sitio: cada pantalla resuelve "quién soy" igual.
  *
  * El vínculo es `employees.user_id`, que fija la invitación de RR.HH. Si el usuario no tiene
  * ficha vinculada no hay portal que mostrar — se le manda al dashboard, donde su rol decide

@@ -62,14 +62,14 @@ export async function middleware(request: NextRequest) {
 
   const isPrivate = bare === "/app" || bare.startsWith("/app/");
   const isCandidate = user?.app_metadata?.audience === "candidate";
-  // Empleado de plantilla: su sitio es el portal (/app/mi/*), no el dashboard de RR.HH. El
+  // Empleado de plantilla: su sitio es el portal (/app/me/*), no el dashboard de RR.HH. El
   // claim va en el JWT (lo fija la invitación), así que no hace falta consultar el rol en cada
   // request. La barrera real de datos sigue siendo la RLS; esto evita que aterrice por error
   // —o a propósito— en pantallas de empresa.
   const isStaff = user?.app_metadata?.audience === "employee";
-  if (isStaff && isPrivate && !bare.startsWith("/app/mi")) {
+  if (isStaff && isPrivate && !bare.startsWith("/app/me")) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = `/${locale}/app/mi/perfil`;
+    redirectUrl.pathname = `/${locale}/app/me/profile`;
     return NextResponse.redirect(redirectUrl);
   }
 

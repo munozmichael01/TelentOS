@@ -642,7 +642,7 @@ export default async function EmployeePage({ params }: { params: { id: string; l
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
-              <Link href="/app/horas" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
+              <Link href="/app/hours" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
                 {t("detail.hours.logBtn")}
               </Link>
             </div>
@@ -701,7 +701,7 @@ export default async function EmployeePage({ params }: { params: { id: string; l
             })()}
 
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
-              <Link href="/app/horas/compensacion" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
+              <Link href="/app/hours/compensation" style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "13px", color: "#fff", background: "#0E5C4A", border: "2px solid #1A1A17", borderRadius: "11px", padding: "8px 14px", boxShadow: "3px 3px 0 #1A1A17", textDecoration: "none" }}>
                 {t("detail.compensation.manageBtn")}
               </Link>
             </div>

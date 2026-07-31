@@ -50,11 +50,11 @@ export const pathnames = {
 
   // Portal del EMPLEADO (superficie propia del rol `employee`; el dashboard B2B es de RR.HH.).
   // No se localiza el slug: es zona privada, el prefijo de locale ya da el idioma.
-  "/app/mi/perfil": "/app/mi/perfil",
-  "/app/mi/desempeno": "/app/mi/desempeno",
-  "/app/mi/ausencias": "/app/mi/ausencias",
-  "/app/mi/nomina": "/app/mi/nomina",
-  "/app/mi/horas": "/app/mi/horas",
+  "/app/me/profile": "/app/me/profile",
+  "/app/me/performance": "/app/me/performance",
+  "/app/me/time-off": "/app/me/time-off",
+  "/app/me/payslips": "/app/me/payslips",
+  "/app/me/hours": "/app/me/hours",
 
   // Dashboard B2B autenticado (no localizado — mismo slug en todos los locales)
   "/app/dashboard": "/app/dashboard",
@@ -67,14 +67,14 @@ export const pathnames = {
   "/app/candidates/[id]": "/app/candidates/[id]",
   "/app/applications/[id]": "/app/applications/[id]",
   "/app/career-site": "/app/career-site",
-  "/app/canales": "/app/canales",
+  "/app/channels": "/app/channels",
   "/app/employees": "/app/employees",
   "/app/employees/[id]": "/app/employees/[id]",
   "/app/org": "/app/org",
   "/app/timeoff": "/app/timeoff",
   "/app/timeoff/calendar": "/app/timeoff/calendar",
-  "/app/horas": "/app/horas",
-  "/app/horas/compensacion": "/app/horas/compensacion",
+  "/app/hours": "/app/hours",
+  "/app/hours/compensation": "/app/hours/compensation",
   "/app/payroll": "/app/payroll",
   "/app/payroll/runs": "/app/payroll/runs",
   "/app/payroll/runs/[id]": "/app/payroll/runs/[id]",

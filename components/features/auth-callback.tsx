@@ -33,7 +33,7 @@ export function AuthCallback() {
 
     const isRecovery = type === "recovery" || hashType === "recovery";
     // A dónde ir tras validar el enlace. `next` lo fija quien genera el enlace (p. ej. la
-    // invitación al portal manda a /app/mi/perfil); sin él, al dashboard, que el middleware
+    // invitación al portal manda a /app/me/profile); sin él, al dashboard, que el middleware
     // reencamina según el rol. Antes estaba fijo en "/dashboard", una ruta que no existe:
     // todas las páginas cuelgan de /app/*, así que un login correcto acababa en 404.
     const target = searchParams.get("next") || "/app/dashboard";
