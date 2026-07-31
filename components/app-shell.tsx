@@ -129,6 +129,13 @@ const IconPerformance = () => (
   </svg>
 );
 
+// Cambio de superficie (admin ↔ portal): flechas opuestas. Icono de línea del DS.
+const IconSwitch = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 3L4 7l4 4" /><path d="M4 7h16" /><path d="M16 21l4-4-4-4" /><path d="M20 17H4" />
+  </svg>
+);
+
 const LogoMark = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
     <path d="M4 7l8 4 8-4M4 7l8-4 8 4M4 7v10l8 4 8-4V7M12 11v10" stroke="#C6F24E" strokeWidth="2" strokeLinejoin="round"/>
@@ -140,7 +147,7 @@ type NavSection = { section: string; brand?: boolean };
 
 // roles that can see each nav item; omit key = visible to all roles
 const NAV_ROLES: Record<string, Role[]> = {
-  // El rol `employee` solo ve su portal (/app/me/*). Todo lo demás del dashboard es de
+  // El rol `employee` solo ve su portal (/me/*). Todo lo demás del dashboard es de
   // empresa, así que se restringe explícitamente: antes estos ítems no tenían regla y por
   // tanto eran visibles para todos los roles, incluido el empleado.
   "/app/dashboard":          ["owner", "hr_admin", "recruiter", "manager"],
@@ -189,16 +196,6 @@ const ALL_NAV = [
   { href: "/app/payroll",          label: "Payroll",             Icon: IconPayroll },
   { href: "/app/payroll/runs",     label: "Pay Runs",            Icon: IconPayRuns },
   { href: "/app/payroll/profiles", label: "Perfiles salariales", Icon: IconPayProfiles },
-  // Portal del empleado: visible para TODOS los roles (cualquiera tiene su propio espacio),
-  // pero abajo: para RR.HH. su espacio personal es secundario frente al trabajo de empresa.
-  // Para el rol `employee` es lo ÚNICO que ve, porque el resto está restringido arriba, y al
-  // caer el resto de secciones esta queda arriba del todo por sí sola.
-  { section: "Mi espacio" },
-  { href: "/app/me/profile",     label: "Mi perfil",     Icon: IconEmployee },
-  { href: "/app/me/performance", label: "Mi desempeño",  Icon: IconPerformance },
-  { href: "/app/me/time-off",    label: "Mis ausencias", Icon: IconVacaciones },
-  { href: "/app/me/hours",       label: "Mis horas",     Icon: IconHoras },
-  { href: "/app/me/payslips",    label: "Mi nómina",     Icon: IconPayroll },
   { section: "Ajustes" },
   {
     href: "/app/settings",
@@ -215,6 +212,20 @@ const ALL_NAV = [
       { href: "/app/settings/skills",     label: "Skills" },
     ],
   },
+];
+
+// Nav del PORTAL DEL EMPLEADO. Producto distinto del admin B2B: una persona puede ser owner
+// y a la vez plantilla, y mezclar ambos menús en una barra confunde (y a un owner SIN ficha
+// le mostraba enlaces muertos). Cada superficie tiene su nav; se cruza con un enlace explícito.
+// Se tipa con la forma del nav admin para que el render (que contempla submenús) valga para
+// los dos sin ramificar.
+const PORTAL_NAV: (typeof ALL_NAV)[number][] = [
+  { section: "Mi espacio" },
+  { href: "/me/profile",     label: "Mi perfil",     Icon: IconEmployee },
+  { href: "/me/performance", label: "Mi desempeño",  Icon: IconPerformance },
+  { href: "/me/time-off",    label: "Mis ausencias", Icon: IconVacaciones },
+  { href: "/me/hours",       label: "Mis horas",     Icon: IconHoras },
+  { href: "/me/payslips",    label: "Mi nómina",     Icon: IconPayroll },
 ];
 
 function buildNav(role: Role | null) {
@@ -249,11 +260,17 @@ export function AppShell({
   userRole,
   companies = [],
   activeCompanyId = null,
+  variant = "admin",
+  crossLink = null,
 }: {
   children: React.ReactNode;
   userRole?: Role | null;
   companies?: { id: string; name: string; isParent: boolean }[];
   activeCompanyId?: string | null;
+  /** Qué producto se está mostrando: el admin B2B o el portal del empleado. */
+  variant?: "admin" | "portal";
+  /** Enlace al otro producto, solo si esta persona tiene acceso a ambos. */
+  crossLink?: { href: string; label: string } | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -270,7 +287,7 @@ export function AppShell({
   const [collapsed, setCollapsed] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const NAV = buildNav(userRole ?? null);
+  const NAV = variant === "portal" ? PORTAL_NAV : buildNav(userRole ?? null);
 
   // Restore collapsed state from localStorage after mount
   useEffect(() => {
@@ -453,6 +470,21 @@ export function AppShell({
                   </Link>
                 );
               })}
+
+              {/* Puente entre los dos productos. Solo aparece si esta persona tiene acceso a
+                  ambos: un owner que además es plantilla, o un empleado que además administra.
+                  Va separado del nav, no como una sección más, para que quede claro que se
+                  cambia de superficie y no de pantalla. */}
+              {crossLink && (
+                <Link
+                  href={crossLink.href as never}
+                  className="nav-item"
+                  style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "14px", padding: "9px 10px", borderTop: "1px solid #E7E1D4", paddingTop: "14px", color: "#79746B", fontSize: "13.5px", fontWeight: 600, textDecoration: "none" }}
+                >
+                  <span style={{ flexShrink: 0, display: "flex" }}><IconSwitch /></span>
+                  <span className="nav-label">{crossLink.label}</span>
+                </Link>
+              )}
             </nav>
 
             {/* collapse toggle */}
