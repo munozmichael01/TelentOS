@@ -290,7 +290,8 @@
       "calibration_adjust": "Ajuste en calibración",
       "development_plan": "Plan de desarrollo",
       "improvement_plan": "Plan de mejora",
-      "acknowledged": "Acuse del empleado"
+      "acknowledged": "Acuse del empleado",
+      "portal_invited": "Acceso al portal concedido"
     }
   },
   "portal": {

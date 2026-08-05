@@ -393,7 +393,68 @@ async function importSectors(names) {
   console.log("Importación completa.");
 }
 
+/**
+ * Traduce las SKILLS que ya están enlazadas a un cargo. El import las inserta solo con su
+ * nombre canónico (inglés) y sin `skill_translations`, así que en una ficha en español las
+ * competencias salían mezcladas: "gestionar presupuestos" junto a "ensure gender equality in
+ * the workplace". Se re-consulta cada ocupación en es y pt: ESCO devuelve el título de cada
+ * skill ya localizado en `_links.hasEssentialSkill[].title`, así que no hay que pedir cada
+ * skill por separado (serían miles de peticiones en vez de cientos).
+ */
+async function translateSkills() {
+  const { data: titles } = await db.from("job_titles").select("id, esco_uri").not("esco_uri", "is", null);
+  const { data: allSkills } = await pageAllSkills();
+  const idByUri = new Map(allSkills.filter((s) => s.esco_uri).map((s) => [s.esco_uri, s.id]));
+  const idByName = new Map(allSkills.map((s) => [nkey(s.name), s.id]));
+
+  const existing = new Set();
+  { const P = 1000;
+    for (let from = 0; ; from += P) {
+      const { data } = await db.from("skill_translations").select("skill_id, locale").range(from, from + P - 1);
+      for (const r of data ?? []) existing.add(`${r.skill_id}|${r.locale}`);
+      if (!data || data.length < P) break;
+    } }
+
+  const rows = new Map();
+  for (const [i, t] of titles.entries()) {
+    for (const loc of ["es", "pt"]) {
+      const d = await getJson(api("/resource/occupation", { uri: t.esco_uri, language: loc, selectedVersion: VERSION })).catch(() => null);
+      if (!d) continue;
+      for (const key of ["hasEssentialSkill", "hasOptionalSkill"]) {
+        for (const s of (Array.isArray(d._links?.[key]) ? d._links[key] : [])) {
+          const sid = idByUri.get(s.uri) ?? idByName.get(nkey(s.title));
+          const name = clean(s.title);
+          if (!sid || !name || existing.has(`${sid}|${loc}`)) continue;
+          rows.set(`${sid}|${loc}`, { skill_id: sid, locale: loc, name });
+        }
+      }
+    }
+    if ((i + 1) % 50 === 0) console.log(`  … ${i + 1}/${titles.length} · traducciones acumuladas: ${rows.size}`);
+  }
+  const out = [...rows.values()];
+  console.log(`Traducciones de skill a insertar: ${out.length}`);
+  if (DRY) { console.log(out.slice(0, 5)); return; }
+  for (const part of chunk(out, 500)) {
+    const { error } = await db.from("skill_translations").upsert(part, { onConflict: "skill_id,locale" });
+    if (error) throw error;
+  }
+  console.log("Skills traducidas.");
+}
+
+async function pageAllSkills() {
+  const out = []; const P = 1000;
+  for (let from = 0; ; from += P) {
+    const { data, error } = await db.from("skills").select("id, name, esco_uri").range(from, from + P - 1);
+    if (error) throw error;
+    if (!data?.length) break;
+    out.push(...data);
+    if (data.length < P) break;
+  }
+  return { data: out };
+}
+
 async function main() {
+  if (process.argv.includes("--translate-skills")) return translateSkills();
   if (ENRICH) return enrich();
   const areaArg = argOf("area");
   const arg = argOf("sector");

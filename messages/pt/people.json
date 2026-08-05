@@ -290,7 +290,8 @@
       "calibration_adjust": "Ajuste na calibração",
       "development_plan": "Plano de desenvolvimento",
       "improvement_plan": "Plano de melhoria",
-      "acknowledged": "Confirmação do colaborador"
+      "acknowledged": "Confirmação do colaborador",
+      "portal_invited": "Acesso ao portal concedido"
     }
   },
   "portal": {
