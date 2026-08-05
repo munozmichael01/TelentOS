@@ -46,3 +46,17 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 
 ## Backlog producto — Job Board
 - **"Publicar en incógnito" (rol confidencial):** flag POR-OFERTA (`jobs.board_hidden` o similar) para que una empresa oculte una oferta puntual del board público, manteniéndola en su career site. NO un toggle por-empresa (decisión 2026-07-19: todas las ofertas van al board por defecto = keystone). Caso borde para enterprise; sin construir aún.
+
+## 2026-08 · Taxonomía y seeders (detectado durante el bloque 1 de Desempeño)
+
+| # | Hallazgo | Severidad | Estado |
+|---|---|---|---|
+| T1 | Lecturas de Supabase **sin paginar** en los seeders: el corte a 1.000 filas dejaba mapas incompletos y **descartaba enlaces cargo↔skill en silencio** (`cook` acabó con 2 competencias de las 50 que da ESCO). | Alta | ✅ Resuelto: lectura paginada + red de seguridad por `esco_uri` + aviso por consola en vez de descarte mudo |
+| T2 | `job_title_synonyms` sin índice único → los seeders duplicaban filas al reejecutarse. | Media | ✅ Resuelto (migr. 0071) |
+| T3 | Sinónimos de ESCO **usurpando el nombre de otro cargo** ("cocinero" como sinónimo de `grill cook`): la búsqueda del término resolvía a cargos ajenos y dejaba fuera al genérico. | Alta | ✅ Resuelto (migr. 0068, 135 colisiones borradas) + regla documentada |
+| T4 | `job_title_relations` generado con un `.slice(0, 600)` **global**: 600 filas para 219 de 590 cargos. | Media | ✅ Resuelto: top-N por cargo (`npm run build:relations`) |
+| T5 | Áreas triplicadas en columnas de texto sin FK (`category`/`sector`/`category_key`), 305 de 506 cargos sin área. | Media | ✅ Resuelto (migr. 0065, tabla `job_categories` + FK). `category` y `sector` quedan **legado**: no usar en código nuevo |
+| T6 | Números de migración **duplicados** (dos `0063`, dos `0064`) al trabajar dos frentes en paralelo. | Baja | ✅ Resuelto: renumerados a 0070/0071 |
+| T7 | El callback de auth redirigía a `/dashboard`, ruta **inexistente** (todo cuelga de `/app/*`). | Media | ✅ Resuelto |
+| T8 | 5 cargos observados sin ancla adecuada en ESCO, en `review` dentro de `data/taxonomy/market-titles.json`. | Baja | ⏳ Abierto (1–4 apariciones cada uno) |
+| T9 | Sin infraestructura de test de **componentes** (ni testing-library ni jsdom): la UI solo se valida con `tsc` y a ojo. | Media | ⏳ Abierto — relevante ahora que Desempeño añade mucha UI |
