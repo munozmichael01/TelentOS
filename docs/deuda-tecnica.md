@@ -60,3 +60,16 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 | T7 | El callback de auth redirigía a `/dashboard`, ruta **inexistente** (todo cuelga de `/app/*`). | Media | ✅ Resuelto |
 | T8 | 5 cargos observados sin ancla adecuada en ESCO, en `review` dentro de `data/taxonomy/market-titles.json`. | Baja | ⏳ Abierto (1–4 apariciones cada uno) |
 | T9 | Sin infraestructura de test de **componentes** (ni testing-library ni jsdom): la UI solo se valida con `tsc` y a ojo. | Media | ⏳ Abierto — relevante ahora que Desempeño añade mucha UI |
+
+## 2026-08 · Aislamiento multi-inquilino en consultas a `jobs`
+
+| # | Hallazgo | Severidad | Estado |
+|---|---|---|---|
+| M1 | KPI "Ofertas activas" del dashboard sin filtro de empresa: mostraba **3.225** (el catálogo entero) a una empresa con **10**. La RLS no protege `jobs` porque el board necesita lectura pública de las activas. | **Alta** | ✅ Resuelto |
+| M2 | `app/api/channels/report`: dos consultas a `jobs` sin scope — agregaba sectores y **listaba títulos de ofertas de otras empresas**. Peor que M1: no era un número, eran datos. | **Alta** | ✅ Resuelto |
+| M3 | Recursión RLS reintroducida en las políticas de nómina (42P17). Mismo patrón que la migr. 0050. El test de regresión no cubría esas tablas. | **Alta** | ✅ Resuelto (migr. 0073) + 4 tablas añadidas al test |
+| M4 | `employee_events` legible por toda la empresa: un empleado veía el expediente de sus compañeros. | **Alta** | ✅ Resuelto (migr. 0074) |
+
+**Regla derivada** (en CLAUDE.md): toda consulta a `jobs` desde el admin filtra por `company_id`
+explícitamente. Y toda pantalla con RLS se verifica **con la sesión del usuario real**, nunca con
+service role: los datos pueden estar y el permiso no.

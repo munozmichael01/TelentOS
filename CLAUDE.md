@@ -77,6 +77,31 @@ const company = await getCompany(); // RLS-scoped por sesión del usuario
 
 La RLS **impone el aislamiento por empresa a nivel de base de datos**: cada tabla con datos de empresa se scopea por la ruta FK a `companies` vía el helper `auth_company_ids()` (las empresas del usuario según `company_members`). Las tablas sensibles (nómina, compensación, compliance) exigen además rol owner/hr_admin. La referencia global sin `company_id` (channels, evaluation_templates, skills) es de solo lectura para autenticados; los accesos anónimos del career site (ofertas activas, aplicar) se preservan. **No añadas políticas `using(true)` para `authenticated`** ni tablas sin RLS: rompe el aislamiento. Toda tabla nueva con datos de empresa necesita su política de scope en una migración.
 
+### `jobs` es la excepción: filtra por empresa a mano SIEMPRE
+
+El job board público necesita leer las ofertas **activas de todas las empresas**
+(`jobs_anon_read_active`), así que **la RLS no aísla `jobs` entre inquilinos**. Cualquier
+consulta desde el admin sin `.eq("company_id", …)` explícito ve el catálogo entero.
+
+Caso real (2026-08): el KPI "Ofertas activas" del dashboard mostraba **3.225** —el total de la
+plataforma— a una empresa con 10, y el informe de canales **listaba títulos de ofertas de otras
+empresas**. Regla: toda consulta a `jobs` desde `/app/*` o sus APIs lleva `company_id` explícito,
+aunque parezca redundante. Las tablas que sí se scopean por RLS (`employees`, `applications`…)
+no necesitan esto, pero el filtro explícito tampoco sobra.
+
+### Las cuatro superficies del producto
+
+| Superficie | Ruta | Quién |
+|---|---|---|
+| Job board público | `/[locale]/empleos/*` | Cualquiera, sin cuenta |
+| Cuenta del candidato | `/[locale]/cuenta/*` | Candidato (`audience=candidate`) |
+| Admin B2B | `/[locale]/app/*` | Empresa: owner · hr_admin · recruiter · manager |
+| Portal del empleado | `/[locale]/me/*` | Plantilla (`audience=employee`) |
+
+Son productos **separados**, no vistas del mismo: una persona puede ser owner y además
+plantilla, y cada superficie tiene su nav. El cruce entre admin y portal es un enlace explícito
+que solo aparece para quien tiene acceso a los dos. No mezclar sus menús ni sus rutas.
+
 ### RBAC — roles
 
 `owner · hr_admin · recruiter · manager · employee`
