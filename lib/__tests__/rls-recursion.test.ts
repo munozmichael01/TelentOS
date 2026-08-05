@@ -48,6 +48,8 @@ const SENSITIVE = [
   // `pay_runs` y la de `pay_runs` consultaba `pay_run_lines`. El test pasaba en verde porque
   // estas tablas no estaban en la lista. Se rompió con funciones SECURITY DEFINER (migr. 0073).
   "pay_runs", "pay_run_lines", "employees", "employee_events",
+  // Portal v2: la jornada pasó a políticas por rol (propio / equipo / RR.HH.).
+  "time_entries", "timer_state",
 ];
 
 describe.skipIf(!hasDb)("RLS: sin recursión bajo sesión autenticada (regresión migr. 0050)", () => {

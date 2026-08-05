@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { HairlineTable, HairlineRow } from "@/components/hairline-table";
 import { getMyEmployee } from "@/lib/performance/me";
+import { ClockInCard } from "@/components/features/clock-in-card";
 import { formatDate } from "@/lib/utils";
 
 const hhmm = (min: number | null) => {
@@ -25,6 +26,10 @@ export default async function MisHorasPage({ params }: { params: { locale: strin
   const t = await getTranslations({ locale: params.locale, namespace: "Portal" });
   const { supabase, employee: emp } = await getMyEmployee(params.locale);
 
+  // Fichaje abierto, si lo hay: el contador arranca desde su hora de inicio.
+  const { data: timer } = await supabase
+    .from("timer_state").select("started_at").eq("employee_id", emp.id).maybeSingle();
+
   const { data } = await supabase
     .from("time_entries")
     .select("id, date, start_time, end_time, duration_minutes, entry_type, comment, timezone")
@@ -41,6 +46,7 @@ export default async function MisHorasPage({ params }: { params: { locale: strin
     <div>
       <PageHeader eyebrow={t("eyebrow")} title={t("hours.title")} description={t("hours.description")} />
       <div style={{ maxWidth: "760px" }}>
+        <ClockInCard startedAt={(timer as { started_at: string } | null)?.started_at ?? null} />
         {rows.length === 0 ? (
           <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "22px", fontSize: "13.5px", color: "#79746B" }}>
             {t("hours.empty")}

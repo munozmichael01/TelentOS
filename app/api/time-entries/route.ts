@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser, jsonError } from "@/lib/api";
 import { getCompanyId } from "@/lib/workspace";
+import { resolveActingEmployee } from "@/lib/api-self";
 
 export async function GET(req: Request) {
   const { supabase, error } = await requireUser();
@@ -45,7 +46,9 @@ export async function POST(req: Request) {
   if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
 
   const body = await req.json().catch(() => null);
-  if (!body?.employee_id) return jsonError("Se requiere employee_id");
+  // Igual que el fichaje: el empleado no se acepta a ciegas del cliente (ver lib/api-self.ts).
+  const acting = await resolveActingEmployee(body?.employee_id ?? null);
+  if (acting.error) return acting.error;
   if (!body?.date) return jsonError("Se requiere date");
   if (!body?.start_time) return jsonError("Se requiere start_time");
 
@@ -64,7 +67,7 @@ export async function POST(req: Request) {
     .from("time_entries")
     .insert({
       company_id: company.id,
-      employee_id: body.employee_id,
+      employee_id: acting.employeeId,
       date: body.date,
       start_time: startTs,
       end_time: endTs,
