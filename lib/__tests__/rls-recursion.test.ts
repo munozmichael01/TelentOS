@@ -44,6 +44,10 @@ const SENSITIVE = [
   "candidates", "applications", "candidate_education", "candidate_experiences",
   "candidate_languages", "candidate_skills", "candidate_profiles", "job_stages",
   "screening_questions", "application_events", "saved_jobs",
+  // Añadidas tras reintroducir el ciclo en 0072: la política de `pay_run_lines` consultaba
+  // `pay_runs` y la de `pay_runs` consultaba `pay_run_lines`. El test pasaba en verde porque
+  // estas tablas no estaban en la lista. Se rompió con funciones SECURITY DEFINER (migr. 0073).
+  "pay_runs", "pay_run_lines", "employees", "employee_events",
 ];
 
 describe.skipIf(!hasDb)("RLS: sin recursión bajo sesión autenticada (regresión migr. 0050)", () => {
