@@ -13,9 +13,24 @@ Backlog de la v1 del módulo. Spec: [`talentos-desempeno-spec.md`](./talentos-de
 
 ---
 
-## Bloque 1 — Cimientos y circuito de datos
+## Bloque 1 — Cimientos y circuito de datos ✅ EN PRODUCCIÓN (2026-08)
 
 Sin esto no existe el módulo. Es también la mitad del trabajo del módulo.
+
+**Cerrado**: las cinco historias, más una separación de superficies que no estaba planificada
+y salió al probarlo (ver DES-B1-06). Estado medido: 44 de 50 fichas con cargo canónico (88%),
+51 eventos de expediente, 612 cargos en la taxonomía con 13.197 enlaces cargo↔skill.
+
+**Fuera de plan pero necesario** — el saneamiento de la taxonomía sin el que las competencias
+no valían nada: áreas relacionales (`job_categories`), modelo de dos niveles esco/market,
+grafo de relaciones con peso recalculado, y tres bugs de datos (sinónimos que usurpaban
+nombres de cargo, lecturas sin paginar que descartaban enlaces en silencio, caps de 8 del
+builder). Documentado en `docs/taxonomy-and-ranking.md`.
+
+### DES-B1-06 · Separar portal del empleado y admin B2B ✅ (no planificada)
+Un owner puede ser además plantilla. Mezclar ambos menús en una barra confunde, y a un owner
+SIN ficha se le mostraban enlaces muertos. Se separan en dos superficies (`/app/*` y `/me/*`)
+con enlace cruzado explícito solo para quien tiene acceso a las dos.
 
 ### DES-B1-01 · Portal del empleado (superficie nueva)
 Rol `employee` con nav reducido y sus propias pantallas. Alcance del portal: **desempeño,
@@ -236,6 +251,11 @@ AC externos aprovechables: `EP-12-01` (AC 2, 3, 4), `EP-12-02` (AC 1, 2, 3), `EP
 **Cerradas**: escala (4 puntos, sin punto medio, + "sin elementos") · sección propia "Desempeño" ·
 alcance del portal del empleado · competencias desde ESCO · objetivos antes del primer ciclo ·
 la promoción pre-rellena compensación pero no la escribe.
+
+**Bloqueantes para el bloque 2 (dueño, no código)**
+- `RESEND_API_KEY` y `RESEND_FROM` en las variables de entorno de **Vercel**: sin eso el correo
+  de invitación no sale (la clave está solo en `.env.local`, y el botón corre en producción).
+  Mientras tanto el flujo funciona copiando el enlace desde la ficha.
 
 **Abiertas (no bloquean el bloque 1)**
 1. Etiquetas exactas de los 4 puntos de la escala y los cortes de score → etiqueta.
