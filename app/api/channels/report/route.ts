@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { requireUser, jsonError } from "@/lib/api";
+import { getCompanyId } from "@/lib/workspace";
 
 export async function GET(req: Request) {
   const { supabase, error } = await requireUser();
   if (error) return error;
+
+  // Las consultas a `jobs` necesitan filtro EXPLÍCITO por empresa: la RLS deja leer las
+  // ofertas activas de todas (el job board lo requiere), así que sin esto el informe de
+  // canales agregaba sectores y listaba títulos de otras empresas. Fuga entre inquilinos.
+  const companyId = await getCompanyId();
+  if (!companyId) return jsonError("No perteneces a ninguna empresa", 412);
 
   const { searchParams } = new URL(req.url);
   const period = searchParams.get("period") ?? "30d";
@@ -35,8 +42,8 @@ export async function GET(req: Request) {
       appQuery,
       campQuery,
       supabase.from("channels").select("id, name, utm_source, kind, base_cpa").order("name"),
-      supabase.from("jobs").select("sector").not("sector", "is", null),
-      supabase.from("jobs").select("id, title, sector, location").order("title"),
+      supabase.from("jobs").select("sector").eq("company_id", companyId).not("sector", "is", null),
+      supabase.from("jobs").select("id, title, sector, location").eq("company_id", companyId).order("title"),
     ]);
 
   if (!applications) return jsonError("Error al obtener datos", 500);

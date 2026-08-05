@@ -158,7 +158,12 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
       .limit(80),
 
     // Métricas de pulso
-    supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "active"),
+    // OJO con `jobs`: hay que filtrar por empresa EXPLÍCITAMENTE. La RLS no basta porque el
+    // job board necesita lectura pública de las ofertas activas de todas las empresas
+    // (`jobs_anon_read_active`), así que sin este filtro el KPI mostraba el total del portal
+    // —3.225 ofertas de Turijobs— como si fueran de la empresa. Es fuga entre inquilinos.
+    supabase.from("jobs").select("id", { count: "exact", head: true })
+      .eq("company_id", company.id).eq("status", "active"),
     supabase.from("employees").select("id", { count: "exact", head: true }).eq("status", "active"),
     supabase.from("applications").select("id", { count: "exact", head: true }).eq("status", "open"),
 
