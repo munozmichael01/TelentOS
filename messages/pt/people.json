@@ -304,5 +304,14 @@
     "noEmail": "Adiciona um email à ficha para poder convidar",
     "error": "Não foi possível convidar",
     "resend": "Reenviar acesso"
+  },
+  "Portal": {
+    "clock": {
+      "running": "Ponto em curso",
+      "stopped": "Sem ponto",
+      "start": "Registar entrada",
+      "stop": "Registar saída",
+      "failed": "Não foi possível registar. Tente de novo."
+    }
   }
 }

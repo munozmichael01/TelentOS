@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 import { requireUser, jsonError } from "@/lib/api";
-import { getCompanyId } from "@/lib/workspace";
+import { resolveActingEmployee } from "@/lib/api-self";
 
 export async function POST(req: Request) {
   const { supabase, error } = await requireUser();
   if (error) return error;
 
-  const _cid = await getCompanyId(); const company = _cid ? { id: _cid } : null;
-  if (!company) return jsonError("Configura primero la empresa en Ajustes", 412);
-
   const body = await req.json().catch(() => null);
-  if (!body?.employee_id) return jsonError("Se requiere employee_id");
-
-  const employee_id: string = body.employee_id;
+  // Sobre QUÉ empleado se actúa no se acepta del cliente: RR.HH. puede hacerlo por otro de su
+  // empresa, cualquier otro rol solo por sí mismo. Sin esto, al abrir el portal un empleado
+  // podría fichar (o pedir vacaciones) por un compañero.
+  const acting = await resolveActingEmployee(body?.employee_id ?? null);
+  if (acting.error) return acting.error;
+  const employee_id = acting.employeeId;
+  const company = { id: acting.companyId };
 
   // Load active timer
   const { data: timer, error: timerLoadError } = await supabase
