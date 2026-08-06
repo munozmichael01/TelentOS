@@ -13,7 +13,8 @@
     "location": "Localização",
     "modality": "Modalidade",
     "phone": "Telefone",
-    "readOnly": "Se algo não estiver correto, fala com a equipa de pessoas: estes dados são mantidos pela empresa."
+    "readOnly": "Se algo não estiver correto, fala com a equipa de pessoas: estes dados são mantidos pela empresa.",
+    "country": "País"
   },
   "performance": {
     "title": "O meu desempenho",
@@ -100,5 +101,19 @@
     "markDone": "Marcar como feita",
     "markPending": "Marcar como pendente",
     "failed": "Não foi possível atualizar a tarefa."
+  },
+  "contact": {
+    "title": "Seus dados de contato",
+    "description": "Isto você mantém. O resto da ficha é mantido pela empresa.",
+    "phone": "Telefone",
+    "city": "Cidade",
+    "address": "Endereço",
+    "emergencyName": "Contato de emergência",
+    "emergencyPhone": "Telefone de emergência",
+    "save": "Salvar alterações",
+    "saving": "Salvando…",
+    "saved": "Salvo",
+    "failed": "Não foi possível salvar. Tente de novo.",
+    "moveNote": "Vai se mudar para outro país? Avise o time de pessoas: mudar o país de residência afeta seu contrato e seus impostos, não é um campo que se altere sozinho."
   }
 }
