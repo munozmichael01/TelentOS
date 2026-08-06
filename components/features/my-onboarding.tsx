@@ -19,20 +19,31 @@ export function MyOnboarding({ tasks }: { tasks: OnboardingTask[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+  // El servidor tarda ~2,5 s en devolver la lista repintada. Sin marcar la casilla al instante,
+  // ese hueco se lee como "no ha pasado nada" y la gente vuelve a pulsar.
+  const [optimistic, setOptimistic] = useState<Record<string, string>>({});
 
-  const done = tasks.filter((task) => task.status === "done").length;
+  const statusOf = (task: OnboardingTask) => optimistic[task.id] ?? task.status;
+  const done = tasks.filter((task) => statusOf(task) === "done").length;
   const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
 
   async function toggle(task: OnboardingTask) {
+    const next = statusOf(task) === "done" ? "pending" : "done";
     setBusy(task.id);
     setError("");
+    setOptimistic((o) => ({ ...o, [task.id]: next }));
     const res = await fetch(`/api/onboarding/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: task.status === "done" ? "pending" : "done" }),
+      body: JSON.stringify({ status: next }),
     }).catch(() => null);
     setBusy(null);
-    if (!res?.ok) { setError(t("failed")); return; }
+    if (!res?.ok) {
+      // Se deshace la marca: dejarla puesta mentiría sobre lo que hay guardado.
+      setOptimistic((o) => { const c = { ...o }; delete c[task.id]; return c; });
+      setError(t("failed"));
+      return;
+    }
     router.refresh();
   }
 
@@ -53,7 +64,7 @@ export function MyOnboarding({ tasks }: { tasks: OnboardingTask[] }) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {tasks.map((task) => {
-          const isDone = task.status === "done";
+          const isDone = statusOf(task) === "done";
           return (
             <button
               key={task.id}
