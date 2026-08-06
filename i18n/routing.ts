@@ -56,6 +56,7 @@ export const pathnames = {
   "/me/payslips": "/me/payslips",
   "/me/payslips/[id]": "/me/payslips/[id]",
   "/me/hours": "/me/hours",
+  "/me/documents": "/me/documents",
 
   // Dashboard B2B autenticado (no localizado — mismo slug en todos los locales)
   "/app/dashboard": "/app/dashboard",

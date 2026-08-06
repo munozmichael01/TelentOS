@@ -1,6 +1,8 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { getMyEmployee } from "@/lib/performance/me";
+import { MyOnboarding } from "@/components/features/my-onboarding";
+import type { OnboardingTask } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
 /** Portal del empleado — su propia ficha, en solo lectura. Los cambios los hace RR.HH. */
@@ -8,6 +10,12 @@ export default async function MiPerfilPage({ params }: { params: { locale: strin
   setRequestLocale(params.locale);
   const t = await getTranslations({ locale: params.locale, namespace: "Portal" });
   const { supabase, employee: emp } = await getMyEmployee(params.locale);
+
+  // Las tareas de incorporación viven aquí y no en su propia sección: la incorporación se acaba,
+  // y una entrada de menú permanentemente vacía en el portal de un veterano es ruido.
+  const { data: onboarding } = await supabase
+    .from("onboarding_tasks").select("*").eq("employee_id", emp.id).order("order_index");
+  const tasks = (onboarding ?? []) as OnboardingTask[];
 
   const { data: manager } = emp.manager_id
     ? await supabase.from("employees").select("name, role_title").eq("id", emp.manager_id).maybeSingle()
@@ -31,6 +39,7 @@ export default async function MiPerfilPage({ params }: { params: { locale: strin
     <div>
       <PageHeader eyebrow={t("eyebrow")} title={t("profile.title")} description={t("profile.description")} />
       <div style={{ maxWidth: "760px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        {tasks.length > 0 && <MyOnboarding tasks={tasks} />}
         <div style={{ background: "#FCFAF6", border: "1px solid #E7E1D4", borderRadius: "16px", padding: "22px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             {fields.map(({ label, value }) => (

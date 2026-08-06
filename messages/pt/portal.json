@@ -83,5 +83,22 @@
     "start": "Registar entrada",
     "stop": "Registar saída",
     "failed": "Não foi possível registar. Tente de novo."
+  },
+  "documents": {
+    "title": "Meus documentos",
+    "description": "Seus contratos, comprovantes e demais documentos.",
+    "empty": "Você ainda não tem documentos.",
+    "name": "Documento",
+    "date": "Data",
+    "open": "Abrir",
+    "uploadTitle": "Enviar um documento",
+    "uploadNote": "O que você enviar fica visível para o RH. Excluir é o RH quem faz."
+  },
+  "onboarding": {
+    "title": "Suas tarefas de integração",
+    "done": "{done} de {total} concluídas",
+    "markDone": "Marcar como feita",
+    "markPending": "Marcar como pendente",
+    "failed": "Não foi possível atualizar a tarefa."
   }
 }

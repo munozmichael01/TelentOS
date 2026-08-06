@@ -83,5 +83,22 @@
     "start": "Clock in",
     "stop": "Clock out",
     "failed": "Couldn’t record it. Try again."
+  },
+  "documents": {
+    "title": "My documents",
+    "description": "Your contracts, receipts and other paperwork.",
+    "empty": "You don't have any documents yet.",
+    "name": "Document",
+    "date": "Date",
+    "open": "Open",
+    "uploadTitle": "Upload a document",
+    "uploadNote": "Anything you upload is visible to HR. Only HR can delete it."
+  },
+  "onboarding": {
+    "title": "Your onboarding tasks",
+    "done": "{done} of {total} done",
+    "markDone": "Mark as done",
+    "markPending": "Mark as pending",
+    "failed": "Couldn't update the task."
   }
 }
