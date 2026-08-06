@@ -13,7 +13,8 @@
     "location": "Location",
     "modality": "Work mode",
     "phone": "Phone",
-    "readOnly": "If something is wrong, tell your people team: the company maintains these details."
+    "readOnly": "If something is wrong, tell your people team: the company maintains these details.",
+    "country": "Country"
   },
   "performance": {
     "title": "My performance",
@@ -100,5 +101,19 @@
     "markDone": "Mark as done",
     "markPending": "Mark as pending",
     "failed": "Couldn't update the task."
+  },
+  "contact": {
+    "title": "Your contact details",
+    "description": "You keep these up to date. The rest of your record is maintained by the company.",
+    "phone": "Phone",
+    "city": "City",
+    "address": "Address",
+    "emergencyName": "Emergency contact",
+    "emergencyPhone": "Emergency phone",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "failed": "Couldn't save. Please try again.",
+    "moveNote": "Moving to another country? Tell your people team: a change of country of residence affects your contract and your taxes, it isn't a field you change on your own."
   }
 }

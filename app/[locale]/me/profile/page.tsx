@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { getMyEmployee } from "@/lib/performance/me";
 import { MyOnboarding } from "@/components/features/my-onboarding";
+import { MyContactForm } from "@/components/features/my-contact-form";
 import type { OnboardingTask } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -30,9 +31,10 @@ export default async function MiPerfilPage({ params }: { params: { locale: strin
     { label: t("profile.joined"), value: formatDate(emp.start_date) },
     { label: t("profile.manager"), value: mgr?.name ?? "—" },
     { label: t("profile.contract"), value: emp.contract_type },
-    { label: t("profile.location"), value: [emp.city, emp.country].filter(Boolean).join(", ") || "—" },
+    // País sí, ciudad no: la ciudad la mantiene el empleado abajo, pero mudarse de PAÍS afecta
+    // al contrato y a los impuestos, así que sale aquí como dato de la empresa.
+    { label: t("profile.country"), value: emp.country ?? "—" },
     { label: t("profile.modality"), value: emp.work_modality ?? "—" },
-    { label: t("profile.phone"), value: emp.phone ?? "—" },
   ];
 
   return (
@@ -53,6 +55,17 @@ export default async function MiPerfilPage({ params }: { params: { locale: strin
           </div>
         </div>
         <p style={{ fontSize: "13px", color: "#79746B", margin: 0 }}>{t("profile.readOnly")}</p>
+
+        <MyContactForm
+          initial={{
+            phone: emp.phone ?? null,
+            address: emp.address ?? null,
+            city: emp.city ?? null,
+            emergency_contact_name: emp.emergency_contact_name ?? null,
+            emergency_contact_phone: emp.emergency_contact_phone ?? null,
+          }}
+        />
+        <p style={{ fontSize: "12.5px", color: "#79746B", margin: 0 }}>{t("contact.moveNote")}</p>
       </div>
     </div>
   );
