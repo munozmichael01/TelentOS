@@ -339,7 +339,7 @@ export function AppShell({
   return (
     <div className="app-outer" style={{ background: "#ECEAE4", minHeight: "100vh", padding: "26px", WebkitFontSmoothing: "antialiased" }}>
       <Toaster />
-      <AssistantHost />
+      <div className="no-print"><AssistantHost /></div>
       <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
         {sidebarOpen && (
           <div
@@ -348,7 +348,7 @@ export function AppShell({
           />
         )}
         {/* app container — fixed height so only content area scrolls */}
-        <div className="app-container" style={{
+        <div className="app-container" data-shell-frame style={{
           display: "flex",
           border: "1px solid #E7E1D4",
           borderRadius: "18px",
@@ -359,7 +359,7 @@ export function AppShell({
         }}>
 
           {/* ── SIDEBAR ── */}
-          <aside className={sidebarClass} style={{ flexShrink: 0, background: "#FCFAF6", borderRight: "1px solid #E7E1D4", display: "flex", flexDirection: "column" }}>
+          <aside className={`${sidebarClass} no-print`} style={{ flexShrink: 0, background: "#FCFAF6", borderRight: "1px solid #E7E1D4", display: "flex", flexDirection: "column" }}>
             {/* logo row */}
             <div className="sb-header" style={{ height: "62px", display: "flex", alignItems: "center", gap: "10px", padding: "0 18px", borderBottom: "1px solid #E7E1D4" }}>
               <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: "#0E5C4A", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 #1A1A17", flexShrink: 0 }}>
@@ -521,7 +521,7 @@ export function AppShell({
           {/* ── MAIN ── */}
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {/* topbar */}
-            <div style={{ height: "62px", flexShrink: 0, display: "flex", alignItems: "center", gap: "14px", padding: "0 22px", borderBottom: "1px solid #E7E1D4", background: "#FCFAF6" }}>
+            <div className="no-print" style={{ height: "62px", flexShrink: 0, display: "flex", alignItems: "center", gap: "14px", padding: "0 22px", borderBottom: "1px solid #E7E1D4", background: "#FCFAF6" }}>
               <button
                 className="app-hamburger"
                 onClick={() => setSidebarOpen(true)}

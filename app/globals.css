@@ -557,3 +557,27 @@
 .jb-checkline { stroke-dasharray: 26; animation: jbCheck .4s ease forwards; }
 @keyframes jbCheck { from { stroke-dashoffset: 26; } to { stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) { .jb-scan, .jb-fillbar, .jb-checkline { animation: none; } .jb-fillbar { width: 100%; } }
+
+/* ── Impresión ────────────────────────────────────────────────────────────
+   Hoy la "descarga" del recibo de nómina es el diálogo de impresión del navegador
+   (`/me/payslips/[id]`), así que el papel debe salir limpio: fuera el chrome de la app
+   —barra lateral, asistente, botones— y sin el marco de la ventana. */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff !important; }
+  /* El shell fija altura de viewport y overflow oculto para el scroll interno; en papel eso
+     recortaría el contenido a una sola pantalla. */
+  .app-content {
+    overflow: visible !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+  [data-shell-frame] {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #fff !important;
+  }
+}

@@ -63,7 +63,19 @@
     "empty": "Ainda não há recibos disponíveis.",
     "period": "Período",
     "gross": "Bruto",
-    "net": "Líquido"
+    "net": "Líquido",
+    "slip": {
+      "title": "Recibo de pagamento",
+      "gross": "Bruto",
+      "net": "Líquido a pagar",
+      "generated": "Gerado: {date}",
+      "download": "Baixar / Imprimir",
+      "back": "Voltar aos meus recibos",
+      "loading": "Carregando recibo…",
+      "failed": "Não foi possível carregar o recibo.",
+      "view": "Ver recibo",
+      "noSlip": "—"
+    }
   },
   "clock": {
     "running": "Ponto em curso",
