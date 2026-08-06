@@ -73,3 +73,29 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 **Regla derivada** (en CLAUDE.md): toda consulta a `jobs` desde el admin filtra por `company_id`
 explícitamente. Y toda pantalla con RLS se verifica **con la sesión del usuario real**, nunca con
 service role: los datos pueden estar y el permiso no.
+
+## 2026-08 · Portal del empleado v2 (autoservicio)
+
+Abrir el portal a la escritura convirtió en agujeros reales varias políticas que eran solo
+laxas mientras el único consumidor era el dashboard de RR.HH.
+
+| # | Hallazgo | Severidad | Estado |
+|---|---|---|---|
+| P1 | `timer/start`, `timer/stop` y `time-entries` aceptaban `employee_id` **del cuerpo**: un empleado podía fichar por un compañero. | **Alta** | ✅ Resuelto (`lib/api-self.ts`) |
+| P2 | `time_entries` y `timer_state` con una sola política `for all` de empresa: la jornada de todos era legible por cualquiera. | **Alta** | ✅ Resuelto (migr. 0075) |
+| P3 | `absence_requests` igual, pero con escritura: un empleado podía poner su solicitud en `approved` — **aprobarse las vacaciones** — y borrar las de otros. | **Alta** | ✅ Resuelto (migr. 0076) |
+| P4 | Bolsas (`employee_allowances`, `allowance_policies`) escribibles por cualquier miembro: uno se regala el saldo que después valida su propia solicitud. | **Alta** | ✅ Resuelto (migr. 0076) |
+| P5 | `absence-requests/[id]/cancel` solo comprobaba la empresa: se podían cancelar las vacaciones de un compañero. | **Alta** | ✅ Resuelto |
+| P6 | `calculate-days` tomaba `company_id` del cliente → se calculaba sobre los festivos de otra empresa. | Media | ✅ Resuelto |
+| P7 | Claves i18n del fichaje escritas en `people.json`: resolvían a `People.Portal.clock` mientras la tarjeta pedía `Portal.clock`. Habría reventado en runtime. | Media | ✅ Resuelto |
+| P8 | El `next` del callback de auth pasa por el router de next-intl: si el enlace ya trae locale, el destino se duplica y el usuario cae en un 404 mudo. | Media | ✅ Resuelto (se normaliza en el callback) |
+| P9 | Una política de bolsa puede apuntar a un `allowance_type` **inactivo o sin tipos de ausencia asociados**: el saldo sale limpio ("0 usados") aunque el empleado tenga vacaciones aprobadas, porque descuentan de otra bolsa. Detectado con datos reales de la empresa demo. Nada en la UI lo avisa. | Media | ⏳ Abierto — falta un aviso en Ajustes › Ausencias |
+
+### Duplicación eliminada de paso
+
+| Qué | Dónde estaba | Ahora |
+|---|---|---|
+| `calcWorkingDays` | copiada palabra por palabra en `absence-requests` y `calculate-days` | `lib/absences/working-days.ts` |
+| Cálculo de saldo | en línea en la ficha del empleado del admin | `lib/absences/balance.ts` (admin y portal, mismo número) |
+| Tarjeta de saldo | ~90 líneas de markup en la ficha | `AllowanceBalanceCard` |
+| Formulario de ausencia | modal del admin; el selector de tramo escrito **tres** veces | `AbsenceRequestForm` (`absence-panel.tsx`: 780 → 552 líneas) |
