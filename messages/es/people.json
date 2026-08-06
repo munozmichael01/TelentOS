@@ -304,14 +304,5 @@
     "noEmail": "Añade un email a la ficha para poder invitar",
     "error": "No se pudo invitar",
     "resend": "Reenviar acceso"
-  },
-  "Portal": {
-    "clock": {
-      "running": "Fichaje en curso",
-      "stopped": "Sin fichar",
-      "start": "Fichar entrada",
-      "stop": "Fichar salida",
-      "failed": "No se pudo registrar. Inténtalo de nuevo."
-    }
   }
 }

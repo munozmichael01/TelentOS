@@ -50,6 +50,8 @@ const SENSITIVE = [
   "pay_runs", "pay_run_lines", "employees", "employee_events",
   // Portal v2: la jornada pasó a políticas por rol (propio / equipo / RR.HH.).
   "time_entries", "timer_state",
+  // Portal v2: ausencias y bolsas, también partidas por rol (migr. 0076).
+  "absence_requests", "employee_allowances", "allowance_adjustment_log", "absence_types", "allowance_policies",
 ];
 
 describe.skipIf(!hasDb)("RLS: sin recursión bajo sesión autenticada (regresión migr. 0050)", () => {

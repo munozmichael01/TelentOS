@@ -33,7 +33,19 @@
       "pending": "Pendente",
       "rejected": "Recusada",
       "cancelled": "Cancelada"
-    }
+    },
+    "balanceTitle": "Seu saldo",
+    "noBalance": "Sua empresa ainda não atribuiu um saldo de dias a você.",
+    "requestBtn": "Solicitar ausência",
+    "requestTitle": "Nova solicitação",
+    "closeBtn": "Fechar",
+    "cancelBtn": "Cancelar",
+    "cancelling": "Cancelando…",
+    "cancelConfirm": "Tem certeza de que deseja cancelar esta ausência?",
+    "cancelFailed": "Não foi possível cancelar. Tente de novo.",
+    "noTypes": "Sua empresa ainda não configurou tipos de ausência.",
+    "actions": "Ações",
+    "historyTitle": "Suas solicitações"
   },
   "hours": {
     "title": "As minhas horas",
@@ -52,5 +64,12 @@
     "period": "Período",
     "gross": "Bruto",
     "net": "Líquido"
+  },
+  "clock": {
+    "running": "Ponto em curso",
+    "stopped": "Sem ponto",
+    "start": "Registar entrada",
+    "stop": "Registar saída",
+    "failed": "Não foi possível registar. Tente de novo."
   }
 }

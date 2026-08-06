@@ -33,7 +33,19 @@
       "pending": "Pending",
       "rejected": "Rejected",
       "cancelled": "Cancelled"
-    }
+    },
+    "balanceTitle": "Your balance",
+    "noBalance": "Your company hasn't assigned you an allowance yet.",
+    "requestBtn": "Request time off",
+    "requestTitle": "New request",
+    "closeBtn": "Close",
+    "cancelBtn": "Cancel",
+    "cancelling": "Cancelling…",
+    "cancelConfirm": "Cancel this time off request?",
+    "cancelFailed": "Couldn't cancel it. Please try again.",
+    "noTypes": "Your company hasn't set up absence types yet.",
+    "actions": "Actions",
+    "historyTitle": "Your requests"
   },
   "hours": {
     "title": "My hours",
@@ -52,5 +64,12 @@
     "period": "Period",
     "gross": "Gross",
     "net": "Net"
+  },
+  "clock": {
+    "running": "Clocked in",
+    "stopped": "Not clocked in",
+    "start": "Clock in",
+    "stop": "Clock out",
+    "failed": "Couldn’t record it. Try again."
   }
 }
