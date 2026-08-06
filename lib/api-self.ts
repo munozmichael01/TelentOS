@@ -14,9 +14,17 @@ import { jsonError } from "@/lib/api";
  *
  * Devuelve el `employeeId` efectivo o un error listo para responder.
  */
-export async function resolveActingEmployee(requestedEmployeeId?: string | null): Promise<
-  | { employeeId: string; companyId: string; isHr: boolean; error?: undefined }
-  | { error: ReturnType<typeof jsonError>; employeeId?: undefined; companyId?: undefined; isHr?: undefined }
+export async function resolveActingEmployee(
+  requestedEmployeeId?: string | null,
+  /**
+   * `hrMayOmitTarget`: RR.HH. puede llamar sin señalar a nadie y recibir `employeeId: ""`.
+   * Lo necesita la vista previa de días laborables, que el formulario del admin pide antes de
+   * elegir empleado (sin ficha, el cálculo cae al horario genérico L-V).
+   */
+  opts?: { hrMayOmitTarget?: boolean },
+): Promise<
+  | { employeeId: string; companyId: string; isHr: boolean; supabase: ReturnType<typeof createClient>; error?: undefined }
+  | { error: ReturnType<typeof jsonError>; employeeId?: undefined; companyId?: undefined; isHr?: undefined; supabase?: undefined }
 > {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -37,9 +45,12 @@ export async function resolveActingEmployee(requestedEmployeeId?: string | null)
     const { data: target } = await admin
       .from("employees").select("id").eq("id", requestedEmployeeId).eq("company_id", companyId).maybeSingle();
     if (!target) return { error: jsonError("Ese empleado no es de tu empresa", 403) };
-    return { employeeId: requestedEmployeeId, companyId, isHr: true };
+    return { employeeId: requestedEmployeeId, companyId, isHr: true, supabase };
+  }
+  if (isHr && !requestedEmployeeId && opts?.hrMayOmitTarget) {
+    return { employeeId: "", companyId, isHr: true, supabase };
   }
 
   if (!own?.id) return { error: jsonError("Tu usuario no tiene ficha de empleado", 412) };
-  return { employeeId: own.id as string, companyId, isHr };
+  return { employeeId: own.id as string, companyId, isHr, supabase };
 }

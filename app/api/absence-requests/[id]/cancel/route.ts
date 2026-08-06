@@ -1,28 +1,30 @@
 import { NextResponse } from "next/server";
-import { requireUser, jsonError } from "@/lib/api";
+import { jsonError } from "@/lib/api";
+import { resolveActingEmployee } from "@/lib/api-self";
 
+/**
+ * Cancelar una ausencia.
+ *
+ * Antes bastaba con estar autenticado y que la solicitud fuera de la empresa: cualquier empleado
+ * podía cancelar las vacaciones de un compañero. Ahora RR.HH. cancela cualquiera de su empresa y
+ * el resto solo las suyas.
+ */
 export async function POST(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { supabase, error } = await requireUser();
-  if (error) return error;
+  const acting = await resolveActingEmployee(null, { hrMayOmitTarget: true });
+  if (acting.error) return acting.error;
+  const { supabase, employeeId, companyId, isHr } = acting;
 
-  const { data: company } = await supabase
-    .from("companies")
-    .select("id")
-    .limit(1)
-    .maybeSingle();
-  if (!company)
-    return jsonError("Configura primero la empresa en Ajustes", 412);
-
-  // Load the request and verify it's pending or approved
-  const { data: existing } = await supabase
+  let q = supabase
     .from("absence_requests")
-    .select("id, status")
+    .select("id, status, employee_id")
     .eq("id", params.id)
-    .eq("company_id", company.id)
-    .maybeSingle();
+    .eq("company_id", companyId);
+  if (!isHr) q = q.eq("employee_id", employeeId);
+
+  const { data: existing } = await q.maybeSingle();
   if (!existing) return jsonError("Solicitud de ausencia no encontrada", 404);
   if (!["pending", "approved"].includes(existing.status))
     return jsonError(
@@ -32,12 +34,9 @@ export async function POST(
 
   const { data, error: dbError } = await supabase
     .from("absence_requests")
-    .update({
-      status: "cancelled",
-      updated_at: new Date().toISOString(),
-    })
+    .update({ status: "cancelled", updated_at: new Date().toISOString() })
     .eq("id", params.id)
-    .eq("company_id", company.id)
+    .eq("company_id", companyId)
     .select("*")
     .maybeSingle();
   if (dbError) return jsonError(dbError.message, 500);

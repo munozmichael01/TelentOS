@@ -304,14 +304,5 @@
     "noEmail": "Add an email to this record before inviting",
     "error": "Could not invite",
     "resend": "Resend access"
-  },
-  "Portal": {
-    "clock": {
-      "running": "Clocked in",
-      "stopped": "Not clocked in",
-      "start": "Clock in",
-      "stop": "Clock out",
-      "failed": "Couldn’t record it. Try again."
-    }
   }
 }

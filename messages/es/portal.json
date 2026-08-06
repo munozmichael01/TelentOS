@@ -33,7 +33,19 @@
       "pending": "Pendiente",
       "rejected": "Rechazada",
       "cancelled": "Cancelada"
-    }
+    },
+    "balanceTitle": "Tu saldo",
+    "noBalance": "Tu empresa aún no te ha asignado una bolsa de días.",
+    "requestBtn": "Solicitar ausencia",
+    "requestTitle": "Nueva solicitud",
+    "closeBtn": "Cerrar",
+    "cancelBtn": "Cancelar",
+    "cancelling": "Cancelando…",
+    "cancelConfirm": "¿Seguro que quieres cancelar esta ausencia?",
+    "cancelFailed": "No se pudo cancelar. Inténtalo de nuevo.",
+    "noTypes": "Tu empresa aún no ha configurado tipos de ausencia.",
+    "actions": "Acciones",
+    "historyTitle": "Tus solicitudes"
   },
   "hours": {
     "title": "Mis horas",
@@ -52,5 +64,12 @@
     "period": "Periodo",
     "gross": "Bruto",
     "net": "Neto"
+  },
+  "clock": {
+    "running": "Fichaje en curso",
+    "stopped": "Sin fichar",
+    "start": "Fichar entrada",
+    "stop": "Fichar salida",
+    "failed": "No se pudo registrar. Inténtalo de nuevo."
   }
 }
