@@ -129,6 +129,13 @@ const IconPerformance = () => (
   </svg>
 );
 
+// Documentos del empleado: hoja con esquina doblada. Icono de línea del DS.
+const IconDocument = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" /><path d="M14 3v5h5" />
+  </svg>
+);
+
 // Cambio de superficie (admin ↔ portal): flechas opuestas. Icono de línea del DS.
 const IconSwitch = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -226,6 +233,7 @@ const PORTAL_NAV: (typeof ALL_NAV)[number][] = [
   { href: "/me/time-off",    label: "Mis ausencias", Icon: IconVacaciones },
   { href: "/me/hours",       label: "Mis horas",     Icon: IconHoras },
   { href: "/me/payslips",    label: "Mi nómina",     Icon: IconPayroll },
+  { href: "/me/documents",   label: "Mis documentos", Icon: IconDocument },
 ];
 
 function buildNav(role: Role | null) {

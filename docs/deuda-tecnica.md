@@ -89,6 +89,10 @@ laxas mientras el único consumidor era el dashboard de RR.HH.
 | P6 | `calculate-days` tomaba `company_id` del cliente → se calculaba sobre los festivos de otra empresa. | Media | ✅ Resuelto |
 | P7 | Claves i18n del fichaje escritas en `people.json`: resolvían a `People.Portal.clock` mientras la tarjeta pedía `Portal.clock`. Habría reventado en runtime. | Media | ✅ Resuelto |
 | P8 | El `next` del callback de auth pasa por el router de next-intl: si el enlace ya trae locale, el destino se duplica y el usuario cae en un 404 mudo. | Media | ✅ Resuelto (se normaliza en el callback) |
+| P10 | `employee_documents` y `onboarding_tasks` con una sola política `for all` de empresa: contratos y documentos de identidad de todos legibles —y borrables— por cualquier empleado. | **Alta** | ✅ Resuelto (migr. 0078) |
+| P11 | El bucket `documents` tenía `authenticated_storage_all`: cualquier autenticado podía leer, sustituir y borrar el fichero de cualquiera **saltándose la API**. Arreglar solo la tabla no bastaba. | **Alta** | ✅ Resuelto (migr. 0079, por carpeta = employee_id) |
+| P12 | `api/files/sign` comprobaba solo la EMPRESA del documento: un empleado podía firmar el contrato de un compañero pasando su id. | **Alta** | ✅ Resuelto (lee con la sesión del usuario) |
+| P13 | El bucket `cvs` sigue abierto a cualquier autenticado, y eso incluye a los **candidatos**: hoy un candidato con cuenta puede leer el CV de cualquier otro. No se toca aquí porque el flujo de candidatura escribe con su propia sesión y acotarlo a ciegas rompería las inscripciones. | **Alta** | ⏳ Abierto — siguiente pasada |
 | P9 | Una política de bolsa puede apuntar a un `allowance_type` **inactivo o sin tipos de ausencia asociados**: el saldo sale limpio ("0 usados") aunque el empleado tenga vacaciones aprobadas, porque descuentan de otra bolsa. Detectado con datos reales de la empresa demo. Nada en la UI lo avisa. | Media | ⏳ Abierto — falta un aviso en Ajustes › Ausencias |
 
 ### Duplicación eliminada de paso

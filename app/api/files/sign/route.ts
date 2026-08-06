@@ -32,8 +32,10 @@ export async function POST(req: Request) {
   let storagePath: string;
 
   if (body.bucket === "documents") {
-    // Resolve path from employee_documents record, verify ownership
-    const { data: doc } = await admin
+    // La comprobación era solo de EMPRESA, así que un empleado podía firmar el contrato de
+    // cualquier compañero pasando su id. Se lee con la sesión del usuario para que decida la RLS
+    // (migr. 0078: propio / equipo / RR.HH.); si no le corresponde, la fila no llega.
+    const { data: doc } = await supabase
       .from("employee_documents")
       .select("file_url, employee_id, employees(company_id)")
       .eq("id", body.resourceId)

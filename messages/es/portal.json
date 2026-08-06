@@ -83,5 +83,22 @@
     "start": "Fichar entrada",
     "stop": "Fichar salida",
     "failed": "No se pudo registrar. Inténtalo de nuevo."
+  },
+  "documents": {
+    "title": "Mis documentos",
+    "description": "Tus contratos, justificantes y demás documentación.",
+    "empty": "Todavía no tienes documentos.",
+    "name": "Documento",
+    "date": "Fecha",
+    "open": "Abrir",
+    "uploadTitle": "Subir un documento",
+    "uploadNote": "Lo que subas queda a la vista de RR.HH. Borrarlo lo hace RR.HH."
+  },
+  "onboarding": {
+    "title": "Tus tareas de incorporación",
+    "done": "{done} de {total} completadas",
+    "markDone": "Marcar como hecha",
+    "markPending": "Marcar como pendiente",
+    "failed": "No se pudo actualizar la tarea."
   }
 }
