@@ -125,7 +125,7 @@ Guards:
 | **Payroll** | 🚧 En implementación — spec y protocolo en `handoff/Handoff Claude Code - Payroll spec producto.md` (§8 con puertas de AC) | `/payroll`, `/payroll/runs`, `/payroll/profiles` |
 | **Onboarding** | ✅ Completo | vía `application_events` + tareas |
 | **Desempeño** (Performance Management) | 🚧 **Bloque 1 en prod** (cimientos): cargo canónico en la ficha, competencias del puesto, expediente y portal del empleado. Bloques 2–4 pendientes — [spec](docs/Performance%20Management/talentos-desempeno-spec.md) + [backlog](docs/Performance%20Management/talentos-desempeno-backlog.md) | pestañas de `/app/employees/[id]` + portal `/me/*` |
-| **Portal del empleado** | ✅ v1 en prod — superficie SEPARADA del admin B2B | `/me/profile` · `/me/performance` · `/me/time-off` · `/me/hours` · `/me/payslips` |
+| **Portal del empleado** | ✅ v2 en prod — superficie SEPARADA del admin B2B, con escritura | `/me/profile` · `/me/performance` · `/me/time-off` · `/me/hours` · `/me/payslips` · `/me/documents` |
 
 **Payroll**: el esquema (migraciones 0016–0019) existe; el ciclo funcional se está implementando según la spec de `handoff/`. Reglas clave: el pack `generic` es el único activo (VE/BR/ES son mocks en preview); **el dinero nunca fluye automáticamente del ATS a nómina** — los campos `offer_*` de la candidatura solo pre-rellenan el formulario de compensación que RR.HH. confirma al contratar (el auto-create de `pay_profiles` en `hire/route.ts` fue revertido a propósito: no reintroducirlo).
 
@@ -253,3 +253,31 @@ Estos temas requieren decisión explícita del producto antes de implementar:
 - **Alcance del beta de payroll VE**: ¿Solo cálculo de nómina o también envío a bancos y generación de archivos IVSS/SSO/LPH? Afecta `pay_run_lines` + `payroll_exports`.
 - **Eyebrow de Horas/Ausencias/Compensación/Calendario**: ¿Son sub-áreas de "Personas" (eyebrow = "Personas") o secciones propias del sidebar? Actualmente usan su propio nombre de área.
 - **Persistencia de conversaciones del Asistente**: hoy el hilo vive en la sesión del navegador (recargar = hilo nuevo). Persistir conversaciones tiene coste (storage + privacidad + UX de historial) y valor (continuidad, auditoría) — decidir con datos de uso real del asistente.
+
+## Portal del empleado: qué mantiene él y qué la empresa
+
+El portal (`/me/*`) escribe, no solo lee. Dos reglas que se aplican a todo lo que se añada ahí:
+
+**1. Nunca se resuelve "sobre quién actúo" con lo que manda el cliente.** Los endpoints de jornada,
+ausencias y documentos aceptaban `employee_id` en el cuerpo; con el portal abierto eso es fichar o
+pedir vacaciones por un compañero. Se usa `resolveActingEmployee` (`lib/api-self.ts`): RR.HH. puede
+actuar por cualquiera de su empresa, el resto solo por sí mismo.
+
+**2. La RLS no distingue columnas.** Dar al empleado una política de UPDATE sobre su propia fila de
+`employees` le dejaría cambiarse el cargo o el contrato por PostgREST. Cuando el autoservicio afecta
+a parte de una tabla, va por función SECURITY DEFINER con la lista de columnas dentro
+(`update_my_contact_details`, migr. 0080).
+
+Reparto de datos personales, por si se añaden campos:
+
+| Lo mantiene el empleado | Lo mantiene la empresa |
+|---|---|
+| teléfono, dirección, ciudad, contacto de emergencia | país de residencia, nombre, email, documento, fecha de nacimiento, cargo, departamento, responsable, contrato, fechas, modalidad, entidad legal, nivel |
+
+El criterio no es "qué es fácil de exponer" sino qué pasa si el dato cambia. El contacto de
+emergencia solo lo sabe él y hace falta cuando no se le puede preguntar: gatearlo garantiza tenerlo
+desactualizado. El país de residencia, en cambio, arrastra contrato, impuestos y derecho a trabajar
+— no es un campo de perfil, es una conversación con RR.HH., y la UI lo dice en vez de dejarlo gris.
+
+Todo cambio en autoservicio deja evento en `employee_events`: sin rastro, una discusión sobre "yo
+actualicé mis datos" no se resuelve.
