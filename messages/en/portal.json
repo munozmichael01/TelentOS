@@ -63,7 +63,19 @@
     "empty": "No payslips available yet.",
     "period": "Period",
     "gross": "Gross",
-    "net": "Net"
+    "net": "Net",
+    "slip": {
+      "title": "Payslip",
+      "gross": "Gross",
+      "net": "Net pay",
+      "generated": "Generated: {date}",
+      "download": "Download / Print",
+      "back": "Back to my payslips",
+      "loading": "Loading payslip…",
+      "failed": "Couldn't load the payslip.",
+      "view": "View payslip",
+      "noSlip": "—"
+    }
   },
   "clock": {
     "running": "Clocked in",

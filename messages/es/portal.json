@@ -63,7 +63,19 @@
     "empty": "Aún no hay recibos disponibles.",
     "period": "Periodo",
     "gross": "Bruto",
-    "net": "Neto"
+    "net": "Neto",
+    "slip": {
+      "title": "Recibo de nómina",
+      "gross": "Bruto",
+      "net": "Neto a pagar",
+      "generated": "Generado: {date}",
+      "download": "Descargar / Imprimir",
+      "back": "Volver a mis recibos",
+      "loading": "Cargando recibo…",
+      "failed": "No se pudo cargar el recibo.",
+      "view": "Ver recibo",
+      "noSlip": "—"
+    }
   },
   "clock": {
     "running": "Fichaje en curso",

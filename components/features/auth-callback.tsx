@@ -36,7 +36,12 @@ export function AuthCallback() {
     // invitación al portal manda a /me/profile); sin él, al dashboard, que el middleware
     // reencamina según el rol. Antes estaba fijo en "/dashboard", una ruta que no existe:
     // todas las páginas cuelgan de /app/*, así que un login correcto acababa en 404.
-    const target = searchParams.get("next") || "/app/dashboard";
+    // `router` es el de next-intl: añade el locale por su cuenta. Si el enlace ya trae uno
+    // (`/es-ve/app/timeoff`), el destino saldría duplicado —`/es-ve/es-ve/…`— y el usuario
+    // aterriza en un 404 sin pista de por qué. Se le quita aquí en vez de confiar en que quien
+    // genera el enlace lo recuerde.
+    const rawNext = searchParams.get("next") || "/app/dashboard";
+    const target = rawNext.replace(/^\/[a-z]{2}-[a-z]{2}(?=\/|$)/i, "") || "/app/dashboard";
     // En recuperación hay que pasar antes por definir la contraseña, arrastrando el destino.
     const next = isRecovery
       ? `/auth/reset-password${target !== "/app/dashboard" ? `?next=${encodeURIComponent(target)}` : ""}`
