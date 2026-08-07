@@ -13,7 +13,7 @@ import type { Employee } from "@/lib/types";
 export async function getMyEmployee(locale: string): Promise<{ supabase: ReturnType<typeof createClient>; employee: Employee }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect({ href: "/login", locale });
+  if (!user) redirect({ href: "/employer/sign-in", locale });
 
   const { data } = await supabase
     .from("employees")
@@ -21,6 +21,6 @@ export async function getMyEmployee(locale: string): Promise<{ supabase: ReturnT
     .eq("user_id", user!.id)
     .maybeSingle();
 
-  if (!data) redirect({ href: "/app/dashboard", locale });
+  if (!data) redirect({ href: "/employer/dashboard", locale });
   return { supabase, employee: data as Employee };
 }

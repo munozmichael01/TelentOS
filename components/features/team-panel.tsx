@@ -11,7 +11,7 @@ import {
   unlinkEmployee,
   cancelInvite,
   resendInvite,
-} from "@/app/[locale]/app/settings/team/actions";
+} from "@/app/[locale]/employer/settings/team/actions";
 import { useTranslations } from "next-intl";
 
 /* ── Types ── */

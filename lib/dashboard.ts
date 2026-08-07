@@ -212,7 +212,7 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
       title: `${candidate.name} · ${job.title}`,
       subtitle: `Fit ${app.fit_score ?? "—"} · ${daysStalled} días en ${stage?.name ?? "etapa"} sin movimiento`,
       avatar: { initials: initials(candidate.name), bg: pal.bg, color: pal.color },
-      actions: [{ label: "Ver candidatura", kind: "primary", href: `/app/applications/${app.id}` }],
+      actions: [{ label: "Ver candidatura", kind: "primary", href: `/employer/applications/${app.id}` }],
     });
   }
 
@@ -234,7 +234,7 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
         title: `${name} · ${VIOLATION_LABELS[v.violation_type] ?? v.violation_type}`,
         subtitle: v.description ?? "",
         avatar: { initials: initials(name), bg: "#F6D9D2", color: "#BD4332" },
-        actions: [{ label: "Revisar", kind: "primary" as const, href: "/app/settings/compliance" }],
+        actions: [{ label: "Revisar", kind: "primary" as const, href: "/employer/settings/compliance" }],
       };
     }),
 
@@ -276,7 +276,7 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
         title: `${name} · ${t.title}`,
         subtitle: `Fecha límite: ${t.due_date}`,
         avatar: { initials: initials(name), bg: "#F8E7C4", color: "#946312" },
-        actions: [{ label: "Ver tareas", kind: "primary" as const, href: `/app/employees/${t.employee_id}` }],
+        actions: [{ label: "Ver tareas", kind: "primary" as const, href: `/employer/employees/${t.employee_id}` }],
       };
     }),
 
@@ -292,7 +292,7 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
         title: `${name} · ${typeName}`,
         subtitle: "Ausente hoy",
         avatar: { initials: initials(name), bg: "#D6E4F2", color: "#2B5E8A" },
-        actions: [{ label: "Ver empleado", kind: "primary" as const, href: `/app/employees/${r.employee_id}` }],
+        actions: [{ label: "Ver empleado", kind: "primary" as const, href: `/employer/employees/${r.employee_id}` }],
       };
     }),
   ].sort((a, b) => b.priority - a.priority);
@@ -326,7 +326,7 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
       id: a.id,
       label: jobTitle ? `${candidateName} · ${jobTitle}` : `${candidateName} · nueva candidatura`,
       time: a.created_at,
-      href: `/app/applications/${a.id}`,
+      href: `/employer/applications/${a.id}`,
       dot: "#0E5C4A",
     };
   });

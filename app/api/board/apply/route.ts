@@ -8,6 +8,7 @@ import { highestEducationLevel } from "@/lib/education";
 import { CvExperienceSchema, CvLanguageSchema, CvEducationSchema } from "@/agents/agent-cv-parser";
 import type { EducationLevel, SeniorityLevel } from "@/lib/types";
 import { z } from "zod";
+import { hasAudience } from "@/lib/auth/audiences";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
 
   // ¿candidato logueado? → vincular su cuenta a la ficha ATS.
   const { data: { user } } = await createClient().auth.getUser();
-  const userId = user?.app_metadata?.audience === "candidate" ? user.id : null;
+  const userId = user && hasAudience(user, "candidate") ? user.id : null;
 
   const admin = createAdminClient();
 

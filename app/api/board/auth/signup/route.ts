@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     email,
     password,
     email_confirm: true,
-    app_metadata: { audience: "candidate" },
+    app_metadata: { audiences: ["candidate"] },
     user_metadata: { full_name: name || null },
   });
   if (error || !data.user) {

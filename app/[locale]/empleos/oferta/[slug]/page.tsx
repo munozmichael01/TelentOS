@@ -7,6 +7,7 @@ import { careerSiteActive } from "@/lib/board/canonical";
 import { idFromSlug, formatSalary, modalityStyle, logoFor, relativeDate, jobSlug } from "@/lib/board/format";
 import { Link } from "@/i18n/navigation";
 import { JobApplyBar } from "@/components/board/job-apply-bar";
+import { hasAudience } from "@/lib/auth/audiences";
 
 const ARCHIVO = "'Archivo',sans-serif";
 const MONO = "'Space Mono',monospace";
@@ -75,7 +76,7 @@ export default async function JobDetailPage({ params }: { params: { locale: stri
   const { job, skills, screening } = data;
   // 1-toque: candidato logueado + oferta sin screening obligatorio → aplicar directo.
   const { data: { user } } = await createClient().auth.getUser();
-  const authed = user?.app_metadata?.audience === "candidate";
+  const authed = hasAudience(user, "candidate");
   const hasRequiredScreening = (screening ?? []).some((q) => q.required);
   const t = await getTranslations({ locale: params.locale, namespace: "Board" });
   const locale = params.locale;

@@ -29,7 +29,7 @@ export function EmployerNotify({ companyId, companyName, locale }: { companyId: 
     const res = next
       ? await fetch("/api/board/follows", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ companyId }) })
       : await fetch(`/api/board/follows?companyId=${companyId}`, { method: "DELETE" });
-    if (res.status === 401) { setFollowing(false); router.push("/cuenta/entrar"); }
+    if (res.status === 401) { setFollowing(false); router.push("/candidate/sign-in"); }
     else if (!res.ok) setFollowing(!next);
   }
 
@@ -40,7 +40,7 @@ export function EmployerNotify({ companyId, companyName, locale }: { companyId: 
       body: JSON.stringify({ criteria: { companyId }, frequency: freq }),
     }).catch(() => null);
     setBusy(false);
-    if (res?.status === 401) { router.push("/cuenta/entrar"); return; }
+    if (res?.status === 401) { router.push("/candidate/sign-in"); return; }
     if (res?.ok) setCreated(true);
   }
 

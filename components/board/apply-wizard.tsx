@@ -69,7 +69,7 @@ export function ApplyWizard({ job, preview, screening, slug, locale, authed = fa
       const { error: signErr } = await supabase.auth.signInWithPassword({ email: form.email.trim().toLowerCase(), password: acctPw });
       if (signErr) { setAcctErr(acctMode === "signin" ? t("acctBadCreds") : t("acctError")); setAcctBusy(false); return; }
       await fetch("/api/board/auth/link", { method: "POST" }); // liga la candidatura a la cuenta
-      router.push("/cuenta");
+      router.push("/candidate");
     } catch { setAcctErr(t("acctError")); setAcctBusy(false); }
   }
 
@@ -377,7 +377,7 @@ export function ApplyWizard({ job, preview, screening, slug, locale, authed = fa
                     </div>
                     {authed ? (
                       <div className="jb-apply-donebtns">
-                        <HardButton variant="brand" full onClick={() => router.push("/cuenta")}>{t("viewApps")}</HardButton>
+                        <HardButton variant="brand" full onClick={() => router.push("/candidate")}>{t("viewApps")}</HardButton>
                         <Link href="/empleos" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 14, color: "var(--soft)", padding: 8, textAlign: "center" }}>
                           <span className="jb-apply-mobileonly">{t("keepBrowsing")}</span><span className="jb-apply-desktoponly">{t("keepBrowsingShort")}</span>
                         </Link>

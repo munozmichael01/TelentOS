@@ -49,7 +49,7 @@ export function HireButton({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al contratar");
-      router.push(`/app/employees/${data.employee_id}`);
+      router.push(`/employer/employees/${data.employee_id}`);
       router.refresh();
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));

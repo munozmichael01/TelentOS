@@ -17,9 +17,9 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       // Bots web generales: se indexa el público (marketing + job board), NO el producto ni la API.
-      { userAgent: "*", allow: "/", disallow: ["/api/", "/onboarding", "/auth/", "/*/app/"] },
+      { userAgent: "*", allow: "/", disallow: ["/api/", "/employer/onboarding", "/auth/", "/*/app/"] },
       // Bots de IA: acceso al contenido público (mismo alcance) — explícito para dejar la intención clara.
-      { userAgent: AI_BOTS, allow: "/", disallow: ["/api/", "/onboarding", "/auth/", "/*/app/"] },
+      { userAgent: AI_BOTS, allow: "/", disallow: ["/api/", "/employer/onboarding", "/auth/", "/*/app/"] },
     ],
     sitemap: `${SITE}/sitemap.xml`,
     host: SITE,

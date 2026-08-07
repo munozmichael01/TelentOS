@@ -72,7 +72,7 @@ export function OfferDetailPanel({ jobId, locale }: { jobId: string; locale: str
     const res = next
       ? await fetch("/api/board/saved", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId }) })
       : await fetch(`/api/board/saved?jobId=${jobId}`, { method: "DELETE" });
-    if (res.status === 401) { setSaved(false); router.push("/cuenta/entrar"); }
+    if (res.status === 401) { setSaved(false); router.push("/candidate/sign-in"); }
     else if (!res.ok) setSaved(!next);
   }
 

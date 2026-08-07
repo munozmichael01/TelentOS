@@ -40,11 +40,11 @@ export function AuthCallback() {
     // (`/es-ve/app/timeoff`), el destino saldría duplicado —`/es-ve/es-ve/…`— y el usuario
     // aterriza en un 404 sin pista de por qué. Se le quita aquí en vez de confiar en que quien
     // genera el enlace lo recuerde.
-    const rawNext = searchParams.get("next") || "/app/dashboard";
-    const target = rawNext.replace(/^\/[a-z]{2}-[a-z]{2}(?=\/|$)/i, "") || "/app/dashboard";
+    const rawNext = searchParams.get("next") || "/employer/dashboard";
+    const target = rawNext.replace(/^\/[a-z]{2}-[a-z]{2}(?=\/|$)/i, "") || "/employer/dashboard";
     // En recuperación hay que pasar antes por definir la contraseña, arrastrando el destino.
     const next = isRecovery
-      ? `/auth/reset-password${target !== "/app/dashboard" ? `?next=${encodeURIComponent(target)}` : ""}`
+      ? `/auth/reset-password${target !== "/employer/dashboard" ? `?next=${encodeURIComponent(target)}` : ""}`
       : target;
 
     async function handle() {
@@ -115,7 +115,7 @@ export function AuthCallback() {
             {errorMsg}
           </p>
           <button
-            onClick={() => router.push("/login")}
+            onClick={() => router.push("/employer/sign-in")}
             style={{
               padding: "11px 24px", borderRadius: "11px",
               border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17",

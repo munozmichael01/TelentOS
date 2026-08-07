@@ -157,66 +157,66 @@ const NAV_ROLES: Record<string, Role[]> = {
   // El rol `employee` solo ve su portal (/me/*). Todo lo demás del dashboard es de
   // empresa, así que se restringe explícitamente: antes estos ítems no tenían regla y por
   // tanto eran visibles para todos los roles, incluido el empleado.
-  "/app/dashboard":          ["owner", "hr_admin", "recruiter", "manager"],
-  "/app/employees":          ["owner", "hr_admin", "manager"],
-  "/app/org":                ["owner", "hr_admin", "recruiter", "manager"],
-  "/app/settings/absences":  ["owner", "hr_admin"],
-  "/app/settings/schedules": ["owner", "hr_admin"],
+  "/employer/dashboard":          ["owner", "hr_admin", "recruiter", "manager"],
+  "/employer/employees":          ["owner", "hr_admin", "manager"],
+  "/employer/org":                ["owner", "hr_admin", "recruiter", "manager"],
+  "/employer/settings/absences":  ["owner", "hr_admin"],
+  "/employer/settings/schedules": ["owner", "hr_admin"],
   // reclutamiento — manager no tiene acceso al pipeline de selección
-  "/app/jobs":               ["owner", "hr_admin", "recruiter"],
-  "/app/candidates":         ["owner", "hr_admin", "recruiter"],
-  "/app/career-site":        ["owner", "hr_admin", "recruiter"],
-  "/app/channels":            ["owner", "hr_admin", "recruiter"],
+  "/employer/jobs":               ["owner", "hr_admin", "recruiter"],
+  "/employer/candidates":         ["owner", "hr_admin", "recruiter"],
+  "/employer/career-site":        ["owner", "hr_admin", "recruiter"],
+  "/employer/channels":            ["owner", "hr_admin", "recruiter"],
   // personas — manager solo ve su equipo (scoping via RLS en backend)
-  "/app/timeoff":            ["owner", "hr_admin", "manager"],
-  "/app/timeoff/calendar":   ["owner", "hr_admin", "manager"],
-  "/app/hours":              ["owner", "hr_admin", "manager"],
+  "/employer/timeoff":            ["owner", "hr_admin", "manager"],
+  "/employer/timeoff/calendar":   ["owner", "hr_admin", "manager"],
+  "/employer/hours":              ["owner", "hr_admin", "manager"],
   // sensibles — solo admin
-  "/app/hours/compensation": ["owner", "hr_admin"],
+  "/employer/hours/compensation": ["owner", "hr_admin"],
   // payroll — solo owner/hr_admin (datos financieros sensibles)
-  "/app/payroll":            ["owner", "hr_admin"],
-  "/app/payroll/runs":       ["owner", "hr_admin"],
-  "/app/payroll/profiles":   ["owner", "hr_admin"],
-  "/app/settings":           ["owner", "hr_admin"],
-  "/app/settings/team":      ["owner"],
-  "/app/settings/billing":   ["owner"],
-  "/app/settings/compliance": ["owner", "hr_admin"],
-  "/app/settings/payroll":    ["owner", "hr_admin"],
-  "/app/settings/skills":     ["owner", "hr_admin", "recruiter"],
+  "/employer/payroll":            ["owner", "hr_admin"],
+  "/employer/payroll/runs":       ["owner", "hr_admin"],
+  "/employer/payroll/profiles":   ["owner", "hr_admin"],
+  "/employer/settings":           ["owner", "hr_admin"],
+  "/employer/settings/team":      ["owner"],
+  "/employer/settings/billing":   ["owner"],
+  "/employer/settings/compliance": ["owner", "hr_admin"],
+  "/employer/settings/payroll":    ["owner", "hr_admin"],
+  "/employer/settings/skills":     ["owner", "hr_admin", "recruiter"],
 };
 
 const ALL_NAV = [
-  { href: "/app/dashboard",          label: "Dashboard",    Icon: IconDashboard },
+  { href: "/employer/dashboard",          label: "Dashboard",    Icon: IconDashboard },
   { section: "Reclutamiento" },
-  { href: "/app/jobs",               label: "Ofertas",      Icon: IconBriefcase },
-  { href: "/app/candidates",         label: "Candidatos",   Icon: IconCandidates },
-  { href: "/app/career-site",        label: "Career Site",  Icon: IconGlobe },
-  { href: "/app/channels",            label: "Canales",      Icon: IconChannels },
+  { href: "/employer/jobs",               label: "Ofertas",      Icon: IconBriefcase },
+  { href: "/employer/candidates",         label: "Candidatos",   Icon: IconCandidates },
+  { href: "/employer/career-site",        label: "Career Site",  Icon: IconGlobe },
+  { href: "/employer/channels",            label: "Canales",      Icon: IconChannels },
   { section: "Personas" },
-  { href: "/app/employees",          label: "Empleados",    Icon: IconEmployee },
-  { href: "/app/org",                label: "Organigrama",  Icon: IconOrg },
-  { href: "/app/timeoff",            label: "Ausencias",    Icon: IconVacaciones },
-  { href: "/app/timeoff/calendar",   label: "Calendario",   Icon: IconCalendar },
-  { href: "/app/hours",              label: "Horas",        Icon: IconHoras },
-  { href: "/app/hours/compensation", label: "Banco de horas", Icon: IconCompensacion },
+  { href: "/employer/employees",          label: "Empleados",    Icon: IconEmployee },
+  { href: "/employer/org",                label: "Organigrama",  Icon: IconOrg },
+  { href: "/employer/timeoff",            label: "Ausencias",    Icon: IconVacaciones },
+  { href: "/employer/timeoff/calendar",   label: "Calendario",   Icon: IconCalendar },
+  { href: "/employer/hours",              label: "Horas",        Icon: IconHoras },
+  { href: "/employer/hours/compensation", label: "Banco de horas", Icon: IconCompensacion },
   { section: "Payroll", brand: true },
-  { href: "/app/payroll",          label: "Payroll",             Icon: IconPayroll },
-  { href: "/app/payroll/runs",     label: "Pay Runs",            Icon: IconPayRuns },
-  { href: "/app/payroll/profiles", label: "Perfiles salariales", Icon: IconPayProfiles },
+  { href: "/employer/payroll",          label: "Payroll",             Icon: IconPayroll },
+  { href: "/employer/payroll/runs",     label: "Pay Runs",            Icon: IconPayRuns },
+  { href: "/employer/payroll/profiles", label: "Perfiles salariales", Icon: IconPayProfiles },
   { section: "Ajustes" },
   {
-    href: "/app/settings",
+    href: "/employer/settings",
     label: "Ajustes",
     Icon: IconSettings,
     children: [
-      { href: "/app/settings",            label: "Empresa" },
-      { href: "/app/settings/team",       label: "Equipo" },
-      { href: "/app/settings/billing",    label: "Billing" },
-      { href: "/app/settings/absences",   label: "Ausencias" },
-      { href: "/app/settings/schedules",  label: "Horarios" },
-      { href: "/app/settings/compliance", label: "Compliance" },
-      { href: "/app/settings/payroll",    label: "Payroll" },
-      { href: "/app/settings/skills",     label: "Skills" },
+      { href: "/employer/settings",            label: "Empresa" },
+      { href: "/employer/settings/team",       label: "Equipo" },
+      { href: "/employer/settings/billing",    label: "Billing" },
+      { href: "/employer/settings/absences",   label: "Ausencias" },
+      { href: "/employer/settings/schedules",  label: "Horarios" },
+      { href: "/employer/settings/compliance", label: "Compliance" },
+      { href: "/employer/settings/payroll",    label: "Payroll" },
+      { href: "/employer/settings/skills",     label: "Skills" },
     ],
   },
 ];
@@ -228,12 +228,12 @@ const ALL_NAV = [
 // los dos sin ramificar.
 const PORTAL_NAV: (typeof ALL_NAV)[number][] = [
   { section: "Mi espacio" },
-  { href: "/me/profile",     label: "Mi perfil",     Icon: IconEmployee },
-  { href: "/me/performance", label: "Mi desempeño",  Icon: IconPerformance },
-  { href: "/me/time-off",    label: "Mis ausencias", Icon: IconVacaciones },
-  { href: "/me/hours",       label: "Mis horas",     Icon: IconHoras },
-  { href: "/me/payslips",    label: "Mi nómina",     Icon: IconPayroll },
-  { href: "/me/documents",   label: "Mis documentos", Icon: IconDocument },
+  { href: "/employee/profile",     label: "Mi perfil",     Icon: IconEmployee },
+  { href: "/employee/performance", label: "Mi desempeño",  Icon: IconPerformance },
+  { href: "/employee/time-off",    label: "Mis ausencias", Icon: IconVacaciones },
+  { href: "/employee/hours",       label: "Mis horas",     Icon: IconHoras },
+  { href: "/employee/payslips",    label: "Mi nómina",     Icon: IconPayroll },
+  { href: "/employee/documents",   label: "Mis documentos", Icon: IconDocument },
 ];
 
 function buildNav(role: Role | null) {
@@ -313,12 +313,14 @@ export function AppShell({
 
   useEffect(() => {
     setSidebarOpen(false);
-    if (pathname.startsWith("/app/settings")) setSettingsOpen(true);
+    if (pathname.startsWith("/employer/settings")) setSettingsOpen(true);
   }, [pathname]);
 
   async function signOut() {
     await createClient().auth.signOut();
-    router.push("/login");
+    // A la puerta del producto en el que estaba. El shell lo comparten admin y portal, y mandar
+    // siempre a la de empresa dejaba al empleado en una pantalla de "acceso interno".
+    router.push(variant === "portal" ? "/employee/sign-in" : "/employer/sign-in");
     router.refresh();
   }
 

@@ -30,7 +30,7 @@ export function JobApplyBar({ jobId, slug, locale, authed = false, hasRequiredSc
     const res = next
       ? await fetch("/api/board/saved", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId }) })
       : await fetch(`/api/board/saved?jobId=${jobId}`, { method: "DELETE" });
-    if (res.status === 401) { setSaved(false); router.push("/cuenta/entrar"); }
+    if (res.status === 401) { setSaved(false); router.push("/candidate/sign-in"); }
     else if (!res.ok) setSaved(!next);
   }
 
@@ -56,7 +56,7 @@ export function JobApplyBar({ jobId, slug, locale, authed = false, hasRequiredSc
             <svg width="18" height="18" viewBox="0 0 24 24" fill={saved ? "#0E5C4A" : "none"}><path d="M6 4h12v17l-6-4-6 4V4Z" stroke={saved ? "#0E5C4A" : "#1A1A17"} strokeWidth="2" strokeLinejoin="round" /></svg>
           </button>
           {state === "applied" ? (
-            <Link href="/cuenta" className="jb-hard" style={{ ...barStyle, background: "#0E5C4A" }}>{t("detail.applied")} →</Link>
+            <Link href="/candidate" className="jb-hard" style={{ ...barStyle, background: "#0E5C4A" }}>{t("detail.applied")} →</Link>
           ) : canOneTap ? (
             <button onClick={oneTap} disabled={state === "applying"} className="jb-hard" style={{ ...barStyle, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", opacity: state === "applying" ? .7 : 1 }}>
               {state === "applying" ? t("apply.sending") : (

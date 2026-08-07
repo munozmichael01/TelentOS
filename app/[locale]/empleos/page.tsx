@@ -7,6 +7,7 @@ import { getCategories, countryForLocale } from "@/lib/board/geo";
 import { routing, type Locale } from "@/i18n/routing";
 import { getPathname } from "@/i18n/navigation";
 import { BoardClient } from "@/components/board/board-client";
+import { hasAudience } from "@/lib/auth/audiences";
 
 // Job board público — entrada del board (SSR de ofertas activas cross-empresa para SEO).
 // La interacción (búsqueda, filtros, guardar) vive en BoardClient. Slugs localizados por
@@ -46,7 +47,7 @@ export default async function BoardPage({
   });
 
   const { data: { user } } = await supabase.auth.getUser();
-  const authed = user?.app_metadata?.audience === "candidate";
+  const authed = hasAudience(user, "candidate");
 
   return (
     <BoardClient
