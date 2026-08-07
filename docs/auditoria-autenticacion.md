@@ -126,3 +126,32 @@ trabajo, pero la fricción es permanente y el caso "me contrataron y perdí mis 
 
 Recomiendo **(a)**: es la que sostiene el producto que estamos construyendo, donde el job board
 alimenta al ATS y el ATS al portal — la misma persona recorre las tres superficies por diseño.
+
+---
+
+## Estado tras el arreglo (2026-08-07)
+
+Se eligió la salida **(a)** con un matiz del dueño del producto: no "una identidad con varias
+audiencias derivadas de los hechos", sino **alta explícita por producto** con el mismo email y
+contraseña, y **sin selector** — para cambiar de producto se sale y se entra por su puerta.
+
+| # | Hallazgo | Estado |
+|---|---|---|
+| 1 | Bucle infinito de redirects | ✅ Imposible por construcción: no se redirige entre productos |
+| 2 | La invitación quitaba el admin / las candidaturas | ✅ `grantAudience` añade, nunca reescribe |
+| 3 | El login de empresa aceptaba candidatos sin avisar | ✅ La puerta detecta la sesión sin alta y lo explica |
+| 4 | Logout a la superficie equivocada | ✅ Vuelve a la puerta del producto en el que estabas |
+| 5 | Sin claim = permiso (default-allow) | ✅ Sin alta no se entra a ninguno |
+| 6 | El login perdía locale y destino | ✅ Router de i18n; el destino lo decide el middleware |
+
+Verificado en producción con sesiones reales, 20 trazas de redirects: el bucle original, sin
+sesión, rutas viejas, cada producto rechazando a quien no tiene su alta, y la misma persona
+(owner + empleado) entrando en dos productos.
+
+**Efecto secundario del despliegue:** el primer intento dejó las puertas dentro del layout que
+exige sesión y tumbó el login en producción hasta el arreglo siguiente. La lección va en
+CLAUDE.md: la puerta de un producto nunca puede colgar del layout que la exige.
+
+**Queda sin cerrar:** hay fichas de candidato que coinciden por email con una cuenta pero cuyo
+`user_id` apunta a otra (o a ninguna). No se pierde nada —darse de alta en `/candidate` las
+vincula— pero conviene un barrido.
