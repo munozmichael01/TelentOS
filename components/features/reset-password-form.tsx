@@ -50,7 +50,7 @@ export function ResetPasswordForm() {
       return;
     }
     setDone(true);
-    setTimeout(() => router.push(nextPath || "/app/dashboard"), 2500);
+    setTimeout(() => router.push(nextPath || "/employer/dashboard"), 2500);
   }
 
   return (
@@ -92,7 +92,7 @@ export function ResetPasswordForm() {
                 Solicita un nuevo enlace de recuperación desde la pantalla de inicio de sesión.
               </p>
               <button
-                onClick={() => router.push("/login")}
+                onClick={() => router.push("/employer/sign-in")}
                 style={{
                   padding: "10px 20px", borderRadius: "10px",
                   border: "2px solid #1A1A17", boxShadow: "3px 3px 0 #1A1A17",

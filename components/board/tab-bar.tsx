@@ -9,12 +9,12 @@ type Tab = "search" | "applications" | "saved" | "alerts" | "profile";
 // conmuta los sub-tabs localmente para evitar una segunda nav superior.
 export function BoardTabBar({ active, onSelect, badges, className }: { active: Tab; onSelect?: (tab: Exclude<Tab, "search">) => void; badges?: Partial<Record<Tab, number>>; className?: string }) {
   const t = useTranslations("Board.tabs");
-  const items: { key: Tab; href: "/empleos" | "/cuenta"; label: string; icon: JSX.Element }[] = [
+  const items: { key: Tab; href: "/empleos" | "/candidate"; label: string; icon: JSX.Element }[] = [
     { key: "search", href: "/empleos", label: t("search"), icon: <path d="M11 4a7 7 0 105.6 11.2L21 19M18 11a7 7 0 10-14 0 7 7 0 0014 0Z" /> },
-    { key: "applications", href: "/cuenta", label: t("applications"), icon: <path d="M4 5h16v14H4zM4 9h16" strokeLinejoin="round" /> },
-    { key: "saved", href: "/cuenta", label: t("saved"), icon: <path d="M6 4h12v17l-6-4-6 4V4Z" strokeLinejoin="round" /> },
-    { key: "alerts", href: "/cuenta", label: t("alerts"), icon: <><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6Z" strokeLinejoin="round" /><path d="M10 19a2 2 0 004 0" /></> },
-    { key: "profile", href: "/cuenta", label: t("profile"), icon: <><circle cx="12" cy="8" r="4" /><path d="M5 20c1-4 4.5-5 7-5s6 1 7 5" strokeLinecap="round" /></> },
+    { key: "applications", href: "/candidate", label: t("applications"), icon: <path d="M4 5h16v14H4zM4 9h16" strokeLinejoin="round" /> },
+    { key: "saved", href: "/candidate", label: t("saved"), icon: <path d="M6 4h12v17l-6-4-6 4V4Z" strokeLinejoin="round" /> },
+    { key: "alerts", href: "/candidate", label: t("alerts"), icon: <><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6Z" strokeLinejoin="round" /><path d="M10 19a2 2 0 004 0" /></> },
+    { key: "profile", href: "/candidate", label: t("profile"), icon: <><circle cx="12" cy="8" r="4" /><path d="M5 20c1-4 4.5-5 7-5s6 1 7 5" strokeLinecap="round" /></> },
   ];
 
   const itemStyle = (on: boolean) => ({

@@ -63,7 +63,7 @@ export function CandidateAuth({ locale, companySession = false }: { locale: stri
       // Vincula las candidaturas hechas como invitado con este email a la cuenta.
       await fetch("/api/board/auth/link", { method: "POST" }).catch(() => {});
       // Tras registrarse, al constructor de perfil con IA; al iniciar sesión, a la cuenta.
-      router.push(signup ? "/cuenta/perfil" : "/cuenta");
+      router.push(signup ? "/candidate/profile" : "/candidate");
       router.refresh();
     } catch {
       setError(t("errGeneric")); setLoading(false);

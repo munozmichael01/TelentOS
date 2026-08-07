@@ -6,6 +6,7 @@ import { resolveHub } from "@/lib/board/hub";
 import { buildHubSeo } from "@/lib/board/hub-seo";
 import { getCategories, countryForLocale } from "@/lib/board/geo";
 import { BoardClient } from "@/components/board/board-client";
+import { hasAudience } from "@/lib/auth/audiences";
 
 // Hub SEO/AEO de dos segmentos (la "money page"): (categoría|cargo) × ubicación → /empleos/[a]/[b].
 // La URL estructurada ES el buscador con ambos facets aplicados (SSR), + FAQ debajo del paginado.
@@ -32,7 +33,7 @@ export default async function HubPage({ params }: { params: { locale: string; ca
   const seo = await buildHubSeo(data, params.locale, path);
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const authed = user?.app_metadata?.audience === "candidate";
+  const authed = hasAudience(user, "candidate");
 
   return (
     <>

@@ -6,6 +6,7 @@ import { resolveSkillIds } from "@/lib/skills";
 import { computeRecruiterFit, type JobSkillReq } from "@/lib/job-board/fit";
 import type { EducationLevel, SeniorityLevel } from "@/lib/types";
 import { ApplyWizard } from "@/components/board/apply-wizard";
+import { hasAudience } from "@/lib/auth/audiences";
 
 const CAP = (s: string | null) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
 
@@ -47,7 +48,7 @@ export default async function ApplyPage({ params }: { params: { locale: string; 
 
   // ¿candidato ya logueado? decide el cierre del apply + habilita "match para ti" (oculto a anónimo).
   const { data: { user } } = await supabase.auth.getUser();
-  const authed = user?.app_metadata?.audience === "candidate";
+  const authed = hasAudience(user, "candidate");
 
   // Match para ti (N de 4) — solo logueado con ficha; anónimo lo oculta (decisión de Design).
   let match: { met: number; total: number } | null = null;

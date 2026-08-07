@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -51,11 +52,16 @@ export function LoginForm() {
           setInfo("Cuenta creada. Revisa tu email para confirmarla y vuelve a iniciar sesión.");
           return;
         }
+        // El alta en el producto de empresa va aquí, ANTES de que exista la empresa: sin ella no
+        // podría ni llegar al onboarding a crearla.
+        await fetch("/api/auth/enroll", { method: "POST" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      router.push("/");
+      // No se adivina el destino: el middleware enruta según las altas de esta cuenta, y si no
+      // tiene la de empresa esta misma puerta se lo explica. Antes hacía push("/") y un
+      // candidato acababa en el marketing, logueado, sin señal de que algo había pasado.
       router.refresh();
     } catch (err) {
       setError(String(err instanceof Error ? err.message : err));

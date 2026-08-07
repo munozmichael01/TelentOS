@@ -4,6 +4,7 @@ import { jsonError } from "@/lib/api";
 import { resolveSkillIds } from "@/lib/skills";
 import { computeRecruiterFit, type JobSkillReq } from "@/lib/job-board/fit";
 import type { EducationLevel, SeniorityLevel } from "@/lib/types";
+import { hasAudience } from "@/lib/auth/audiences";
 
 /**
  * Aplicar EN UN TOQUE: candidato logueado con perfil (ficha ATS) → crea la candidatura
@@ -12,7 +13,7 @@ import type { EducationLevel, SeniorityLevel } from "@/lib/types";
  */
 export async function POST(req: Request) {
   const { data: { user } } = await createClient().auth.getUser();
-  if (!user || user.app_metadata?.audience !== "candidate") return jsonError("No autenticado", 401);
+  if (!user || !hasAudience(user, "candidate")) return jsonError("No autenticado", 401);
   const body = await req.json().catch(() => null);
   if (!body?.jobId) return jsonError("Falta la oferta");
 

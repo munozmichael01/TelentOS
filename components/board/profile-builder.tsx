@@ -274,7 +274,7 @@ export function ProfileBuilder({ locale }: { locale: string }) {
 
   // Guardar la propuesta confirmada (el usuario confirma → se persiste) y navegar. Los agentes
   // no escriben en DB por su cuenta: la persistencia ocurre aquí, al pulsar el CTA.
-  async function save(destination: "/empleos" | "/cuenta") {
+  async function save(destination: "/empleos" | "/candidate") {
     setSaving(true);
     setError("");
     const body = {
@@ -340,7 +340,7 @@ export function ProfileBuilder({ locale }: { locale: string }) {
       <div className="jb-pib-page">
         {/* Header full-width (desktop 64px con logo de marca + nota; mobile compacto) */}
         <header className="jb-pib-header">
-          <button onClick={() => { if (step === "review") setStep("intake"); else router.push("/cuenta"); }} className="jb-pib-back jb-hard">
+          <button onClick={() => { if (step === "review") setStep("intake"); else router.push("/candidate"); }} className="jb-pib-back jb-hard">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="var(--ink)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
           <span className="jb-pib-logo">
@@ -451,7 +451,7 @@ export function ProfileBuilder({ locale }: { locale: string }) {
                         {saving ? t("saving") : t("findJobs")}
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#1A1A17" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                       </button>
-                      <button onClick={() => save("/cuenta")} disabled={saving} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 14, color: "#B7B2A8", background: "transparent", border: "none", padding: "14px 18px", cursor: saving ? "not-allowed" : "pointer" }}>
+                      <button onClick={() => save("/candidate")} disabled={saving} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 14, color: "#B7B2A8", background: "transparent", border: "none", padding: "14px 18px", cursor: saving ? "not-allowed" : "pointer" }}>
                         {t("viewProfile")}
                       </button>
                     </div>
@@ -528,7 +528,7 @@ export function ProfileBuilder({ locale }: { locale: string }) {
                         {saving ? t("saving") : t("findJobs")}
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                       </button>
-                      <button onClick={() => save("/cuenta")} disabled={saving} style={{ width: "100%", textAlign: "center", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "transparent", border: "none", padding: 6, cursor: saving ? "not-allowed" : "pointer" }}>
+                      <button onClick={() => save("/candidate")} disabled={saving} style={{ width: "100%", textAlign: "center", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "transparent", border: "none", padding: 6, cursor: saving ? "not-allowed" : "pointer" }}>
                         {t("viewProfile")}
                       </button>
                     </div>

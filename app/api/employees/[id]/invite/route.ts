@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireApiRole, jsonError } from "@/lib/api";
 import { createAdminClient } from "@/lib/supabase/server";
+import { grantAudience } from "@/lib/auth/audiences";
 import { sendEmail } from "@/lib/email/resend";
 import { recordEmployeeEvent } from "@/lib/performance/events";
 
@@ -48,7 +49,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const { data: created, error: createErr } = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
-    app_metadata: { audience: "employee" },
+    app_metadata: { audiences: ["employee"] },
     user_metadata: { full_name: employee.name },
   });
   if (created?.user) {
@@ -58,10 +59,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const found = list?.users?.find((u) => (u.email ?? "").toLowerCase() === email);
     if (!found) return jsonError("Ese email ya existe pero no se pudo recuperar la cuenta", 500);
     userId = found.id;
-    // Se le marca la audiencia de empleado sin tocar el resto de su metadata.
-    await admin.auth.admin.updateUserById(userId, {
-      app_metadata: { ...(found.app_metadata ?? {}), audience: "employee" },
-    });
+    // AÑADE el alta del portal; no toca las que ya tenga. Antes esto escribía `audience:
+    // "employee"` a secas y, como era un valor único, invitar al portal a alguien que ya
+    // administraba la empresa lo expulsaba de /employer para siempre, y a un ex-candidato le
+    // borraba el acceso a sus propias candidaturas (docs/auditoria-autenticacion.md).
+    await grantAudience(admin, userId, "employee");
   } else {
     return jsonError(createErr?.message ?? "No se pudo crear la cuenta", 500);
   }
@@ -88,7 +90,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   //      tokens en el FRAGMENTO de la URL y solo el callback los procesa. Apuntar directo a la
   //      página deja al usuario sin sesión y el middleware lo manda al login.
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://telent-os-mu.vercel.app";
-  const callback = `${site}/es-ve/auth/callback?next=${encodeURIComponent("/me/profile")}`;
+  const callback = `${site}/es-ve/auth/callback?next=${encodeURIComponent("/employee/profile")}`;
   const { data: link, error: linkGenErr } = await admin.auth.admin.generateLink({
     type: "recovery",
     email,

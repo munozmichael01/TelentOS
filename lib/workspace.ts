@@ -33,7 +33,7 @@ export async function getActiveCompanyId(): Promise<string | null> {
 /**
  * Empresa del usuario, resuelta desde su **membresía** (no `.limit(1)`).
  * Un usuario sin membresía → `null` (nunca cae en otra empresa: aislamiento
- * multi-tenant). El gate del layout redirige a `/onboarding` cuando es null.
+ * multi-tenant). El gate del layout redirige a `/employer/onboarding` cuando es null.
  */
 /** ID de la empresa del usuario, desde su membresía. `null` si no tiene (multi-tenant). */
 export async function getCompanyId(): Promise<string | null> {

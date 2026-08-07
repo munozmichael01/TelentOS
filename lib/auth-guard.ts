@@ -13,10 +13,10 @@ export async function requireRole(allowedRoles: Role[]): Promise<Role> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/employer/sign-in");
 
   const company = await getCompany();
-  if (!company) redirect("/app/dashboard");
+  if (!company) redirect("/employer/dashboard");
 
   const admin = createAdminClient();
   const { data: member } = await admin
@@ -26,10 +26,10 @@ export async function requireRole(allowedRoles: Role[]): Promise<Role> {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!member?.role) redirect("/app/dashboard");
+  if (!member?.role) redirect("/employer/dashboard");
 
   const role = member.role as Role;
-  if (!allowedRoles.includes(role)) redirect("/app/dashboard");
+  if (!allowedRoles.includes(role)) redirect("/employer/dashboard");
 
   return role;
 }

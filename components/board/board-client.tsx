@@ -238,7 +238,7 @@ export function BoardClient({
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ criteria, frequency: "daily" }),
     });
-    if (res.status === 401) { router.push("/cuenta/entrar"); return; }
+    if (res.status === 401) { router.push("/candidate/sign-in"); return; }
     if (res.ok) { setSavedSearch(true); flash(t("search.alertCreated")); }
     else flash(t("apply.error"));
   }
@@ -250,7 +250,7 @@ export function BoardClient({
     const res = isSaved
       ? await fetch(`/api/board/saved?jobId=${jobId}`, { method: "DELETE" })
       : await fetch("/api/board/saved", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId }) });
-    if (res.status === 401) { setSaved((s) => ({ ...s, [jobId]: false })); router.push("/cuenta/entrar"); return; }
+    if (res.status === 401) { setSaved((s) => ({ ...s, [jobId]: false })); router.push("/candidate/sign-in"); return; }
     if (!res.ok) { setSaved((s) => ({ ...s, [jobId]: isSaved })); return; } // revierte
     flash(isSaved ? t("toast.unsaved") : t("toast.saved"));
   }
@@ -314,7 +314,7 @@ export function BoardClient({
     }).then((r) => r.json().then((d) => ({ status: r.status, d })).catch(() => ({ status: r.status, d: null }))).catch(() => null);
     setApplying((s) => { const n = { ...s }; delete n[j.id]; return n; });
     if (!res) { flash(t("apply.error")); return; }
-    if (res.status === 401) { router.push("/cuenta/entrar"); return; }
+    if (res.status === 401) { router.push("/candidate/sign-in"); return; }
     // Cambió el estado (screening/perfil) desde la carga → cae al flujo completo.
     if (res.d?.needsWizard) { router.push({ pathname: "/empleos/oferta/[slug]/aplicar", params: { slug } }); return; }
     if ((res.status === 200 && res.d?.ok) || res.status === 409) { setApplied((s) => ({ ...s, [j.id]: true })); flash(t("toast.applied")); return; }
@@ -453,14 +453,14 @@ export function BoardClient({
             </div>
             <nav className="jb-topnav" style={{ alignItems: "center", gap: 22 }}>
               <Link href="/empleos/empresas" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)" }}>{t("nav.companies")}</Link>
-              <Link href="/cuenta" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)" }}>{t("nav.alerts")}</Link>
+              <Link href="/candidate" style={{ fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)" }}>{t("nav.alerts")}</Link>
             </nav>
             {authed ? (
-              <Link href="/cuenta" aria-label={t("nav.account")} style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--brand)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 var(--ink)", flexShrink: 0 }}>
+              <Link href="/candidate" aria-label={t("nav.account")} style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--brand)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 var(--ink)", flexShrink: 0 }}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#C6F24E" strokeWidth="2" /><path d="M5 20c1-4 4.5-5 7-5s6 1 7 5" stroke="#C6F24E" strokeWidth="2" strokeLinecap="round" /></svg>
               </Link>
             ) : (
-              <Link href="/cuenta/entrar" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--ink)", background: "var(--surface)", border: "1.5px solid var(--ink)", borderRadius: 9, padding: "6px 12px", boxShadow: "2px 2px 0 var(--ink)", flexShrink: 0 }}>
+              <Link href="/candidate/sign-in" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 12, color: "var(--ink)", background: "var(--surface)", border: "1.5px solid var(--ink)", borderRadius: 9, padding: "6px 12px", boxShadow: "2px 2px 0 var(--ink)", flexShrink: 0 }}>
                 {t("login")}
               </Link>
             )}

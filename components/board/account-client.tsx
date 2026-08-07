@@ -238,7 +238,7 @@ export function AccountClient({ locale }: { locale: string }) {
 
   async function logout() {
     await createClient().auth.signOut();
-    router.push("/cuenta/entrar");
+    router.push("/candidate/sign-in");
     router.refresh();
   }
 
@@ -390,10 +390,10 @@ function ProfileTab({ display, completeness, exp, edu, langs, links, avatarUrl, 
           <div style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 15 }}>{complete ? t("account.refineWithAi") : t("account.completeWithAi")}</div>
           <div style={{ fontSize: 12.5, color: "#B7B2A8", marginTop: 2 }}>{complete ? t("account.aiSubtitleRefine") : t("account.aiSubtitleComplete")}</div>
         </div>
-        <Link href="/cuenta/perfil" className="jb-hard" style={{ flexShrink: 0, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "var(--ink)", background: "var(--lime)", border: "2px solid var(--lime)", borderRadius: 11, padding: "10px 16px", boxShadow: "3px 3px 0 rgba(198,242,78,.35)" }}>{complete ? t("account.aiCtaRefine") : t("account.aiCtaComplete")}</Link>
+        <Link href="/candidate/profile" className="jb-hard" style={{ flexShrink: 0, fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "var(--ink)", background: "var(--lime)", border: "2px solid var(--lime)", borderRadius: 11, padding: "10px 16px", boxShadow: "3px 3px 0 rgba(198,242,78,.35)" }}>{complete ? t("account.aiCtaRefine") : t("account.aiCtaComplete")}</Link>
       </div>
       {/* Footer de CTAs — solo mobile (en desktop viven en top bar y sidebar) */}
-      <div className="jb-acct-footer-mobile" style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 6 }}><HardButton href="/empleos" variant="brand" full><SearchIcon />{t("account.searchForMe")}</HardButton><HardButton href="/cuenta/perfil" variant="lime" full><SparkIcon />{complete ? t("account.refineWithAi") : t("account.completeWithAi")}</HardButton><button onClick={onSettings} className="jb-tap" style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: 11, cursor: "pointer" }}>{t("account.settingsAndNotifications")}</button></div>
+      <div className="jb-acct-footer-mobile" style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 6 }}><HardButton href="/empleos" variant="brand" full><SearchIcon />{t("account.searchForMe")}</HardButton><HardButton href="/candidate/profile" variant="lime" full><SparkIcon />{complete ? t("account.refineWithAi") : t("account.completeWithAi")}</HardButton><button onClick={onSettings} className="jb-tap" style={{ width: "100%", fontFamily: "'Hanken Grotesk',sans-serif", fontWeight: 700, fontSize: 13.5, color: "var(--soft)", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: 11, cursor: "pointer" }}>{t("account.settingsAndNotifications")}</button></div>
     </div>
   );
 }

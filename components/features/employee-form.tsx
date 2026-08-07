@@ -141,7 +141,7 @@ export function EmployeeForm({
       if (!res.ok) throw new Error(data.error ?? t("form.saveError"));
       setOpen(false);
       router.refresh();
-      if (!employee) router.push(`/app/employees/${data.employee.id}`);
+      if (!employee) router.push(`/employer/employees/${data.employee.id}`);
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));
     } finally {

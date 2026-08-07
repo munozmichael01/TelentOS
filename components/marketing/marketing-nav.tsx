@@ -138,7 +138,7 @@ export function MarketingNav() {
               )}
             </div>
 
-            <Link href="/login" className="ld-link" style={{ fontSize: 14, fontWeight: 700, color: "var(--soft)" }}>{t("login")}</Link>
+            <Link href="/employer/sign-in" className="ld-link" style={{ fontSize: 14, fontWeight: 700, color: "var(--soft)" }}>{t("login")}</Link>
             <a href="#cta" className="ld-hard" style={{ fontFamily: ARCHIVO, fontWeight: 800, fontSize: 13, color: "#fff", background: "var(--accent)", border: "2px solid var(--ink)", borderRadius: 11, padding: "9px 15px", boxShadow: "3px 3px 0 var(--ink)", cursor: "pointer" }}>{t("cta")}</a>
           </div>
         </div>

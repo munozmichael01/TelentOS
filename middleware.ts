@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
+import { audiencesOf, PRODUCT_HOME, type Audience } from "./lib/auth/audiences";
 
 // Compone i18n (next-intl) + auth (Supabase). El locale idioma-país va en la URL
 // (/es-ve, /en-us, /pt-br); las comprobaciones de público/privado y los redirects se
@@ -9,88 +10,101 @@ import { routing } from "./i18n/routing";
 // autoprotege por ruta).
 const handleI18n = createIntlMiddleware(routing);
 const localeRe = new RegExp(`^/(${routing.locales.join("|")})(?=/|$)`);
-// Slug localizado de la cuenta del candidato (espeja `pathnames` de i18n/routing.ts;
-// se duplica aquí porque el middleware no usa los helpers de navegación tipada).
-const CUENTA: Record<string, string> = { "es-ve": "/cuenta", "en-us": "/account", "pt-br": "/conta" };
+
+/**
+ * Los tres productos, cada uno con su namespace y su puerta.
+ *
+ * `door` es lo ÚNICO público del namespace: la pantalla de entrada. Todo lo demás exige el alta
+ * de ese producto (`app_metadata.audiences`, ver lib/auth/audiences.ts).
+ *
+ * Regla dura: **nunca se redirige de un producto a otro**. Quien pide un producto en el que no
+ * tiene alta va a la puerta DE ESE producto, que se lo explica. Mandarlo a otro sitio es lo que
+ * producía el bucle infinito `/app/dashboard ⇄ /me/profile` de la auditoría.
+ */
+const PRODUCTS: { audience: Audience; root: string; door: string; open: string[] }[] = [
+  { audience: "staff", root: "/employer", door: "/employer/sign-in", open: ["/employer/sign-in"] },
+  { audience: "employee", root: "/employee", door: "/employee/sign-in", open: ["/employee/sign-in"] },
+  { audience: "candidate", root: "/candidate", door: "/candidate/sign-in", open: ["/candidate/sign-in"] },
+];
+
+/**
+ * Rutas anteriores al reparto por producto. Se mantienen redirigiendo porque hay enlaces vivos
+ * (invitaciones ya enviadas, marcadores, los accesos que se repartieron para revisar).
+ */
+const LEGACY: [RegExp, string][] = [
+  [/^\/login(\/|$)/, "/employer/sign-in"],
+  [/^\/onboarding(\/|$)/, "/employer/onboarding"],
+  [/^\/app(?=\/|$)/, "/employer"],
+  [/^\/me(?=\/|$)/, "/employee"],
+  [/^\/(cuenta|account|conta)\/(entrar|sign-in)(\/|$)/, "/candidate/sign-in"],
+  [/^\/(cuenta|account|conta)\/(perfil|profile)(\/|$)/, "/candidate/profile"],
+  [/^\/(cuenta|account|conta)(?=\/|$)/, "/candidate"],
+];
 
 export async function middleware(request: NextRequest) {
-  // 1) next-intl: routing de locale (redirige / → /es, añade/normaliza el prefijo).
+  // 1) next-intl: routing de locale (redirige / → /es-ve, añade/normaliza el prefijo).
   const response = handleI18n(request);
   // Si i18n decidió redirigir (p. ej. añadir el prefijo), hónralo; el auth corre en el
   // siguiente request ya con locale.
   if (response.headers.get("location")) return response;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) return response; // sin env aún: no bloquear el arranque
-
-  // 2) Refresco de sesión de Supabase (cookies sobre la respuesta de i18n).
-  const supabase = createServerClient(url, anon, {
-    cookies: {
-      getAll: () => request.cookies.getAll(),
-      setAll: (cookiesToSet: { name: string; value: string; options: Record<string, unknown> }[]) => {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // 3) Protección de rutas sobre el path SIN prefijo de idioma.
-  // El dashboard B2B autenticado vive bajo /app/* (privado); TODO lo demás es público
-  // (marketing, career sites, job board, login/auth). Regla simple: /app/* = privado.
   const { pathname } = request.nextUrl;
   const locale = pathname.match(localeRe)?.[1] ?? routing.defaultLocale;
   const bare = pathname.replace(localeRe, "") || "/";
 
-  // Mercados NO primarios (p. ej. es-es) existen solo para el board (SEO geo). Sus rutas
-  // NO-board (marketing, dashboard, auth) colapsan al locale primario del idioma → evita
-  // contenido duplicado. El board y la cuenta del candidato sí se mantienen por mercado.
+  const go = (path: string, keepSearch = false) => {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = `/${locale}${path}`;
+    if (!keepSearch) redirectUrl.search = "";
+    return NextResponse.redirect(redirectUrl);
+  };
+
+  // 2) Rutas viejas → nuevas, antes de cualquier comprobación de sesión.
+  for (const [re, to] of LEGACY) {
+    if (re.test(bare)) return go(bare.replace(re, to) || to, true);
+  }
+
+  // 3) Mercados NO primarios (p. ej. es-es) existen solo para el board (SEO geo). Sus rutas
+  // NO-board colapsan al locale primario del idioma → evita contenido duplicado. El board y la
+  // cuenta del candidato sí se mantienen por mercado.
   const LANG_PRIMARY: Record<string, string> = { es: "es-ve", en: "en-us", pt: "pt-br" };
   const primary = LANG_PRIMARY[locale.split("-")[0]] ?? routing.defaultLocale;
-  const isBoardNs = /^\/(empleos|jobs|vagas|cuenta|account|conta)(\/|$)/.test(bare);
+  const isBoardNs = /^\/(empleos|jobs|vagas|candidate)(\/|$)/.test(bare);
   if (locale !== primary && !isBoardNs) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = `/${primary}${bare === "/" ? "" : bare}`;
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Dos superficies privadas y separadas: el admin B2B (/app/*) y el portal del empleado
-  // (/me/*). Una persona puede tener acceso a ambas.
-  const isAdmin = bare === "/app" || bare.startsWith("/app/");
-  const isPortal = bare === "/me" || bare.startsWith("/me/");
-  const isPrivate = isAdmin || isPortal;
-  const isCandidate = user?.app_metadata?.audience === "candidate";
-  // Empleado de plantilla: su sitio es el portal (/me/*), no el admin B2B. El
-  // claim va en el JWT (lo fija la invitación), así que no hace falta consultar el rol en cada
-  // request. La barrera real de datos sigue siendo la RLS; esto evita que aterrice por error
-  // —o a propósito— en pantallas de empresa.
-  const isStaff = user?.app_metadata?.audience === "employee";
-  if (isStaff && isAdmin) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = `/${locale}/me/profile`;
-    return NextResponse.redirect(redirectUrl);
-  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anon) return response; // sin env aún: no bloquear el arranque
 
-  // /app/* es SOLO para usuarios de empresa. Un candidato es un `user` pero no tiene
-  // company_members (RLS es la barrera real); aquí lo mandamos a su cuenta.
-  if (isPrivate && (!user || isCandidate)) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = isCandidate ? `/${locale}${CUENTA[locale] ?? "/cuenta"}` : `/${locale}/login`;
-    return NextResponse.redirect(redirectUrl);
-  }
-  // Usuario de EMPRESA logueado: fuera de la home pública y del login (a su dashboard).
-  // A los candidatos NO se les redirige: pueden navegar el marketing y el board libremente.
-  if (user && !isCandidate && (bare.startsWith("/login") || bare === "/")) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = `/${locale}/app/dashboard`;
-    return NextResponse.redirect(redirectUrl);
-  }
+  // 4) Refresco de sesión de Supabase (cookies sobre la respuesta de i18n).
+  const supabase = createServerClient(url, anon, {
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll: (cookiesToSet: { name: string; value: string; options: Record<string, unknown> }[]) => {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+      },
+    },
+  });
+  const { data: { user } } = await supabase.auth.getUser();
+  const audiences = audiencesOf(user);
+
+  // 5) Producto pedido, si la ruta cae en alguno.
+  const product = PRODUCTS.find((p) => bare === p.root || bare.startsWith(`${p.root}/`));
+  if (!product) return response; // marketing, board y career sites: públicos
+
+  const atDoor = product.open.some((o) => bare === o || bare.startsWith(`${o}/`));
+  const enrolled = audiences.includes(product.audience);
+
+  // Ya dentro y con alta: la puerta sobra.
+  if (atDoor) return user && enrolled ? go(PRODUCT_HOME[product.audience]) : response;
+
+  // Zona privada del producto: sin sesión o sin alta, a SU puerta. Nunca a otro producto.
+  if (!user || !enrolled) return go(product.door);
 
   return response;
 }
