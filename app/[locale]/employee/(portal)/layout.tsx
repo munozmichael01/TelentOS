@@ -17,17 +17,23 @@ export const dynamic = "force-dynamic";
  * (docs/auditoria-autenticacion.md). Ahora el alta caduca —el hecho que la sostenía ya no está— y
  * la puerta del propio producto lo explica.
  */
-export default async function EmployeePortalLayout({ children }: { children: React.ReactNode }) {
+export default async function EmployeePortalLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: { locale: string };
+}) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/employee/sign-in");
+  if (!user) redirect(`/${params.locale}/employee/sign-in`);
 
   const admin = createAdminClient();
   const { data: employee } = await admin
     .from("employees").select("id, company_id").eq("user_id", user.id).maybeSingle();
   if (!employee) {
     await revokeAudience(admin, user.id, "employee");
-    redirect("/employee/sign-in");
+    redirect(`/${params.locale}/employee/sign-in`);
   }
 
   // ¿Además administra? Solo para ofrecerle el enlace a la puerta del otro producto: sin ninguna

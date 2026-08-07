@@ -6,16 +6,22 @@ import { seedHrisDefaults } from "@/lib/hris-seed";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: { locale: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/employer/sign-in");
+  if (!user) redirect(`/${params.locale}/employer/sign-in`);
 
   const company = await getCompany();
   // Sin empresa propia → onboarding self-serve (nunca se cae en la empresa demo).
-  if (!company) redirect("/employer/onboarding");
+  if (!company) redirect(`/${params.locale}/employer/onboarding`);
 
   // Ensure HRIS defaults exist for this company (no-op if already seeded)
   await seedHrisDefaults(supabase, company.id);
