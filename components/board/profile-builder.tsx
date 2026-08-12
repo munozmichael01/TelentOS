@@ -116,7 +116,7 @@ export function ProfileBuilder({ locale }: { locale: string }) {
   const [cv, setCv] = useState<File | null>(null);
   const [cvName, setCvName] = useState("");
   const [cityIn, setCityIn] = useState("");
-  const [countryIn, setCountryIn] = useState(locale === "pt" ? "BR" : locale === "en" ? "US" : "VE");
+  const [countryIn, setCountryIn] = useState((locale.split("-")[1] ?? "ve").toUpperCase());
   const [lastTitle, setLastTitle] = useState("");
   const [lastCompany, setLastCompany] = useState("");
   // Skills confirmadas en el intake (sembradas por categoría del rol; el candidato toca para incluir/quitar y puede añadir).

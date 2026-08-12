@@ -13,11 +13,46 @@ import { defineRouting } from "next-intl/routing";
 // dashboard porque este vive bajo /app/jobs).
 // Idioma y país son EJES INDEPENDIENTES (una cosa es la oferta, otra el producto): cualquier
 // mercado se navega en cualquier idioma. Locale = {idioma}-{país}. Los slugs del board se
-// localizan por IDIOMA (empleos/jobs/vagas); byLang genera el mapa para los 12 locales.
+// localizan por IDIOMA (empleos/jobs/vagas).
+//
+// ── Qué significa el país ──────────────────────────────────────────────────────────────
+// En el board: se ven TODAS las ofertas, primero las del país elegido y el resto según la
+// priorización propia del buscador. El país ordena, NO filtra.
+// Fuera del board: no significa nada. Marketing, admin y portal colapsan al mercado primario
+// de su idioma; lo legal y de nómina se configura por empresa dentro del producto, no por URL.
+//
+// ── Mercados abiertos ─────────────────────────────────────────────────────────────────
+// El catálogo de idiomas y países es la maquinaria; ACTIVE_* es la llave. Abrir un mercado
+// nuevo es añadirlo a ACTIVE_COUNTRIES: hereda esta misma lógica sin más cambios. Hoy solo
+// Venezuela, en español e inglés.
 const LANGS = ["es", "en", "pt"] as const;
 const COUNTRIES = ["ve", "es", "br", "us"] as const;
-const LOCALES = LANGS.flatMap((la) => COUNTRIES.map((c) => `${la}-${c}`)) as
-  `${(typeof LANGS)[number]}-${(typeof COUNTRIES)[number]}`[];
+
+export const ACTIVE_LANGS: readonly (typeof LANGS)[number][] = ["es", "en"];
+export const ACTIVE_COUNTRIES: readonly (typeof COUNTRIES)[number][] = ["ve"];
+
+type AnyLocale = `${(typeof LANGS)[number]}-${(typeof COUNTRIES)[number]}`;
+/** Todos los locales concebibles: se usa para reconocer y redirigir los que aún no abrimos. */
+export const ALL_LOCALES = LANGS.flatMap((la) => COUNTRIES.map((c) => `${la}-${c}`)) as AnyLocale[];
+/** Los que existen de verdad hoy. `routing.locales` sale de aquí. */
+const LOCALES = ACTIVE_LANGS.flatMap((la) => ACTIVE_COUNTRIES.map((c) => `${la}-${c}`)) as AnyLocale[];
+
+/** Mercado primario de cada idioma: el primer país abierto. Ahí colapsa todo lo que no es board. */
+export const LANG_PRIMARY: Record<string, string> = Object.fromEntries(
+  ACTIVE_LANGS.map((la) => [la, `${la}-${ACTIVE_COUNTRIES[0]}`]),
+);
+
+/**
+ * Locale abierto equivalente a uno que no lo está: se conserva el IDIOMA si está abierto
+ * (`en-us` → `en-ve`), y si no, al default. Así una URL de un mercado cerrado redirige en vez
+ * de dar 404, y el día que abramos ese mercado la URL vuelve a existir tal cual.
+ */
+export function resolveLocale(locale: string): string {
+  if ((LOCALES as string[]).includes(locale)) return locale;
+  const lang = locale.split("-")[0];
+  return LANG_PRIMARY[lang] ?? "es-ve";
+}
+
 const byLang = (es: string, en: string, pt: string): Record<string, string> =>
   Object.fromEntries(LOCALES.map((l) => [l, l.startsWith("es") ? es : l.startsWith("en") ? en : pt]));
 
@@ -97,9 +132,9 @@ export const pathnames = {
 } as const;
 
 export const routing = defineRouting({
-  // 12 locales = 3 idiomas × 4 mercados. es-ve default (arranca en VE). Messages compartidos por
-  // idioma. El país solo pesa en el board (boost local + hubs de ciudad); marketing/dashboard de
-  // locales no-primarios redirigen a su idioma primario (es→es-ve, en→en-us, pt→pt-br).
+  // Hoy: es-ve y en-ve. La maquinaria admite 3 idiomas × 4 mercados; lo que está abierto lo
+  // dice ACTIVE_* arriba. Messages compartidos por idioma. El país solo pesa en el board
+  // (ordena local primero, no filtra); todo lo demás colapsa al primario de su idioma.
   locales: LOCALES,
   defaultLocale: "es-ve",
   pathnames,

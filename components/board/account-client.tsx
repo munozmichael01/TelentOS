@@ -770,7 +770,9 @@ function emptyForm(): FormState { return { first_name: "", last_name: "", email:
 function splitList(v: string) { return v.split(",").map((x) => x.trim()).filter(Boolean); }
 function splitName(v?: string | null) { const parts = (v ?? "").trim().split(/\s+/).filter(Boolean); return { first: parts[0] ?? "", last: parts.slice(1).join(" ") }; }
 function initials(name?: string | null) { const n = (name || "?").trim(); return n.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?"; }
-function defaultCountry(locale: string) { if (locale === "pt") return "BR"; if (locale === "en") return "US"; return "VE"; }
+// El país sale del MERCADO (la parte -xx del locale), no del idioma: `en-ve` es Venezuela
+// en inglés, no Estados Unidos.
+function defaultCountry(locale: string) { return (locale.split("-")[1] ?? "ve").toUpperCase(); }
 function period(start?: string | null, end?: string | null, current?: boolean | null, t?: ReturnType<typeof useTranslations>) { const s = start ? new Date(start).getUTCFullYear() : null; const e = current ? t?.("account.current") : (end ? new Date(end).getUTCFullYear() : null); return [s, e].filter(Boolean).join(" - ") || "-"; }
 function yearPeriod(start?: number | null, end?: number | null) { return [start, end].filter(Boolean).join(" - ") || "-"; }
 // periodLine del mockup: "Tipo · Periodo · Ubicación" (omite los vacíos).
