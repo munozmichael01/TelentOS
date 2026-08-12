@@ -9,6 +9,7 @@ import { jobSlug } from "@/lib/board/format";
 import { BoardTabBar } from "@/components/board/tab-bar";
 import { OfferDetailPanel } from "@/components/board/offer-detail-panel";
 import { JobCard } from "@/components/board/job-card";
+import { ACTIVE_LANGS } from "@/i18n/routing";
 
 // ≥1024px activamos el split lista+detalle (LinkedIn-style). Por debajo, la tarjeta
 // navega a la página de oferta (comportamiento mobile intacto). Coincide con el
@@ -447,7 +448,7 @@ export function BoardClient({
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 20 }}>
             {/* Idioma de la UI (mantiene el mercado): una cosa es la oferta, otra el producto. */}
             <div style={{ display: "flex", alignItems: "center", gap: 2, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 999, padding: 2, flexShrink: 0 }}>
-              {(["es", "en", "pt"] as const).map((lg) => (
+              {ACTIVE_LANGS.map((lg) => (
                 <button key={lg} onClick={() => switchLang(lg)} aria-label={lg} style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: .3, textTransform: "uppercase", color: lg === uiLang ? "#fff" : "var(--soft)", background: lg === uiLang ? "var(--brand)" : "transparent", border: "none", borderRadius: 999, padding: "3px 7px", cursor: "pointer" }}>{lg}</button>
               ))}
             </div>

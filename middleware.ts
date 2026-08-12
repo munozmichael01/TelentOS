@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
-import { routing } from "./i18n/routing";
+import { routing, ALL_LOCALES, LANG_PRIMARY, resolveLocale } from "./i18n/routing";
 import { audiencesOf, PRODUCT_HOME, type Audience } from "./lib/auth/audiences";
 
 // Compone i18n (next-intl) + auth (Supabase). El locale idioma-país va en la URL
@@ -10,6 +10,12 @@ import { audiencesOf, PRODUCT_HOME, type Audience } from "./lib/auth/audiences";
 // autoprotege por ruta).
 const handleI18n = createIntlMiddleware(routing);
 const localeRe = new RegExp(`^/(${routing.locales.join("|")})(?=/|$)`);
+// Locales de mercados que aún no hemos abierto. next-intl no los conoce (no están en
+// `routing.locales`), así que sin esto darían 404 y perderían el path. Se redirigen al
+// equivalente abierto conservando el idioma, y el día que se abra el mercado la URL revive.
+const closedLocaleRe = new RegExp(
+  `^/(${ALL_LOCALES.filter((l) => !(routing.locales as readonly string[]).includes(l)).join("|")})(?=/|$)`,
+);
 
 /**
  * Los tres productos, cada uno con su namespace y su puerta.
@@ -42,6 +48,14 @@ const LEGACY: [RegExp, string][] = [
 ];
 
 export async function middleware(request: NextRequest) {
+  // 0) Mercado cerrado → su equivalente abierto, antes de que next-intl lo dé por inexistente.
+  const closed = request.nextUrl.pathname.match(closedLocaleRe);
+  if (closed) {
+    const open = request.nextUrl.clone();
+    open.pathname = request.nextUrl.pathname.replace(closedLocaleRe, `/${resolveLocale(closed[1])}`);
+    return NextResponse.redirect(open);
+  }
+
   // 1) next-intl: routing de locale (redirige / → /es-ve, añade/normaliza el prefijo).
   const response = handleI18n(request);
   // Si i18n decidió redirigir (p. ej. añadir el prefijo), hónralo; el auth corre en el
@@ -64,10 +78,9 @@ export async function middleware(request: NextRequest) {
     if (re.test(bare)) return go(bare.replace(re, to) || to, true);
   }
 
-  // 3) Mercados NO primarios (p. ej. es-es) existen solo para el board (SEO geo). Sus rutas
-  // NO-board colapsan al locale primario del idioma → evita contenido duplicado. El board y la
-  // cuenta del candidato sí se mantienen por mercado.
-  const LANG_PRIMARY: Record<string, string> = { es: "es-ve", en: "en-us", pt: "pt-br" };
+  // 3) Fuera del board el país no significa nada, así que los mercados no primarios colapsan al
+  // primario de su idioma → evita contenido duplicado. El board y la cuenta del candidato sí se
+  // mantienen por mercado: ahí el país ordena los resultados (local primero, sin filtrar).
   const primary = LANG_PRIMARY[locale.split("-")[0]] ?? routing.defaultLocale;
   const isBoardNs = /^\/(empleos|jobs|vagas|candidate)(\/|$)/.test(bare);
   if (locale !== primary && !isBoardNs) {

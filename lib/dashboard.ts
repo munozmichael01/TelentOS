@@ -1,6 +1,36 @@
 import { createClient } from "@/lib/supabase/server";
 import { initials } from "@/lib/utils";
 
+/**
+ * Normaliza el `href` que propone el agente de insights.
+ *
+ * Los insights los redacta un LLM y el enlace viene dentro de su respuesta, así que apunta a
+ * donde el modelo cree que están las pantallas: rutas sin prefijo de producto (`/canales`,
+ * `/settings/compliance`) o directamente inexistentes. En la auditoría del 12-ago eran 404 en la
+ * cara del usuario. Igual que un agente nunca escribe en la base, tampoco se le confía el
+ * enrutado: se traduce aquí y lo que no se reconoce cae al dashboard en vez de a un 404.
+ */
+const AGENT_HREF_ALIASES: [RegExp, string][] = [
+  [/^\/(canales|channels)(?=[/?#]|$)/, "/employer/channels"],
+  [/^\/(horas|hours)(?=[/?#]|$)/, "/employer/hours"],
+  [/^\/(ofertas|jobs)(?=[/?#]|$)/, "/employer/jobs"],
+  [/^\/(candidatos|candidates)(?=[/?#]|$)/, "/employer/candidates"],
+  [/^\/(empleados|employees)(?=[/?#]|$)/, "/employer/employees"],
+  [/^\/(ausencias|timeoff)(?=[/?#]|$)/, "/employer/timeoff"],
+  [/^\/(nomina|payroll)(?=[/?#]|$)/, "/employer/payroll"],
+  [/^\/(ajustes|settings)(?=[/?#]|$)/, "/employer/settings"],
+  [/^\/(applications|career-site|org|timesheets|dashboard)(?=[/?#]|$)/, "/employer/$1"],
+];
+
+export function normalizeAgentHref(href: string | undefined): string {
+  if (!href || !href.startsWith("/")) return "/employer/dashboard";
+  if (href.startsWith("/employer/")) return href;
+  for (const [re, to] of AGENT_HREF_ALIASES) {
+    if (re.test(href)) return href.replace(re, to);
+  }
+  return "/employer/dashboard";
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type InboxType = "compliance" | "ausencia" | "candidato" | "onboarding" | "ausente";
@@ -313,7 +343,10 @@ export async function getDashboardData(_userId: string): Promise<DashboardData> 
     text: i.text,
     scope: i.scope,
     entities: (i.entities as { id: string; label: string }[]) ?? [],
-    action: (i.action as { label: string; href: string }) ?? { label: "Ver", href: "/" },
+    action: (() => {
+      const a = i.action as { label?: string; href?: string } | null;
+      return { label: a?.label ?? "Ver", href: normalizeAgentHref(a?.href) };
+    })(),
     status: i.status as "open" | "done" | "ignored",
     generated_at: i.generated_at,
   }));

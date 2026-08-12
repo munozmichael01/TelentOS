@@ -9,13 +9,17 @@ import { createClient } from "@/lib/supabase/client";
  * Puerta de un producto: la pantalla de entrada, y lo único público de su namespace.
  *
  * Los tres productos comparten identidad (mismo email, misma contraseña) pero el alta es de cada
- * uno: tener cuenta en el board no da el admin. Por eso la puerta tiene DOS estados y el segundo
- * es tan importante como el primero:
+ * uno: tener cuenta en el board no da el admin.
  *
- *   · sin sesión → formulario de entrada.
- *   · con sesión pero sin alta en ESTE producto → se explica, y se ofrece la puerta de los
- *     productos en los que sí la tiene. Nunca se le redirige solo: mandar a la gente de un
- *     producto a otro es lo que producía el bucle de redirects (docs/auditoria-autenticacion.md).
+ * **El formulario se enseña SIEMPRE**, también cuando ya hay una sesión de otro producto. La
+ * primera versión lo escondía y ponía en su lugar un "no tienes acceso, cierra sesión y
+ * regístrate" — sin botón de cerrar sesión y con el único enlace llevando al producto del que
+ * venías. Un callejón sin salida (auditoría del 12-ago, F1). Cuando hay una sesión ajena se
+ * añade encima el aviso de que entrar aquí la cerrará, más las puertas de los productos en los
+ * que esa cuenta sí tiene alta. Es lo que ya hacía bien la puerta del candidato.
+ *
+ * Lo que NO se hace nunca es redirigir a otro producto: eso producía el bucle de redirects
+ * (docs/auditoria-autenticacion.md).
  */
 
 const ink = "#1A1A17", soft = "#79746B", line = "#E7E1D4", surface = "#FCFAF6";
@@ -78,44 +82,56 @@ export function ProductDoor({
             {title}
           </h1>
 
-          {signedInAs ? (
-            <>
-              <p style={{ fontSize: "13.5px", color: ink, margin: "0 0 6px", lineHeight: 1.5 }}>{noAccess}</p>
-              <p style={{ fontSize: "12.5px", color: soft, margin: "0 0 18px" }}>
-                Tu sesión es <strong style={{ color: ink }}>{signedInAs}</strong>.
-              </p>
-              {hint && <p style={{ fontSize: "12.5px", color: soft, margin: "0 0 18px", lineHeight: 1.5 }}>{hint}</p>}
-              {elsewhere && elsewhere.length > 0 && (
-                <div style={{ borderTop: `1px solid ${line}`, paddingTop: "16px" }}>
-                  <div style={{ ...label, marginBottom: "10px" }}>Tus productos</div>
-                  {elsewhere.map((p) => (
-                    <a key={p.href} href={p.href} style={{ display: "block", fontSize: "13.5px", fontWeight: 600, color: "#0E5C4A", textDecoration: "none", padding: "7px 0" }}>
-                      {p.label} →
-                    </a>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <form onSubmit={submit}>
-              <div style={{ marginBottom: "14px" }}>
-                <label style={label} htmlFor="door-email">Email</label>
-                <input id="door-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} style={input} />
-              </div>
-              <div style={{ marginBottom: "18px" }}>
-                <label style={label} htmlFor="door-password">Contraseña</label>
-                <input id="door-password" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} style={input} />
-              </div>
-              {error && <p style={{ fontSize: "13px", color: "#BD4332", margin: "0 0 14px" }}>{error}</p>}
-              <button type="submit" disabled={loading} style={{ width: "100%", fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px", color: "#fff", background: "#0E5C4A", border: `2px solid ${ink}`, boxShadow: `3px 3px 0 ${ink}`, borderRadius: "11px", padding: "12px", cursor: loading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                {loading && <Loader2 size={15} className="animate-spin" />}
-                Entrar
-              </button>
-              {hint && <p style={{ fontSize: "12.5px", color: soft, margin: "16px 0 0", lineHeight: 1.5 }}>{hint}</p>}
-            </form>
+          {signedInAs && (
+            <ForeignSessionNotice email={signedInAs} message={noAccess ?? ""} elsewhere={elsewhere} />
           )}
+          <form onSubmit={submit}>
+            <div style={{ marginBottom: "14px" }}>
+              <label style={label} htmlFor="door-email">Email</label>
+              <input id="door-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} style={input} />
+            </div>
+            <div style={{ marginBottom: "18px" }}>
+              <label style={label} htmlFor="door-password">Contraseña</label>
+              <input id="door-password" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} style={input} />
+            </div>
+            {error && <p style={{ fontSize: "13px", color: "#BD4332", margin: "0 0 14px" }}>{error}</p>}
+            <button type="submit" disabled={loading} style={{ width: "100%", fontFamily: "'Archivo',sans-serif", fontWeight: 800, fontSize: "14px", color: "#fff", background: "#0E5C4A", border: `2px solid ${ink}`, boxShadow: `3px 3px 0 ${ink}`, borderRadius: "11px", padding: "12px", cursor: loading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+              {loading && <Loader2 size={15} className="animate-spin" />}
+              Entrar
+            </button>
+            {hint && <p style={{ fontSize: "12.5px", color: soft, margin: "16px 0 0", lineHeight: 1.5 }}>{hint}</p>}
+          </form>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Aviso de sesión ajena. Se enseña ENCIMA del formulario, nunca en su lugar: quitarle el
+ * formulario a quien llega con otra sesión lo deja sin salida (auditoría 12-ago, F1).
+ */
+export function ForeignSessionNotice({
+  email, message, elsewhere,
+}: {
+  email: string;
+  message: string;
+  elsewhere?: { href: string; label: string }[];
+}) {
+  return (
+    <div style={{ background: "#FDF6E6", border: "1px solid #E8D9A8", borderRadius: "12px", padding: "13px 14px", marginBottom: "18px" }}>
+      <p style={{ fontSize: "13px", color: "#1A1A17", margin: 0, lineHeight: 1.5 }}>
+        {message} Tu sesión es <strong>{email}</strong>, y entrar aquí la cerrará.
+      </p>
+      {elsewhere && elsewhere.length > 0 && (
+        <div style={{ marginTop: "10px" }}>
+          {elsewhere.map((p) => (
+            <a key={p.href} href={p.href} style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#0E5C4A", textDecoration: "none", padding: "3px 0" }}>
+              {p.label} →
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

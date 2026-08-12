@@ -3,7 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { LoginForm } from "@/components/features/login-form";
 import { createClient } from "@/lib/supabase/server";
 import { audiencesOf, PRODUCT_DOOR } from "@/lib/auth/audiences";
-import { ProductDoor } from "@/components/features/product-door";
+import { ForeignSessionNotice } from "@/components/features/product-door";
 
 export const dynamic = "force-dynamic";
 
@@ -19,30 +19,26 @@ export default async function EmployerSignInPage({ params }: { params: { locale:
   const { data: { user } } = await createClient().auth.getUser();
   const audiences = audiencesOf(user);
 
-  if (user && !audiences.includes("staff")) {
-    const elsewhere = [
-      audiences.includes("employee") && { href: `/${params.locale}${PRODUCT_DOOR.employee}`, label: "Portal del empleado" },
-      audiences.includes("candidate") && { href: `/${params.locale}${PRODUCT_DOOR.candidate}`, label: "Mi cuenta de candidato" },
-    ].filter(Boolean) as { href: string; label: string }[];
-
-    return (
-      <ProductDoor
-        product="staff"
-        eyebrow="Acceso interno"
-        title="Administración de empresa"
-        signedInAs={user.email ?? ""}
-        noAccess="Tu cuenta no está dada de alta en la administración de ninguna empresa."
-        hint="Si tu empresa ya usa TalentOS, pide que te añadan al equipo. Si vienes a crearla, cierra sesión y regístrate."
-        elsewhere={elsewhere}
-      />
-    );
-  }
+  const foreign = user && !audiences.includes("staff") ? user.email ?? "" : null;
+  const elsewhere = [
+    audiences.includes("employee") && { href: `/${params.locale}${PRODUCT_DOOR.employee}`, label: "Portal del empleado" },
+    audiences.includes("candidate") && { href: `/${params.locale}${PRODUCT_DOOR.candidate}`, label: "Mi cuenta de candidato" },
+  ].filter(Boolean) as { href: string; label: string }[];
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 20px", background: "radial-gradient(130% 80% at 50% -10%, #F7F3EB 0%, #F4F0E8 60%)" }}>
-      <Suspense>
-        <LoginForm />
-      </Suspense>
+      <div style={{ width: "100%", maxWidth: "392px" }}>
+        {foreign && (
+          <ForeignSessionNotice
+            email={foreign}
+            message="Tu cuenta no está dada de alta en la administración de ninguna empresa."
+            elsewhere={elsewhere}
+          />
+        )}
+        <Suspense>
+          <LoginForm />
+        </Suspense>
+      </div>
     </div>
   );
 }

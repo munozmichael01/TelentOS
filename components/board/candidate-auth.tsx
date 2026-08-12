@@ -26,7 +26,7 @@ export function CandidateAuth({ locale, companySession = false }: { locale: stri
   const searchParams = useSearchParams();
   const emailParam = searchParams ? (searchParams.get("email") || "") : "";
 
-  const [mode, setMode] = useState<"signin" | "signup">("signup");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [form, setForm] = useState({ firstName: "", lastName: "", email: emailParam, password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
