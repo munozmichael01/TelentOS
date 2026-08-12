@@ -19,12 +19,16 @@ Origen: `AUD-*` = auditoría técnica (doc en `handoff/`, solo local) · `P6-*` 
 | P6-a | **Numeración legal per-empresa** del `slip_number` (formato `{period_month}-{n}` se repite entre empresas) | `payslips`, `runs/[id]/route.ts` | ER | La doble-generación de recibos **ya está cerrada** (unique `payslips.pay_run_line_id`, migr `0035`); lo que queda es la numeración legal, que va con los packs de país |
 | REL-loop | React "Maximum update depth exceeded" en burst (dev/edge) | `RedirectBoundary` de Next (`redirect-boundary.js`) en RSC fetch fallido de un redirect | Monitor | **Mecanismo:** el `RedirectBoundary` de Next hace `router.replace` en un effect y entra en bucle cuando falla la carga del RSC payload del destino (`Failed to fetch RSC payload for .../login`). Contenido por React (~50 iters, cae a browser nav, el usuario llega a /login). NO es código propio (app-shell/effects limpios). **Downgrade de PR→Monitor (2026-07-11):** NO reproducible limpio single-origin. El camino representativo de prod (sesión expirada + full reload) **redirige a /login sin loop** — verificado. Los floats observados fueron en dev (HMR invalida chunks RSC) y en un repro de prod **contaminado cross-origin** (fetch a :3001 mientras servía :3002). Evidencia de impacto sistemático en prod real: débil. **Decisión:** no parchear auth a ciegas (prod auto-deploy, alto blast radius, fix no verificable sin repro). **Camino correcto:** añadir monitoreo de errores de cliente (Sentry/equiv) para tener señal real de si dispara para usuarios; fijar sólo con repro real o señal de prod. Ver OBS-monitoring |
 | OBS-monitoring | Sin monitoreo de errores de cliente en prod (no Sentry/equiv) | global | PR | Con Vercel = prod y sin observabilidad, no sabemos si REL-loop u otros errores de cliente afectan a usuarios reales. Necesita DSN/cuenta del usuario. Habilita cerrar REL-loop con datos en vez de a ciegas |
+| T11 | **Guardas de rol solo en el NAV, no en el servidor**: `app-shell` esconde el enlace de Candidatos a quien no le toca, pero `candidates/page.tsx`, `candidates/[id]` y `applications/[id]` no llevan `requireRole` — quien escriba la URL entra igual | `app/[locale]/employer/(workspace)/**` | **PR — ALTA** | La RLS aísla entre EMPRESAS, así que no hay fuga entre clientes; lo que no se impone es el reparto por rol DENTRO de la empresa. Salió al verificar el cierre del bucket de CV, donde `files/sign` tenía el mismo hueco (ya corregido exigiendo rol). Falta el barrido de páginas |
+| T10 | Ruta plana en el bucket `logos` (`logo-{ts}-{nombre}`, sin carpeta de empresa) → la política de Storage no puede acotarla por inquilino | `components/features/company-form.tsx` | ER | Mitigado en migr. 0081: a `logos` le queda solo INSERT (nada actualiza ni borra logos), así que el daño posible es subir ficheros de más, no pisar los de otra empresa. Acotarlo de verdad exige ruta `{company_id}/…` y migrar los objetos |
 | SEC-pwned | "Prevent use of leaked passwords" desactivado (Supabase Auth → Attack Protection) | Supabase Auth | PR | Valida contraseñas contra HaveIBeenPwned. **Solo disponible en plan Pro+** → se activará al lanzar con Pro. Los 3 toggles gratis (secure password/email change, min length 8) sí están activados |
 
 ## Resuelto
 
 | ID | Qué | Commit |
 |---|---|---|
+| SEC-cvs | **El bucket `cvs` estaba abierto a cualquier cuenta autenticada**: `legacy_buckets_authenticated` era `for all` con el nombre del bucket como única condición, así que un candidato cualquiera podía listar el bucket entero, descargar CV ajenos, firmarles URLs y **sobrescribirlos**. Datos personales de terceros. Reproducido con sesión real antes de tocar. El bucket queda SIN políticas (todos los caminos del servidor van con service_role) y `files/sign` pasa a firmar con admin en vez de con la sesión del usuario | migr. `0081` |
+| SEC-cvs-rol | `files/sign` comprobaba la empresa pero no el rol: un `employee` podía firmar el CV de cualquier candidato de su empresa llamando al endpoint a mano | ver T11 |
 | AUD-H1 | Festivos apuntaban a ruta inexistente | `3346730` |
 | AUD-H6a | Mutaciones fire-and-forget → helper `apiFetch` con error visible | `3346730` |
 | AUD-H3 | `careers/apply` sin rate-limit, con data poisoning | `b2cafd8` |
@@ -103,24 +107,3 @@ laxas mientras el único consumidor era el dashboard de RR.HH.
 | Cálculo de saldo | en línea en la ficha del empleado del admin | `lib/absences/balance.ts` (admin y portal, mismo número) |
 | Tarjeta de saldo | ~90 líneas de markup en la ficha | `AllowanceBalanceCard` |
 | Formulario de ausencia | modal del admin; el selector de tramo escrito **tres** veces | `AbsenceRequestForm` (`absence-panel.tsx`: 780 → 552 líneas) |
-
-### T10 · Ruta plana en el bucket `logos` — BAJA (2026-08-12)
-
-Los logos se suben a `logo-{timestamp}-{nombre}`, sin carpeta de empresa, así que la política de
-Storage no puede acotarlos por tenant. Al cerrar `cvs` (migr. 0081) se le dejó a `logos` solo
-INSERT para autenticados —nada en el código actualiza ni borra logos, cada subida crea ruta
-nueva— con lo que el daño posible se reduce a subir ficheros de más, no a pisar los de otra
-empresa. Para acotarlo de verdad hay que cambiar la ruta a `{company_id}/…` en
-`components/features/company-form.tsx` y migrar los objetos existentes.
-
-### T11 · Las pantallas de `/employer/*` se protegen por el NAV, no por el servidor — ALTA (2026-08-12)
-
-`app-shell.tsx` decide qué entradas del menú ve cada rol (`/employer/candidates` solo owner,
-hr_admin y recruiter), pero **las páginas no llevan `requireRole`**: `candidates/page.tsx`,
-`candidates/[id]/page.tsx` y `applications/[id]/page.tsx` no comprueban el rol. Un `manager` o un
-`employee` que escriba la URL a mano entra igual. Lo que contiene el daño hoy es la RLS —el
-aislamiento por empresa sí es real— pero el reparto por rol dentro de la empresa no se está
-imponiendo en el servidor.
-
-Salió al verificar el cierre del bucket de CV: el endpoint `files/sign` tenía el mismo hueco (ya
-corregido ahí exigiendo rol). Falta el barrido de las páginas.
