@@ -93,59 +93,58 @@ no necesitan esto, pero el filtro explícito tampoco sobra.
 
 ### Los tres productos y el board — directorios y navegación
 
-TalentOS no es una app con vistas: son **tres productos** con puerta propia, más el job board
-público. Una persona **se da de alta en cada uno por separado**, con el mismo email y la misma
-contraseña si quiere. Tener cuenta en el board no da el admin.
+TalentOS son **tres productos** con puerta propia, más el job board público. El "qué es cada uno
+y quién se da de alta" está en [productos-acceso-y-mercados.md](docs/functional/productos-acceso-y-mercados.md);
+aquí van solo los invariantes que hay que respetar al escribir código.
 
 ```
 /[locale]/
 ├── /  ·  /producto/*  ·  /pricing     marketing público
-├── /empleos/*   (/jobs, /vagas)       JOB BOARD público — slugs LOCALIZADOS, es el activo SEO
+├── /empleos/*   (/jobs)               JOB BOARD público — slugs LOCALIZADOS, es el activo SEO
 ├── /careers/*                         career sites de empresa (público)
 │
-├── /employer/                         PRODUCTO · Admin B2B
-│   ├── sign-in                        puerta (con registro de empresa)
-│   ├── onboarding                     crear empresa — fuera del layout, aún no la tiene
+├── /employer/                         Admin B2B
+│   ├── sign-in · onboarding           públicos — FUERA del layout protegido
 │   └── (workspace)/…                  dashboard, jobs, candidates, employees, payroll, settings
-├── /employee/                         PRODUCTO · Portal del empleado
-│   ├── sign-in                        puerta (sin registro: el alta la da la empresa)
+├── /employee/                         Portal del empleado
+│   ├── sign-in                        público — FUERA del layout protegido
 │   └── (portal)/…                     profile, time-off, hours, payslips, documents, performance
-├── /candidate/                        PRODUCTO · Cuenta del candidato
-│   ├── sign-in                        puerta (con registro)
-│   └── profile                        perfil y candidaturas
+├── /candidate/                        Cuenta del candidato
+│   ├── sign-in                        público
+│   └── profile
 │
 └── /auth/*                            mecanismo compartido: callback y reset de contraseña
 ```
 
-**Los tres productos NO se localizan** (son privados, sin valor SEO, y un path estable por
-producto es lo que hace legible el reparto). El board sí: ahí los slugs por idioma son el activo.
+Cuatro reglas duras:
 
-`(workspace)` y `(portal)` son grupos de rutas: **no aparecen en la URL**. Existen para que el
-layout que exige sesión envuelva solo la zona privada. Tener la puerta dentro de ese layout hace
-que la pantalla de entrada se redirija a sí misma — pasó, y tumbó el login en producción.
+1. **Los tres productos NO se localizan.** Son privados y sin valor SEO; un path estable por
+   producto es lo que hace legible el reparto. El board sí: ahí los slugs por idioma son el activo.
+2. **La puerta de un producto nunca cuelga del layout que exige sesión.** Para eso están los
+   grupos `(workspace)` y `(portal)`, que no aparecen en la URL. Tenerla dentro hace que la
+   pantalla de entrada se redirija a sí misma — pasó, y tumbó el login en producción.
+3. **Nunca se redirige de un producto a otro.** Quien pide uno sin alta va a la puerta DE ESE
+   producto. Saltar entre productos producía el bucle `/app/dashboard ⇄ /me/profile`
+   (docs/auditoria-autenticacion.md).
+4. **La puerta enseña SIEMPRE su formulario**, también con una sesión ajena abierta; el aviso va
+   encima, nunca en lugar del formulario. Quitarlo deja a la persona sin salida.
 
-**Regla dura: nunca se redirige de un producto a otro.** Quien pide uno en el que no tiene alta
-va a la puerta DE ESE producto, que se lo explica y le ofrece las suyas. Saltar de producto es lo
-que producía el bucle infinito `/app/dashboard ⇄ /me/profile` (docs/auditoria-autenticacion.md).
-Para cambiar de producto se sale y se entra por su puerta; no hay selector de contexto.
+Rutas anteriores (`/app/*`, `/me/*`, `/cuenta|/account|/conta`, `/login`, `/onboarding`)
+redirigen desde el middleware — hay invitaciones enviadas y marcadores vivos.
 
 ### Altas por producto (`app_metadata.audiences`)
 
-Lista, no valor único, y **el registro de altas** — ver `lib/auth/audiences.ts`:
+Lista, no valor único, y es el registro de altas — `lib/auth/audiences.ts`:
 
 1. **Solo crece por alta explícita.** `grantAudience` añade; nunca reescribe. Antes era un valor
    único y cada alta pisaba la anterior: invitar al portal a quien administraba la empresa lo
    expulsaba del admin, y a un ex-candidato le borraba sus candidaturas.
-2. **Da acceso a la PUERTA; los hechos deciden lo de dentro.** `company_members`, `employees` y
-   `candidates` mandan sobre lo que se ve, con la RLS como barrera real. Si un alta miente
-   (ficha borrada), el producto la caduca con `revokeAudience` y su puerta lo explica.
+2. **Da acceso a la PUERTA; los hechos deciden lo de dentro.** Si un alta miente (ficha borrada),
+   el producto la caduca con `revokeAudience` y su puerta lo explica.
 3. **Sin alta no se entra a ninguno.** Ausencia de claim ya no significa "personal de empresa".
 
 Vive en `app_metadata` y no en `user_metadata` porque este último lo reescribe el propio usuario
 con `auth.updateUser`: allí el gating sería decorativo.
-
-Rutas anteriores (`/app/*`, `/me/*`, `/cuenta|/account|/conta`, `/login`, `/onboarding`)
-redirigen desde el middleware — hay invitaciones enviadas y marcadores vivos.
 
 ### RBAC — roles
 
