@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
   const { data: member } = await admin
     .from("company_members")
-    .select("company_id")
+    .select("company_id, role")
     .eq("user_id", user.id)
     .maybeSingle();
   if (!member?.company_id) return jsonError("Sin empresa configurada", 403);
@@ -46,7 +46,16 @@ export async function POST(req: Request) {
     if (empCompanyId !== company_id) return jsonError("Recurso no autorizado", 403);
     storagePath = doc.file_url;
   } else {
-    // bucket === "cvs": resolve path from candidates record, verify via applications
+    // bucket === "cvs": el CV es dato de reclutamiento, no de la empresa entera. La comprobación
+    // era solo de EMPRESA, así que un `employee` —que no tiene nada que hacer en reclutamiento y
+    // ni siquiera ve el enlace en su nav— podía firmar el CV de cualquier candidato de su empresa
+    // llamando al endpoint a mano. Se exigen los mismos roles que guardan las pantallas de
+    // candidatos.
+    if (!["owner", "hr_admin", "recruiter"].includes(member.role as string)) {
+      return jsonError("Recurso no autorizado", 403);
+    }
+
+    // Path desde la ficha del candidato, verificado contra las ofertas de la empresa.
     const { data: candidate } = await admin
       .from("candidates")
       .select("id, cv_url")

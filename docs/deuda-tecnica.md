@@ -112,3 +112,15 @@ INSERT para autenticados —nada en el código actualiza ni borra logos, cada su
 nueva— con lo que el daño posible se reduce a subir ficheros de más, no a pisar los de otra
 empresa. Para acotarlo de verdad hay que cambiar la ruta a `{company_id}/…` en
 `components/features/company-form.tsx` y migrar los objetos existentes.
+
+### T11 · Las pantallas de `/employer/*` se protegen por el NAV, no por el servidor — ALTA (2026-08-12)
+
+`app-shell.tsx` decide qué entradas del menú ve cada rol (`/employer/candidates` solo owner,
+hr_admin y recruiter), pero **las páginas no llevan `requireRole`**: `candidates/page.tsx`,
+`candidates/[id]/page.tsx` y `applications/[id]/page.tsx` no comprueban el rol. Un `manager` o un
+`employee` que escriba la URL a mano entra igual. Lo que contiene el daño hoy es la RLS —el
+aislamiento por empresa sí es real— pero el reparto por rol dentro de la empresa no se está
+imponiendo en el servidor.
+
+Salió al verificar el cierre del bucket de CV: el endpoint `files/sign` tenía el mismo hueco (ya
+corregido ahí exigiendo rol). Falta el barrido de las páginas.
