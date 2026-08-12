@@ -51,8 +51,18 @@ export async function middleware(request: NextRequest) {
   // 0) Mercado cerrado → su equivalente abierto, antes de que next-intl lo dé por inexistente.
   const closed = request.nextUrl.pathname.match(closedLocaleRe);
   if (closed) {
+    const target = resolveLocale(closed[1]);
+    const rest = request.nextUrl.pathname.replace(closedLocaleRe, "");
+    // Si además cambia el IDIOMA (cerramos `pt` entero, así que pt-br → es-ve), los slugs del
+    // board dejan de valer: `/vagas` no existe en español. Se cae a la raíz del board en el
+    // idioma destino en vez de a un 404. El resto de rutas no se localizan, así que se conservan.
+    const langChanged = closed[1].split("-")[0] !== target.split("-")[0];
+    const boardRoot: Record<string, string> = { es: "/empleos", en: "/jobs", pt: "/vagas" };
     const open = request.nextUrl.clone();
-    open.pathname = request.nextUrl.pathname.replace(closedLocaleRe, `/${resolveLocale(closed[1])}`);
+    open.pathname =
+      langChanged && /^\/(empleos|jobs|vagas)(\/|$)/.test(rest)
+        ? `/${target}${boardRoot[target.split("-")[0]] ?? "/empleos"}`
+        : `/${target}${rest}`;
     return NextResponse.redirect(open);
   }
 
