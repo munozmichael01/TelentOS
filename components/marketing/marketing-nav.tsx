@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { type Locale, type StaticPathname } from "@/i18n/routing";
+import { routing, type Locale, type StaticPathname } from "@/i18n/routing";
 import { LogoMark, MIcon, type IconName } from "./icons";
 
 const ARCHIVO = "'Archivo',sans-serif";
@@ -43,11 +43,15 @@ const MENU_COLS: MenuCol[] = [
 // Selector de IDIOMA de marketing: un locale primario por idioma. es-es es un mercado del
 // board (idioma español), no una opción de idioma de marketing → no se lista aquí (sus rutas
 // no-board redirigen a es-ve).
-const MARKETING_LOCALES = ["es-ve", "en-us", "pt-br"] as const;
-const LOCALE_LABELS: Partial<Record<Locale, string>> = {
-  "es-ve": "Español (Venezuela)",
-  "en-us": "English (US)",
-  "pt-br": "Português (Brasil)",
+// Se derivan de los mercados ABIERTOS, no de una lista escrita a mano: la lista fija seguía
+// ofreciendo "English (US)" y "Português (Brasil)" después de cerrar esos mercados, y al pulsar
+// portugués el usuario se quedaba en es-ve sin ninguna explicación.
+const MARKETING_LOCALES = routing.locales as readonly Locale[];
+const LANG_LABELS: Record<string, string> = { es: "Español", en: "English", pt: "Português" };
+const COUNTRY_LABELS: Record<string, string> = { ve: "Venezuela", es: "España", br: "Brasil", us: "US" };
+const localeLabel = (l: Locale | string) => {
+  const [lang, country] = l.split("-");
+  return `${LANG_LABELS[lang] ?? lang} (${COUNTRY_LABELS[country] ?? country.toUpperCase()})`;
 };
 
 export function MarketingNav() {
@@ -131,7 +135,7 @@ export function MarketingNav() {
                       style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "8px 10px", fontFamily: "'Hanken Grotesk',sans-serif", fontSize: 13, fontWeight: l === locale ? 700 : 600, color: l === locale ? "var(--brand)" : "#54504A", background: "transparent", border: "none", cursor: "pointer" }}
                     >
                       <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: ".5px", color: l === locale ? "var(--brand)" : "var(--soft)", border: "1px solid", borderColor: l === locale ? "#BEE0CE" : "var(--line)", borderRadius: 6, padding: "1px 5px" }}>{(l.split("-")[1] ?? l).toUpperCase()}</span>
-                      {LOCALE_LABELS[l]}
+                      {localeLabel(l)}
                     </button>
                   ))}
                 </div>

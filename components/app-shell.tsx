@@ -149,41 +149,12 @@ const LogoMark = () => (
   </svg>
 );
 
-type Role = "owner" | "hr_admin" | "recruiter" | "manager" | "employee";
+import { SECTION_ROLES, type Role } from "@/lib/auth/section-roles";
 type NavSection = { section: string; brand?: boolean };
 
-// roles that can see each nav item; omit key = visible to all roles
-const NAV_ROLES: Record<string, Role[]> = {
-  // El rol `employee` solo ve su portal (/me/*). Todo lo demás del dashboard es de
-  // empresa, así que se restringe explícitamente: antes estos ítems no tenían regla y por
-  // tanto eran visibles para todos los roles, incluido el empleado.
-  "/employer/dashboard":          ["owner", "hr_admin", "recruiter", "manager"],
-  "/employer/employees":          ["owner", "hr_admin", "manager"],
-  "/employer/org":                ["owner", "hr_admin", "recruiter", "manager"],
-  "/employer/settings/absences":  ["owner", "hr_admin"],
-  "/employer/settings/schedules": ["owner", "hr_admin"],
-  // reclutamiento — manager no tiene acceso al pipeline de selección
-  "/employer/jobs":               ["owner", "hr_admin", "recruiter"],
-  "/employer/candidates":         ["owner", "hr_admin", "recruiter"],
-  "/employer/career-site":        ["owner", "hr_admin", "recruiter"],
-  "/employer/channels":            ["owner", "hr_admin", "recruiter"],
-  // personas — manager solo ve su equipo (scoping via RLS en backend)
-  "/employer/timeoff":            ["owner", "hr_admin", "manager"],
-  "/employer/timeoff/calendar":   ["owner", "hr_admin", "manager"],
-  "/employer/hours":              ["owner", "hr_admin", "manager"],
-  // sensibles — solo admin
-  "/employer/hours/compensation": ["owner", "hr_admin"],
-  // payroll — solo owner/hr_admin (datos financieros sensibles)
-  "/employer/payroll":            ["owner", "hr_admin"],
-  "/employer/payroll/runs":       ["owner", "hr_admin"],
-  "/employer/payroll/profiles":   ["owner", "hr_admin"],
-  "/employer/settings":           ["owner", "hr_admin"],
-  "/employer/settings/team":      ["owner"],
-  "/employer/settings/billing":   ["owner"],
-  "/employer/settings/compliance": ["owner", "hr_admin"],
-  "/employer/settings/payroll":    ["owner", "hr_admin"],
-  "/employer/settings/skills":     ["owner", "hr_admin", "recruiter"],
-};
+// Los roles de cada sección son la MISMA lista que imponen los layouts del servidor
+// (lib/auth/section-roles.ts). Tenerla aquí sola era el bug: el menú escondía, la ruta no.
+const NAV_ROLES = SECTION_ROLES;
 
 const ALL_NAV = [
   { href: "/employer/dashboard",          label: "Dashboard",    Icon: IconDashboard },

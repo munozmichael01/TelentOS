@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { PRODUCT_HOME } from "@/lib/auth/audiences";
 
 /**
  * Puerta de un producto: la pantalla de entrada, y lo único público de su namespace.
@@ -63,8 +64,10 @@ export function ProductDoor({
       setError("Email o contraseña incorrectos.");
       return;
     }
-    // El middleware decide a dónde: si hay alta en este producto, entra; si no, vuelve aquí y
-    // esta misma pantalla explica por qué. No se adivina el destino desde el cliente.
+    // `router.refresh()` a secas repinta la puerta pero deja la barra de direcciones en
+    // /sign-in, porque no sigue el redirect del middleware. Se navega al producto y se refresca
+    // para que el servidor vuelva a evaluar el alta (si no la tiene, esta pantalla lo dirá).
+    router.replace(PRODUCT_HOME[product] as never);
     router.refresh();
   }
 
