@@ -1,10 +1,69 @@
-# Roles y control de acceso
+# Productos, acceso y mercados
 
-## Qué es
+> Actualizado el 12-ago-2026, tras separar TalentOS en tres productos y cerrar todos los
+> mercados menos Venezuela. La versión anterior de este documento (jul 2026) describía una sola
+> aplicación con roles; eso ya no es exacto.
 
-Cada usuario que entra a TalentOS tiene un **rol** que determina qué módulos ve y qué acciones puede ejecutar. El rol es por empresa: si alguien pertenece a dos empresas en el futuro, tiene un rol distinto en cada una.
+## El modelo en una frase
 
-Hoy (Fase 1) la plataforma es de un solo tenant. El modelo está diseñado para multi-tenant desde el inicio: todas las filas de membresía viven en `company_members(company_id, user_id, role)`.
+TalentOS no es una aplicación con vistas distintas según quién entra: son **tres productos**
+con puerta propia, más un job board público. Dentro de cada producto, el **rol** decide qué se
+ve y qué se puede hacer.
+
+Son dos preguntas encadenadas y conviene no mezclarlas:
+
+1. **¿A qué producto puedo entrar?** Lo decide el **alta** (`app_metadata.audiences`).
+2. **Una vez dentro, ¿qué puedo hacer?** Lo decide el **rol** (`company_members.role`), y lo
+   impone la RLS en base de datos.
+
+---
+
+## Los tres productos
+
+| Producto | Entrada | Quién entra | Cómo se da de alta |
+|---|---|---|---|
+| **Job board** | `/{locale}/empleos` | Cualquiera | No hace falta cuenta |
+| **Admin B2B** | `/{locale}/employer/sign-in` | Empresa: owner, hr_admin, recruiter, manager | Registro propio (crea la empresa) o invitación al equipo |
+| **Portal del empleado** | `/{locale}/employee/sign-in` | Plantilla | **Solo por invitación de su empresa.** No hay autoservicio |
+| **Cuenta del candidato** | `/{locale}/candidate/sign-in` | Candidatos | Registro propio desde el board |
+
+**Una persona se da de alta en cada producto por separado**, y puede usar el mismo email y la
+misma contraseña en los tres. Tener cuenta en el board no da el admin. Es habitual tener varias:
+un fundador es owner de su empresa, empleado de ella, y puede ser candidato en otra.
+
+**No hay selector de contexto.** Para cambiar de producto se sale y se entra por su puerta. Si
+una persona tiene alta en varios, la puerta a la que llega le enseña enlaces a los otros.
+
+**Nunca se salta de un producto a otro automáticamente.** Quien pide un producto en el que no
+tiene alta llega a la puerta de *ese* producto, que le explica la situación. Esta regla no es un
+detalle de implementación: saltar entre productos producía un bucle infinito de redirects que
+dejaba cuentas encerradas sin poder ni cerrar sesión (`docs/auditoria-autenticacion.md`).
+
+### Qué pasa si el alta deja de sostenerse
+
+El alta da acceso a la **puerta**; lo que se ve dentro lo mandan los datos. Si a alguien le
+retiran su ficha de empleado, el portal caduca su alta y su puerta se lo dice. No se le manda a
+otro producto.
+
+---
+
+## Mercados e idiomas
+
+El locale es **idioma-país** (`es-ve`, `en-ve`). Hoy hay **un solo mercado abierto, Venezuela, en
+español e inglés**. La plataforma admite 3 idiomas × 4 países; abrir un mercado nuevo es añadirlo
+a `ACTIVE_COUNTRIES` en `i18n/routing.ts` y hereda toda la lógica de abajo sin más trabajo.
+
+**Qué significa el país:**
+
+- **En el job board**, y solo ahí: se ven **todas** las ofertas, salgan de donde salgan. Las del
+  país seleccionado aparecen **primero**, y el resto se ordenan por la relevancia propia del
+  buscador. El país **ordena, no filtra**. Nadie ve una lista vacía por elegir un mercado.
+- **Fuera del board no significa nada.** Marketing, admin y portal solo distinguen idioma; lo
+  legal y de nómina se configura por empresa dentro del producto, no por la URL.
+
+Las URLs de mercados cerrados **no dan 404**: redirigen al equivalente abierto conservando el
+idioma (`en-us` → `en-ve`). Si el idioma también está cerrado, van al español; y como los slugs
+del board están traducidos, la ruta cae a la raíz del board (`/pt-br/vagas` → `/es-ve/empleos`).
 
 ---
 
@@ -16,9 +75,10 @@ Hoy (Fase 1) la plataforma es de un solo tenant. El modelo está diseñado para 
 | `hr_admin` | HR del día a día | Todo excepto billing |
 | `recruiter` | Reclutador | Solo pipeline: ofertas, candidatos, career site, canales |
 | `manager` | Responsable de equipo | Solo su subárbol del organigrama (Fase 2) |
-| `employee` | Empleado en autoservicio | Solo lo propio: perfil, ausencias, fichaje (portal aparte, planificado) |
+| `employee` | Empleado en autoservicio | Solo lo propio, y en el portal del empleado (producto aparte) |
 
-`manager` y `employee` no se construyen en Fase 1. El enum los incluye ya para no romper el esquema cuando lleguen.
+Un miembro con rol `employee` **no entra al admin B2B**: su producto es el portal. El resto de
+roles sí, y muchos de ellos son además plantilla, así que tienen las dos altas.
 
 ---
 
