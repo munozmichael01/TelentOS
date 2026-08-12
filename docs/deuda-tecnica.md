@@ -103,3 +103,12 @@ laxas mientras el único consumidor era el dashboard de RR.HH.
 | Cálculo de saldo | en línea en la ficha del empleado del admin | `lib/absences/balance.ts` (admin y portal, mismo número) |
 | Tarjeta de saldo | ~90 líneas de markup en la ficha | `AllowanceBalanceCard` |
 | Formulario de ausencia | modal del admin; el selector de tramo escrito **tres** veces | `AbsenceRequestForm` (`absence-panel.tsx`: 780 → 552 líneas) |
+
+### T10 · Ruta plana en el bucket `logos` — BAJA (2026-08-12)
+
+Los logos se suben a `logo-{timestamp}-{nombre}`, sin carpeta de empresa, así que la política de
+Storage no puede acotarlos por tenant. Al cerrar `cvs` (migr. 0081) se le dejó a `logos` solo
+INSERT para autenticados —nada en el código actualiza ni borra logos, cada subida crea ruta
+nueva— con lo que el daño posible se reduce a subir ficheros de más, no a pisar los de otra
+empresa. Para acotarlo de verdad hay que cambiar la ruta a `{company_id}/…` en
+`components/features/company-form.tsx` y migrar los objetos existentes.

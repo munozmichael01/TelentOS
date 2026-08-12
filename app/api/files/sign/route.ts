@@ -74,7 +74,11 @@ export async function POST(req: Request) {
     storagePath = candidate.cv_url;
   }
 
-  const { data, error: signErr } = await supabase.storage
+  // Se firma con el cliente admin, no con la sesión del usuario: la autorización ya está hecha
+  // arriba (se resuelve el path desde la base y se comprueba que el recurso es de su empresa).
+  // Firmar con la sesión obligaba a dar permiso de lectura directa sobre el bucket, que es
+  // justo lo que dejaba los CV de todos los candidatos al alcance de cualquiera (migr. 0081).
+  const { data, error: signErr } = await admin.storage
     .from(body.bucket)
     .createSignedUrl(storagePath, 60 * 10);
   if (signErr) return jsonError(signErr.message, 500);
