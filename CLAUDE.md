@@ -87,7 +87,7 @@ consulta desde el admin sin `.eq("company_id", …)` explícito ve el catálogo 
 
 Caso real (2026-08): el KPI "Ofertas activas" del dashboard mostraba **3.225** —el total de la
 plataforma— a una empresa con 10, y el informe de canales **listaba títulos de ofertas de otras
-empresas**. Regla: toda consulta a `jobs` desde `/app/*` o sus APIs lleva `company_id` explícito,
+empresas**. Regla: toda consulta a `jobs` desde `/employer/*` o sus APIs lleva `company_id` explícito,
 aunque parezca redundante. Las tablas que sí se scopean por RLS (`employees`, `applications`…)
 no necesitan esto, pero el filtro explícito tampoco sobra.
 
@@ -160,20 +160,20 @@ Guards:
 
 | Módulo | Estado | Rutas |
 |---|---|---|
-| **Reclutamiento** (Jobs, Kanban, Career Site) | ✅ Completo | `/jobs`, `/candidates`, `/career-site`, `/canales` |
-| **Personas** (Empleados, Org) | ✅ Completo | `/employees`, `/org` |
-| **Ausencias** | ✅ Completo | `/timeoff`, `/timeoff/calendar`, `/settings/absences` |
-| **Horas** | ✅ Completo | `/horas`, `/horas/compensacion` |
-| **Compliance** | ✅ Completo | `/settings/compliance` |
-| **Horarios** | ✅ Completo | `/settings/schedules` |
-| **Payroll** | 🚧 En implementación — spec y protocolo en `handoff/Handoff Claude Code - Payroll spec producto.md` (§8 con puertas de AC) | `/payroll`, `/payroll/runs`, `/payroll/profiles` |
+| **Reclutamiento** (Jobs, Kanban, Career Site) | ✅ Completo | `/employer/jobs`, `/employer/candidates`, `/employer/career-site`, `/employer/channels` |
+| **Personas** (Empleados, Org) | ✅ Completo | `/employer/employees`, `/employer/org` |
+| **Ausencias** | ✅ Completo | `/employer/timeoff`, `/employer/timeoff/calendar`, `/employer/settings/absences` |
+| **Horas** | ✅ Completo | `/employer/hours`, `/employer/hours/compensation` |
+| **Compliance** | ✅ Completo | `/employer/settings/compliance` |
+| **Horarios** | ✅ Completo | `/employer/settings/schedules` |
+| **Payroll** | 🚧 En implementación — spec y protocolo en `handoff/Handoff Claude Code - Payroll spec producto.md` (§8 con puertas de AC) | `/employer/payroll`, `/employer/payroll/runs`, `/employer/payroll/profiles` |
 | **Onboarding** | ✅ Completo | vía `application_events` + tareas |
-| **Desempeño** (Performance Management) | 🚧 **Bloque 1 en prod** (cimientos): cargo canónico en la ficha, competencias del puesto, expediente y portal del empleado. Bloques 2–4 pendientes — [spec](docs/Performance%20Management/talentos-desempeno-spec.md) + [backlog](docs/Performance%20Management/talentos-desempeno-backlog.md) | pestañas de `/app/employees/[id]` + portal `/me/*` |
-| **Portal del empleado** | ✅ v2 en prod — superficie SEPARADA del admin B2B, con escritura | `/me/profile` · `/me/performance` · `/me/time-off` · `/me/hours` · `/me/payslips` · `/me/documents` |
+| **Desempeño** (Performance Management) | 🚧 **Bloque 1 en prod** (cimientos): cargo canónico en la ficha, competencias del puesto, expediente y portal del empleado. Bloques 2–4 pendientes — [spec](docs/Performance%20Management/talentos-desempeno-spec.md) + [backlog](docs/Performance%20Management/talentos-desempeno-backlog.md) | pestañas de `/employer/employees/[id]` + portal `/employee/*` |
+| **Portal del empleado** | ✅ v2 en prod — superficie SEPARADA del admin B2B, con escritura | `/employee/profile` · `/employee/performance` · `/employee/time-off` · `/employee/hours` · `/employee/payslips` · `/employee/documents` |
 
 **Payroll**: el esquema (migraciones 0016–0019) existe; el ciclo funcional se está implementando según la spec de `handoff/`. Reglas clave: el pack `generic` es el único activo (VE/BR/ES son mocks en preview); **el dinero nunca fluye automáticamente del ATS a nómina** — los campos `offer_*` de la candidatura solo pre-rellenan el formulario de compensación que RR.HH. confirma al contratar (el auto-create de `pay_profiles` en `hire/route.ts` fue revertido a propósito: no reintroducirlo).
 
-**Desempeño / Performance Management** (no confundir con rendimiento de la app) = evaluaciones de desempeño, objetivos, feedback continuo, planes de desarrollo y mejora, promociones e historial. **Bloque 1 (cimientos) en producción**: `employees.job_title_id` (migr. 0070), competencias del puesto derivadas de `job_title_skills` con herencia del ancla, expediente append-only (`employee_events`, migr. 0069) y portal del empleado en `/me/*`. Bloques 2–4 (objetivos y feedback · ciclo formal · consecuencias) pendientes. La spec y el backlog están en `docs/Performance Management/` (los ficheros `performance-management-spec.md` y `performance-backlog-epicas-historias.md` de esa carpeta son una **propuesta externa** que se conserva solo como catálogo de casos borde y criterios de aceptación — el documento de referencia es `talentos-desempeno-spec.md`). Dos bloqueantes estructurales antes de cualquier pantalla de evaluación: **no hay superficie de empleado** (0 de 49 empleados tienen `user_id`; ninguna página admite el rol `employee`) y **falta `employees.job_title_id`** (el cargo es texto libre, sin puente a la taxonomía). Reglas propias del módulo: las competencias **se derivan de `job_title_skills`** (nunca un catálogo paralelo), la escala es de **4 puntos sin punto medio**, y una promoción **pre-rellena** compensación pero nunca escribe en `pay_profiles`.
+**Desempeño / Performance Management** (no confundir con rendimiento de la app) = evaluaciones de desempeño, objetivos, feedback continuo, planes de desarrollo y mejora, promociones e historial. **Bloque 1 (cimientos) en producción**: `employees.job_title_id` (migr. 0070), competencias del puesto derivadas de `job_title_skills` con herencia del ancla, expediente append-only (`employee_events`, migr. 0069) y portal del empleado en `/employee/*`. Bloques 2–4 (objetivos y feedback · ciclo formal · consecuencias) pendientes. La spec y el backlog están en `docs/Performance Management/` (los ficheros `performance-management-spec.md` y `performance-backlog-epicas-historias.md` de esa carpeta son una **propuesta externa** que se conserva solo como catálogo de casos borde y criterios de aceptación — el documento de referencia es `talentos-desempeno-spec.md`). Los dos bloqueantes estructurales que había —no existir superficie de empleado, y que el cargo fuese texto libre sin puente a la taxonomía— **están resueltos**: son justamente lo que entregó el bloque 1. Reglas propias del módulo: las competencias **se derivan de `job_title_skills`** (nunca un catálogo paralelo), la escala es de **4 puntos sin punto medio**, y una promoción **pre-rellena** compensación pero nunca escribe en `pay_profiles`.
 
 ---
 
@@ -300,7 +300,7 @@ Estos temas requieren decisión explícita del producto antes de implementar:
 
 ## Portal del empleado: qué mantiene él y qué la empresa
 
-El portal (`/me/*`) escribe, no solo lee. Dos reglas que se aplican a todo lo que se añada ahí:
+El portal (`/employee/*`) escribe, no solo lee. Dos reglas que se aplican a todo lo que se añada ahí:
 
 **1. Nunca se resuelve "sobre quién actúo" con lo que manda el cliente.** Los endpoints de jornada,
 ausencias y documentos aceptaban `employee_id` en el cuerpo; con el portal abierto eso es fichar o
