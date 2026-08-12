@@ -126,6 +126,10 @@ export async function middleware(request: NextRequest) {
   // Ya dentro y con alta: la puerta sobra.
   if (atDoor) return user && enrolled ? go(PRODUCT_HOME[product.audience]) : response;
 
+  // La RAÍZ del producto no es una pantalla, es un alias de su home. Sin esto, quien tenía alta
+  // pasaba el filtro y se comía un 404 porque no hay página en `/employer` ni en `/employee`.
+  if (bare === product.root && user && enrolled) return go(PRODUCT_HOME[product.audience]);
+
   // Zona privada del producto: sin sesión o sin alta, a SU puerta. Nunca a otro producto.
   if (!user || !enrolled) return go(product.door);
 
