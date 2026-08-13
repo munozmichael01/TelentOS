@@ -8,6 +8,7 @@ import type { Job } from "@/lib/types";
 import type { CareerSiteContent, CareerSiteBranding } from "@/lib/career-site-types";
 import { HEADING_FONTS, BODY_FONTS } from "@/lib/career-site-types";
 import { TrackCareerEvent } from "@/components/features/career-site-track";
+import { careerSiteActive } from "@/lib/board/canonical";
 
 export const dynamic = "force-dynamic";
 
@@ -88,9 +89,13 @@ export default async function CareersPage({ params }: { params: { locale: string
     supabase.from("career_site_pages").select("*").eq("company_id", company.id).eq("is_published", true).maybeSingle(),
   ]);
 
-  // Career inactivo (sin página publicada) → la cara pública es el board. Redirect temporal
-  // para no perder el posicionamiento de la empresa y sus ofertas cuando cae el plan.
-  if (!cmsPage) {
+  // Career inactivo → la cara pública es el board. Redirect temporal para no perder el
+  // posicionamiento de la empresa y sus ofertas cuando cae el plan.
+  //
+  // La condición sale del MISMO helper que usa el board (`careerSiteActive`, con cliente admin) y
+  // no de si esta consulta bajo RLS devolvió fila: preguntarlo cada lado por su cuenta hacía que
+  // el destino canónico dependiera de la sesión del visitante.
+  if (!(await careerSiteActive(company.id))) {
     redirect({ href: { pathname: "/empleos/empresa/[slug]", params: { slug: params.slug } }, locale: params.locale });
   }
 
