@@ -5,7 +5,7 @@ import { dedupeStrings, resolveSkillIds } from "@/lib/skills";
 
 const EDITABLE = [
   "title", "job_title_id", "description", "skills", "salary_min", "salary_max", "salary_currency", "salary_period",
-  "location", "city", "country_code", "employment_type", "sector", "department",
+  "location", "city", "region", "country_code", "employment_type", "sector", "department",
   "category", "category_key", "closes_at", "experience_min_years", "status",
 ] as const;
 
