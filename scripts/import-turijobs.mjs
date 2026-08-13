@@ -167,7 +167,10 @@ async function main() {
       company_id: companyId, title,
       description: stripHtml(val(j.content)) || null,
       salary_min: sal.min, salary_max: sal.max, salary_currency: "EUR", salary_period: sal.period,
-      city, country_code: country, location: region,
+      // `region` ya se extraía pero se escribía en `location` porque la columna no existía
+      // (migr. 0082). Ahora van los tres campos a su sitio, y `location` es la etiqueta legible.
+      city, region, country_code: country,
+      location: [city, region].filter(Boolean).join(", ") || region || city,
       employment_type: empType(val(j.jobtype)),
       category: String(val(j.category) ?? "").trim() || null, category_key: catKey(val(j.category)),
       status: "active", source: "import_xml", external_id: extId,

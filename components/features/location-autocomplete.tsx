@@ -4,8 +4,31 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 type PhotonFeature = {
-  properties: { name: string; city?: string; state?: string; country?: string; type?: string };
+  properties: { name: string; city?: string; state?: string; country?: string; countrycode?: string; type?: string };
 };
+
+/**
+ * Ubicación resuelta contra el gazetteer. Photon (OpenStreetMap) ya devolvía ciudad, región y
+ * país, pero el componente solo emitía la CADENA montada y quien lo usaba guardaba eso en un
+ * campo de texto: los tres campos se tiraban en esa línea. Por eso ninguna oferta creada en el
+ * producto tenía país, y el orden local-first del board no podía funcionar con ellas.
+ */
+export type ResolvedPlace = {
+  label: string;
+  city: string | null;
+  region: string | null;
+  countryCode: string | null;
+};
+
+function toPlace(p: PhotonFeature["properties"]): ResolvedPlace {
+  const city = p.type === "city" ? p.name : (p.city ?? p.name);
+  return {
+    label: formatLocation(p),
+    city: city ?? null,
+    region: p.state && p.state !== city ? p.state : null,
+    countryCode: p.countrycode ? p.countrycode.toUpperCase() : null,
+  };
+}
 
 function formatLocation(p: PhotonFeature["properties"]): string {
   const parts: string[] = [];
@@ -20,6 +43,7 @@ function formatLocation(p: PhotonFeature["properties"]): string {
 export function LocationAutocomplete({
   value,
   onChange,
+  onSelect,
   placeholder = "Madrid, Spain",
   className,
   required,
@@ -27,13 +51,18 @@ export function LocationAutocomplete({
 }: {
   value: string;
   onChange: (v: string) => void;
+  /**
+   * Se dispara al ELEGIR una sugerencia, con la ubicación desmenuzada. Opcional a propósito:
+   * quien solo quiera el texto (perfiles, empresa) sigue con `onChange` y no cambia nada.
+   */
+  onSelect?: (place: ResolvedPlace) => void;
   placeholder?: string;
   className?: string;
   required?: boolean;
   name?: string;
 }) {
   const [query, setQuery] = useState(value);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<ResolvedPlace[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -51,9 +80,10 @@ export function LocationAutocomplete({
         { signal: AbortSignal.timeout(4000) }
       );
       const json = await res.json();
-      const results: string[] = (json.features as PhotonFeature[])
-        .map((f) => formatLocation(f.properties))
-        .filter((s, i, arr) => s && arr.indexOf(s) === i)
+      const seen = new Set<string>();
+      const results: ResolvedPlace[] = (json.features as PhotonFeature[])
+        .map((f) => toPlace(f.properties))
+        .filter((p) => p.label && !seen.has(p.label) && seen.add(p.label))
         .slice(0, 5);
       setSuggestions(results);
       setOpen(results.length > 0);
@@ -71,9 +101,10 @@ export function LocationAutocomplete({
     debounceRef.current = setTimeout(() => search(v), 320);
   }
 
-  function pick(s: string) {
-    setQuery(s);
-    onChange(s);
+  function pick(s: ResolvedPlace) {
+    setQuery(s.label);
+    onChange(s.label);
+    onSelect?.(s);
     setSuggestions([]);
     setOpen(false);
   }
@@ -134,7 +165,7 @@ export function LocationAutocomplete({
                 <path d="M12 21s7-5.6 7-11a7 7 0 10-14 0c0 5.4 7 11 7 11Z" stroke="currentColor" strokeWidth="2"/>
                 <circle cx="12" cy="10" r="2" stroke="currentColor" strokeWidth="2"/>
               </svg>
-              {s}
+              {s.label}
             </button>
           ))}
         </div>

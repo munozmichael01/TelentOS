@@ -278,6 +278,17 @@ export function JobForm({ job, source }: { job?: Job; source?: "manual" | "ai" }
               <LocationAutocomplete
                 value={form.location}
                 onChange={(v) => set("location", v)}
+                // Al elegir del gazetteer se guardan los TRES campos, no solo el texto: es lo que
+                // hace que la oferta exista para el eje geográfico del board (país ordena, y
+                // ciudad/región alimentan los hubs). Escribir a mano sin elegir deja el texto y
+                // los campos como estén — por eso el país es obligatorio antes de publicar.
+                onSelect={(p) => setForm((f) => ({
+                  ...f,
+                  location: p.label,
+                  city: p.city ?? "",
+                  region: p.region ?? "",
+                  country_code: p.countryCode ?? "",
+                }))}
                 placeholder="Madrid (híbrido)"
                 className="pr-9"
               />

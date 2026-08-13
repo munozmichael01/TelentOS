@@ -32,6 +32,7 @@ export async function POST(req: Request) {
       // city/country_code solo si llegan (tolerante a migración 0029 pendiente)
       ...(body.city !== undefined ? { city: body.city } : {}),
       ...(body.country_code !== undefined ? { country_code: body.country_code } : {}),
+      ...(body.region !== undefined ? { region: body.region } : {}),
       employment_type: body.employment_type ?? "full_time",
       sector: body.sector ?? null,
       department: body.department ?? null,
