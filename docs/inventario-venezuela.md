@@ -210,3 +210,64 @@ permiso comprobado.** Revisarlas desde un navegador real antes de producción.
 Banesco 202 · **Cashea 57** · OIM 24 · BBVA Provincial 16 · Ridery 10 · Telefónica 7 · DHL 6 ·
 Inter 2 (tras dedupe) · Kuehne+Nagel 1 → **~325 ofertas**, más todo el bloque ONG vía ReliefWeb,
 aún sin medir.
+
+---
+
+# Recon — tercera tanda: consumo y retail (13-ago-2026)
+
+## Nuevas fuentes con volumen VE verificado
+
+| Fuente | Ofertas VE | ATS | Endpoint | Esfuerzo | Recomendación |
+|---|---|---|---|---|---|
+| **Mondelez** | **~24** (Caracas, Valencia, Maracay, Barquisimeto, Maracaibo, Coro) | Workday `mdlz/External` | `POST mdlz.wd3.myworkdayjobs.com/wday/cxs/mdlz/External/jobs` body `{"appliedFacets":{},"limit":20,"offset":0,"searchText":"Venezuela"}` → 200, `total: 26` | BAJO | **ENTRA** |
+| **Excelsior Gama** | **25, todas VE** | HiringRoom | `somosgama.hiringroom.com/jobs` — HTML server-rendered (37 KB). Sin JSON: `/api/jobs`, `/jobs/api` y `api.hiringroom.com/v1/jobs` dan 404 | BAJO-MEDIO | **ENTRA — el mejor local, 100 % VE** |
+| **Colgate-Palmolive** | **3–8** (Caracas, Valencia) | SAP SuccessFactors RMK | `jobs.colgate.com/sitemap.xml` **no es un sitemap: es un feed RSS de Google Jobs** (6,6 MB, 540 items) con `g:location`, `g:job_function`, `g:expiration_date` | BAJO | **ENTRA** — el feed es más completo que su propio buscador |
+
+**Mondelez no tiene faceta de país.** Las facetas expuestas son `jobFamilyGroup`, `workerSubType`,
+`timeType`, `remoteType` y `locationMainGroup`, y la última no devuelve valores anidados. Hay que
+filtrar por `searchText: "Venezuela"` y **post-filtrar por `locationsText`**: de las 26 que devuelve,
+2 son falsos positivos (una LatAm, una México).
+
+**PepsiCo — asimetría a respetar.** El front `pepsicojobs.com` permite rastreo (`Allow: /`,
+`crawl-delay: 5`) y expone `GET /api/jobs?country=Venezuela` → 200. Pero el ATS de detrás
+(`globalcareers-pepsico.icims.com`) declara `User-agent: * / Disallow: /`. **Consumir solo el
+front, nunca el iCIMS.** Hoy son 1 sola oferta, así que MÁS ADELANTE.
+
+## Descartadas, con motivo
+
+| Empresa | Por qué |
+|---|---|
+| **Coca-Cola FEMSA** | Portal HiringRoom con 11 vacantes: 7 Argentina, 4 Uruguay, **cero Venezuela**, pese a que su web dice operar aquí. El corporativo está tras Akamai (403 a todo) |
+| **Empresas Polar** | `empresaspolar.com/vacantes` son 970 caracteres: un título y un botón que **manda a LinkedIn**. Cero vacantes. Además `Content-Signal: ai-train=no` — reserva expresa de derechos (art. 4 Directiva UE 2019/790) |
+| **Farmatodo** | Su career real es un **Google Sites** con 16 cargos genéricos sin fecha ni ubicación, y un Google Form. Es un buzón de CVs, no un job board |
+| **Cervecería Regional** | Sin sección de empleo, y sus términos **prohíben el scraping textualmente** ("robot, araña, raspador u otro dispositivo automático"). Doble motivo |
+| **Locatel** | `locatel.com.ve/empleo` devuelve el fallback de búsqueda de VTEX: dos productos. No hay career page. `robots.txt` **vacío** (0 bytes) |
+| **Traki** | `traki.com.ve/empleo` → 301 → `traki.com` = "Volvemos pronto". Sitio en migración |
+| **Central Madeirense** | Sitio caído: DNS resuelve pero todas las conexiones dan timeout. Último snapshot de su zona de empleo, **nov-2021** |
+
+## La lectura que más importa
+
+**De los cinco minoristas venezolanos puros —Polar, Farmatodo, Locatel, Traki y Central
+Madeirense— ninguno publica ofertas estructuradas en su web.** Cuatro no tienen career site
+funcional y Polar te manda directo a LinkedIn.
+
+Eso **refuerza la tesis del board propio**: el canal no está ocupado, es que **no existe**. Y
+explica por qué el mercado venezolano vive en LinkedIn y en canales informales.
+
+El patrón de multinacionales se confirma a medias: Workday y SuccessFactors sí están, pero el
+"portal global con cero Venezuela" es real — Coca-Cola FEMSA 0, PepsiCo 1. **Solo Mondelez tiene
+volumen venezolano de verdad.**
+
+## Aviso de higiene
+
+Ni la ausencia de `robots.txt` ni un `Allow: /` equivalen a permiso de reutilización. En Cervecería
+Regional el veto es explícito y en Polar el `Content-Signal: ai-train=no` es una reserva formal.
+Para las tres que sí entran —Mondelez, Gama y Colgate— **no se pudieron verificar los términos de
+uso**; conviene revisarlos antes de producción, en especial HiringRoom, cuyos T&C no aparecen en
+las URLs habituales.
+
+## Inventario VE verificado, acumulado
+
+Banesco 202 · Cashea 57 · **Excelsior Gama 25** · OIM 24 · **Mondelez 24** · BBVA Provincial 16 ·
+Ridery 10 · Telefónica 7 · DHL 6 · **Colgate 5** · Inter 2 · Kuehne+Nagel 1 → **~379 ofertas
+venezolanas**, más el bloque ONG vía ReliefWeb, aún sin medir.
