@@ -146,3 +146,67 @@ Locatel, Traki, Central Madeirense, Excelsior Gama), parte de tecnología (Cashe
 Wawa, Cuadro, PedidosYa), telecom (Telefónica, Inter) y remoto (BruntWork, BairesDev, Stefanini).
 Los job boards venezolanos **no aportan**: Vacantes.com no tiene ni una oferta de Venezuela,
 Conectados.ai solo publica blog y Kuentro devuelve un sitemap vacío.
+
+---
+
+# Recon — segunda tanda: tecnología, telecom y logística (13-ago-2026)
+
+Cifras contadas contra la respuesta real de cada API, con verificación cruzada.
+
+## Nuevas fuentes con volumen VE verificado
+
+| Fuente | Ofertas VE | ATS | Endpoint | Esfuerzo | Recomendación |
+|---|---|---|---|---|---|
+| **Cashea** | **57** de 74 | Teamtailor | `GET cashea.na.teamtailor.com/jobs.json` (y `.rss`) → 200 | BAJO | **ENTRA — la mejor fuente VE de todo el estudio** |
+| **Ridery** | **10**, todas VE | Odoo Recruitment | `GET ridery-odoo.ridery.app/jobs` (HTML limpio + sitemap) | BAJO | **ENTRA** — `robots.txt` sin un solo `Disallow` |
+| **Telefónica / Movistar** | **7** | SAP SuccessFactors | sitemap (291 locs); RSS/JSON devuelven HTML | MEDIO | **ENTRA con reservas** — ver riesgo de caducidad |
+| **DHL** | **6** | Phenom sobre Avature | `POST careers.dhl.com/widgets` → 200, sin auth | BAJO | **ENTRA** |
+| **Kuehne+Nagel** | **1** | Phenom sobre SuccessFactors | `POST jobs.kuehne-nagel.com/widgets` → 200 | BAJO | **ENTRA** — mismo adaptador que DHL, coste marginal ~0 |
+| **Inter** | 51 registros = **2 cargos reales** | Ninguno (PHP propio) | `GET inter.com.ve/ajax/postulacion.php` → 200, 51 registros | BAJO | **ENTRA con dedupe obligatorio** |
+
+**Un solo adaptador Phenom** sirve para DHL, Kuehne+Nagel y UPS. El `body` del POST:
+`{"ddoKey":"refineSearch","from":0,"size":100,"jobs":true,"counts":true,"selected_fields":{"country":["Venezuela"]}}`
+
+**La etiqueta de país NO es uniforme** entre fuentes: DHL usa `"Venezuela"`, K+N
+`"Venezuela (Bolivarian Republic of)"`, SmartRecruiters `country=ve`. Normalizar a `VE` en el
+conector, nunca confiar en la cadena de origen.
+
+## Descartadas, con motivo
+
+| Empresa | Por qué |
+|---|---|
+| **MercadoLibre** | **0 vacantes VE** (907 globales). Validado contra Argentina 153, Brasil 450, Chile 116 antes de aceptar el cero |
+| **UPS** | 0 — Venezuela ni aparece en su facet de 48 países |
+| **PedidosYa** | 1 sola oferta, de **abril de 2024**: evergreen rancia |
+| **Yummy** | Su web enlaza a `jobs.lever.co/yummysuperapp`, que da **404**. 12 tokens probados en Lever, Teamtailor, PeopleForce, Greenhouse, Ashby y Workable: ninguno vivo. Sin board público → captación por correo |
+| **Wawa (La Wawa)** | Webflow con formulario; no publica vacantes |
+| **Digitel** | No existe página de empleo: 15 rutas y 3 subdominios probados. Y sus condiciones prohíben expresamente reproducción y distribución |
+| **Cuadro** | **No identificada.** Lo más cercano, `cuadro.app` (contabilidad, EE. UU.) y `somoscuadro.com` (indumentaria), no encajan. **Pendiente de que Michael aclare a qué empresa se refería** |
+
+## Cuatro advertencias operativas
+
+1. **Cashea declara `Content-Signal: ai-train=no, ai-input=yes`** — permite ingesta para uso en
+   vivo pero se opone al entrenamiento de modelos. El pipeline debe respetarlo: publicar sus
+   ofertas sí, usarlas para entrenar no.
+2. **Inter infla el índice.** Sus 51 registros son **2 cargos replicados en 28 ciudades**, todos con
+   vigencia fija 2026. Deduplicar por `CarCod` + `CiuOrigen` y marcarlas como oferta permanente, no
+   como vacante fresca. Sin eso, dos puestos parecerían 51 y ensuciarían el board entero.
+3. **Telefónica tiene fecha de caducidad.** Anunció su salida de Venezuela (nov-2025) y la venta
+   está en pausa. Sus 7 vacantes son las más cualificadas del estudio (DBA, Data Engineer, Core/OSS,
+   SAP), pero el conector puede quedarse sin fuente.
+4. **Un 200 no confirma la empresa.** `apply.workable.com/.../yummy` responde 200 pero es "Yummy
+   Pear"; `.../wawa` es la cadena de tiendas de EE. UU. Los tres devolvían `jobs: []`. Verificar
+   siempre la identidad, no solo el código de respuesta.
+
+## Condiciones de uso — el hueco que queda
+
+Quedan **"no verificado" en casi todo el estudio**: las páginas legales de DHL, UPS, K+N y
+Telefónica devolvieron 404 o quedaron tras protección anti-bot. Solo se recuperaron avisos de
+privacidad de candidato, sin cláusulas de reuso. **No hay prohibición comprobada, pero tampoco
+permiso comprobado.** Revisarlas desde un navegador real antes de producción.
+
+## Inventario VE verificado hasta ahora
+
+Banesco 202 · **Cashea 57** · OIM 24 · BBVA Provincial 16 · Ridery 10 · Telefónica 7 · DHL 6 ·
+Inter 2 (tras dedupe) · Kuehne+Nagel 1 → **~325 ofertas**, más todo el bloque ONG vía ReliefWeb,
+aún sin medir.
