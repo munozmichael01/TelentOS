@@ -380,3 +380,65 @@ DRC 8 · IFRC 2 · WFP 1), con **2 conectores + 2 scrapers HTML triviales**.
 PNUD/UNDP, UN Careers, UNOPS, FAO, OPS/OMS y UNFPA — hosts y `siteNumber` de Oracle Recruiting
 Cloud. **UNOPS es la vía real de las vacantes de ACNUR en Venezuela**, así que es la más relevante
 de las que faltan.
+
+---
+
+# Recon — sexta tanda: agencias de la ONU (13-ago-2026)
+
+## Un aviso honesto antes de la tabla
+
+**Solo hay 3 vacantes ONU en Venezuela verificadas hoy** (UNDP 2 en Caracas y Maracaibo, ambas de
+UNOCHA; Secretaría 1 en Caracas), más las 24 de OIM. El volumen venezolano del sistema ONU es
+**estructuralmente muy bajo**. Estos conectores valen por **cobertura regional y por marca**, no
+por número de vacantes locales. Si el criterio de entrada es volumen VE, hay que priorizar por otro
+eje: Kuentro, Banesco, Cashea y Bumeran pesan muchísimo más.
+
+## El hallazgo de mejor relación coste/beneficio
+
+**Un tenant Oracle compartido**, `estm.fa.em2.oraclecloud.com`, aloja varias agencias a la vez:
+
+| Agencia | `siteNumber` | Reqs totales | Vacantes VE |
+|---|---|---|---|
+| **UNDP / PNUD** | `CX_2` | 383 | **2** (Caracas, Maracaibo — ambas UNOCHA) |
+| **UNFPA** | `CX_2003` | 67 | 0 |
+| *sin identificar* | `CX_1001` | 62 | por mapear |
+| *sin identificar* | `CX_3001` | 99 | por mapear |
+
+**El conector de OIM ya escrito las cubre todas cambiando host y `siteNumber`.** Mapear `CX_1001` y
+`CX_3001` es coste marginal cero y probablemente añade dos agencias más.
+
+El tenant de UNDP aloja además **UN Women, UNOCHA y UNV**, así que sus vacantes salen por el mismo
+sitio.
+
+## Fuentes que entran
+
+| Org | ATS | Endpoint | VE | Esfuerzo |
+|---|---|---|---|---|
+| **UNDP + UNFPA** | Oracle RC | `estm.fa.em2.oraclecloud.com/hcmRestApi/…/recruitingCEJobRequisitions?…siteNumber={CX_2\|CX_2003},limit=200` → 200. Máx. **200** por request, paginar con `offset`. El detalle de cada vacante también es público (`recruitingCEJobRequisitionDetails`) | 2 · 0 | BAJO |
+| **UN Careers** (Secretaría) | SPA Angular + API propia sobre MongoDB — **no es Inspira** | `POST careers.un.org/api/public/opening/jo/list/filteredV2/en` con `{"filterConfig":{"jle":[],"jc":[]},"pagination":{"page":0,"itemPerPage":2000,"sortBy":"startDate","sortDirection":-1}}` → 200, 426 vacantes con descripción completa. **Sin `sortBy` devuelve 500** (error de Mongo filtrándose — confirma que no hay capa de auth) | 1 | BAJO |
+| **PAHO / OPS** | **Workday**, no el Taleo de WHO | `POST paho.wd5.myworkdayjobs.com/wday/cxs/paho/pahocareers/jobs` → 200, total 16 | 0 | BAJO |
+
+## Descartadas
+
+- **UNOPS** — Avature. Sin API (todo 404), pero **sí scrapeable con curl puro**:
+  `careers.unops.org/careersmarketplace/SearchJobs?jobOffset=N`, 6 por página. Recorridas las 14
+  páginas: 79 vacantes, **0 en Venezuela**. Esfuerzo MEDIO, sin premio hoy. *(Nota: la tanda
+  anterior identificó UNOPS como la vía de contratación de ACNUR en Venezuela; ese canal **no
+  aparece** en su marketplace público.)*
+- **FAO** y **WHO/OMS** — ambas **Oracle Taleo**, el muro del estudio. `POST
+  /careersection/rest/jobboard/searchjobs` devuelve **HTTP 500 "An Error Occurred in TEE"** incluso
+  ejecutándolo desde dentro de la página con sesión válida. Taleo hace POST de formulario con
+  render en servidor: **no hay XHR que interceptar**. Exige navegador headless con sesión pegajosa.
+  FAO 114 vacantes, WHO 72, **0 en Venezuela** en ambas. WHO no tiene ni una vacante en las
+  Américas — confirma que esa región se gestiona aparte, por el Workday de PAHO.
+
+## Balance de conectores de todo el recon
+
+Tres patrones cubren prácticamente todo lo que merece la pena:
+
+1. **Oracle Recruiting Cloud** — OIM, UNDP, UNFPA (+ los dos sites por mapear).
+2. **Workday CXS** (`POST /wday/cxs/{tenant}/{site}/jobs`) — IRC, WFP, UNHCR, PAHO, **BBVA
+   Provincial** y **Mondelez**. `limit` topa en 20.
+3. **API propia de `careers.un.org`**.
+
+Más scrapers HTML triviales para DRC, HIAS, Excelsior Gama, Grupo Parawa y Ridery.
