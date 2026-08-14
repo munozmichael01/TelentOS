@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { dedupeHash } from "@/lib/import";
 import { dedupeStrings, resolveSkillIds } from "@/lib/skills";
 import { DEFAULT_STAGES } from "@/lib/types";
+import { locationErrorForPublish } from "@/lib/jobs/location-required";
 
 export async function POST(req: Request) {
   // Chokepoint de creación de ofertas: formulario, job-writer (source: "ai") e imports.
@@ -15,6 +16,14 @@ export async function POST(req: Request) {
 
   const skills = dedupeStrings(Array.isArray(body.skills) ? body.skills : []);
   const db = createAdminClient();
+
+  // Publicar exige ubicación utilizable (país siempre; ciudad salvo remoto). Ver
+  // lib/jobs/location-required.ts: sin país la oferta no existe para el orden ni para los hubs.
+  const locErr = locationErrorForPublish({
+    status: body.status === "active" ? "active" : "draft",
+    country_code: body.country_code, city: body.city, modality: body.modality,
+  });
+  if (locErr) return jsonError(locErr, 422);
 
   const { data: job, error: dbError } = await db
     .from("jobs")
