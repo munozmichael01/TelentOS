@@ -43,6 +43,7 @@ export default async function BoardPage({
     contract: searchParams.contract,
     sort: (searchParams.sort as "relevance" | "recent" | "salary") ?? "relevance",
     homeCountry: countryForLocale(params.locale), // boost local-first del mercado (no filtra)
+    includeRemoteInCountry: true, // buscar una ciudad trae también las remotas de su país (detrás)
     pageSize: 20,
   });
 

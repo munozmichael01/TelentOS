@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireApiRole, jsonError } from "@/lib/api";
 import { createAdminClient } from "@/lib/supabase/server";
 import { dedupeStrings, resolveSkillIds } from "@/lib/skills";
+import { locationErrorForPublish } from "@/lib/jobs/location-required";
 
 const EDITABLE = [
   "title", "job_title_id", "description", "skills", "salary_min", "salary_max", "salary_currency", "salary_period",
@@ -13,16 +14,29 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const { companyId, error } = await requireApiRole(["owner", "hr_admin", "recruiter"]);
   if (error) return error;
 
+  const db = createAdminClient();
   const body = await req.json().catch(() => ({}));
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
   for (const key of EDITABLE) {
     if (key in body) updates[key] = body[key];
   }
+  // Publicar (o editar una publicada) exige ubicación utilizable. Se comprueba contra la fila
+  // ACTUAL fusionada con los cambios: si solo mandan `status: active`, el país y la ciudad que
+  // cuentan son los que ya tiene guardados.
+  if (updates.status === "active" || "country_code" in updates || "city" in updates || "modality" in updates) {
+    const { data: current } = await db
+      .from("jobs").select("status, country_code, city, modality").eq("id", params.id).maybeSingle();
+    const merged = { ...(current ?? {}), ...updates } as {
+      status?: string | null; country_code?: string | null; city?: string | null; modality?: string | null;
+    };
+    const locErr = locationErrorForPublish(merged);
+    if (locErr) return jsonError(locErr, 422);
+  }
+
   if ("skills" in updates) {
     updates.skills = dedupeStrings(Array.isArray(updates.skills) ? (updates.skills as string[]) : []);
   }
 
-  const db = createAdminClient();
   const { data, error: dbError } = await db
     .from("jobs")
     .update(updates)

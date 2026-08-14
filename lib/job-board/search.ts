@@ -15,6 +15,12 @@ export type BoardSearchParams = {
   location?: string; // ciudad/texto
   country?: string; // country_code — FILTRO duro (hubs de país)
   homeCountry?: string; // country_code del MERCADO — BOOST local-first (no filtra), board+asistente
+  /**
+   * Incluir las ofertas REMOTAS del país al que pertenece `location`, detrás de las presenciales.
+   * El BOARD lo activa; los hubs de SEO NO, a propósito: un hub "Cocinero en Caracas" lleno de
+   * remotas de todo el país es contenido flojo y Google lo penaliza (migr. 0083).
+   */
+  includeRemoteInCountry?: boolean;
   category?: string; // free-text legacy
   categoryKey?: string; // categoría canónica (data/taxonomy/categories.json)
   modality?: "presencial" | "hibrido" | "remoto";
@@ -117,6 +123,20 @@ export async function searchJobs(
     const ctx = await resolveTitleContext(params.q);
     if (ctx.titleIds.length) { titleIds = ctx.titleIds; relatedIds = ctx.relatedIds; relatedW = ctx.relatedW; }
   }
+  // País de la ciudad buscada, para poder traer las remotas de ese país. Se deduce de nuestro
+  // PROPIO inventario en vez de llamar al gazetteer en cada búsqueda: es gratis, no añade latencia
+  // externa y mejora solo según entra inventario. Si no se deduce, no entra ninguna remota — se
+  // degrada al comportamiento anterior en vez de inventarse un país.
+  let locationCountry: string | null = null;
+  if (params.includeRemoteInCountry && params.location) {
+    const { data: hit } = await supabase
+      .from("jobs").select("country_code")
+      .ilike("city", `%${params.location}%`)
+      .not("country_code", "is", null).eq("status", "active")
+      .limit(1).maybeSingle();
+    locationCountry = (hit?.country_code as string | undefined) ?? null;
+  }
+
   const { data: ranked, error } = await supabase.rpc("board_rank_jobs", {
     p_q: params.q ?? null, p_tokens: params.qTokens ?? null, p_location: params.location ?? null,
     p_category_keys: catKeys, p_modalities: params.modalities ?? null, p_contracts: contracts,
@@ -124,6 +144,7 @@ export async function searchJobs(
     p_title_ids: titleIds ?? null, p_related_ids: relatedIds ?? null, p_related_w: relatedW ?? null,
     p_applied: params.appliedIds ?? null, p_sort: params.sort ?? "relevance", p_limit: pageSize, p_offset: from,
     p_country: params.country ?? null, p_home_country: params.homeCountry ?? null,
+    p_location_country: locationCountry,
   });
   if (error) throw new Error(error.message);
   const rankedRows = (ranked ?? []) as { id: string; total: number }[];
