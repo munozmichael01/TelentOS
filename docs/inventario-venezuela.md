@@ -323,3 +323,60 @@ es venezolana (Delaware/Andorra) y solo tiene 12 ofertas VE.
 **Grupo Parawa y EY primero** — esfuerzo bajo, cero bloqueos. **Kuentro y Bumeran VE en paralelo**
 para volumen. **SLB merece una petición formal de permiso**: 34 ofertas cualificadas y una API
 impecable, pero es la restricción más dura de todo el estudio.
+
+---
+
+# Recon — quinta tanda: ONG y organismos internacionales (13-ago-2026)
+
+## Lo que más cambia el plan: son 2 conectores, no 12
+
+**El patrón dominante del sector no es Oracle, es Workday**, y su API es idéntica en todos:
+`POST /wday/cxs/{tenant}/{site}/jobs`, mismo body, mismo JSON. **Un solo conector parametrizado
+por tenant+site** cubre IRC, WFP y UNHCR — y también **BBVA Provincial y Mondelez** de las tandas
+anteriores. Con el conector Oracle de OIM, dos piezas de código cubren la mayor parte del sector.
+
+## Fuentes con volumen VE verificado
+
+| Organización | Vacantes VE | ATS | Endpoint | Recomendación |
+|---|---|---|---|---|
+| **IRC** | **20** (de 364) | Workday `theirc.wd1` | `POST theirc.wd1.myworkdayjobs.com/wday/cxs/theirc/External_Careers/jobs` → 200 | **ENTRA — prioridad 1** |
+| **HIAS** | **14** (de 21) | ClearCompany | `hias.hrmdirect.com/employment/job-openings.php?search=true&dept=54319` → 200 HTML | **ENTRA — prioridad 2** |
+| **DRC** | **8** (de 55) | Propio (Umbraco) | `drc.ngo/en/jobs/` → 200, toda la bolsa en un HTML sin paginación, con `data-country="Venezuela"` | **ENTRA — prioridad 3** |
+| **IFRC** | 2 (de 28) | Lumesse/TalentLink | `/fo/rest/jobs` → **403** server-side | MÁS ADELANTE |
+| **PMA / WFP** | 1 (de 97) | Workday | `POST wd3.myworkdaysite.com/wday/cxs/wfp/job_openings/jobs` → 200. **Ojo al host**: `myworkdaysite.com`, no `myworkdayjobs.com` | **ENTRA** — coste marginal, mismo conector |
+
+**Cobertura resultante con OIM incluido: 69 vacantes en Venezuela** (OIM 24 · IRC 20 · HIAS 14 ·
+DRC 8 · IFRC 2 · WFP 1), con **2 conectores + 2 scrapers HTML triviales**.
+
+## Trampas comprobadas al integrar
+
+- **Workday: `limit` máximo 20.** Con 50 devuelve error. Paginar con `offset`.
+- **No filtrar por `searchText`.** En IRC devuelve 26, pero el barrido completo de las 364 filtrando
+  por `locationsText` da **20 realmente en Venezuela**: el buscador engancha menciones en
+  descripciones y puestos regionales. **Filtrar por ubicación, nunca por texto.**
+- **`careers.rescue.org` es solo fachada** (Phenom sobre Azure). El ATS real es Workday `theirc.wd1`.
+  Atacar el HTML de Phenom sería un error: el JSON está debajo.
+- **HIAS: el `dept=54319` puede cambiar.** Releer el `<select>` en cada ejecución en vez de
+  hardcodearlo (el propio desplegable declara "HIAS Venezuela - 14 Jobs").
+
+## Descartadas, con motivo
+
+- **UNICEF** — PageUp devuelve **202 con 0 bytes** a cualquier petición programática, incluso a un
+  `fetch()` desde el navegador con cookies. Y tiene 0 vacantes en Venezuela.
+- **`venezuela.un.org/es/jobs`** — **1 sola vacante** en toda la página, `rss.xml` con 0 items, y
+  facetas de cierre que van de 2019 a 2030. Es un índice global abandonado para Venezuela.
+- **ACNUR / UNHCR** — 0 en su Workday **pese a tener operación activa en Venezuela**, porque
+  **contrata allí vía UNOPS**: sus vacantes de Caracas salen como contratos LICA con números
+  `JR24xxxxx` anunciados por UNOPS. Para capturar ACNUR/Venezuela hay que ir a UNOPS.
+- **CICR/ICRC** — sitemap limpio y permitido, pero 0 vacantes VE hoy. Reevaluar.
+- **unvacancies.org** — su `/api/v1/jobs` es abierto y riquísimo (53 campos, 46 ofertas VE), **pero
+  su `robots.txt` marca `Disallow: /api/*`** y su `Content-Signal: ai-train=no, use=reference` es
+  una reserva de derechos. Además es un **scraper de segundo nivel**: sus propios `source_url`
+  apuntan al Workday del IRC. Ir a la fuente primaria, que es justo lo que cubren los conectores de
+  arriba. Si algún día interesa, se pide permiso a `hello@unvacancies.org`.
+
+## Pendiente de esta tanda
+
+PNUD/UNDP, UN Careers, UNOPS, FAO, OPS/OMS y UNFPA — hosts y `siteNumber` de Oracle Recruiting
+Cloud. **UNOPS es la vía real de las vacantes de ACNUR en Venezuela**, así que es la más relevante
+de las que faltan.
