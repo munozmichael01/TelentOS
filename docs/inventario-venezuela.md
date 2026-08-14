@@ -442,3 +442,70 @@ Tres patrones cubren prácticamente todo lo que merece la pena:
 3. **API propia de `careers.un.org`**.
 
 Más scrapers HTML triviales para DRC, HIAS, Excelsior Gama, Grupo Parawa y Ridery.
+
+---
+
+# Recon — séptima tanda: contratación remota desde Venezuela (13-ago-2026)
+
+## La única con etiqueta país = Venezuela explícita
+
+| Fuente | Ofertas | ATS | Endpoint | VE | Recomendación |
+|---|---|---|---|---|---|
+| **Valatam** | 18 | Workable | `apply.workable.com/api/v1/widget/accounts/valatam` → 200, con `title, country, city, telecommuting, url` | **3 explícitas** (Email & SMS Marketing Manager, Marketing & Social Media Specialist, Recruitment Manager LATAM) | **ENTRA — la más limpia del bloque.** `robots` con `Disallow:` vacío |
+
+Reparto de Valatam: Ecuador 8 · Colombia 7 · **Venezuela 3** · Argentina 2 · Perú 1 · Nicaragua 1 ·
+Guatemala 1. Es la **única de todo el estudio cuyo feed nombra Venezuela como país de la oferta**.
+
+## Limpias y sin bloqueos
+
+| Fuente | Ofertas | ATS | Endpoint | Nota |
+|---|---|---|---|---|
+| **Nortal / Nearsure** | 47 (**45 "Latin America - Remote"**) | Greenhouse `nortal` | `boards-api.greenhouse.io/v1/boards/nortal/jobs?content=true` → 200 | **Nearsure fue adquirida por Nortal**; su cartera LATAM sigue viva bajo ese token |
+| **CloudDevs** | **332** | WP Job Manager | `clouddevs.com/wp-json/wp/v2/job-listings?per_page=100` → 200, `X-WP-Total: 332` | REST completo + taxonomías. Títulos en formato `Cliente: Rol` |
+| **Ubiminds** | 21 | Lever | `api.lever.co/v0/postings/Ubiminds?mode=json` → 200 | **El token distingue mayúsculas**: `Ubiminds` funciona, `ubiminds` da 404. Sobre todo Brasil |
+| **DistantJob** | 13 | Greenhouse `distantjob` | `boards-api.greenhouse.io/v1/boards/distantjob/jobs` → 200 | Pequeño pero trivial |
+
+## Volumen enorme, pero con una decisión que tomar antes
+
+| Fuente | Volumen | Por qué no es automático |
+|---|---|---|
+| **Torre** | **297.622** en corpus · `{"location":{"term":"Venezuela"}}` → **77.506** · abiertas 39.879 | `POST search.torre.co/opportunities/_search`, sin auth, paginado, con `locations[]`, `remote`, `compensation` en USD. **`torre.ai` prohíbe `/search/jobs?*` a los crawlers, pero el host de la API es otro y no tiene `robots.txt`.** Aprovechar esa separación de hosts es precisamente el tipo de decisión que conviene tomar a conciencia |
+| **Somewhere** (ex Shepherd) | **~2.100–2.400** · 553 LATAM | Recruit CRM. **`albatross.recruitcrm.io/robots.txt` es `Disallow: /`**, y el endpoint **exige falsificar `Origin` y `Referer`** para responder. Eso es un control de acceso deliberado, no un descuido |
+| **Athyna** | 74, LATAM puro | Mismo Recruit CRM, mismo `Disallow: /`, mismo requisito de cabeceras |
+
+**La vía limpia para las tres es pedir acuerdo de sindicación** — que además da atribución y logo,
+que es lo que quiere el empleador. Los términos de Somewhere no prohíben scraping; lo que lo
+desaconseja es el `robots` del host de su API y el tener que suplantar cabeceras.
+
+## Descartadas
+
+- **Virtual Latinos** — sus términos **prohíben el scraping expresamente**: *"Systematic retrieval
+  of data […] to create or compile a collection, compilation, database or directory without written
+  permission"* y *"any automated use of the system, such as data mining, robots…"*. Además el
+  marketplace exige registro.
+- **Stefanini LATAM** — API Gupy limpia (`employability-portal.gupy.io/api/v1/jobs?companyId=54256`,
+  181 ofertas), pero **0 en Venezuela** y mayoría presencial o híbrida. Reevaluar solo si se abre
+  es-mx o es-pe.
+- **BruntWork** — sin API y sin señal VE. `bruntwork.co` además veta `/job/` en robots.
+- **Turing** — su tablero de Greenhouse es **solo contratación corporativa** (Palo Alto, Bengaluru,
+  São Paulo); el marketplace de desarrolladores no está expuesto.
+- **BairesDev** — el detalle por oferta **sí es público** (`applicants.bairesdev.com/api/JobPosting?JobPostingId={id}`,
+  schema.org sin auth) y su `applicantLocationRequirements` **nombra Venezuela**, pero **no hay
+  endpoint de listado**: solo se enumeraría por fuerza bruta de ids. Sirve para *enriquecer*, no
+  para descubrir. *(Dato curioso: su `robots.txt` permite explícitamente ClaudeBot y GPTBot.)*
+- Howdy · TECLA · Alluxi · Revelo · Remote Latinos — sin feed público. Listopro fue absorbida por
+  Revelo, cuyo sitemap solo expone hubs SEO, no ofertas.
+
+## Trampas comprobadas, para el conector
+
+1. **El widget de Workable miente por omisión.** Un token inexistente da 404, pero **varias cuentas
+   existen y devuelven 200 con `"jobs":[]`** — `somewhere`, `bruntwork`, `bairesdev`, `howdy`,
+   `ubiminds`, `athyna`, `near`, `revelo`, `alluxi`. Un 200 no es un feed.
+2. **Recruit CRM tiene rate-limit por IP y lo señala mal**: tras ~110 peticiones devuelve
+   `{"message":"You are not allowed to access this URL."}` **con HTTP 200**, no 429. Hay que
+   detectar ese mensaje como fallo, no como respuesta vacía.
+3. **El `search_data` de Recruit CRM no filtra en servidor** en ninguna de las formas probadas: hay
+   que traerse el catálogo entero y filtrar en nuestro lado.
+4. **Alluxi devuelve soft-404s**: HTTP 200 con HTML para cualquier ruta inventada. Comprobar
+   `content-type` antes de creerse un 200.
+5. **Dos adquisiciones cambian la lista**: Nearsure → Nortal, Listopro → Revelo.
