@@ -271,3 +271,55 @@ las URLs habituales.
 Banesco 202 · Cashea 57 · **Excelsior Gama 25** · OIM 24 · **Mondelez 24** · BBVA Provincial 16 ·
 Ridery 10 · Telefónica 7 · DHL 6 · **Colgate 5** · Inter 2 · Kuehne+Nagel 1 → **~379 ofertas
 venezolanas**, más el bloque ONG vía ReliefWeb, aún sin medir.
+
+---
+
+# Recon — cuarta tanda: otros + job boards VE (13-ago-2026)
+
+## ⚠️ Corrige a las tandas anteriores
+
+**Kuentro NO está vacío.** La primera tanda concluyó "sitemap con 0 `<loc>`" y lo descartó. Era la
+lectura equivocada: es una SPA, así que el sitemap es solo el shell. **Tiene API JSON abierta**:
+`POST api.kuentro.ai/api/jobs/searchFeeFull` body `{"page":1}`, sin auth → 200, y su `count_items`
+declara **3.712 ofertas, 100 % venezolanas** en la muestra. **Es el mayor inventario VE-nativo del
+estudio.** Límite comprobado ejecutando la paginación: anónimamente se agota en **exactamente 30
+ofertas únicas** y a partir de ahí el metadata se rompe (además hay un off-by-one: pides `page:1`
+y responde `page:2`). Para las 3.712 hace falta token → **conversación con ellos**.
+
+**Vacantes.com pasa de "MÁS ADELANTE" a NO.** Sus términos prohíben el scraping textualmente, y su
+`robots.txt` incluye **un bloque específico para ClaudeBot que no permite `/vacantes/`**. Además no
+es venezolana (Delaware/Andorra) y solo tiene 12 ofertas VE.
+
+## Nuevas fuentes
+
+| Fuente | Ofertas VE | Stack | Endpoint | Esfuerzo | Recomendación |
+|---|---|---|---|---|---|
+| **Kuentro** | **3.712** declaradas · **30** accesibles sin token | SPA React + Laravel | `POST api.kuentro.ai/api/jobs/searchFeeFull` → 200 sin auth | BAJO-MEDIO | **ENTRA** — el único VE-nativo con JSON abierto y volumen real. Pedirles token |
+| **Bumeran VE** | **756** URLs de oferta | — | `sitemap_avisos_bum.xml`; `robots.txt` sin Disallow global | BAJO | **ENTRA** — no estaba en el encargo y es la mejor alternativa a Kuentro |
+| **Grupo Parawa** | **20–21, 100 % VE** | HiringRoom | `grupoparawa.hiringroom.com/jobs`, HTML renderizado en servidor | BAJO | **ENTRA** — más volumen VE que EY, Deloitte y BAT juntos |
+| **EY Venezuela** | **8** (Caracas, Valencia, Pto. La Cruz) | SuccessFactors RMK | `careers.ey.com/sitemap.xml` (7.545 ofertas, `lastmod` diario) + filtro país por URL | BAJO | **ENTRA** |
+
+## Bloqueadas por sus propios términos — decisión consciente
+
+| Fuente | Ofertas VE | Por qué NO |
+|---|---|---|
+| **SLB** | **34** (Maturín 31, Anaco 3) | La mejor API técnica del estudio —Coveo con token público en el HTML, las 34 en una llamada— pero sus términos **prohíben el scraping Y el uso de IA sobre su contenido**: *"does not provide permission to you copy, scrape, archive… Use artificial intelligence or machine learning algorithms on the content of this Website"*. No se resuelve por vía técnica: requiere acuerdo |
+| **BAT** | 3 | `Disallow:/search-jobs/` justo en el endpoint útil, **y** términos que describen literalmente nuestro caso de uso: *"you may not make any part of the Site available as part of another website, whether by scraping, crawling, hyperlink framing…"* |
+| **Vacantes.com** | 12 | *"Realizar actividades de scraping, crawling, extracción automatizada de datos […] sin autorización previa y por escrito"* + bloque ClaudeBot en robots |
+| **Deloitte VE** | 3 | WAF bloquea todo lo que no sea navegador, incluido `/robots.txt`. Tres ofertas no justifican pelearlo |
+| **Computrabajo VE** | el mayor del mercado | Sin feed ni API: robots no declara sitemap y `/sitemap.xml` da 302. **Solo por acuerdo comercial** |
+| **Conectados.ai** | no verificado | Es panameña (Humanet Group). AppSync GraphQL 401, `api.conectados.ai` 403. Sin superficie pública |
+
+## Tres hipótesis mías que resultaron falsas
+
+1. **SLB no usa Workday ni Phenom** — es **Coveo**.
+2. **EY no usa Taleo ni Oracle** — es **SuccessFactors RMK**, igual que Deloitte y BAT: los tres
+   grandes comparten familia de plataforma.
+3. **Grupo Parawa sí tiene career site**, y con 20 ofertas VE tiene más volumen venezolano que EY,
+   Deloitte y BAT juntos.
+
+## Secuenciado sugerido
+
+**Grupo Parawa y EY primero** — esfuerzo bajo, cero bloqueos. **Kuentro y Bumeran VE en paralelo**
+para volumen. **SLB merece una petición formal de permiso**: 34 ofertas cualificadas y una API
+impecable, pero es la restricción más dura de todo el estudio.
